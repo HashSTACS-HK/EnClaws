@@ -17,10 +17,40 @@ services:
       timeout: 5s
       retries: 5
 
+  # ---- Matter engine (team-pivot-web / Agenora OS matter governance) ----
+  matter-engine:
+    build:
+      context: ../team-pivot-web
+      dockerfile: ../EnClaws/matter-engine/Dockerfile
+    environment:
+      # Feishu OAuth (required; replace with real values or leave placeholder for local dev)
+      FEISHU_APP_ID: ${FEISHU_APP_ID:-placeholder}
+      FEISHU_APP_SECRET: ${FEISHU_APP_SECRET:-placeholder}
+      FEISHU_REDIRECT_URI: ${FEISHU_REDIRECT_URI:-http://localhost:8001/api/auth/feishu/callback}
+      SESSION_SECRET: ${MATTER_SESSION_SECRET:-change-me-to-a-long-random-secret}
+      DATA_DIR: /data
+      # CORS: matter engine only allows one origin; set to EC UI origin if needed.
+      # In iframe mode the React app inside the iframe fetches back to port 8001
+      # (same origin), so this value only matters for direct browser-to-8001 access.
+      WEB_DEV_ORIGIN: ${MATTER_WEB_DEV_ORIGIN:-http://localhost:5173}
+    volumes:
+      - matter-engine-data:/data
+    ports:
+      - "${MATTER_ENGINE_PORT:-8001}:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; socket.create_connection(('localhost', 8001), timeout=3)\" 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     depends_on:
       openclaw-db:
+        condition: service_healthy
+      matter-engine:
         condition: service_healthy
     environment:
       HOME: /home/node
@@ -32,6 +62,9 @@ services:
       # Multi-tenant database
       OPENCLAW_DB_URL: postgresql://${OPENCLAW_DB_USER:-openclaw}:${OPENCLAW_DB_PASSWORD:-openclaw_secret}@openclaw-db:5432/${OPENCLAW_DB_NAME:-openclaw}
       OPENCLAW_JWT_SECRET: ${OPENCLAW_JWT_SECRET:-change-me-to-a-long-random-secret}
+      # Matter engine proxy config
+      MATTER_ENGINE_URL: ${MATTER_ENGINE_URL:-http://matter-engine:8001}
+      MATTER_ENGINE_PAT: ${MATTER_ENGINE_PAT:-}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
@@ -79,3 +112,4 @@ services:
 
 volumes:
   openclaw-pgdata:
+  matter-engine-data:
