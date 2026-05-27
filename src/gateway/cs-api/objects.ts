@@ -38,14 +38,6 @@ function generateSecret(): string {
 }
 
 /**
- * Mask secret for display (keep prefix + first 0 visible inner chars + tail).
- * 屏蔽 secret，只显示前缀和末 4 位。
- */
-function maskSecret(plain: string): string {
-  return `${plain.slice(0, 12)}****${plain.slice(-4)}`;
-}
-
-/**
  * Derive the public endpoint URL for a given appId.
  * 根据 appId 推导 endpoint URL。
  */
@@ -109,9 +101,8 @@ export async function createObject(req: IncomingMessage, res: ServerResponse): P
     endpointUrl: "pending",
   });
 
-  // Derive and persist the real endpoint URL now that we have appId.
+  // Derive endpoint URL dynamically from appId (column stores "pending" sentinel; see backlog).
   const realEndpoint = endpointUrlFor(obj.appId);
-  const final = obj;
 
   void createAuditLog({
     tenantId,
@@ -122,12 +113,12 @@ export async function createObject(req: IncomingMessage, res: ServerResponse): P
   });
 
   sendJson(res, 201, {
-    id: final.id,
-    appId: final.appId,
+    id: obj.id,
+    appId: obj.appId,
     appSecret: plainSecret,
     endpointUrl: realEndpoint,
-    isActive: final.isActive,
-    createdAt: final.createdAt instanceof Date ? final.createdAt.toISOString() : final.createdAt,
+    isActive: obj.isActive,
+    createdAt: obj.createdAt instanceof Date ? obj.createdAt.toISOString() : obj.createdAt,
   });
 }
 
@@ -184,7 +175,7 @@ export async function getObject(
     appId: obj.appId,
     isActive: obj.isActive,
     endpointUrl: endpointUrlFor(obj.appId),
-    appSecretMask: maskSecret(obj.appId), // mask appId as proxy; real secret not stored plaintext
+    appSecretMask: "agnr_secret_****", // static mask — real secret not stored plaintext, only bcrypt hash
     lastUsedAt:
       obj.lastUsedAt instanceof Date
         ? obj.lastUsedAt.toISOString()
