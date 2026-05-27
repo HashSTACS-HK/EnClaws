@@ -462,4 +462,25 @@ CREATE TRIGGER IF NOT EXISTS trg_cs_sessions_updated_at AFTER UPDATE ON cs_sessi
   FOR EACH ROW BEGIN
     UPDATE cs_sessions SET updated_at = datetime('now') WHERE id = NEW.id;
   END;
+
+-- 18. CS API Objects (upper-app credentials, Agenora S2)
+CREATE TABLE IF NOT EXISTS cs_api_objects (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  agent_id TEXT NOT NULL,
+  app_id TEXT NOT NULL UNIQUE,
+  app_secret_hash TEXT NOT NULL,
+  rotating_from_hash TEXT,
+  rotating_until TEXT,
+  endpoint_url TEXT NOT NULL,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  last_used_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS cs_api_objects_tenant_idx ON cs_api_objects(tenant_id);
+CREATE INDEX IF NOT EXISTS cs_api_objects_app_id_idx ON cs_api_objects(app_id);
 `;

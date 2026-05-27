@@ -437,6 +437,29 @@ export interface SysToolsConfigRow {
 }
 
 // ============================================================
+// CS API Object (upper-app credentials, Agenora S2)
+// ============================================================
+
+export type MessageSource = "agenora-ai" | "upper-app-relay";
+
+export interface CsApiObject {
+  id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  agentId: string;
+  appId: string;
+  appSecretHash: string;
+  rotatingFromHash?: string;
+  rotatingUntil?: Date;
+  endpointUrl: string;
+  isActive: boolean;
+  lastUsedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================
 // RBAC Permission Definitions
 // ============================================================
 

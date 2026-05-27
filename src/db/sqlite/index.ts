@@ -78,6 +78,7 @@ export function initSqliteDb(url: string): void {
     }
   };
   addColumnIfMissing("plans", "max_cron_jobs", "INTEGER NOT NULL DEFAULT 5");
+  addColumnIfMissing("cs_messages", "source", "TEXT NOT NULL DEFAULT 'agenora-ai' CHECK (source IN ('agenora-ai','upper-app-relay'))");
 
   // Re-seed plan rows so freshly-added column picks up correct per-plan values.
   // Use INSERT OR REPLACE against the primary key.
