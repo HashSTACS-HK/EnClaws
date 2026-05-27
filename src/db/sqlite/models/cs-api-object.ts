@@ -13,6 +13,25 @@ import type { CreateCsApiObjectInput } from "../../models/cs-api-object.js";
 
 // ── Row mapper ────────────────────────────────────────────────────────────────
 
+/**
+ * Parse a SQLite datetime string as UTC.
+ *
+ * SQLite stores datetimes as "YYYY-MM-DD HH:MM:SS[.SSS]" without a timezone
+ * suffix. We always store UTC values (via `datetime('now')` / `toISOString()`),
+ * so we must re-attach the Z suffix before parsing — otherwise Node.js on
+ * systems with a non-UTC local timezone will misinterpret the value.
+ *
+ * SQLite 存储的日期字符串格式为 "YYYY-MM-DD HH:MM:SS"，没有时区后缀。
+ * 我们统一存储 UTC 时间，解析时需补回 Z 以保证正确性。
+ */
+function parseSqliteDate(val: unknown): Date {
+  const s = val as string;
+  // Already has timezone info (e.g. contains + or Z) — parse as-is
+  if (s.includes("Z") || s.includes("+")) { return new Date(s); }
+  // Convert "YYYY-MM-DD HH:MM:SS[.SSS]" → "YYYY-MM-DDTHH:MM:SS[.SSS]Z"
+  return new Date(s.replace(" ", "T") + "Z");
+}
+
 function rowToCsApiObject(row: Record<string, unknown>): CsApiObject {
   return {
     id: row.id as string,
@@ -23,12 +42,12 @@ function rowToCsApiObject(row: Record<string, unknown>): CsApiObject {
     appId: row.app_id as string,
     appSecretHash: row.app_secret_hash as string,
     rotatingFromHash: (row.rotating_from_hash as string | null) ?? undefined,
-    rotatingUntil: row.rotating_until ? new Date(row.rotating_until as string) : undefined,
+    rotatingUntil: row.rotating_until ? parseSqliteDate(row.rotating_until) : undefined,
     endpointUrl: row.endpoint_url as string,
     isActive: Boolean(row.is_active),
-    lastUsedAt: row.last_used_at ? new Date(row.last_used_at as string) : undefined,
-    createdAt: new Date(row.created_at as string),
-    updatedAt: new Date(row.updated_at as string),
+    lastUsedAt: row.last_used_at ? parseSqliteDate(row.last_used_at) : undefined,
+    createdAt: parseSqliteDate(row.created_at),
+    updatedAt: parseSqliteDate(row.updated_at),
   };
 }
 
