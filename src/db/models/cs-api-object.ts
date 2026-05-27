@@ -26,12 +26,12 @@ function rowToCsApiObject(row: Record<string, unknown>): CsApiObject {
     appId: row.app_id as string,
     appSecretHash: row.app_secret_hash as string,
     rotatingFromHash: (row.rotating_from_hash as string | null) ?? undefined,
-    rotatingUntil: row.rotating_until ? new Date(row.rotating_until as string) : undefined,
+    rotatingUntil: row.rotating_until ? (row.rotating_until as Date) : undefined,
     endpointUrl: row.endpoint_url as string,
     isActive: Boolean(row.is_active),
-    lastUsedAt: row.last_used_at ? new Date(row.last_used_at as string) : undefined,
-    createdAt: new Date(row.created_at as string),
-    updatedAt: new Date(row.updated_at as string),
+    lastUsedAt: row.last_used_at ? (row.last_used_at as Date) : undefined,
+    createdAt: row.created_at as Date,
+    updatedAt: row.updated_at as Date,
   };
 }
 
@@ -143,11 +143,12 @@ export async function updateCsApiObject(
 
 export async function rotateCsApiObjectSecret(
   id: string,
+  tenantId: string,
   newHash: string,
   rotatingUntil: Date,
 ): Promise<CsApiObject> {
   if (getDbType() === DB_SQLITE) {
-    return sqliteModel.rotateCsApiObjectSecret(id, newHash, rotatingUntil);
+    return sqliteModel.rotateCsApiObjectSecret(id, tenantId, newHash, rotatingUntil);
   }
   const r = await query(
     `UPDATE cs_api_objects
@@ -155,12 +156,14 @@ export async function rotateCsApiObjectSecret(
          app_secret_hash    = $1,
          rotating_until     = $2,
          updated_at         = NOW()
-     WHERE id = $3 RETURNING *`,
-    [newHash, rotatingUntil, id],
+     WHERE id = $3 AND tenant_id = $4 RETURNING *`,
+    [newHash, rotatingUntil, id, tenantId],
   );
+  if (!r.rows[0]) { throw new Error(`cs_api_object not found: ${id}`); }
   return rowToCsApiObject(r.rows[0]);
 }
 
+/** No tenantId scoping — caller guarantees id authority (looked up via getCsApiObjectByAppId which doesn't tenant-scope). */
 export async function clearExpiredRotation(id: string): Promise<void> {
   if (getDbType() === DB_SQLITE) {
     return sqliteModel.clearExpiredRotation(id);
@@ -184,6 +187,7 @@ export async function deleteCsApiObject(id: string, tenantId: string): Promise<b
   return (r.rowCount ?? 0) > 0;
 }
 
+/** No tenantId scoping — caller guarantees id authority (looked up via getCsApiObjectByAppId which doesn't tenant-scope). */
 export async function touchLastUsed(id: string): Promise<void> {
   if (getDbType() === DB_SQLITE) {
     return sqliteModel.touchLastUsed(id);

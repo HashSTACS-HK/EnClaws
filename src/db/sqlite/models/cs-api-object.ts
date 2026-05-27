@@ -94,25 +94,26 @@ export async function updateCsApiObject(
 
 export async function rotateCsApiObjectSecret(
   id: string,
+  tenantId: string,
   newHash: string,
   rotatingUntil: Date,
 ): Promise<CsApiObject> {
-  // Capture old hash first, then update (SQLite has no RETURNING for self-referential SET)
-  const old = sqliteQuery(`SELECT app_secret_hash FROM cs_api_objects WHERE id = ?`, [id]);
-  const oldHash = old.rows[0] ? (old.rows[0] as Record<string, unknown>).app_secret_hash as string : null;
-  sqliteQuery(
+  // Single atomic UPDATE … RETURNING (SQLite ≥ 3.35 supports RETURNING with self-referential SET)
+  const r = sqliteQuery(
     `UPDATE cs_api_objects
-     SET rotating_from_hash = ?,
+     SET rotating_from_hash = app_secret_hash,
          app_secret_hash    = ?,
          rotating_until     = ?,
          updated_at         = datetime('now')
-     WHERE id = ?`,
-    [oldHash, newHash, rotatingUntil.toISOString().replace("T", " ").replace("Z", ""), id],
+     WHERE id = ? AND tenant_id = ?
+     RETURNING *`,
+    [newHash, rotatingUntil.toISOString().replace("T", " ").replace("Z", ""), id, tenantId],
   );
-  const r = sqliteQuery(`SELECT * FROM cs_api_objects WHERE id = ?`, [id]);
+  if (!r.rows[0]) { throw new Error(`cs_api_object not found: ${id}`); }
   return rowToCsApiObject(r.rows[0]);
 }
 
+/** No tenantId scoping — caller guarantees id authority (looked up via getCsApiObjectByAppId which doesn't tenant-scope). */
 export async function clearExpiredRotation(id: string): Promise<void> {
   sqliteQuery(
     `UPDATE cs_api_objects
@@ -130,6 +131,7 @@ export async function deleteCsApiObject(id: string, tenantId: string): Promise<b
   return r.rowCount > 0;
 }
 
+/** No tenantId scoping — caller guarantees id authority (looked up via getCsApiObjectByAppId which doesn't tenant-scope). */
 export async function touchLastUsed(id: string): Promise<void> {
   sqliteQuery(
     `UPDATE cs_api_objects SET last_used_at = datetime('now') WHERE id = ?`,
