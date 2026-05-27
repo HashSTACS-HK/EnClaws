@@ -110,4 +110,11 @@ describe("app-secret auth", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) { expect(result.code).toBe("OBJECT_INACTIVE"); }
   });
+
+  it("returns MISSING_AUTH when Authorization header is absent", async () => {
+    const { tryAppSecretAuth } = await import("./app-secret.js");
+    const result = await tryAppSecretAuth(mockReq({}), "agnr_irrelevant");
+    expect(result.ok).toBe(false);
+    if (!result.ok) { expect(result.code).toBe("MISSING_AUTH"); }
+  });
 });
