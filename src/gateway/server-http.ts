@@ -50,6 +50,7 @@ import {
   resolveHookDeliver,
 } from "./hooks.js";
 import { handleAgentChatHttpRequest } from "./agent-chat-http.js";
+import { handleCsApiRequest } from "./cs-api-http.js";
 import { sendGatewayAuthFailure, setDefaultSecurityHeaders } from "./http-common.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
 import { handleOpenResponsesHttpRequest } from "./openresponses-http.js";
@@ -511,6 +512,10 @@ export function createGatewayHttpServer(opts: {
       // Agent Chat API — no auth, direct LLM proxy for tenant agents
       if (await handleAgentChatHttpRequest(req, res)) {
         return;
+      }
+      // CS API — API Object CRUD + session endpoints for Agenora S2 integration
+      if (req.url?.startsWith("/api/cs-api")) {
+        if (await handleCsApiRequest(req, res)) { return; }
       }
       if (openResponsesEnabled) {
         if (

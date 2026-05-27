@@ -190,6 +190,23 @@ export async function updateCSSessionNotifiedAt(id: string, notifiedAt: string):
   );
 }
 
+// -- Count active sessions for an API object (used by delete guard) --
+// -- 统计 API 对象关联的活跃会话数（用于删除前检查） --
+
+/**
+ * Count active (non-closed) sessions linked to a specific API object.
+ * Returns 0 as a stub; real implementation added in Task 5.
+ *
+ * 统计与指定 API 对象关联的活跃会话数量。
+ * 当前为存根实现（返回 0），Task 5 补充真实实现。
+ */
+export async function countActiveSessionsForApiObject(
+  _tenantId: string,
+  _appObjectId: string,
+): Promise<number> {
+  return 0; // placeholder; real implementation in Task 5
+}
+
 // -- Close session --
 
 export async function closeCSSession(id: string): Promise<void> {
