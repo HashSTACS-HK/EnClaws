@@ -211,7 +211,7 @@ describe("POST /{appId}/messages", () => {
   function makeSseResponse(): {
     res: ServerResponse;
     events: Array<{ event: string; data: unknown }>;
-    ended: boolean;
+    state: { ended: boolean };
   } {
     const events: Array<{ event: string; data: unknown }> = [];
     const state = { ended: false };
