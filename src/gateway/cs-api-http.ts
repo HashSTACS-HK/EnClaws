@@ -22,6 +22,11 @@ import {
   handleRelease,
   handleObserver,
 } from "./cs-api/runtime.js";
+import {
+  handleListSessions,
+  handleGetSession,
+  handleTranscript,
+} from "./cs-api/queries.js";
 import { sendError } from "./cs-api/http-helpers.js";
 
 const PREFIX = "/api/cs-api";
@@ -103,6 +108,30 @@ export async function handleCsApiRequest(
   const observerMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/messages\/observer$/);
   if (observerMatch && req.method === "POST") {
     await handleObserver(req, res, observerMatch[1], observerMatch[2]);
+    return true;
+  }
+
+  // ── §11.6 Query endpoints (GET) ─────────────────────────────────────────────
+
+  // GET /api/cs-api/{appId}/sessions
+  const listSessMatch = path.match(/^\/([^/]+)\/sessions$/);
+  if (listSessMatch && req.method === "GET") {
+    await handleListSessions(req, res, listSessMatch[1]);
+    return true;
+  }
+
+  // GET /api/cs-api/{appId}/sessions/{sessionId}/transcript
+  // IMPORTANT: transcript pattern MUST come before single-session pattern (more specific first)
+  const transcriptMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/transcript$/);
+  if (transcriptMatch && req.method === "GET") {
+    await handleTranscript(req, res, transcriptMatch[1], transcriptMatch[2]);
+    return true;
+  }
+
+  // GET /api/cs-api/{appId}/sessions/{sessionId}
+  const getSessMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)$/);
+  if (getSessMatch && req.method === "GET") {
+    await handleGetSession(req, res, getSessMatch[1], getSessMatch[2]);
     return true;
   }
 

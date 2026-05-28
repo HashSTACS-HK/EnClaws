@@ -554,6 +554,514 @@ export async function setSessionState(params: {
   return sess;
 }
 
+// ── CS-API query helpers (§11.6) ──────────────────────────────────────────────
+
+/**
+ * Encode a cursor from (updatedAt, id) for session list pagination.
+ * Cursor encodes { u: ISO string, i: id string }.
+ *
+ * 将 (updatedAt, id) 编码为 base64 cursor，用于会话列表分页。
+ */
+function encodeCursor(updatedAt: Date | string, id: string): string {
+  const iso = typeof updatedAt === "string" ? updatedAt : updatedAt.toISOString();
+  return Buffer.from(JSON.stringify({ u: iso, i: id })).toString("base64");
+}
+
+/**
+ * Decode a session list cursor.
+ * Returns null on parse failure.
+ *
+ * 解码会话列表 cursor，解析失败返回 null。
+ */
+function decodeSessionCursor(s: string): { updatedAt: string; id: string } | null {
+  try {
+    const obj = JSON.parse(Buffer.from(s, "base64").toString("utf8")) as { u?: unknown; i?: unknown };
+    if (typeof obj.u !== "string" || typeof obj.i !== "string") { return null; }
+    return { updatedAt: obj.u, id: obj.i };
+  } catch { return null; }
+}
+
+/**
+ * Encode a cursor from (createdAt, id) for transcript pagination.
+ *
+ * 将 (createdAt, id) 编码为 base64 cursor，用于消息流水分页。
+ */
+function encodeTranscriptCursor(createdAt: Date | string, id: string): string {
+  const iso = typeof createdAt === "string" ? createdAt : createdAt.toISOString();
+  return Buffer.from(JSON.stringify({ c: iso, i: id })).toString("base64");
+}
+
+/**
+ * Decode a transcript cursor.
+ *
+ * 解码消息流水 cursor。
+ */
+function decodeTranscriptCursor(s: string): { createdAt: string; id: string } | null {
+  try {
+    const obj = JSON.parse(Buffer.from(s, "base64").toString("utf8")) as { c?: unknown; i?: unknown };
+    if (typeof obj.c !== "string" || typeof obj.i !== "string") { return null; }
+    return { createdAt: obj.c, id: obj.i };
+  } catch { return null; }
+}
+
+export interface CsApiSessionSummary {
+  id: string;
+  state: string;
+  customerId: string | null;
+  channelId: string | null;
+  activeResponder: { type: string; party: string } | null;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  messageCount: number;
+  createdAt: string;
+  updatedAt: string;
+  participants?: string[];
+}
+
+export interface ListCsApiSessionsParams {
+  tenantId: string;
+  appObjectId: string;
+  cursor?: string;
+  limit?: number;
+  state?: "ai-handling" | "human-handling" | "closed";
+  customerId?: string;
+  updatedAfter?: string;
+}
+
+export interface ListCsApiTranscriptParams {
+  tenantId: string;
+  appObjectId: string;
+  sessionId: string;
+  cursor?: string;
+  limit?: number;
+  direction?: "before" | "after";
+}
+
+export interface CsApiMessage {
+  id: string;
+  role: string;
+  source: string;
+  content: string;
+  senderParty?: string;
+  toolCalls?: unknown;
+  createdAt: string;
+}
+
+/**
+ * Map a raw cs_sessions row to CsApiSessionSummary.
+ * Attaches lastMessageAt/lastMessagePreview/messageCount from aggregated fields.
+ *
+ * 将 cs_sessions 行映射为 CsApiSessionSummary（含聚合消息字段）。
+ */
+function rowToSessionSummary(
+  row: Record<string, unknown>,
+  meta: { lastMessageAt: string | null; lastMessagePreview: string | null; messageCount: number },
+): CsApiSessionSummary {
+  const parseJson = <T>(val: unknown, fallback: T): T => {
+    if (typeof val === "string") {
+      try { return JSON.parse(val) as T; } catch { return fallback; }
+    }
+    return (val as T) ?? fallback;
+  };
+
+  let sessionMeta: Record<string, unknown> = {};
+  if (typeof row.metadata === "string") {
+    try { sessionMeta = JSON.parse(row.metadata) as Record<string, unknown>; } catch { /* ignore */ }
+  } else if (row.metadata && typeof row.metadata === "object") {
+    sessionMeta = row.metadata as Record<string, unknown>;
+  }
+
+  const activeResponder = parseJson<{ type: string; party: string } | null>(
+    sessionMeta.activeResponder ?? null,
+    null,
+  );
+
+  const createdAt = typeof row.created_at === "string" ? row.created_at : (row.created_at as Date)?.toISOString?.() ?? "";
+  const updatedAt = typeof row.updated_at === "string" ? row.updated_at : (row.updated_at as Date)?.toISOString?.() ?? "";
+
+  return {
+    id: row.id as string,
+    state: row.state as string,
+    customerId: (row.visitor_id as string) ?? null,
+    channelId: (row.channel as string) ?? null,
+    activeResponder,
+    lastMessageAt: meta.lastMessageAt,
+    lastMessagePreview: meta.lastMessagePreview,
+    messageCount: meta.messageCount,
+    createdAt,
+    updatedAt,
+  };
+}
+
+/**
+ * List CS-API sessions for a tenant + appObjectId with cursor pagination.
+ * Supports optional filters: state, customerId, updatedAfter.
+ * Cursor encodes (updated_at DESC, id DESC) for stable ordering.
+ *
+ * 分页列出指定租户和 appObjectId 下的 CS-API 会话，支持 state / customerId / updatedAfter 过滤。
+ */
+export async function listCsApiSessions(
+  p: ListCsApiSessionsParams,
+): Promise<{ sessions: CsApiSessionSummary[]; nextCursor: string | null }> {
+  const limit = Math.min(p.limit ?? 20, 50);
+  const { tenantId, appObjectId, state, customerId, updatedAfter, cursor } = p;
+
+  const cursorDecoded = cursor ? decodeSessionCursor(cursor) : null;
+
+  if (getDbType() === DB_SQLITE) {
+    // Build WHERE conditions
+    const conditions: string[] = [
+      "s.tenant_id = ?",
+      "s.app_object_id = ?",
+    ];
+    const values: unknown[] = [tenantId, appObjectId];
+
+    if (state) { conditions.push("s.state = ?"); values.push(state); }
+    if (customerId) { conditions.push("s.visitor_id = ?"); values.push(customerId); }
+    if (updatedAfter) { conditions.push("s.updated_at > ?"); values.push(updatedAfter); }
+    if (cursorDecoded) {
+      conditions.push("(s.updated_at < ? OR (s.updated_at = ? AND s.id < ?))");
+      values.push(cursorDecoded.updatedAt, cursorDecoded.updatedAt, cursorDecoded.id);
+    }
+
+    // Fetch limit+1 to detect hasMore
+    const sql = `
+      SELECT s.*
+      FROM cs_sessions s
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY s.updated_at DESC, s.id DESC
+      LIMIT ?
+    `;
+    values.push(limit + 1);
+
+    const rows = sqliteQuery(sql, values).rows as Record<string, unknown>[];
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+    // For each session, get message count + last message
+    const sessions: CsApiSessionSummary[] = [];
+    for (const row of pageRows) {
+      const sessionId = row.id as string;
+      const cntResult = sqliteQuery(
+        "SELECT COUNT(*) as cnt FROM cs_messages WHERE session_id = ?",
+        [sessionId],
+      ).rows[0] as Record<string, unknown> | undefined;
+      const messageCount = Number(cntResult?.cnt ?? 0);
+
+      const lastMsgResult = sqliteQuery(
+        "SELECT content, created_at FROM cs_messages WHERE session_id = ? ORDER BY created_at DESC LIMIT 1",
+        [sessionId],
+      ).rows[0] as Record<string, unknown> | undefined;
+      const lastMessageAt = lastMsgResult?.created_at
+        ? (typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at : String(lastMsgResult.created_at))
+        : null;
+      const rawContent = lastMsgResult?.content as string | null ?? null;
+      const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
+
+      sessions.push(rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount }));
+    }
+
+    const nextCursor = hasMore && pageRows.length > 0
+      ? encodeCursor(pageRows[pageRows.length - 1].updated_at as string, pageRows[pageRows.length - 1].id as string)
+      : null;
+
+    return { sessions, nextCursor };
+  }
+
+  // PostgreSQL
+  const conditions: string[] = [
+    "s.tenant_id = $1",
+    "s.app_object_id = $2",
+  ];
+  const values: unknown[] = [tenantId, appObjectId];
+  let idx = 2;
+
+  if (state) { idx++; conditions.push(`s.state = $${idx}`); values.push(state); }
+  if (customerId) { idx++; conditions.push(`s.visitor_id = $${idx}`); values.push(customerId); }
+  if (updatedAfter) { idx++; conditions.push(`s.updated_at > $${idx}`); values.push(updatedAfter); }
+  if (cursorDecoded) {
+    idx++; const uIdx = idx;
+    idx++; const iIdx = idx;
+    conditions.push(`(s.updated_at < $${uIdx} OR (s.updated_at = $${uIdx} AND s.id < $${iIdx}))`);
+    values.push(cursorDecoded.updatedAt, cursorDecoded.id);
+  }
+
+  idx++;
+  const sql = `
+    SELECT
+      s.*,
+      COUNT(m.id)::int AS msg_count,
+      MAX(m.created_at) AS last_message_at,
+      (
+        SELECT content FROM cs_messages
+        WHERE session_id = s.id
+        ORDER BY created_at DESC LIMIT 1
+      ) AS last_message_content
+    FROM cs_sessions s
+    LEFT JOIN cs_messages m ON m.session_id = s.id
+    WHERE ${conditions.join(" AND ")}
+    GROUP BY s.id
+    ORDER BY s.updated_at DESC, s.id DESC
+    LIMIT $${idx}
+  `;
+  values.push(limit + 1);
+
+  const result = await query(sql, values);
+  const rows = result.rows as Record<string, unknown>[];
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+  const sessions: CsApiSessionSummary[] = pageRows.map((row) => {
+    const messageCount = Number(row.msg_count ?? 0);
+    const lastMessageAt = row.last_message_at
+      ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString() : String(row.last_message_at))
+      : null;
+    const rawContent = row.last_message_content as string | null ?? null;
+    const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
+    return rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount });
+  });
+
+  const nextCursor = hasMore && pageRows.length > 0
+    ? encodeCursor(
+        pageRows[pageRows.length - 1].updated_at as Date,
+        pageRows[pageRows.length - 1].id as string,
+      )
+    : null;
+
+  return { sessions, nextCursor };
+}
+
+/**
+ * Get a single CS-API session's metadata (no messages[]).
+ * Returns null if not found or not owned by appObjectId.
+ *
+ * 获取单条 CS-API 会话元数据（不含 messages 字段）。
+ */
+export async function getCsApiSessionMetadata(p: {
+  tenantId: string;
+  appObjectId: string;
+  sessionId: string;
+}): Promise<CsApiSessionSummary | null> {
+  const { tenantId, appObjectId, sessionId } = p;
+
+  if (getDbType() === DB_SQLITE) {
+    const r = sqliteQuery(
+      "SELECT * FROM cs_sessions WHERE id = ? AND tenant_id = ? AND app_object_id = ?",
+      [sessionId, tenantId, appObjectId],
+    );
+    if (r.rows.length === 0) { return null; }
+    const row = r.rows[0] as Record<string, unknown>;
+
+    const cntResult = sqliteQuery(
+      "SELECT COUNT(*) as cnt FROM cs_messages WHERE session_id = ?",
+      [sessionId],
+    ).rows[0] as Record<string, unknown> | undefined;
+    const messageCount = Number(cntResult?.cnt ?? 0);
+
+    const lastMsgResult = sqliteQuery(
+      "SELECT content, created_at FROM cs_messages WHERE session_id = ? ORDER BY created_at DESC LIMIT 1",
+      [sessionId],
+    ).rows[0] as Record<string, unknown> | undefined;
+    const lastMessageAt = lastMsgResult?.created_at
+      ? (typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at : String(lastMsgResult.created_at))
+      : null;
+    const rawContent = lastMsgResult?.content as string | null ?? null;
+    const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
+
+    return rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount });
+  }
+
+  const r = await query(
+    `SELECT
+       s.*,
+       COUNT(m.id)::int AS msg_count,
+       MAX(m.created_at) AS last_message_at,
+       (SELECT content FROM cs_messages WHERE session_id = s.id ORDER BY created_at DESC LIMIT 1) AS last_message_content
+     FROM cs_sessions s
+     LEFT JOIN cs_messages m ON m.session_id = s.id
+     WHERE s.id = $1 AND s.tenant_id = $2 AND s.app_object_id = $3
+     GROUP BY s.id`,
+    [sessionId, tenantId, appObjectId],
+  );
+  if (r.rows.length === 0) { return null; }
+  const row = r.rows[0] as Record<string, unknown>;
+  const messageCount = Number(row.msg_count ?? 0);
+  const lastMessageAt = row.last_message_at
+    ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString() : String(row.last_message_at))
+    : null;
+  const rawContent = row.last_message_content as string | null ?? null;
+  const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
+  return rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount });
+}
+
+/**
+ * List messages for a session (transcript) with cursor pagination.
+ * direction="before" → older messages (default, for scroll-up history)
+ * direction="after"  → newer messages
+ *
+ * 分页列出指定会话的消息流水（transcript），支持 before/after 两种方向。
+ */
+export async function listCsApiTranscript(
+  p: ListCsApiTranscriptParams,
+): Promise<{ messages: CsApiMessage[]; nextCursor: string | null; hasMore: boolean }> {
+  const limit = Math.min(p.limit ?? 30, 100);
+  const direction = p.direction ?? "before";
+  const { tenantId, appObjectId, sessionId, cursor } = p;
+
+  const cursorDecoded = cursor ? decodeTranscriptCursor(cursor) : null;
+
+  // Verify session ownership before loading messages
+  if (getDbType() === DB_SQLITE) {
+    const sessionCheck = sqliteQuery(
+      "SELECT id FROM cs_sessions WHERE id = ? AND tenant_id = ? AND app_object_id = ?",
+      [sessionId, tenantId, appObjectId],
+    );
+    if (sessionCheck.rows.length === 0) {
+      return { messages: [], nextCursor: null, hasMore: false };
+    }
+  } else {
+    const sessionCheck = await query(
+      "SELECT id FROM cs_sessions WHERE id = $1 AND tenant_id = $2 AND app_object_id = $3",
+      [sessionId, tenantId, appObjectId],
+    );
+    if (sessionCheck.rows.length === 0) {
+      return { messages: [], nextCursor: null, hasMore: false };
+    }
+  }
+
+  if (getDbType() === DB_SQLITE) {
+    const conditions: string[] = ["session_id = ?"];
+    const values: unknown[] = [sessionId];
+
+    if (cursorDecoded) {
+      if (direction === "before") {
+        conditions.push("(created_at < ? OR (created_at = ? AND id < ?))");
+        values.push(cursorDecoded.createdAt, cursorDecoded.createdAt, cursorDecoded.id);
+      } else {
+        conditions.push("(created_at > ? OR (created_at = ? AND id > ?))");
+        values.push(cursorDecoded.createdAt, cursorDecoded.createdAt, cursorDecoded.id);
+      }
+    }
+
+    const orderDir = direction === "before" ? "DESC" : "ASC";
+    const sql = `
+      SELECT id, role, source, content, source_chunks, created_at
+      FROM cs_messages
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY created_at ${orderDir}, id ${orderDir}
+      LIMIT ?
+    `;
+    values.push(limit + 1);
+
+    const rows = sqliteQuery(sql, values).rows as Record<string, unknown>[];
+    const hasMore = rows.length > limit;
+    let pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+    // For "before" direction: re-order ascending so caller gets oldest-first
+    if (direction === "before") {
+      pageRows = pageRows.toReversed();
+    }
+
+    const messages: CsApiMessage[] = pageRows.map((row) => {
+      const sourceChunks = (() => {
+        try { return typeof row.source_chunks === "string" ? JSON.parse(row.source_chunks) as unknown[] : null; } catch { return null; }
+      })();
+      const senderParty = Array.isArray(sourceChunks) && sourceChunks.length > 0
+        ? (sourceChunks[0] as Record<string, unknown>)?.senderParty as string | undefined
+        : undefined;
+      return {
+        id: row.id as string,
+        role: row.role as string,
+        source: (row.source as string) ?? "agenora-ai",
+        content: row.content as string,
+        ...(senderParty ? { senderParty } : {}),
+        createdAt: typeof row.created_at === "string" ? row.created_at : String(row.created_at),
+      };
+    });
+
+    // nextCursor: points to the "edge" message for next page
+    let nextCursor: string | null = null;
+    if (hasMore && pageRows.length > 0) {
+      const edgeRow = direction === "before" ? pageRows[0] : pageRows[pageRows.length - 1];
+      nextCursor = encodeTranscriptCursor(
+        edgeRow.created_at as string,
+        edgeRow.id as string,
+      );
+    }
+
+    return { messages, nextCursor, hasMore };
+  }
+
+  // PostgreSQL
+  const conditions: string[] = ["session_id = $1"];
+  const values: unknown[] = [sessionId];
+  let idx = 1;
+
+  if (cursorDecoded) {
+    if (direction === "before") {
+      idx++; const cIdx = idx;
+      idx++; const iIdx = idx;
+      conditions.push(`(created_at < $${cIdx} OR (created_at = $${cIdx} AND id < $${iIdx}))`);
+      values.push(cursorDecoded.createdAt, cursorDecoded.id);
+    } else {
+      idx++; const cIdx = idx;
+      idx++; const iIdx = idx;
+      conditions.push(`(created_at > $${cIdx} OR (created_at = $${cIdx} AND id > $${iIdx}))`);
+      values.push(cursorDecoded.createdAt, cursorDecoded.id);
+    }
+  }
+
+  idx++;
+  const orderDir = direction === "before" ? "DESC" : "ASC";
+  const sql = `
+    SELECT id, role, source, content, source_chunks, created_at
+    FROM cs_messages
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY created_at ${orderDir}, id ${orderDir}
+    LIMIT $${idx}
+  `;
+  values.push(limit + 1);
+
+  const result = await query(sql, values);
+  const rows = result.rows as Record<string, unknown>[];
+  const hasMore = rows.length > limit;
+  let pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+  if (direction === "before") {
+    pageRows = pageRows.toReversed();
+  }
+
+  const messages: CsApiMessage[] = pageRows.map((row) => {
+    const sourceChunks = (() => {
+      if (typeof row.source_chunks === "string") {
+        try { return JSON.parse(row.source_chunks) as unknown[]; } catch { return null; }
+      }
+      return Array.isArray(row.source_chunks) ? row.source_chunks as unknown[] : null;
+    })();
+    const senderParty = Array.isArray(sourceChunks) && sourceChunks.length > 0
+      ? (sourceChunks[0] as Record<string, unknown>)?.senderParty as string | undefined
+      : undefined;
+    return {
+      id: row.id as string,
+      role: row.role as string,
+      source: (row.source as string) ?? "agenora-ai",
+      content: row.content as string,
+      ...(senderParty ? { senderParty } : {}),
+      createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
+    };
+  });
+
+  let nextCursor: string | null = null;
+  if (hasMore && messages.length > 0) {
+    // For "before": edge is the oldest (first after reversal), cursor points caller further back
+    // For "after": edge is the newest (last), cursor points caller forward
+    const edgeMsg = direction === "before" ? messages[0] : messages[messages.length - 1];
+    nextCursor = encodeTranscriptCursor(edgeMsg.createdAt, edgeMsg.id);
+  }
+
+  return { messages, nextCursor, hasMore };
+}
+
 // -- Close session --
 
 export async function closeCSSession(id: string): Promise<void> {
