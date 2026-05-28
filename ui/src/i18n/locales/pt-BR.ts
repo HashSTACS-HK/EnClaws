@@ -1170,12 +1170,12 @@ export const pt_BR: TranslationMap = {
     removeModelInUse: "Não é possível remover modelo(s) em uso pelo(s) agent(s): {agents}",
     needOneModel: "Adicione pelo menos um modelo",
     modelIdRequired: "Por favor, insira o ID do modelo",
-    displayNameRequired: "Por favor, insira o nome de exibicao",
+    displayNameRequired: "Por favor, insira o nome de exibição",
     duplicateModelId: "O ID do modelo já existe",
     authConfigured: "configurado",
     apiKeyPlaceholder: "Digite a chave API",
     modelIdPlaceholder: "Digite o ID do modelo",
-    displayNamePlaceholder: "Digite o nome de exibicao",
+    displayNamePlaceholder: "Digite o nome de exibição",
   },
   cs: {
     apiMode: {
