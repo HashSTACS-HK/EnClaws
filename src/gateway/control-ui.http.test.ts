@@ -113,10 +113,14 @@ describe("handleControlUiHttpRequest", () => {
           },
         );
         expect(handled).toBe(true);
-        expect(setHeader).toHaveBeenCalledWith("X-Frame-Options", "DENY");
+        // X-Frame-Options intentionally omitted — CSP frame-ancestors allowlist supersedes it
+        // (modern browsers honor CSP frame-ancestors over X-Frame-Options when both present).
+        const xfo = setHeader.mock.calls.find((call) => call[0] === "X-Frame-Options");
+        expect(xfo).toBeUndefined();
         const csp = setHeader.mock.calls.find((call) => call[0] === "Content-Security-Policy")?.[1];
         expect(typeof csp).toBe("string");
-        expect(String(csp)).toContain("frame-ancestors 'none'");
+        expect(String(csp)).toContain("frame-ancestors 'self'");
+        expect(String(csp)).toContain("https://jiumi-demo.enclaws.com");
         expect(String(csp)).toContain("script-src 'self'");
         expect(String(csp)).not.toContain("script-src 'self' 'unsafe-inline'");
       },

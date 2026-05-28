@@ -100,7 +100,10 @@ type ControlUiAvatarMeta = {
 };
 
 function applyControlUiSecurityHeaders(res: ServerResponse) {
-  res.setHeader("X-Frame-Options", "DENY");
+  // CSP frame-ancestors is the modern, more granular replacement for X-Frame-Options.
+  // We intentionally omit X-Frame-Options so the per-origin allowlist in CSP takes effect
+  // for upstream apps (e.g. jiumi-demo) to iframe-embed agenora control UI.
+  // 故意省略 X-Frame-Options，让 CSP frame-ancestors 白名单生效，支持 jiumi 等上层 iframe 嵌入。
   res.setHeader("Content-Security-Policy", buildControlUiCspHeader());
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "no-referrer");
