@@ -39,10 +39,13 @@ function generateSecret(): string {
 
 /**
  * Derive the public endpoint URL for a given appId.
- * 根据 appId 推导 endpoint URL。
+ * Priority: AGENORA_PUBLIC_URL (explicit) > ENCLAWS_GATEWAY_PORT (env) > 19001 (dev default).
+ * 根据 appId 推导 endpoint URL：优先读 AGENORA_PUBLIC_URL，回退到本地 gateway 端口。
  */
 function endpointUrlFor(appId: string): string {
-  const base = process.env.AGENORA_PUBLIC_URL ?? "http://localhost:18789";
+  const base =
+    process.env.AGENORA_PUBLIC_URL ??
+    `http://localhost:${process.env.ENCLAWS_GATEWAY_PORT ?? "19001"}`;
   return `${base}/api/cs-api/${appId}`;
 }
 
