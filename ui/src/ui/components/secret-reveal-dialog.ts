@@ -175,7 +175,7 @@ export class SecretRevealDialog extends LitElement {
           </div>
 
           <div class="footer">
-            <button class="btn-done" @click=${this._close}>I've Saved It</button>
+            <button class="btn-done" @click=${() => this._close()}>I've Saved It</button>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ export class SecretRevealDialog extends LitElement {
  */
 export function showSecretReveal(opts: SecretRevealOptions): Promise<void> {
   return new Promise((resolve) => {
-    const el = document.createElement("secret-reveal-dialog") as SecretRevealDialog;
+    const el = document.createElement("secret-reveal-dialog");
     el.appId = opts.appId;
     el.appSecret = opts.appSecret;
     el.endpointUrl = opts.endpointUrl;

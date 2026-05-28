@@ -59,7 +59,7 @@ function resolveHttpBase(): string {
  * Attach the current JWT as Authorization: Bearer <token>.
  * 附加 JWT Bearer 认证头。
  */
-function authHeaders(): HeadersInit {
+function authHeaders(): Record<string, string> {
   const token = getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
@@ -232,6 +232,7 @@ export class CsApiModeView extends LitElement {
 
   @state() private _showCreate = false;
   @state() private _submitting = false;
+  @state() private _busyId: string | null = null;
 
   // Create form fields
   @state() private _createName = "";
@@ -345,7 +346,8 @@ export class CsApiModeView extends LitElement {
 
   // ── Regenerate secret ───────────────────────────────────────────────────────
 
-  private async _regenerateSecret(obj: ApiObject) {
+  private async _handleRegenerate(obj: ApiObject) {
+    if (this._busyId !== null) { return; }
     const confirmed = await showConfirm({
       title: t("cs.apiMode.regenerate.confirmTitle"),
       message: t("cs.apiMode.regenerate.confirmMessage"),
@@ -354,6 +356,7 @@ export class CsApiModeView extends LitElement {
     });
     if (!confirmed) { return; }
 
+    this._busyId = obj.id;
     this._error = "";
     try {
       const res = await apiFetch(`/api/cs-api/objects/${encodeURIComponent(obj.id)}/regenerate-secret`, {
@@ -378,12 +381,15 @@ export class CsApiModeView extends LitElement {
       await this._fetchObjects();
     } catch (err) {
       this._error = err instanceof Error ? err.message : t("cs.apiMode.regenerate.error");
+    } finally {
+      this._busyId = null;
     }
   }
 
   // ── Delete ──────────────────────────────────────────────────────────────────
 
-  private async _delete(obj: ApiObject) {
+  private async _handleDelete(obj: ApiObject) {
+    if (this._busyId !== null) { return; }
     const confirmed = await showConfirm({
       title: t("cs.apiMode.delete.confirmTitle"),
       message: t("cs.apiMode.delete.confirmMessage", { name: obj.name }),
@@ -392,6 +398,7 @@ export class CsApiModeView extends LitElement {
     });
     if (!confirmed) { return; }
 
+    this._busyId = obj.id;
     this._error = "";
     try {
       const res = await apiFetch(`/api/cs-api/objects/${encodeURIComponent(obj.id)}`, {
@@ -410,6 +417,8 @@ export class CsApiModeView extends LitElement {
       if (!this._error) {
         this._error = err instanceof Error ? err.message : t("cs.apiMode.delete.error");
       }
+    } finally {
+      this._busyId = null;
     }
   }
 
@@ -466,12 +475,12 @@ export class CsApiModeView extends LitElement {
           <button
             class="btn btn-primary"
             ?disabled=${this._submitting}
-            @click=${this._submitCreate}
+            @click=${() => this._submitCreate()}
           >${this._submitting ? t("cs.apiMode.create.submitting") : t("cs.apiMode.create.submitBtn")}</button>
           <button
             class="btn btn-ghost"
             ?disabled=${this._submitting}
-            @click=${this._cancelCreate}
+            @click=${() => this._cancelCreate()}
           >${t("cs.apiMode.create.cancelBtn")}</button>
         </div>
       </div>
@@ -525,11 +534,13 @@ export class CsApiModeView extends LitElement {
                   <div class="cell-actions">
                     <button
                       class="btn btn-ghost"
-                      @click=${() => this._regenerateSecret(obj)}
+                      ?disabled=${this._busyId !== null}
+                      @click=${() => this._handleRegenerate(obj)}
                     >${t("cs.apiMode.table.regenerateBtn")}</button>
                     <button
                       class="btn btn-danger-ghost"
-                      @click=${() => this._delete(obj)}
+                      ?disabled=${this._busyId !== null}
+                      @click=${() => this._handleDelete(obj)}
                     >${t("cs.apiMode.table.deleteBtn")}</button>
                   </div>
                 </td>
