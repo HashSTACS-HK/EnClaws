@@ -26,7 +26,7 @@ export interface SqliteQueryResult<T = Record<string, unknown>> {
  * Automatically creates the database file and schema if they don't exist.
  */
 export function initSqliteDb(url: string): void {
-  if (db) return;
+  if (db) {return;}
 
   // Parse sqlite:///path/to/data.db → /path/to/data.db
   let dbPath: string;
@@ -79,6 +79,7 @@ export function initSqliteDb(url: string): void {
   };
   addColumnIfMissing("plans", "max_cron_jobs", "INTEGER NOT NULL DEFAULT 5");
   addColumnIfMissing("cs_messages", "source", "TEXT NOT NULL DEFAULT 'agenora-ai' CHECK (source IN ('agenora-ai','upper-app-relay'))");
+  addColumnIfMissing("cs_sessions", "app_object_id", "TEXT REFERENCES cs_api_objects(id) ON DELETE SET NULL");
 
   // Re-seed plan rows so freshly-added column picks up correct per-plan values.
   // Use INSERT OR REPLACE against the primary key.
@@ -148,10 +149,10 @@ export function sqliteQuery<T = Record<string, unknown>>(
 
   // Convert boolean values to integers for SQLite
   const adaptedParams = params.map((v) => {
-    if (v === true) return 1;
-    if (v === false) return 0;
-    if (v instanceof Date) return v.toISOString().replace("T", " ").replace("Z", "");
-    if (v === undefined) return null;
+    if (v === true) {return 1;}
+    if (v === false) {return 0;}
+    if (v instanceof Date) {return v.toISOString().replace("T", " ").replace("Z", "");}
+    if (v === undefined) {return null;}
     return v;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any[];
@@ -253,7 +254,7 @@ export function sqliteQuery<T = Record<string, unknown>>(
  * 一处修改，全局所有表（含 CS 模块）自动继承。
  */
 function adaptRow(row: unknown): unknown {
-  if (!row || typeof row !== "object") return row;
+  if (!row || typeof row !== "object") {return row;}
   const r = row as Record<string, unknown>;
   const adapted: Record<string, unknown> = {};
 

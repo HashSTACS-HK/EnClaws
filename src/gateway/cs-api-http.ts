@@ -16,6 +16,12 @@ import {
   regenerateSecret,
   deleteObject,
 } from "./cs-api/objects.js";
+import {
+  handleMessages,
+  handleHandoff,
+  handleRelease,
+  handleObserver,
+} from "./cs-api/runtime.js";
 import { sendError } from "./cs-api/http-helpers.js";
 
 const PREFIX = "/api/cs-api";
@@ -67,6 +73,36 @@ export async function handleCsApiRequest(
   const regenMatch = path.match(/^\/objects\/([\w-]+)\/regenerate-secret$/);
   if (regenMatch && req.method === "POST") {
     await regenerateSecret(req, res, regenMatch[1]);
+    return true;
+  }
+
+  // ── Runtime endpoints (Bearer appSecret auth) ───────────────────────────────
+
+  // POST /api/cs-api/{appId}/messages
+  const msgMatch = path.match(/^\/([^/]+)\/messages$/);
+  if (msgMatch && req.method === "POST") {
+    await handleMessages(req, res, msgMatch[1]);
+    return true;
+  }
+
+  // POST /api/cs-api/{appId}/sessions/{sessionId}/handoff-to-human
+  const handoffMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/handoff-to-human$/);
+  if (handoffMatch && req.method === "POST") {
+    await handleHandoff(req, res, handoffMatch[1], handoffMatch[2]);
+    return true;
+  }
+
+  // POST /api/cs-api/{appId}/sessions/{sessionId}/release-to-ai
+  const releaseMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/release-to-ai$/);
+  if (releaseMatch && req.method === "POST") {
+    await handleRelease(req, res, releaseMatch[1], releaseMatch[2]);
+    return true;
+  }
+
+  // POST /api/cs-api/{appId}/sessions/{sessionId}/messages/observer
+  const observerMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/messages\/observer$/);
+  if (observerMatch && req.method === "POST") {
+    await handleObserver(req, res, observerMatch[1], observerMatch[2]);
     return true;
   }
 

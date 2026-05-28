@@ -8,6 +8,47 @@ import { query, getDbType, DB_SQLITE } from "../index.js";
 import { sqliteQuery } from "../sqlite/index.js";
 import type { CSSession, CSSessionState } from "../../customer-service/types.js";
 
+// ── CS-API session types (Agenora S2 jiumi) ─────────────────────────────────
+
+/**
+ * State values for sessions created via the CS API (different from legacy widget states).
+ *
+ * CS API 会话状态，与旧版 widget 状态独立。
+ */
+export type CsApiSessionState = "ai-handling" | "human-handling" | "closed";
+
+/**
+ * Active responder shape for handoff/release operations.
+ *
+ * 接管/释放操作中的响应方信息。
+ */
+export interface CsApiActiveResponder {
+  type: "human";
+  party: string;
+}
+
+/**
+ * Minimal CS-API session shape returned by findOrCreateCsApiSession.
+ * Includes message history for agent context.
+ *
+ * findOrCreateCsApiSession 返回的最小会话结构，含消息历史供 agent 使用。
+ */
+export interface CsApiSession {
+  id: string;
+  tenantId: string;
+  customerId: string;
+  appObjectId: string | null;
+  agentId: string;
+  state: CsApiSessionState;
+  channel: string;
+  activeResponder: CsApiActiveResponder | null;
+  metadata: Record<string, unknown>;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  /** Message history for agent context (chronological). */
+  messages: Array<{ role: string; content: string }>;
+}
+
 // -- Row mapper --
 
 function rowToSession(row: Record<string, unknown>): CSSession {
@@ -69,7 +110,7 @@ export async function createCSSession(params: {
 export async function getCSSession(id: string): Promise<CSSession | null> {
   if (getDbType() === DB_SQLITE) {
     const result = sqliteQuery("SELECT * FROM cs_sessions WHERE id = ?", [id]);
-    return result.rows.length > 0 ? rowToSession(result.rows[0] as Record<string, unknown>) : null;
+    return result.rows.length > 0 ? rowToSession(result.rows[0]) : null;
   }
   const result = await query("SELECT * FROM cs_sessions WHERE id = $1", [id]);
   return result.rows.length > 0 ? rowToSession(result.rows[0]) : null;
@@ -86,7 +127,7 @@ export async function findActiveCSSession(
       "SELECT * FROM cs_sessions WHERE tenant_id = ? AND visitor_id = ? AND closed_at IS NULL ORDER BY created_at DESC LIMIT 1",
       [tenantId, visitorId],
     );
-    return result.rows.length > 0 ? rowToSession(result.rows[0] as Record<string, unknown>) : null;
+    return result.rows.length > 0 ? rowToSession(result.rows[0]) : null;
   }
   const result = await query(
     "SELECT * FROM cs_sessions WHERE tenant_id = $1 AND visitor_id = $2 AND closed_at IS NULL ORDER BY created_at DESC LIMIT 1",
@@ -123,7 +164,7 @@ export async function updateCSSessionMeta(
   if (getDbType() === DB_SQLITE) {
     if (updates.tags) { sets.push("tags = ?"); values.push(JSON.stringify(updates.tags)); }
     if (updates.identityAnchors) { sets.push("identity_anchors = ?"); values.push(JSON.stringify(updates.identityAnchors)); }
-    if (sets.length === 0) return;
+    if (sets.length === 0) {return;}
     sets.push("updated_at = ?");
     values.push(new Date().toISOString());
     values.push(id);
@@ -134,7 +175,7 @@ export async function updateCSSessionMeta(
   let idx = 0;
   if (updates.tags) { idx++; sets.push(`tags = $${idx}`); values.push(JSON.stringify(updates.tags)); }
   if (updates.identityAnchors) { idx++; sets.push(`identity_anchors = $${idx}`); values.push(JSON.stringify(updates.identityAnchors)); }
-  if (sets.length === 0) return;
+  if (sets.length === 0) {return;}
   sets.push("updated_at = NOW()");
   idx++;
   values.push(id);
@@ -194,17 +235,323 @@ export async function updateCSSessionNotifiedAt(id: string, notifiedAt: string):
 // -- 统计 API 对象关联的活跃会话数（用于删除前检查） --
 
 /**
- * Count active (non-closed) sessions linked to a specific API object.
- * Returns 0 as a stub; real implementation added in Task 5.
+ * Count active sessions linked to a specific CS API object.
+ * "Active" = state IN ('ai-handling', 'human-handling').
  *
- * 统计与指定 API 对象关联的活跃会话数量。
- * 当前为存根实现（返回 0），Task 5 补充真实实现。
+ * 统计与指定 API 对象关联的活跃会话数量（state 为 ai-handling 或 human-handling）。
  */
 export async function countActiveSessionsForApiObject(
-  _tenantId: string,
-  _appObjectId: string,
+  tenantId: string,
+  appObjectId: string,
 ): Promise<number> {
-  return 0; // placeholder; real implementation in Task 5
+  if (getDbType() === DB_SQLITE) {
+    const result = sqliteQuery(
+      `SELECT COUNT(*) as cnt FROM cs_sessions
+       WHERE tenant_id = ? AND app_object_id = ?
+         AND state IN ('ai-handling', 'human-handling')`,
+      [tenantId, appObjectId],
+    );
+    const row = result.rows[0] as Record<string, unknown> | undefined;
+    return Number(row?.cnt ?? 0);
+  }
+  const result = await query(
+    `SELECT COUNT(*)::int AS cnt FROM cs_sessions
+     WHERE tenant_id = $1 AND app_object_id = $2
+       AND state IN ('ai-handling', 'human-handling')`,
+    [tenantId, appObjectId],
+  );
+  return Number(result.rows[0]?.cnt ?? 0);
+}
+
+// ── CS-API session helpers (Agenora S2 jiumi) ────────────────────────────────
+
+/**
+ * Row mapper for CS-API sessions (includes app_object_id, active_responder).
+ *
+ * CS-API 会话行映射器（含 app_object_id 和 active_responder）。
+ */
+function rowToCsApiSession(row: Record<string, unknown>): CsApiSession {
+  const parseJson = <T>(val: unknown, fallback: T): T => {
+    if (typeof val === "string") {
+      try { return JSON.parse(val) as T; } catch { return fallback; }
+    }
+    return (val as T) ?? fallback;
+  };
+
+  return {
+    id: row.id as string,
+    tenantId: row.tenant_id as string,
+    customerId: (row.visitor_id as string) ?? "",
+    appObjectId: (row.app_object_id as string | null) ?? null,
+    agentId: (row.metadata_agent_id as string) ?? "",
+    state: (row.state as CsApiSessionState) ?? "ai-handling",
+    channel: (row.channel as string) ?? "cs-api",
+    activeResponder: parseJson<CsApiActiveResponder | null>(row.metadata_active_responder, null),
+    metadata: parseJson<Record<string, unknown>>(row.metadata, {}),
+    createdAt: (row.created_at as Date | string),
+    updatedAt: (row.updated_at as Date | string),
+    messages: [],
+  };
+}
+
+/**
+ * Find or create a CS-API session for a customer/app-object pair.
+ *
+ * Lookup priority:
+ *   1. `requestedSessionId` provided → return it (if found, any state)
+ *   2. Existing session for (tenantId, customerId, appObjectId) with active state → return it
+ *   3. Create new session
+ *
+ * 查找或创建 CS-API 会话，附带消息历史（供 agent 使用）。
+ */
+export async function findOrCreateCsApiSession(params: {
+  tenantId: string;
+  appObjectId: string;
+  agentId: string;
+  customerId: string;
+  channelId?: string;
+  requestedSessionId?: string;
+}): Promise<CsApiSession> {
+  const { tenantId, appObjectId, agentId, customerId, channelId, requestedSessionId } = params;
+  const channel = channelId ?? "cs-api";
+
+  // Helper: load messages for a session id
+  async function loadMessages(sessionId: string): Promise<Array<{ role: string; content: string }>> {
+    if (getDbType() === DB_SQLITE) {
+      const r = sqliteQuery(
+        "SELECT role, content FROM cs_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT 100",
+        [sessionId],
+      );
+      return r.rows.map((row) => {
+        const r2 = row;
+        return { role: r2.role as string, content: r2.content as string };
+      });
+    }
+    const r = await query(
+      "SELECT role, content FROM cs_messages WHERE session_id = $1 ORDER BY created_at ASC LIMIT 100",
+      [sessionId],
+    );
+    return r.rows.map((row) => ({ role: row.role as string, content: row.content as string }));
+  }
+
+  // Helper: build metadata JSON with agentId embedded
+  function buildMetadata(extra?: Record<string, unknown>): string {
+    return JSON.stringify({ agentId, ...extra });
+  }
+
+  // 1. Requested session id lookup
+  if (requestedSessionId) {
+    if (getDbType() === DB_SQLITE) {
+      const r = sqliteQuery(
+        "SELECT * FROM cs_sessions WHERE id = ? AND tenant_id = ?",
+        [requestedSessionId, tenantId],
+      );
+      if (r.rows.length > 0) {
+        const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
+        sess.messages = await loadMessages(sess.id);
+        return sess;
+      }
+    } else {
+      const r = await query(
+        "SELECT * FROM cs_sessions WHERE id = $1 AND tenant_id = $2",
+        [requestedSessionId, tenantId],
+      );
+      if (r.rows.length > 0) {
+        const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
+        sess.messages = await loadMessages(sess.id);
+        return sess;
+      }
+    }
+  }
+
+  // 2. Existing active session lookup
+  if (getDbType() === DB_SQLITE) {
+    const r = sqliteQuery(
+      `SELECT * FROM cs_sessions
+       WHERE tenant_id = ? AND visitor_id = ? AND app_object_id = ?
+         AND state IN ('ai-handling', 'human-handling')
+       ORDER BY created_at DESC LIMIT 1`,
+      [tenantId, customerId, appObjectId],
+    );
+    if (r.rows.length > 0) {
+      const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
+      sess.messages = await loadMessages(sess.id);
+      return sess;
+    }
+  } else {
+    const r = await query(
+      `SELECT * FROM cs_sessions
+       WHERE tenant_id = $1 AND visitor_id = $2 AND app_object_id = $3
+         AND state IN ('ai-handling', 'human-handling')
+       ORDER BY created_at DESC LIMIT 1`,
+      [tenantId, customerId, appObjectId],
+    );
+    if (r.rows.length > 0) {
+      const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
+      sess.messages = await loadMessages(sess.id);
+      return sess;
+    }
+  }
+
+  // 3. Create new session
+  const meta = buildMetadata();
+  if (getDbType() === DB_SQLITE) {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    sqliteQuery(
+      `INSERT INTO cs_sessions
+         (id, tenant_id, visitor_id, state, channel, app_object_id, tags, identity_anchors, metadata, created_at, updated_at)
+       VALUES (?, ?, ?, 'ai-handling', ?, ?, '[]', '{}', ?, ?, ?)`,
+      [id, tenantId, customerId, channel, appObjectId, meta, now, now],
+    );
+    const r2 = sqliteQuery("SELECT * FROM cs_sessions WHERE id = ?", [id]);
+    const sess = rowToCsApiSession(flattenMetadata(r2.rows[0]));
+    sess.agentId = agentId;
+    sess.messages = [];
+    return sess;
+  }
+
+  const r = await query(
+    `INSERT INTO cs_sessions
+       (tenant_id, visitor_id, state, channel, app_object_id, metadata)
+     VALUES ($1, $2, 'ai-handling', $3, $4, $5)
+     RETURNING *`,
+    [tenantId, customerId, channel, appObjectId, meta],
+  );
+  const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
+  sess.agentId = agentId;
+  sess.messages = [];
+  return sess;
+}
+
+/**
+ * Flatten metadata JSON into row fields for simpler mapper access.
+ * Extracts `agentId` and `activeResponder` from the metadata blob.
+ *
+ * 将 metadata JSON 中的字段展开到行记录上，方便 mapper 读取。
+ */
+function flattenMetadata(row: Record<string, unknown>): Record<string, unknown> {
+  let meta: Record<string, unknown> = {};
+  if (typeof row.metadata === "string") {
+    try { meta = JSON.parse(row.metadata) as Record<string, unknown>; } catch { /* ignore */ }
+  } else if (typeof row.metadata === "object" && row.metadata !== null) {
+    meta = row.metadata as Record<string, unknown>;
+  }
+  return {
+    ...row,
+    metadata_agent_id: meta.agentId,
+    metadata_active_responder: meta.activeResponder ?? null,
+  };
+}
+
+/**
+ * Append a message to a CS-API session (cs_messages table).
+ * Returns the new message id.
+ *
+ * 向 CS-API 会话追加一条消息，返回新消息 id。
+ */
+export async function appendCsApiMessage(params: {
+  sessionId: string;
+  tenantId: string;
+  role: string;
+  source: "agenora-ai" | "upper-app-relay";
+  content: string;
+  senderParty?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<{ id: string }> {
+  const { sessionId, tenantId, role, source, content, senderParty, metadata } = params;
+  const confidenceJson = null;
+  const sourceChunksJson = senderParty
+    ? JSON.stringify([{ senderParty }])
+    : metadata
+      ? JSON.stringify([{ metadata }])
+      : null;
+
+  if (getDbType() === DB_SQLITE) {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    sqliteQuery(
+      `INSERT INTO cs_messages
+         (id, session_id, tenant_id, role, content, confidence, source_chunks, source, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source, now],
+    );
+    return { id };
+  }
+
+  const r = await query(
+    `INSERT INTO cs_messages
+       (session_id, tenant_id, role, content, confidence, source_chunks, source)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id`,
+    [sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source],
+  );
+  return { id: r.rows[0].id as string };
+}
+
+/**
+ * Update the state and active_responder of a CS-API session.
+ * Returns the updated session or null if not found.
+ *
+ * 更新 CS-API 会话状态及响应方，返回更新后的会话。
+ */
+export async function setSessionState(params: {
+  tenantId: string;
+  sessionId: string;
+  state: CsApiSessionState;
+  activeResponder: CsApiActiveResponder | null;
+}): Promise<CsApiSession | null> {
+  const { tenantId, sessionId, state, activeResponder } = params;
+
+  // We store activeResponder in the metadata JSON blob
+  if (getDbType() === DB_SQLITE) {
+    // Read current metadata
+    const cur = sqliteQuery(
+      "SELECT metadata FROM cs_sessions WHERE id = ? AND tenant_id = ?",
+      [sessionId, tenantId],
+    );
+    if (cur.rows.length === 0) { return null; }
+    const row0 = cur.rows[0];
+    let meta: Record<string, unknown> = {};
+    if (typeof row0.metadata === "string") {
+      try { meta = JSON.parse(row0.metadata) as Record<string, unknown>; } catch { /* ignore */ }
+    }
+    meta.activeResponder = activeResponder;
+    const now = new Date().toISOString();
+    sqliteQuery(
+      "UPDATE cs_sessions SET state = ?, metadata = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",
+      [state, JSON.stringify(meta), now, sessionId, tenantId],
+    );
+    const r2 = sqliteQuery("SELECT * FROM cs_sessions WHERE id = ?", [sessionId]);
+    if (r2.rows.length === 0) { return null; }
+    const sess = rowToCsApiSession(flattenMetadata(r2.rows[0]));
+    sess.activeResponder = activeResponder;
+    return sess;
+  }
+
+  // PostgreSQL
+  const cur = await query(
+    "SELECT metadata FROM cs_sessions WHERE id = $1 AND tenant_id = $2",
+    [sessionId, tenantId],
+  );
+  if (cur.rows.length === 0) { return null; }
+  let meta: Record<string, unknown> = {};
+  const metaVal = cur.rows[0].metadata;
+  if (typeof metaVal === "string") {
+    try { meta = JSON.parse(metaVal) as Record<string, unknown>; } catch { /* ignore */ }
+  } else if (metaVal && typeof metaVal === "object") {
+    meta = metaVal as Record<string, unknown>;
+  }
+  meta.activeResponder = activeResponder;
+  const r = await query(
+    `UPDATE cs_sessions SET state = $1, metadata = $2, updated_at = NOW()
+     WHERE id = $3 AND tenant_id = $4 RETURNING *`,
+    [state, JSON.stringify(meta), sessionId, tenantId],
+  );
+  if (r.rows.length === 0) { return null; }
+  const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
+  sess.activeResponder = activeResponder;
+  return sess;
 }
 
 // -- Close session --
