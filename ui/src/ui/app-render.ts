@@ -497,7 +497,7 @@ export function renderApp(state: AppViewState) {
                   const userRole = authState?.user?.role;
                   const isPlatformAdmin = userRole === "platform-admin";
                   const isTenantAdmin = userRole === "owner" || userRole === "admin";
-                  const tenantOnlyTabs = new Set(["tenant-settings", "tenant-knowledge", "tenant-users", "tenant-agents", "tenant-channels", "tenant-models", "tenant-skills", "tenant-traces", "tenant-usage", "tenant-cron", "cs-setup", "cs-knowledge", "cs-sessions", "cs-api-mode"]);
+                  const tenantOnlyTabs = new Set(["tenant-settings", "tenant-knowledge", "tenant-users", "tenant-agents", "tenant-channels", "tenant-models", "tenant-skills", "tenant-traces", "tenant-usage", "tenant-cron", "cs-setup", "cs-knowledge", "cs-sessions"]);
                   const platformOnlyTabs = new Set(["overview", "platform-models","platform-tools","platform-tenants","logs"]);
                   const visibleTabs = group.tabs.filter((tab) => {
                     if (platformOnlyTabs.has(tab)) {return isPlatformAdmin;}
@@ -1593,7 +1593,7 @@ export function renderApp(state: AppViewState) {
                   }
 
                   ${
-                          !isComingSoon && (state.tab === "tenant-overview" || state.tab === "tenant-settings" || state.tab === "tenant-knowledge" || state.tab === "tenant-users" || state.tab === "tenant-agents" || state.tab === "tenant-channels" || state.tab === "tenant-models" || state.tab === "tenant-skills" || state.tab === "tenant-traces" || state.tab === "tenant-usage" || state.tab === "tenant-cron" || state.tab === "cs-setup" || state.tab === "cs-knowledge" || state.tab === "cs-sessions" || state.tab === "cs-api-mode")
+                          !isComingSoon && (state.tab === "tenant-overview" || state.tab === "tenant-settings" || state.tab === "tenant-knowledge" || state.tab === "tenant-users" || state.tab === "tenant-agents" || state.tab === "tenant-channels" || state.tab === "tenant-models" || state.tab === "tenant-skills" || state.tab === "tenant-traces" || state.tab === "tenant-usage" || state.tab === "tenant-cron" || state.tab === "cs-setup" || state.tab === "cs-knowledge" || state.tab === "cs-sessions")
                                   ? html`
                                       <section class="card">
                                           ${state.tab === "tenant-overview" ? html`
@@ -1650,14 +1650,11 @@ export function renderApp(state: AppViewState) {
                                                         state.setTab("tenant-agents" as any);
                                                       }}></tenant-cron-view>` : nothing}
                                           ${state.tab === "cs-setup" ? html`
-                                              <cs-setup-view></cs-setup-view>` : nothing}
+                                              <cs-setup-view .gatewayUrl=${state.settings.gatewayUrl}></cs-setup-view>` : nothing}
                                           ${state.tab === "cs-knowledge" ? html`
                                               <cs-knowledge-view></cs-knowledge-view>` : nothing}
                                           ${state.tab === "cs-sessions" ? html`
                                               <cs-sessions-view></cs-sessions-view>` : nothing}
-                                          ${state.tab === "cs-api-mode" ? html`
-                                              <cs-api-mode-view
-                                                      .gatewayUrl=${state.settings.gatewayUrl}></cs-api-mode-view>` : nothing}
                                       </section>`
                                   : nothing
                   }

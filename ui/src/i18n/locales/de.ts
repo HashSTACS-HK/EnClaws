@@ -63,10 +63,9 @@ export const de: TranslationMap = {
     "tenant-usage": "Mein Tarif",
     "platform-tools": "Werkzeugverwaltung",
     "platform-tenants": "Mandanten",
-    "cs-setup": "CS-Einrichtung",
+    "cs-setup": "CS-Konsole",
     "cs-knowledge": "CS-Wissensbasis",
     "cs-sessions": "CS-Sitzungen",
-    "cs-api-mode": "API-Modus",
   },
   subtitles: {
     agents: "Agent-Arbeitsbereiche, Tools und Identitäten verwalten.",
@@ -94,10 +93,9 @@ export const de: TranslationMap = {
     "tenant-usage": "Aktuellen Tarif, Kontingentnutzung und Token-Verbrauch anzeigen.",
     "platform-tools": "Plattformweite Tool-Zugriffsrichtlinie konfigurieren, die standardmäßig für alle Agenten gilt.",
     "platform-tenants": "Alle Mandanten-Tarife, Kontingente und Status verwalten.",
-    "cs-setup": "Feishu-Benachrichtigungen konfigurieren und Widget-Einbettungscode für jeden Kanal generieren.",
+    "cs-setup": "KI-Kundenservice-Konsole — Widget-Einbettungsmodus und API-Integrationsmodus.",
     "cs-knowledge": "Wissensdatenbankdateien für den KI-Kundenservice-Agenten verwalten.",
     "cs-sessions": "KI-Kundenservice-Sitzungsaufzeichnungen und Nachrichtenverläufe anzeigen.",
-    "cs-api-mode": "API-Objekte für die direkte Agenora S2 API-Integration verwalten.",
   },
   platformTools: {
     infoBanner: "Dies ist die plattformweite Werkzeugrichtlinie. Sie legt fest, welche Werkzeuge allen Agenten standardmäßig zur Verfügung stehen. Einzelne Agenten oder Mandanten können darüber hinaus strengere Einschränkungen anwenden.",
@@ -1179,6 +1177,10 @@ export const de: TranslationMap = {
     displayNamePlaceholder: "Anzeigename eingeben",
   },
   cs: {
+    console: {
+      widgetModeBtn: "Widget-Modus",
+      apiModeBtn: "API-Modus",
+    },
     apiMode: {
       title: "API-Modus",
       newBtn: "+ Neues API-Objekt",

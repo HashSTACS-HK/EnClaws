@@ -71,10 +71,9 @@ export const zh_CN: TranslationMap = {
     "tenant-cron": "定时任务总览",
     "platform-tools": "工具管理",
     "platform-tenants": "企业管理",
-    "cs-setup": "客服设置",
+    "cs-setup": "客服控制台",
     "cs-knowledge": "客服知识库",
     "cs-sessions": "客服会话",
-    "cs-api-mode": "API 模式",
   },
   subtitles: {
     agents: "管理代理工作区、工具和身份。",
@@ -105,10 +104,9 @@ export const zh_CN: TranslationMap = {
     "tenant-cron": "跨 Agent 监控和管理所有定时任务。",
     "platform-tools": "配置平台级工具访问策略，默认应用于所有 Agent。",
     "platform-tenants": "管理平台所有企业的套餐、配额和状态。",
-    "cs-setup": "配置飞书通知凭据，生成各渠道的网页嵌入代码。",
+    "cs-setup": "AI 客服控制台 — Widget 嵌入模式和 API 集成模式。",
     "cs-knowledge": "管理 AI 客服知识库文件，支持上传、删除 Markdown 文档。",
     "cs-sessions": "查看 AI 客服会话记录和消息详情。",
-    "cs-api-mode": "管理 API 对象，实现 Agenora S2 API 直连集成。",
   },
   platformTools: {
     infoBanner: "这是平台级工具策略，定义了所有 Agent 默认可用的工具。各企业或 Agent 可在此基础上叠加更严格的限制。",
@@ -1635,6 +1633,10 @@ export const zh_CN: TranslationMap = {
     displayNamePlaceholder: "输入显示名称",
   },
   cs: {
+    console: {
+      widgetModeBtn: "Widget 模式",
+      apiModeBtn: "API 模式",
+    },
     apiMode: {
       title: "API 模式",
       newBtn: "+ 新建 API 对象",

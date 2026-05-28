@@ -63,10 +63,9 @@ export const pt_BR: TranslationMap = {
     "tenant-usage": "Meu Plano",
     "platform-tools": "Gerenciamento de Ferramentas",
     "platform-tenants": "Inquilinos",
-    "cs-setup": "Configuração do CS",
+    "cs-setup": "Console do CS",
     "cs-knowledge": "Base de Conhecimento do CS",
     "cs-sessions": "Sessões do CS",
-    "cs-api-mode": "Modo API",
   },
   subtitles: {
     agents: "Gerenciar espaços de trabalho, ferramentas e identidades de agentes.",
@@ -94,10 +93,9 @@ export const pt_BR: TranslationMap = {
     "tenant-usage": "Veja o plano atual, uso de cotas e consumo de tokens.",
     "platform-tools": "Configurar política de acesso a ferramentas em nível de plataforma, aplicada a todos os agentes por padrão.",
     "platform-tenants": "Gerenciar planos, cotas e status de todos os inquilinos.",
-    "cs-setup": "Configurar notificações do Feishu e gerar código de incorporação do widget para cada canal.",
+    "cs-setup": "Console de atendimento ao cliente com IA — modo Widget e modo de integração de API.",
     "cs-knowledge": "Gerenciar arquivos da base de conhecimento para o agente de atendimento ao cliente com IA.",
     "cs-sessions": "Visualizar registros de sessões e threads de mensagens do atendimento ao cliente com IA.",
-    "cs-api-mode": "Gerenciar Objetos de API para integração direta com a API do Agenora S2.",
   },
   platformTools: {
     infoBanner: "Esta é a política de ferramentas em nível de plataforma. Ela define quais ferramentas estão disponíveis para todos os agentes por padrão. Agentes ou inquilinos individuais podem aplicar restrições mais rígidas.",
@@ -1178,6 +1176,10 @@ export const pt_BR: TranslationMap = {
     displayNamePlaceholder: "Digite o nome de exibição",
   },
   cs: {
+    console: {
+      widgetModeBtn: "Modo Widget",
+      apiModeBtn: "Modo API",
+    },
     apiMode: {
       title: "Modo API",
       newBtn: "+ Novo Objeto de API",

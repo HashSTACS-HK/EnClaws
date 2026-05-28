@@ -24,7 +24,7 @@ export const TAB_GROUPS = [
     },
     {
         label: "cs",
-        tabs: ["cs-setup", "cs-knowledge", "cs-sessions", "cs-api-mode"],
+        tabs: ["cs-setup", "cs-knowledge", "cs-sessions"],
     },
     {
         label: "platform",
@@ -67,8 +67,7 @@ export type Tab =
     | "platform-tenants"
     | "cs-setup"
     | "cs-knowledge"
-    | "cs-sessions"
-    | "cs-api-mode";
+    | "cs-sessions";
 
 const TAB_PATHS: Record<Tab, string> = {
     agents: "/agents",
@@ -102,7 +101,6 @@ const TAB_PATHS: Record<Tab, string> = {
     "cs-setup": "/cs-setup",
     "cs-knowledge": "/cs-knowledge",
     "cs-sessions": "/cs-sessions",
-    "cs-api-mode": "/cs-api-mode",
 };
 
 const PATH_TO_TAB = new Map(Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]));
@@ -250,8 +248,6 @@ export function iconForTab(tab: Tab): IconName {
             return "zap";
         case "cs-sessions":
             return "messageSquare";
-        case "cs-api-mode":
-            return "link";
         default:
             return "folder";
     }

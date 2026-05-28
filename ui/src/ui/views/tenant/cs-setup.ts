@@ -10,8 +10,9 @@
  */
 
 import { html, css, LitElement, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { I18nController } from "../../../i18n/index.ts";
+import { customElement, state, property } from "lit/decorators.js";
+import "./cs-api-mode.js";
+import { I18nController, t } from "../../../i18n/index.ts";
 import { tenantRpc } from "./rpc.ts";
 import { loadAuth } from "../../auth-store.ts";
 import { loadSettings } from "../../storage.ts";
@@ -426,8 +427,38 @@ export class CSSetupView extends LitElement {
       @media (max-width: 640px) {
         .restrictions-grid { grid-template-columns: 1fr; }
       }
+
+      /* Console mode switcher */
+      .mode-switcher {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--color-border, #e1e4e8);
+        padding-bottom: 12px;
+      }
+      .mode-btn {
+        padding: 6px 14px;
+        cursor: pointer;
+        background: var(--color-bg-secondary, #f6f8fa);
+        border: 1px solid var(--color-border, #e1e4e8);
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+        font-weight: 500;
+      }
+      .mode-btn.active {
+        background: var(--color-accent, #0969da);
+        color: #fff;
+        border-color: var(--color-accent, #0969da);
+      }
+      .mode-btn:hover:not(.active) { background: var(--color-bg-hover, #eaeef2); }
     `,
   ];
+
+  /** Gateway URL passed in from app-render for the embedded API mode view. 从 app-render 传入的 Gateway 地址。 */
+  @property({ type: String }) gatewayUrl = "";
+
+  @state() private _consoleMode: "widget" | "api" = "widget";
 
   @state() private customSystemPrompt = "";
   @state() private companyName = "EC";
@@ -991,7 +1022,7 @@ export class CSSetupView extends LitElement {
     `;
   }
 
-  render() {
+  private _renderWidgetMode() {
     if (this.loading) {
       return html`<div style="padding:32px;text-align:center;color:var(--color-text-secondary,#6a737d)">加载中…</div>`;
     }
@@ -1045,6 +1076,25 @@ export class CSSetupView extends LitElement {
       </div>
       <hr class="divider" />
       ${this._renderChannels()}
+    `;
+  }
+
+  render() {
+    return html`
+      <div class="mode-switcher">
+        <button
+          class="mode-btn ${this._consoleMode === 'widget' ? 'active' : ''}"
+          @click=${() => { this._consoleMode = 'widget'; }}
+        >${t("cs.console.widgetModeBtn")}</button>
+        <button
+          class="mode-btn ${this._consoleMode === 'api' ? 'active' : ''}"
+          @click=${() => { this._consoleMode = 'api'; }}
+        >${t("cs.console.apiModeBtn")}</button>
+      </div>
+
+      ${this._consoleMode === 'api'
+        ? html`<cs-api-mode-view .gatewayUrl=${this.gatewayUrl}></cs-api-mode-view>`
+        : this._renderWidgetMode()}
     `;
   }
 }

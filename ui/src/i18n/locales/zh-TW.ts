@@ -63,10 +63,9 @@ export const zh_TW: TranslationMap = {
     "tenant-usage": "我的方案",
     "platform-tools": "工具管理",
     "platform-tenants": "企業管理",
-    "cs-setup": "客服設置",
+    "cs-setup": "客服控制台",
     "cs-knowledge": "客服知識庫",
     "cs-sessions": "客服會話",
-    "cs-api-mode": "API 模式",
   },
   subtitles: {
     agents: "管理代理工作區、工具和身份。",
@@ -94,10 +93,9 @@ export const zh_TW: TranslationMap = {
     "tenant-usage": "查看目前方案、配額使用情況和 Token 用量。",
     "platform-tools": "設定平台級工具存取策略，預設套用至所有 Agent。",
     "platform-tenants": "管理平台所有企業的方案、配額和狀態。",
-    "cs-setup": "設定飛書通知憑證，產生各渠道的網頁嵌入程式碼。",
+    "cs-setup": "AI 客服控制台 — Widget 嵌入模式和 API 整合模式。",
     "cs-knowledge": "管理 AI 客服知識庫檔案，支援上傳、刪除 Markdown 文件。",
     "cs-sessions": "查看 AI 客服會話紀錄和訊息詳情。",
-    "cs-api-mode": "管理 API 物件，實現 Agenora S2 API 直連整合。",
   },
   platformTools: {
     infoBanner: "這是平台級工具策略，定義了所有 Agent 預設可用的工具。各企業或 Agent 可在此基礎上疊加更嚴格的限制。",
@@ -1175,6 +1173,10 @@ export const zh_TW: TranslationMap = {
     displayNamePlaceholder: "輸入顯示名稱",
   },
   cs: {
+    console: {
+      widgetModeBtn: "Widget 模式",
+      apiModeBtn: "API 模式",
+    },
     apiMode: {
       title: "API 模式",
       newBtn: "+ 新增 API 物件",
