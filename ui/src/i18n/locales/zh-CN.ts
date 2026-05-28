@@ -74,6 +74,7 @@ export const zh_CN: TranslationMap = {
     "cs-setup": "客服设置",
     "cs-knowledge": "客服知识库",
     "cs-sessions": "客服会话",
+    "cs-api-mode": "API 模式",
   },
   subtitles: {
     agents: "管理代理工作区、工具和身份。",
@@ -107,6 +108,7 @@ export const zh_CN: TranslationMap = {
     "cs-setup": "配置飞书通知凭据，生成各渠道的网页嵌入代码。",
     "cs-knowledge": "管理 AI 客服知识库文件，支持上传、删除 Markdown 文档。",
     "cs-sessions": "查看 AI 客服会话记录和消息详情。",
+    "cs-api-mode": "管理 API 对象，实现 Agenora S2 API 直连集成。",
   },
   platformTools: {
     infoBanner: "这是平台级工具策略，定义了所有 Agent 默认可用的工具。各企业或 Agent 可在此基础上叠加更严格的限制。",
@@ -1631,5 +1633,72 @@ export const zh_CN: TranslationMap = {
     apiKeyPlaceholder: "输入 API 密钥",
     modelIdPlaceholder: "输入模型 ID",
     displayNamePlaceholder: "输入显示名称",
-  }
+  },
+  cs: {
+    apiMode: {
+      title: "API 模式",
+      newBtn: "+ 新建 API 对象",
+      emptyState: "暂无 API 对象。创建一个以启用 API 直连集成。",
+      loading: "加载中…",
+      loadError: "加载 API 对象失败",
+      table: {
+        name: "名称",
+        agent: "Agent",
+        appId: "App ID",
+        lastUsed: "最近使用",
+        actions: "操作",
+        regenerateBtn: "重新生成密钥",
+        deleteBtn: "删除",
+      },
+      create: {
+        title: "新建 API 对象",
+        nameLabel: "名称",
+        namePlaceholder: "例如：生产环境集成",
+        nameRequired: "名称不能为空",
+        descLabel: "描述",
+        descPlaceholder: "可选描述",
+        agentLabel: "Agent",
+        agentNone: "— 不指定 Agent（使用默认）—",
+        submitBtn: "创建",
+        submitting: "创建中…",
+        cancelBtn: "取消",
+        error: "创建 API 对象失败",
+      },
+      regenerate: {
+        confirmTitle: "重新生成密钥？",
+        confirmMessage: "当前密钥将进入 24 小时宽限期，随后失效。请在宽限期结束前更新您的集成配置。",
+        confirmBtn: "重新生成",
+        error: "重新生成密钥失败",
+      },
+      delete: {
+        confirmTitle: "删除 API 对象？",
+        confirmMessage: "删除「{name}」？此操作不可撤销。",
+        confirmBtn: "删除",
+        activeSessionsError: "无法删除：该 API 对象存在活跃会话，请先关闭这些会话。",
+        error: "删除 API 对象失败",
+      },
+      secretDialog: {
+        title: "API 凭据",
+        warning: "这是您唯一一次查看 App Secret 的机会。密钥以单向哈希存储，服务器无法再次显示。",
+        appId: "App ID",
+        appSecret: "App Secret",
+        endpointUrl: "接口地址",
+        copy: "复制",
+        copied: "已复制",
+        doneBtn: "我已保存",
+      },
+    },
+  },
+  audit: {
+    action: {
+      cs: {
+        "api-object": {
+          create: "创建了 API 对象",
+          update: "更新了 API 对象",
+          "regenerate-secret": "重新生成了 App Secret",
+          delete: "删除了 API 对象",
+        },
+      },
+    },
+  },
 };

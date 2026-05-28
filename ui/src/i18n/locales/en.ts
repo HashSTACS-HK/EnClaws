@@ -1668,4 +1668,16 @@ export const en: TranslationMap = {
       },
     },
   },
+  audit: {
+    action: {
+      cs: {
+        "api-object": {
+          create: "Created API Object",
+          update: "Updated API Object",
+          "regenerate-secret": "Regenerated App Secret",
+          delete: "Deleted API Object",
+        },
+      },
+    },
+  },
 };
