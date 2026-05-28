@@ -106,6 +106,7 @@ import "./views/tenant/tenant-usage.ts";
 import "./views/tenant/cs-setup.ts";
 import "./views/tenant/cs-knowledge.ts";
 import "./views/tenant/cs-sessions.ts";
+import "./views/tenant/cs-api-mode.ts";
 import "./components/cs-widget.ts";
 import "./views/tenant/tenant-cron.ts";
 import "./views/platform-overview.ts";
@@ -414,7 +415,7 @@ export function renderApp(state: AppViewState) {
       }}
     ></enclaws-login>
     ${(() => {
-      if (typeof document === "undefined") return nothing;
+      if (typeof document === "undefined") {return nothing;}
       const tid = document
         .querySelector<HTMLMetaElement>('meta[name="ec-cs-tenant-id"]')
         ?.content;
@@ -496,7 +497,7 @@ export function renderApp(state: AppViewState) {
                   const userRole = authState?.user?.role;
                   const isPlatformAdmin = userRole === "platform-admin";
                   const isTenantAdmin = userRole === "owner" || userRole === "admin";
-                  const tenantOnlyTabs = new Set(["tenant-settings", "tenant-knowledge", "tenant-users", "tenant-agents", "tenant-channels", "tenant-models", "tenant-skills", "tenant-traces", "tenant-usage", "tenant-cron", "cs-setup", "cs-knowledge", "cs-sessions"]);
+                  const tenantOnlyTabs = new Set(["tenant-settings", "tenant-knowledge", "tenant-users", "tenant-agents", "tenant-channels", "tenant-models", "tenant-skills", "tenant-traces", "tenant-usage", "tenant-cron", "cs-setup", "cs-knowledge", "cs-sessions", "cs-api-mode"]);
                   const platformOnlyTabs = new Set(["overview", "platform-models","platform-tools","platform-tenants","logs"]);
                   const visibleTabs = group.tabs.filter((tab) => {
                     if (platformOnlyTabs.has(tab)) {return isPlatformAdmin;}
@@ -1592,7 +1593,7 @@ export function renderApp(state: AppViewState) {
                   }
 
                   ${
-                          !isComingSoon && (state.tab === "tenant-overview" || state.tab === "tenant-settings" || state.tab === "tenant-knowledge" || state.tab === "tenant-users" || state.tab === "tenant-agents" || state.tab === "tenant-channels" || state.tab === "tenant-models" || state.tab === "tenant-skills" || state.tab === "tenant-traces" || state.tab === "tenant-usage" || state.tab === "tenant-cron" || state.tab === "cs-setup" || state.tab === "cs-knowledge" || state.tab === "cs-sessions")
+                          !isComingSoon && (state.tab === "tenant-overview" || state.tab === "tenant-settings" || state.tab === "tenant-knowledge" || state.tab === "tenant-users" || state.tab === "tenant-agents" || state.tab === "tenant-channels" || state.tab === "tenant-models" || state.tab === "tenant-skills" || state.tab === "tenant-traces" || state.tab === "tenant-usage" || state.tab === "tenant-cron" || state.tab === "cs-setup" || state.tab === "cs-knowledge" || state.tab === "cs-sessions" || state.tab === "cs-api-mode")
                                   ? html`
                                       <section class="card">
                                           ${state.tab === "tenant-overview" ? html`
@@ -1654,6 +1655,9 @@ export function renderApp(state: AppViewState) {
                                               <cs-knowledge-view></cs-knowledge-view>` : nothing}
                                           ${state.tab === "cs-sessions" ? html`
                                               <cs-sessions-view></cs-sessions-view>` : nothing}
+                                          ${state.tab === "cs-api-mode" ? html`
+                                              <cs-api-mode-view
+                                                      .gatewayUrl=${state.settings.gatewayUrl}></cs-api-mode-view>` : nothing}
                                       </section>`
                                   : nothing
                   }
@@ -1691,7 +1695,7 @@ export function renderApp(state: AppViewState) {
           ${renderExecApprovalPrompt(state)}
           ${renderGatewayUrlConfirmation(state)}
           ${(() => {
-            if (typeof document === "undefined") return nothing;
+            if (typeof document === "undefined") {return nothing;}
             const tid = document
               .querySelector<HTMLMetaElement>('meta[name="ec-cs-tenant-id"]')
               ?.content;
