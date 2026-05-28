@@ -7,13 +7,28 @@
  *   - confidence.ts unit tests (pure function, no DB needed)
  *   - sse.ts unit tests (mock ServerResponse)
  *   - messages endpoint: 401 on missing/bad secret
- *   - messages endpoint: happy path SSE stream (mocked LLM fetch)
+ *   - messages endpoint: happy path SSE stream (mocked runCSAgentReply)
  */
 
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+// Mock runCSAgentReply so tests don't hit real LLM or RAG stack.
+// runCSAgentReply モックにより実 LLM/RAG を使わずにテスト。
+vi.mock("../../customer-service/rag/cs-agent-runner.js", () => ({
+  runCSAgentReply: vi.fn().mockResolvedValue({
+    reply: "test reply [confidence:0.85]",
+    sourceChunks: [],
+  }),
+}));
+
+// Mock loadTenantConfig — cs-api runtime uses this instead of loadConfig().
+// loadTenantConfig モック。
+vi.mock("../../config/tenant-config.js", () => ({
+  loadTenantConfig: vi.fn().mockResolvedValue({}),
+}));
 import type { ServerResponse } from "node:http";
 import { extractConfidence } from "./confidence.js";
 import { startSse, writeSseEvent, endSse } from "./sse.js";
@@ -263,29 +278,11 @@ describe("POST /{appId}/messages", () => {
     expect(body.error?.code).toBe("INVALID_APP_SECRET");
   });
 
-  it("streams session-start + chunk(s) + done events on happy path", async () => {
-    // Mock global fetch to return a streaming SSE response from the LLM
-    const fakeStreamBody = [
-      'data: {"choices":[{"delta":{"content":"Hello "},"finish_reason":null}]}\n\n',
-      'data: {"choices":[{"delta":{"content":"world"},"finish_reason":null}]}\n\n',
-      'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":5}}\n\n',
-      "data: [DONE]\n\n",
-    ].join("");
-
-    const { ReadableStream } = await import("node:stream/web");
-    const encoder = new TextEncoder();
-    const mockStream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(fakeStreamBody));
-        controller.close();
-      },
-    });
-
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      body: mockStream as unknown as ReadableStream<Uint8Array>,
-      text: async () => "",
-    } as unknown as Response);
+  it("streams session-start + ONE chunk + done events on happy path", async () => {
+    // runCSAgentReply is mocked at module level to return:
+    //   { reply: "test reply [confidence:0.85]", sourceChunks: [] }
+    // Expect: session-start → 1 chunk with stripped text → done with confidence 0.85.
+    // runCSAgentReply はモジュールレベルでモック済み。
 
     const { handleMessages } = await import("./runtime.js");
     const req = makeRequest({
@@ -299,7 +296,6 @@ describe("POST /{appId}/messages", () => {
 
     await handleMessages(req, res, appId);
 
-    expect(fetchSpy).toHaveBeenCalled();
     expect(state.ended).toBe(true);
 
     const eventTypes = events.map((e) => e.event);
@@ -311,14 +307,18 @@ describe("POST /{appId}/messages", () => {
     const sessionStart = events.find((e) => e.event === "session-start");
     expect(sessionStart?.data).toMatchObject({ sessionId: expect.any(String) });
 
-    // done has confidence between 0 and 1
-    const done = events.find((e) => e.event === "done");
-    const doneData = done?.data as { confidence?: number };
-    expect(typeof doneData?.confidence).toBe("number");
-    expect(doneData?.confidence).toBeGreaterThanOrEqual(0);
-    expect(doneData?.confidence).toBeLessThanOrEqual(1);
+    // Exactly ONE chunk event with the full stripped reply text
+    const chunkEvents = events.filter((e) => e.event === "chunk");
+    expect(chunkEvents).toHaveLength(1);
+    const chunkData = chunkEvents[0].data as { text?: string };
+    expect(chunkData.text).toBe("test reply");
 
-    fetchSpy.mockRestore();
+    // done has confidence 0.85 (extracted from mock reply) + placeholder fields
+    const done = events.find((e) => e.event === "done");
+    const doneData = done?.data as { confidence?: number; modelActuallyUsed?: string; finishReason?: string };
+    expect(doneData?.confidence).toBeCloseTo(0.85);
+    expect(doneData?.modelActuallyUsed).toBe("unknown");
+    expect(doneData?.finishReason).toBe("stop");
   });
 });
 

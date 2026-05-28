@@ -13,13 +13,13 @@
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { tryAppSecretAuth } from "../../auth/app-secret.js";
-import { getTenantAgent } from "../../db/models/tenant-agent.js";
-import { getTenantModel } from "../../db/models/tenant-model.js";
 import {
   findOrCreateCsApiSession,
   appendCsApiMessage,
   setSessionState,
 } from "../../db/models/cs-session.js";
+import { loadTenantConfig } from "../../config/tenant-config.js";
+import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
   HandoffInput,
@@ -33,94 +33,6 @@ import { endSse, startSse, writeSseEvent } from "./sse.js";
 import { extractConfidence } from "./confidence.js";
 
 const log = createSubsystemLogger("cs-api-runtime");
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Stream text from an LLM via SSE, accumulating the full response. */
-async function streamLlmResponse(params: {
-  baseUrl: string;
-  apiKey: string | null;
-  extraHeaders: Record<string, string>;
-  modelId: string;
-  messages: Array<{ role: string; content: string }>;
-  res: ServerResponse;
-}): Promise<{
-  buffered: string;
-  modelUsed: string;
-  finishReason: string;
-  tokensUsed: number;
-}> {
-  const { baseUrl, apiKey, extraHeaders, modelId, messages, res } = params;
-  const llmUrl = `${baseUrl}/chat/completions`;
-
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (apiKey) { headers["Authorization"] = `Bearer ${apiKey}`; }
-  Object.assign(headers, extraHeaders);
-
-  const fetchRes = await fetch(llmUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ model: modelId, messages, stream: true }),
-  });
-
-  if (!fetchRes.ok || !fetchRes.body) {
-    const errText = await fetchRes.text().catch(() => "unknown");
-    throw new Error(`LLM request failed: ${fetchRes.status} ${errText.slice(0, 200)}`);
-  }
-
-  let buffered = "";
-  let finishReason = "stop";
-  let completionTokens = 0;
-  let promptTokens = 0;
-
-  // Read streaming SSE from the LLM provider
-  const reader = fetchRes.body.getReader();
-  const decoder = new TextDecoder();
-  let partial = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) { break; }
-    partial += decoder.decode(value, { stream: true });
-
-    // Process complete SSE lines
-    const lines = partial.split("\n");
-    partial = lines.pop() ?? "";
-
-    for (const line of lines) {
-      if (!line.startsWith("data: ")) { continue; }
-      const dataStr = line.slice(6).trim();
-      if (dataStr === "[DONE]") { continue; }
-      try {
-        const chunk = JSON.parse(dataStr) as Record<string, unknown>;
-        const choices = chunk.choices as Array<Record<string, unknown>> | undefined;
-        const delta = (choices?.[0]?.delta as Record<string, unknown> | undefined);
-        const text = delta?.content as string | undefined;
-        if (text) {
-          buffered += text;
-          writeSseEvent(res, "chunk", { text });
-        }
-        const fr = choices?.[0]?.finish_reason as string | undefined;
-        if (fr) { finishReason = fr; }
-        // Accumulate usage if present
-        const usage = chunk.usage as Record<string, number> | undefined;
-        if (usage) {
-          completionTokens += usage.completion_tokens ?? 0;
-          promptTokens += usage.prompt_tokens ?? 0;
-        }
-      } catch {
-        // Skip malformed chunks
-      }
-    }
-  }
-
-  return {
-    buffered,
-    modelUsed: modelId,
-    finishReason,
-    tokensUsed: promptTokens + completionTokens,
-  };
-}
 
 // ── Handler: POST /{appId}/messages ─────────────────────────────────────────
 
@@ -156,22 +68,8 @@ export async function handleMessages(
   }
   const input = body;
 
-  // 3. Load agent + model config
-  const agent = await getTenantAgent(tenantId, agentId);
-  if (!agent) {
-    sendError(res, 404, "AGENT_NOT_FOUND", `Agent not found: ${agentId}`);
-    return;
-  }
-  const defaultModel = agent.modelConfig?.find((m) => m.isDefault);
-  if (!defaultModel) {
-    sendError(res, 404, "MODEL_NOT_CONFIGURED", "No default model configured for agent");
-    return;
-  }
-  const tenantModel = await getTenantModel(tenantId, defaultModel.providerId);
-  if (!tenantModel || !tenantModel.baseUrl) {
-    sendError(res, 404, "MODEL_NOT_FOUND", "Tenant model provider not found or missing baseUrl");
-    return;
-  }
+  // 3. Load tenant config (for runCSAgentReply — resolves agent/model from DB internally)
+  const cfg = await loadTenantConfig(tenantId);
 
   // 4. Find or create session
   const session = await findOrCreateCsApiSession({
@@ -193,48 +91,33 @@ export async function handleMessages(
     metadata: input.metadata,
   });
 
-  // 6. Build message history for LLM (existing + new customer message)
-  const llmMessages: Array<{ role: string; content: string }> = [
-    ...session.messages.map((m) => ({
-      role: m.role === "ai" ? "assistant" : m.role === "customer" ? "user" : m.role,
-      content: m.content,
-    })),
-    { role: "user", content: input.content },
-  ];
-
-  // 7. Start SSE stream
+  // 6. Start SSE stream
   startSse(res);
   writeSseEvent(res, "session-start", { sessionId: session.id });
 
-  // 8. Call LLM with streaming
-  let buffered = "";
-  let modelUsed = defaultModel.modelId;
-  let finishReason = "stop";
-  let tokensUsed = 0;
-
+  // 7. Call runCSAgentReply — includes RAG (KB search) + CS system prompt.
+  // Non-streaming: returns complete reply, then emits 1 chunk + done.
+  // Jiumi is a backend relay to WeCom — true streaming has no UX value here.
+  // runCSAgentReply 内部处理 RAG 和 CS prompt，返回完整回复后再发送 SSE 事件。
+  let reply: string;
   try {
-    const result = await streamLlmResponse({
-      baseUrl: tenantModel.baseUrl.replace(/\/+$/, ""),
-      apiKey: tenantModel.apiKeyEncrypted ?? null,
-      extraHeaders: tenantModel.extraHeaders ?? {},
-      modelId: defaultModel.modelId,
-      messages: llmMessages,
-      res,
+    const result = await runCSAgentReply({
+      tenantId,
+      sessionId: session.id,
+      customerMessage: input.content,
+      cfg,
     });
-    buffered = result.buffered;
-    modelUsed = result.modelUsed;
-    finishReason = result.finishReason;
-    tokensUsed = result.tokensUsed;
+    reply = result.reply;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    log.error(`cs-api messages LLM error: appId=${appId} sessionId=${session.id} err=${msg}`);
-    writeSseEvent(res, "error", { code: "LLM_ERROR", message: msg });
+    log.error(`cs-api messages agent error: appId=${appId} sessionId=${session.id} err=${msg}`);
+    writeSseEvent(res, "error", { code: "AGENT_ERROR", message: msg });
     endSse(res);
     return;
   }
 
-  // 9. Extract confidence, append AI message
-  const { stripped, confidence } = extractConfidence(buffered);
+  // 8. Extract confidence, append AI message
+  const { stripped, confidence } = extractConfidence(reply);
   try {
     await appendCsApiMessage({
       sessionId: session.id,
@@ -242,18 +125,22 @@ export async function handleMessages(
       role: "ai",
       source: "agenora-ai",
       content: stripped,
-      metadata: { confidence, modelUsed },
+      metadata: { confidence },
     });
   } catch (err) {
     log.warn(`cs-api: failed to persist AI message: ${String(err)}`);
   }
 
+  // 9. Emit single chunk event with full stripped reply
+  writeSseEvent(res, "chunk", { text: stripped });
+
   // 10. Emit done event
+  // TODO: extend runCSAgentReply return type to expose model + usage (S3+ backlog)
   writeSseEvent(res, "done", {
     confidence,
-    modelActuallyUsed: modelUsed,
-    finishReason,
-    tokensUsed,
+    modelActuallyUsed: "unknown",
+    finishReason: "stop",
+    tokensUsed: { prompt: 0, completion: 0, total: 0 },
   });
   endSse(res);
 }
