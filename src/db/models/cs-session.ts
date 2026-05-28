@@ -734,7 +734,7 @@ export async function listCsApiSessions(
     `;
     values.push(limit + 1);
 
-    const rows = sqliteQuery(sql, values).rows as Record<string, unknown>[];
+    const rows = sqliteQuery(sql, values).rows;
     const hasMore = rows.length > limit;
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
 
@@ -753,7 +753,9 @@ export async function listCsApiSessions(
         [sessionId],
       ).rows[0] as Record<string, unknown> | undefined;
       const lastMessageAt = lastMsgResult?.created_at
-        ? (typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at : String(lastMsgResult.created_at))
+        ? (lastMsgResult.created_at instanceof Date ? lastMsgResult.created_at.toISOString()
+          : typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at
+          : (lastMsgResult.created_at as { toString(): string }).toString())
         : null;
       const rawContent = lastMsgResult?.content as string | null ?? null;
       const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
@@ -814,7 +816,9 @@ export async function listCsApiSessions(
   const sessions: CsApiSessionSummary[] = pageRows.map((row) => {
     const messageCount = Number(row.msg_count ?? 0);
     const lastMessageAt = row.last_message_at
-      ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString() : String(row.last_message_at))
+      ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString()
+        : typeof row.last_message_at === "string" ? row.last_message_at
+        : (row.last_message_at as { toString(): string }).toString())
       : null;
     const rawContent = row.last_message_content as string | null ?? null;
     const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
@@ -850,7 +854,7 @@ export async function getCsApiSessionMetadata(p: {
       [sessionId, tenantId, appObjectId],
     );
     if (r.rows.length === 0) { return null; }
-    const row = r.rows[0] as Record<string, unknown>;
+    const row = r.rows[0];
 
     const cntResult = sqliteQuery(
       "SELECT COUNT(*) as cnt FROM cs_messages WHERE session_id = ?",
@@ -863,7 +867,9 @@ export async function getCsApiSessionMetadata(p: {
       [sessionId],
     ).rows[0] as Record<string, unknown> | undefined;
     const lastMessageAt = lastMsgResult?.created_at
-      ? (typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at : String(lastMsgResult.created_at))
+      ? (lastMsgResult.created_at instanceof Date ? lastMsgResult.created_at.toISOString()
+        : typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at
+        : (lastMsgResult.created_at as { toString(): string }).toString())
       : null;
     const rawContent = lastMsgResult?.content as string | null ?? null;
     const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
@@ -887,7 +893,9 @@ export async function getCsApiSessionMetadata(p: {
   const row = r.rows[0] as Record<string, unknown>;
   const messageCount = Number(row.msg_count ?? 0);
   const lastMessageAt = row.last_message_at
-    ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString() : String(row.last_message_at))
+    ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString()
+      : typeof row.last_message_at === "string" ? row.last_message_at
+      : (row.last_message_at as { toString(): string }).toString())
     : null;
   const rawContent = row.last_message_content as string | null ?? null;
   const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
@@ -953,7 +961,7 @@ export async function listCsApiTranscript(
     `;
     values.push(limit + 1);
 
-    const rows = sqliteQuery(sql, values).rows as Record<string, unknown>[];
+    const rows = sqliteQuery(sql, values).rows;
     const hasMore = rows.length > limit;
     let pageRows = hasMore ? rows.slice(0, limit) : rows;
 

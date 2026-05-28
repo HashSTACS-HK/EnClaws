@@ -63,11 +63,11 @@ export async function handleListSessions(
   const result = await listCsApiSessions({
     tenantId: auth.tenant.tenantId,
     appObjectId: auth.tenant.appObjectId,
-    cursor: clean.cursor as string | undefined,
-    limit: clean.limit as number | undefined,
-    state: clean.state as "ai-handling" | "human-handling" | "closed" | undefined,
-    customerId: clean.customerId as string | undefined,
-    updatedAfter: clean.updatedAfter as string | undefined,
+    cursor: clean.cursor,
+    limit: clean.limit,
+    state: clean.state,
+    customerId: clean.customerId,
+    updatedAfter: clean.updatedAfter,
   });
 
   sendJson(res, 200, result);
@@ -144,9 +144,9 @@ export async function handleTranscript(
     tenantId: auth.tenant.tenantId,
     appObjectId: auth.tenant.appObjectId,
     sessionId,
-    cursor: clean.cursor as string | undefined,
-    limit: clean.limit as number | undefined,
-    direction: clean.direction as "before" | "after" | undefined,
+    cursor: clean.cursor,
+    limit: clean.limit,
+    direction: clean.direction,
   });
 
   // Treat empty response (session not found / not owned) as 404
