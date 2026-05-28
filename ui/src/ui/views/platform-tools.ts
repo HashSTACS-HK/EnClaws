@@ -216,7 +216,7 @@ export class PlatformToolsView extends LitElement {
 
   private get toolGroups(): ToolGroup[] {
     const translated = (key: string | undefined, raw: string) => {
-      if (!key) return raw;
+      if (!key) {return raw;}
       const v = t(key);
       return v === key ? raw : v;
     };
@@ -269,7 +269,7 @@ export class PlatformToolsView extends LitElement {
   }
 
   private async handleSave() {
-    if (!this.pendingDeny) return;
+    if (!this.pendingDeny) {return;}
     this.saving = true;
     this.error = "";
     try {

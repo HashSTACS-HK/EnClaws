@@ -43,7 +43,7 @@ export async function recordInboundSession(params: {
     groupResolution,
     createIfMissing,
   }).catch((err) => {
-    if (isMissingSessionDirError(err)) return;
+    if (isMissingSessionDirError(err)) {return;}
     params.onRecordError(err);
   });
 
@@ -66,7 +66,7 @@ export async function recordInboundSession(params: {
       groupResolution,
     });
   } catch (err) {
-    if (isMissingSessionDirError(err)) return;
+    if (isMissingSessionDirError(err)) {return;}
     params.onRecordError(err);
   }
 }

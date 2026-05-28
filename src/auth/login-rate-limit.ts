@@ -42,7 +42,7 @@ const BACKOFF_STEPS: BackoffStep[] = [
 function backoffFor(failures: number): number {
   let wait = 0;
   for (const step of BACKOFF_STEPS) {
-    if (failures >= step.failures) wait = step.waitMs;
+    if (failures >= step.failures) {wait = step.waitMs;}
   }
   return wait;
 }
@@ -153,17 +153,17 @@ export function createLoginRateLimiter(): LoginRateLimiter {
 
     const tupleBucket = getOrCreate(tupleBuckets, tupleKey);
     const tupleResult = checkBucket(tupleBucket, THROTTLES.tuple, now);
-    if (!tupleResult.allowed) return tupleResult;
+    if (!tupleResult.allowed) {return tupleResult;}
 
     if (email) {
       const emailBucket = getOrCreate(emailBuckets, email);
       const emailResult = checkBucket(emailBucket, THROTTLES.email, now);
-      if (!emailResult.allowed) return emailResult;
+      if (!emailResult.allowed) {return emailResult;}
     }
 
     const ipBucket = getOrCreate(ipBuckets, ip);
     const ipResult = checkBucket(ipBucket, THROTTLES.ip, now);
-    if (!ipResult.allowed) return ipResult;
+    if (!ipResult.allowed) {return ipResult;}
 
     return { allowed: true, retryAfterMs: 0 };
   }
@@ -181,7 +181,7 @@ export function createLoginRateLimiter(): LoginRateLimiter {
     tupleBucket.attempts.push(now);
     tupleBucket.failures += 1;
     const tupleWait = backoffFor(tupleBucket.failures);
-    if (tupleWait > 0) tupleBucket.nextAllowedAt = now + tupleWait;
+    if (tupleWait > 0) {tupleBucket.nextAllowedAt = now + tupleWait;}
 
     if (email) {
       const emailBucket = getOrCreate(emailBuckets, email);
@@ -206,7 +206,7 @@ export function createLoginRateLimiter(): LoginRateLimiter {
     const email = normalizeEmail(rawEmail);
     const tupleKey = `${ip}|${email}`;
     tupleBuckets.delete(tupleKey);
-    if (email) emailBuckets.delete(email);
+    if (email) {emailBuckets.delete(email);}
     // Note: we intentionally do NOT clear the ipBucket — a single successful
     // login from an IP that's been spamming many users should not reset the
     // overall IP-level pressure.
@@ -257,7 +257,7 @@ export async function warmLoginRateLimiterFromDb(limiter: LoginRateLimiter = log
   try {
     const { loadRecentFailures } = await import("./login-attempts.js");
     const rows = await loadRecentFailures(WARMUP_WINDOW_MS);
-    if (rows.length === 0) return;
+    if (rows.length === 0) {return;}
     for (const row of rows) {
       // Replay each failure — this walks the backoff ladder identically
       // to live traffic.  The side-effect we care about is that the

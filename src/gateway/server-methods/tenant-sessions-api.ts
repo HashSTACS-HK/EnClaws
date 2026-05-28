@@ -54,7 +54,7 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
    */
   "tenant.sessions.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "session.list");
@@ -110,7 +110,7 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
    */
   "tenant.sessions.get": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "session.list");
@@ -170,7 +170,7 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
    */
   "tenant.sessions.delete": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "session.delete");
@@ -203,7 +203,7 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
       const entry = store[key];
 
       const deleted = await updateSessionStore(storePath, (s) => {
-        if (!s[key]) return false;
+        if (!s[key]) {return false;}
         delete s[key];
         return true;
       });

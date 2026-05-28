@@ -226,8 +226,8 @@ export function parseExtraAllowedPaths(raw: string): PathRule[] {
  * which are governed by the exec denylist instead.
  */
 export function resolveToolPathOp(toolName: string): PathOp | null {
-  if (toolName === "read") return "read";
-  if (toolName === "write" || toolName === "edit" || toolName === "apply_patch") return "write";
+  if (toolName === "read") {return "read";}
+  if (toolName === "write" || toolName === "edit" || toolName === "apply_patch") {return "write";}
   return null;
 }
 

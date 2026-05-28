@@ -493,7 +493,7 @@ function createRuntimeTenant(): PluginRuntime["tenant"] {
       // SDK consumers don't have to learn the new shape. The core
       // gateway path (tenant-enrich) uses the raw function and handles
       // the sentinel itself.
-      if (result && ("quotaExceeded" in result || "userSuspended" in result)) return null;
+      if (result && ("quotaExceeded" in result || "userSuspended" in result)) {return null;}
       return result;
     },
   };

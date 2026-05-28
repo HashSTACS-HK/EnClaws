@@ -156,7 +156,7 @@ async function handleSend(params: {
 }): Promise<void> {
   const { visitorId, text, cfg, tenantId, notifyBoss } = params;
 
-  if (!text.trim()) return;
+  if (!text.trim()) {return;}
 
   // Find active session
   // 查找活跃会话

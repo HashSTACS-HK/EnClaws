@@ -707,8 +707,8 @@ export function attachGatewayWsMessageHandler(params: {
                 tenantId: jwtTenant.id,
                 userId: jwtUser.id,
                 email: jwtUser.email ?? undefined,
-                role: jwtUser.role as UserRole,
-                scopes: mapRoleToGatewayScopes(jwtUser.role as UserRole),
+                role: jwtUser.role,
+                scopes: mapRoleToGatewayScopes(jwtUser.role),
               };
             }
           } catch {

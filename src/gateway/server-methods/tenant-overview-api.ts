@@ -44,7 +44,7 @@ function getTenantCtx(
 export const tenantOverviewHandlers: GatewayRequestHandlers = {
   "tenant.overview.summary": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try {
       const result = await getTenantSummary(ctx.tenantId);
       respond(true, result);
@@ -56,7 +56,7 @@ export const tenantOverviewHandlers: GatewayRequestHandlers = {
 
   "tenant.overview.trend": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try {
       const { period } = (params ?? {}) as { period?: string };
       const days = period === "30d" ? 30 : 7;
@@ -69,7 +69,7 @@ export const tenantOverviewHandlers: GatewayRequestHandlers = {
 
   "tenant.overview.rank": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try {
       const { period } = (params ?? {}) as { period?: "all" | "month" | "today" };
       const result = await getTenantTokenRank(ctx.tenantId, period ?? "all");
@@ -81,7 +81,7 @@ export const tenantOverviewHandlers: GatewayRequestHandlers = {
 
   "tenant.overview.llm": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try {
       const { period } = (params ?? {}) as { period?: "all" | "month" | "today" };
       const result = await getTenantLlmStats(ctx.tenantId, period ?? "all");
@@ -93,7 +93,7 @@ export const tenantOverviewHandlers: GatewayRequestHandlers = {
 
   "tenant.overview.channelDistribution": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try {
       const channels = await getTenantChannelDistribution(ctx.tenantId);
       respond(true, { channels });
@@ -104,7 +104,7 @@ export const tenantOverviewHandlers: GatewayRequestHandlers = {
 
   "tenant.overview.recentTraces": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try {
       const traces = await getTenantRecentTraces(ctx.tenantId, 10);
       respond(true, { traces });

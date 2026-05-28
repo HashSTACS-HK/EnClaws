@@ -153,7 +153,7 @@ export async function findResetToken(
       LIMIT 1`,
     [tokenHash, purpose],
   );
-  if (result.rows.length === 0) return null;
+  if (result.rows.length === 0) {return null;}
   const row = result.rows[0] as Record<string, unknown>;
   return {
     id: String(row.id),
@@ -178,7 +178,7 @@ export async function consumeResetToken(id: string): Promise<void> {
  * missing or the ciphertext is invalid (e.g. key changed).
  */
 export function decryptTempPasswordPayload(payload: string | null): string | null {
-  if (!payload) return null;
+  if (!payload) {return null;}
   return decryptPayload(payload);
 }
 
@@ -230,12 +230,12 @@ const forgotLastSeen = new Map<string, number>();
 
 export function shouldThrottleForgot(email: string): boolean {
   const key = email.trim().toLowerCase();
-  if (!key) return false;
+  if (!key) {return false;}
   const last = forgotLastSeen.get(key) ?? 0;
   return Date.now() - last < FORGOT_THROTTLE_MS;
 }
 
 export function noteForgotIssued(email: string): void {
   const key = email.trim().toLowerCase();
-  if (key) forgotLastSeen.set(key, Date.now());
+  if (key) {forgotLastSeen.set(key, Date.now());}
 }

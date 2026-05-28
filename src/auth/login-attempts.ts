@@ -46,9 +46,9 @@ export const DEFAULT_RETENTION_DAYS = 90;
 
 function getRetentionDays(): number {
   const raw = process.env.LOGIN_ATTEMPTS_RETAIN_DAYS;
-  if (!raw) return DEFAULT_RETENTION_DAYS;
+  if (!raw) {return DEFAULT_RETENTION_DAYS;}
   const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return DEFAULT_RETENTION_DAYS;
+  if (!Number.isFinite(n) || n <= 0) {return DEFAULT_RETENTION_DAYS;}
   return Math.floor(n);
 }
 
@@ -57,7 +57,7 @@ function getRetentionDays(): number {
  * so a DB outage can't block auth.login.
  */
 export async function recordLoginAttempt(input: LoginAttemptInsert): Promise<void> {
-  if (!isDbInitialized()) return;
+  if (!isDbInitialized()) {return;}
   try {
     if (getDbType() === DB_SQLITE) {
       const id = crypto.randomUUID();
@@ -88,7 +88,7 @@ function rowToRecord(row: Record<string, unknown>): LoginAttemptRow {
     success: Number(row.success ?? 0) === 1,
     userAgent: (row.user_agent as string) ?? null,
     createdAt: row.created_at instanceof Date
-      ? (row.created_at as Date)
+      ? (row.created_at)
       : new Date(String(row.created_at)),
   };
 }
@@ -101,7 +101,7 @@ function rowToRecord(row: Record<string, unknown>): LoginAttemptRow {
  * Returns at most 5000 rows to keep startup bounded.
  */
 export async function loadRecentFailures(windowMs: number): Promise<LoginAttemptRow[]> {
-  if (!isDbInitialized()) return [];
+  if (!isDbInitialized()) {return [];}
   try {
     if (getDbType() === DB_SQLITE) {
       // Use SQLite's native date arithmetic so we compare against the
@@ -115,7 +115,7 @@ export async function loadRecentFailures(windowMs: number): Promise<LoginAttempt
           LIMIT 5000`,
         [`-${windowSeconds} seconds`],
       );
-      return result.rows.map((r) => rowToRecord(r as Record<string, unknown>));
+      return result.rows.map((r) => rowToRecord(r));
     }
     const cutoff = new Date(Date.now() - windowMs);
     const result = await query<Record<string, unknown>>(
@@ -126,7 +126,7 @@ export async function loadRecentFailures(windowMs: number): Promise<LoginAttempt
         LIMIT 5000`,
       [cutoff],
     );
-    return result.rows.map((r) => rowToRecord(r as Record<string, unknown>));
+    return result.rows.map((r) => rowToRecord(r));
   } catch (err) {
     console.error(
       `[login-attempts] preload failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -140,7 +140,7 @@ export async function loadRecentFailures(windowMs: number): Promise<LoginAttempt
  * Returns the number of rows deleted.  Safe to call on any cadence.
  */
 export async function cleanupOldLoginAttempts(): Promise<number> {
-  if (!isDbInitialized()) return 0;
+  if (!isDbInitialized()) {return 0;}
   const days = getRetentionDays();
   try {
     if (getDbType() === DB_SQLITE) {
@@ -172,7 +172,7 @@ export async function countRecentFailures(
   email: string | null,
   windowMs: number,
 ): Promise<number> {
-  if (!isDbInitialized()) return 0;
+  if (!isDbInitialized()) {return 0;}
   try {
     if (getDbType() === DB_SQLITE) {
       const windowSeconds = Math.ceil(windowMs / 1000);

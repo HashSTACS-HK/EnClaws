@@ -10,7 +10,7 @@ import { PERMISSIONS } from "../db/types.js";
  */
 export function hasPermission(role: UserRole, permission: Permission): boolean {
   const allowedRoles = PERMISSIONS[permission];
-  if (!allowedRoles) return false;
+  if (!allowedRoles) {return false;}
   return (allowedRoles as readonly string[]).includes(role);
 }
 
@@ -79,33 +79,33 @@ export function mapRoleToGatewayScopes(role: UserRole): string[] {
  */
 export function mapMethodToPermission(method: string): Permission | null {
   // Agent methods
-  if (method === "agents.list" || method === "agent.identity.get") return "agent.list";
-  if (method === "agents.create") return "agent.create";
-  if (method === "agents.update") return "agent.update";
-  if (method === "agents.delete") return "agent.delete";
+  if (method === "agents.list" || method === "agent.identity.get") {return "agent.list";}
+  if (method === "agents.create") {return "agent.create";}
+  if (method === "agents.update") {return "agent.update";}
+  if (method === "agents.delete") {return "agent.delete";}
 
   // Session methods
-  if (method === "sessions.list" || method === "sessions.preview") return "session.list";
-  if (method === "sessions.reset" || method === "sessions.delete") return "session.delete";
+  if (method === "sessions.list" || method === "sessions.preview") {return "session.list";}
+  if (method === "sessions.reset" || method === "sessions.delete") {return "session.delete";}
 
   // Config methods
-  if (method.startsWith("config.get")) return "config.read";
-  if (method.startsWith("config.")) return "config.write";
+  if (method.startsWith("config.get")) {return "config.read";}
+  if (method.startsWith("config.")) {return "config.write";}
 
   // Chat methods — general use permission
-  if (method.startsWith("chat.")) return "agent.use";
+  if (method.startsWith("chat.")) {return "agent.use";}
 
   // Channel methods
-  if (method === "channels.status") return "channel.list";
-  if (method === "channels.logout") return "channel.delete";
+  if (method === "channels.status") {return "channel.list";}
+  if (method === "channels.logout") {return "channel.delete";}
 
   // Skill methods
-  if (method === "skills.status") return "skill.list";
-  if (method === "skills.update") return "skill.update";
-  if (method === "skills.install") return "skill.install";
+  if (method === "skills.status") {return "skill.list";}
+  if (method === "skills.update") {return "skill.update";}
+  if (method === "skills.install") {return "skill.install";}
 
   // Platform methods
-  if (method.startsWith("platform.")) return "platform.overview";
+  if (method.startsWith("platform.")) {return "platform.overview";}
 
   // Default: allow if authenticated (no specific permission required)
   return null;

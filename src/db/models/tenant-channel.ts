@@ -8,7 +8,7 @@ import type { TenantChannel, TenantChannelConfig, ChannelPolicy } from "../types
 import { listChannelApps } from "./tenant-channel-app.js";
 
 function parseConfig(raw: unknown): TenantChannelConfig {
-  if (!raw) return {} as TenantChannelConfig;
+  if (!raw) {return {} as TenantChannelConfig;}
   if (typeof raw === "string") {
     try { return JSON.parse(raw); } catch { return {} as TenantChannelConfig; }
   }
@@ -38,7 +38,7 @@ export async function createTenantChannel(params: {
   config?: Partial<TenantChannelConfig>;
   createdBy?: string;
 }): Promise<TenantChannel> {
-  if (getDbType() === DB_SQLITE) return sqliteChannel.createTenantChannel(params);
+  if (getDbType() === DB_SQLITE) {return sqliteChannel.createTenantChannel(params);}
   const result = await query(
     `INSERT INTO tenant_channels (tenant_id, channel_type, channel_name, channel_policy, config, created_by)
      VALUES ($1, $2, $3, $4, $5, $6)
@@ -59,7 +59,7 @@ export async function getTenantChannelById(
   tenantId: string,
   channelId: string,
 ): Promise<TenantChannel | null> {
-  if (getDbType() === DB_SQLITE) return sqliteChannel.getTenantChannelById(tenantId, channelId);
+  if (getDbType() === DB_SQLITE) {return sqliteChannel.getTenantChannelById(tenantId, channelId);}
   const result = await query(
     "SELECT * FROM tenant_channels WHERE tenant_id = $1 AND id = $2",
     [tenantId, channelId],
@@ -71,7 +71,7 @@ export async function listTenantChannels(
   tenantId: string,
   opts?: { activeOnly?: boolean; channelType?: string },
 ): Promise<TenantChannel[]> {
-  if (getDbType() === DB_SQLITE) return sqliteChannel.listTenantChannels(tenantId, opts);
+  if (getDbType() === DB_SQLITE) {return sqliteChannel.listTenantChannels(tenantId, opts);}
   const conditions = ["tenant_id = $1"];
   const values: unknown[] = [tenantId];
   let idx = 2;
@@ -96,7 +96,7 @@ export async function updateTenantChannel(
   channelId: string,
   updates: Partial<Pick<TenantChannel, "isActive" | "channelName" | "channelPolicy" | "config">>,
 ): Promise<TenantChannel | null> {
-  if (getDbType() === DB_SQLITE) return sqliteChannel.updateTenantChannel(tenantId, channelId, updates);
+  if (getDbType() === DB_SQLITE) {return sqliteChannel.updateTenantChannel(tenantId, channelId, updates);}
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -118,7 +118,7 @@ export async function updateTenantChannel(
     values.push(JSON.stringify(updates.config));
   }
 
-  if (sets.length === 0) return null;
+  if (sets.length === 0) {return null;}
 
   values.push(tenantId, channelId);
   const result = await query(
@@ -131,7 +131,7 @@ export async function updateTenantChannel(
 }
 
 export async function deleteTenantChannel(tenantId: string, channelId: string): Promise<boolean> {
-  if (getDbType() === DB_SQLITE) return sqliteChannel.deleteTenantChannel(tenantId, channelId);
+  if (getDbType() === DB_SQLITE) {return sqliteChannel.deleteTenantChannel(tenantId, channelId);}
   const result = await query(
     "DELETE FROM tenant_channels WHERE tenant_id = $1 AND id = $2",
     [tenantId, channelId],
@@ -144,7 +144,7 @@ export async function deleteTenantChannel(tenantId: string, channelId: string): 
  * Reads apps from tenant_channel_apps for each channel.
  */
 export async function toConfigChannels(channels: TenantChannel[]): Promise<Record<string, unknown>> {
-  if (getDbType() === DB_SQLITE) return sqliteChannel.toConfigChannels(channels);
+  if (getDbType() === DB_SQLITE) {return sqliteChannel.toConfigChannels(channels);}
   const result: Record<string, unknown> = {};
   for (const ch of channels) {
     const key = ch.channelName ? `${ch.channelType}:${ch.channelName}` : ch.channelType;

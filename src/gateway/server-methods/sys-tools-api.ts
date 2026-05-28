@@ -37,8 +37,8 @@ export const sysToolsHandlers: GatewayRequestHandlers = {
       profile?: string;
     };
     const updates: Record<string, unknown> = {};
-    if (deny !== undefined) updates.deny = deny;
-    if (profile !== undefined) updates.profile = profile;
+    if (deny !== undefined) {updates.deny = deny;}
+    if (profile !== undefined) {updates.profile = profile;}
 
     if (Object.keys(updates).length === 0) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "No fields to update"));

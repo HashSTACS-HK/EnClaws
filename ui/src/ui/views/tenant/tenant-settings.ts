@@ -116,14 +116,14 @@ export class TenantSettingsView extends LitElement {
   private showError(key: string) {
     this.errorKey = key;
     this.successKey = "";
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.errorKey = ""), 5000);
   }
 
   private showSuccess(key: string) {
     this.successKey = key;
     this.errorKey = "";
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.successKey = ""), 5000);
   }
 

@@ -383,9 +383,9 @@ export class CSWidget extends LitElement {
     const text = this.inputText.trim();
     // Allow sending even without sessionId — session is created lazily on first message.
     // 允许在 sessionId 为空时发送，session 由后端在首条消息时按需创建。
-    if (!text || this.sending) return;
+    if (!text || this.sending) {return;}
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
 
     const tempId = `tmp-${Date.now()}`;
     this.messages = [
@@ -428,7 +428,7 @@ export class CSWidget extends LitElement {
         },
       ];
 
-      if (!this.open) this.unread++;
+      if (!this.open) {this.unread++;}
     } catch (_err) {
       this.messages = this.messages.filter((m) => m.id !== typingId);
       this.messages = [
@@ -451,7 +451,7 @@ export class CSWidget extends LitElement {
   private _scrollToBottom() {
     requestAnimationFrame(() => {
       const el = this.shadowRoot?.querySelector(".messages");
-      if (el) el.scrollTop = el.scrollHeight;
+      if (el) {el.scrollTop = el.scrollHeight;}
     });
   }
 
@@ -466,7 +466,7 @@ export class CSWidget extends LitElement {
         </div>
       `;
     }
-    if (msg.role === "system" && !msg.text) return nothing;
+    if (msg.role === "system" && !msg.text) {return nothing;}
     return html`
       <div class="msg-wrap ${msg.role}">
         ${msg.role !== "customer" ? html`<div class="msg-role">${msg.roleLabel}</div>` : nothing}

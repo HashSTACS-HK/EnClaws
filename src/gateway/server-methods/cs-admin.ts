@@ -123,7 +123,7 @@ function csKnowledgeDir(tenantId: string): string {
 /** Sanitize file name: allow only safe chars, force .md extension. */
 function sanitizeFileName(raw: string): string | null {
   const base = path.basename(raw).replace(/[^a-zA-Z0-9\-_.]/g, "");
-  if (!base) return null;
+  if (!base) {return null;}
   return base.endsWith(".md") ? base : `${base}.md`;
 }
 
@@ -289,7 +289,7 @@ export const csAdminHandlers: GatewayRequestHandlers = {
       const sessionsWithLast = sessions.map((s, i) => ({
         ...s,
         lastMessage: lastMessages[i]
-          ? { role: lastMessages[i]!.role, content: lastMessages[i]!.content }
+          ? { role: lastMessages[i].role, content: lastMessages[i].content }
           : null,
       }));
 

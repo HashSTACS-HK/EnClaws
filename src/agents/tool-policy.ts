@@ -35,7 +35,7 @@ export function isOwnerOnlyToolName(name: string) {
 }
 
 function isOwnerOnlyTool(tool: AnyAgentTool) {
-  if (tool.tenantScoped) return false;
+  if (tool.tenantScoped) {return false;}
   return tool.ownerOnly === true || isOwnerOnlyToolName(tool.name);
 }
 

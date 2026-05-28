@@ -338,7 +338,7 @@ export class PlatformTenantsView extends LitElement {
 
   private onSearchInput(e: InputEvent) {
     this.searchQuery = (e.target as HTMLInputElement).value;
-    if (this.searchTimer) clearTimeout(this.searchTimer);
+    if (this.searchTimer) {clearTimeout(this.searchTimer);}
     this.searchTimer = setTimeout(() => {
       this.page = 0;
       this.loadTenants();
@@ -370,7 +370,7 @@ export class PlatformTenantsView extends LitElement {
   }
 
   private onEditPlanChange(plan: TenantRow["plan"]) {
-    if (!this.editState) return;
+    if (!this.editState) {return;}
     const defaults = this.planDefaults?.[plan];
     this.editState = {
       ...this.editState,
@@ -380,7 +380,7 @@ export class PlatformTenantsView extends LitElement {
   }
 
   private async saveEdit() {
-    if (!this.editState) return;
+    if (!this.editState) {return;}
     this.saving = true;
     try {
       await tenantRpc("platform.tenants.update", {
@@ -411,8 +411,8 @@ export class PlatformTenantsView extends LitElement {
   }
 
   private formatQuota(value: number): string {
-    if (value === -1) return t("tenantUsage.noLimit" as any) || "Unlimited";
-    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value === -1) {return t("tenantUsage.noLimit" as any) || "Unlimited";}
+    if (value >= 1_000_000) {return `${(value / 1_000_000).toFixed(1)}M`;}
     return String(value);
   }
 
@@ -428,10 +428,10 @@ export class PlatformTenantsView extends LitElement {
 
   private get currentLocaleTag(): string {
     const loc = i18n.getLocale();
-    if (loc === "zh-CN") return "zh-CN";
-    if (loc === "zh-TW") return "zh-TW";
-    if (loc === "de") return "de-DE";
-    if (loc === "pt-BR") return "pt-BR";
+    if (loc === "zh-CN") {return "zh-CN";}
+    if (loc === "zh-TW") {return "zh-TW";}
+    if (loc === "de") {return "de-DE";}
+    if (loc === "pt-BR") {return "pt-BR";}
     return "en-US";
   }
 
@@ -448,27 +448,27 @@ export class PlatformTenantsView extends LitElement {
   }
 
   private goToPage(p: number) {
-    if (p < 0 || p >= this.totalPages || p === this.page) return;
+    if (p < 0 || p >= this.totalPages || p === this.page) {return;}
     this.page = p;
     this.loadTenants();
   }
 
   private renderPagination() {
     const tp = this.totalPages;
-    if (this.total <= 0) return nothing;
+    if (this.total <= 0) {return nothing;}
     const start = this.page * this.PAGE_SIZE + 1;
     const end = Math.min((this.page + 1) * this.PAGE_SIZE, this.total);
 
     const pages: (number | "...")[] = [];
     if (tp <= 7) {
-      for (let i = 0; i < tp; i++) pages.push(i);
+      for (let i = 0; i < tp; i++) {pages.push(i);}
     } else {
       pages.push(0);
-      if (this.page > 2) pages.push("...");
+      if (this.page > 2) {pages.push("...");}
       const lo = Math.max(1, this.page - 1);
       const hi = Math.min(tp - 2, this.page + 1);
-      for (let i = lo; i <= hi; i++) pages.push(i);
-      if (this.page < tp - 3) pages.push("...");
+      for (let i = lo; i <= hi; i++) {pages.push(i);}
+      if (this.page < tp - 3) {pages.push("...");}
       pages.push(tp - 1);
     }
 
@@ -520,9 +520,9 @@ export class PlatformTenantsView extends LitElement {
 
   private renderEditModal() {
     const es = this.editState;
-    if (!es) return nothing;
+    if (!es) {return nothing;}
     return html`
-      <div class="modal-overlay" @click=${(e: Event) => { if (e.target === e.currentTarget) this.closeEdit(); }}>
+      <div class="modal-overlay" @click=${(e: Event) => { if (e.target === e.currentTarget) {this.closeEdit();} }}>
         <div class="modal">
           <div class="modal-header">
             <h3>${t("platformTenants.editTitle" as any) || "Edit Enterprise"}</h3>

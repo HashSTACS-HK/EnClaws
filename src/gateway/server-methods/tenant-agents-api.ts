@@ -41,7 +41,7 @@ const DEFAULT_IDENTITY_FILENAME = "IDENTITY.md";
 /** Sync config.systemPrompt to the agent's IDENTITY.md file on disk. */
 export async function syncIdentityFile(tenantId: string, agentId: string, config?: Record<string, unknown>): Promise<void> {
   const systemPrompt = typeof config?.systemPrompt === "string" ? config.systemPrompt.trim() : "";
-  if (!systemPrompt) return;
+  if (!systemPrompt) {return;}
   const agentDir = resolveTenantAgentDir(tenantId, agentId);
   await fs.mkdir(agentDir, { recursive: true });
   await fs.writeFile(path.join(agentDir, DEFAULT_IDENTITY_FILENAME), systemPrompt, "utf-8");
@@ -71,7 +71,7 @@ function isAdminRole(role: string): boolean {
 export const tenantAgentsHandlers: GatewayRequestHandlers = {
   "tenant.agents.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "agent.list");
@@ -106,7 +106,7 @@ export const tenantAgentsHandlers: GatewayRequestHandlers = {
 
   "tenant.agents.create": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "agent.create");
@@ -228,7 +228,7 @@ export const tenantAgentsHandlers: GatewayRequestHandlers = {
 
   "tenant.agents.update": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "agent.update");
@@ -351,7 +351,7 @@ export const tenantAgentsHandlers: GatewayRequestHandlers = {
 
   "tenant.agents.delete": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "agent.delete");
@@ -417,7 +417,7 @@ export const tenantAgentsHandlers: GatewayRequestHandlers = {
   /** List all active channel apps for the tenant (used by agent form dropdown). */
   "tenant.agents.channel_apps.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
     try { assertPermission(ctx.role, "agent.list"); } catch (err) {
       if (err instanceof RbacError) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, err.message)); return; }
       throw err;

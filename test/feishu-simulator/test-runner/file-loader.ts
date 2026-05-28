@@ -3,7 +3,7 @@ import path from "node:path";
 import type { TestFile } from "../types.js";
 
 export function loadTestFiles(dirOrFile: string, prefix = ""): Array<{ fileName: string; data: TestFile }> {
-  if (!fs.existsSync(dirOrFile)) return [];
+  if (!fs.existsSync(dirOrFile)) {return [];}
   // Support passing a single .json file directly
   if (!prefix && fs.statSync(dirOrFile).isFile() && dirOrFile.endsWith(".json")) {
     const raw = fs.readFileSync(dirOrFile, "utf-8");
@@ -19,5 +19,5 @@ export function loadTestFiles(dirOrFile: string, prefix = ""): Array<{ fileName:
       results.push({ fileName: rel, data: JSON.parse(raw) as TestFile });
     }
   }
-  return results.sort((a, b) => a.fileName.localeCompare(b.fileName));
+  return results.toSorted((a, b) => a.fileName.localeCompare(b.fileName));
 }

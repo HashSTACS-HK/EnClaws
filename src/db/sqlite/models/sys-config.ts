@@ -71,7 +71,7 @@ function rowToPluginsConfig(row: Record<string, unknown>): SysPluginsConfigRow {
 
 export async function getSysGatewayConfig(): Promise<SysGatewayConfigRow> {
   const result = sqliteQuery("SELECT * FROM sys_gateway_config WHERE id = 1");
-  return rowToGatewayConfig(result.rows[0] as Record<string, unknown>);
+  return rowToGatewayConfig(result.rows[0]);
 }
 
 export async function upsertSysGatewayConfig(
@@ -109,7 +109,7 @@ export async function upsertSysGatewayConfig(
 
 export async function getSysLoggingConfig(): Promise<SysLoggingConfigRow> {
   const result = sqliteQuery("SELECT * FROM sys_logging_config WHERE id = 1");
-  return rowToLoggingConfig(result.rows[0] as Record<string, unknown>);
+  return rowToLoggingConfig(result.rows[0]);
 }
 
 export async function upsertSysLoggingConfig(
@@ -138,7 +138,7 @@ export async function upsertSysLoggingConfig(
 
 export async function getSysPluginsConfig(): Promise<SysPluginsConfigRow> {
   const result = sqliteQuery("SELECT * FROM sys_plugins_config WHERE id = 1");
-  return rowToPluginsConfig(result.rows[0] as Record<string, unknown>);
+  return rowToPluginsConfig(result.rows[0]);
 }
 
 export async function upsertSysPluginsConfig(
@@ -192,7 +192,7 @@ function rowToToolsConfig(row: Record<string, unknown>): SysToolsConfigRow {
 
 export async function getSysToolsConfig(): Promise<SysToolsConfigRow> {
   const result = sqliteQuery("SELECT * FROM sys_tools_config WHERE id = 1");
-  return rowToToolsConfig(result.rows[0] as Record<string, unknown>);
+  return rowToToolsConfig(result.rows[0]);
 }
 
 export async function upsertSysToolsConfig(

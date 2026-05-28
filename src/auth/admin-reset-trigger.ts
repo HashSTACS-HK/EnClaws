@@ -22,7 +22,7 @@ import { revokeAllUserTokens } from "./jwt.js";
 import { createAuditLog } from "../db/models/audit-log.js";
 
 export async function maybeRunAdminResetTrigger(): Promise<void> {
-  if (process.env.ENCLAWS_ADMIN_RESET !== "1") return;
+  if (process.env.ENCLAWS_ADMIN_RESET !== "1") {return;}
   if (!isDbInitialized()) {
     console.error("[admin-reset] ENCLAWS_ADMIN_RESET=1 but database is not configured; skipping.");
     return;

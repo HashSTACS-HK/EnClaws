@@ -76,9 +76,9 @@ export const modelsHandlers: GatewayRequestHandlers = {
       // In multi-tenant mode, build the catalog from the (fresh) tenant config
       // so that model management changes are reflected immediately.
       const cfg = isTenantRequest
-        ? await loadTenantConfig(tenant!.tenantId, {
-            userId: tenant!.userId,
-            userRole: tenant!.role,
+        ? await loadTenantConfig(tenant.tenantId, {
+            userId: tenant.userId,
+            userRole: tenant.role,
           })
         : loadConfig();
 

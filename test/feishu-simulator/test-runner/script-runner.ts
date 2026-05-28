@@ -54,13 +54,13 @@ function parseCommand(cmd: string): string[] {
     if (ch === "'" && !inDouble) { inSingle = !inSingle; continue; }
     if (ch === '"' && !inSingle) { inDouble = !inDouble; continue; }
     if (ch === " " && !inSingle && !inDouble) {
-      if (current) parts.push(current);
+      if (current) {parts.push(current);}
       current = "";
       continue;
     }
     current += ch;
   }
-  if (current) parts.push(current);
+  if (current) {parts.push(current);}
   return parts;
 }
 
@@ -69,7 +69,7 @@ function applyTemplate(template: string, vars: Record<string, string>): string {
 }
 
 export function loadScriptTestFiles(dir: string, prefix = ""): Array<{ fileName: string; data: ScriptTestFile }> {
-  if (!fs.existsSync(dir)) return [];
+  if (!fs.existsSync(dir)) {return [];}
   const results: Array<{ fileName: string; data: ScriptTestFile }> = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -80,7 +80,7 @@ export function loadScriptTestFiles(dir: string, prefix = ""): Array<{ fileName:
       results.push({ fileName: rel, data: JSON.parse(raw) as ScriptTestFile });
     }
   }
-  return results.sort((a, b) => a.fileName.localeCompare(b.fileName));
+  return results.toSorted((a, b) => a.fileName.localeCompare(b.fileName));
 }
 
 export async function runScriptTestFiles(opts: ScriptRunnerOptions): Promise<{ results: ScriptResultRow[]; errors: string[] }> {
@@ -168,9 +168,9 @@ async function runSingleScriptFile(
       console.log(`  [${i + 1}/${data.cases.length}] FAIL \u274C ${tc.name}`);
       console.log(`    Command:  ${command}`);
       console.log(`    Failures: ${failures.join("; ")}`);
-      if (exec.stderr) console.log(`    Stderr:   ${exec.stderr.slice(0, 200)}`);
+      if (exec.stderr) {console.log(`    Stderr:   ${exec.stderr.slice(0, 200)}`);}
       errors.push(`[${fileName}] "${tc.name}": ${failures.join("; ")}`);
-      if (!opts.continueOnFailure) break;
+      if (!opts.continueOnFailure) {break;}
     }
 
     // Run cleanup command if provided

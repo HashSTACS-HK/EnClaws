@@ -84,7 +84,7 @@ export function parseMarkdownProgressive(
       blocks: sections.length
         ? buildBlocks({
             lines,
-            section: sections[0]!,
+            section: sections[0],
             maxBlockChars: options?.maxBlockChars,
           })
         : [],

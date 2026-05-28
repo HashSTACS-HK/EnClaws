@@ -7,7 +7,7 @@ import type { TenantChannel, TenantChannelConfig, ChannelPolicy } from "../../ty
 import { listChannelApps } from "./tenant-channel-app.js";
 
 function parseConfig(raw: unknown): TenantChannelConfig {
-  if (!raw) return {} as TenantChannelConfig;
+  if (!raw) {return {} as TenantChannelConfig;}
   if (typeof raw === "string") {
     try { return JSON.parse(raw); } catch { return {} as TenantChannelConfig; }
   }
@@ -113,7 +113,7 @@ export async function updateTenantChannel(
     values.push(JSON.stringify(updates.config));
   }
 
-  if (sets.length === 0) return null;
+  if (sets.length === 0) {return null;}
 
   values.push(tenantId, channelId);
   sqliteQuery(

@@ -113,7 +113,7 @@ function validateModels(models: TenantModelDefinition[] | undefined, respond: Ga
         return false;
       }
       modelIds.add(m.id);
-      if (!m.contextWindow) m.contextWindow = 128000;
+      if (!m.contextWindow) {m.contextWindow = 128000;}
     }
   }
   return true;
@@ -122,7 +122,7 @@ function validateModels(models: TenantModelDefinition[] | undefined, respond: Ga
 export const platformModelsHandlers: GatewayRequestHandlers = {
   "platform.models.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "platform.models.list");
@@ -157,7 +157,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
 
   "platform.models.create": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "platform.models.create");
@@ -188,7 +188,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerType or providerName"));
       return;
     }
-    if (!validateModels(models, respond)) return;
+    if (!validateModels(models, respond)) {return;}
 
     try {
       const model = await createTenantModel({
@@ -237,7 +237,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
 
   "platform.models.update": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "platform.models.update");
@@ -264,7 +264,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing id"));
       return;
     }
-    if (!validateModels(models, respond)) return;
+    if (!validateModels(models, respond)) {return;}
 
     const existing = await getModelById(id);
     if (!existing || existing.visibility !== "shared") {
@@ -292,13 +292,13 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     }
 
     const updates: Record<string, unknown> = {};
-    if (providerName !== undefined) updates.providerName = providerName;
-    if (baseUrl !== undefined) updates.baseUrl = baseUrl;
-    if (apiProtocol !== undefined) updates.apiProtocol = apiProtocol;
-    if (authMode !== undefined) updates.authMode = authMode;
-    if (apiKey !== undefined) updates.apiKeyEncrypted = apiKey;
-    if (models !== undefined) updates.models = models;
-    if (isActive !== undefined) updates.isActive = isActive;
+    if (providerName !== undefined) {updates.providerName = providerName;}
+    if (baseUrl !== undefined) {updates.baseUrl = baseUrl;}
+    if (apiProtocol !== undefined) {updates.apiProtocol = apiProtocol;}
+    if (authMode !== undefined) {updates.authMode = authMode;}
+    if (apiKey !== undefined) {updates.apiKeyEncrypted = apiKey;}
+    if (models !== undefined) {updates.models = models;}
+    if (isActive !== undefined) {updates.isActive = isActive;}
 
     const updated = await updateModelById(id, updates);
     if (!updated) {
@@ -334,7 +334,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
 
   "platform.models.delete": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "platform.models.delete");
@@ -364,7 +364,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     for (const mid of allModelIds) {
       const refs = await findAgentsByModelRefAsync(id, mid);
       for (const name of refs) {
-        if (!allRefAgents.includes(name)) allRefAgents.push(name);
+        if (!allRefAgents.includes(name)) {allRefAgents.push(name);}
       }
     }
     if (allRefAgents.length > 0) {
@@ -391,7 +391,7 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
 
   "platform.models.checkModelUsage": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "platform.models.update");

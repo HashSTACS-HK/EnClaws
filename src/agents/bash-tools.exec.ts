@@ -379,7 +379,7 @@ export function createExecTool(
       if (Object.keys(asyncExtraEnv).length > 0) {
         logInfo(`[exec] extraEnvAsync injected: ${Object.keys(asyncExtraEnv).join(", ")}`);
       }
-      const mergedEnv = { ...baseEnv, ...(params.env ?? {}), ...defaultsExtraEnv, ...asyncExtraEnv };
+      const mergedEnv = { ...baseEnv, ...params.env, ...defaultsExtraEnv, ...asyncExtraEnv };
 
       const env = sandbox
         ? buildSandboxEnv({

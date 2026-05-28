@@ -74,7 +74,7 @@ export function createDedupeCache(options: DedupeCacheOptions): DedupeCache {
       return hasUnexpired(key, now, false);
     },
     delete: (key) => {
-      if (!key) return;
+      if (!key) {return;}
       cache.delete(key);
     },
     clear: () => {

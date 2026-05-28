@@ -505,7 +505,7 @@ export class OnboardingWizard extends LitElement {
           this.stopFeishuPoll();
           this.channelAppId = result.appId;
           this.channelAppSecret = result.appSecret;
-          if (result.botName) this.channelBotName = result.botName;
+          if (result.botName) {this.channelBotName = result.botName;}
           this.feishuPolling = false;
           this.feishuMode = "manual"; // show filled fields
         } else if (result.status === "error") {
@@ -628,12 +628,12 @@ export class OnboardingWizard extends LitElement {
   }
 
   private nextModel() {
-    if (!this.validateModel()) return;
+    if (!this.validateModel()) {return;}
     this.goNext();
   }
 
   private nextChannel() {
-    if (this.selectedChannel && !this.validateChannel()) return;
+    if (this.selectedChannel && !this.validateChannel()) {return;}
     this.submitAll();
   }
 
@@ -765,7 +765,7 @@ export class OnboardingWizard extends LitElement {
           <div class="option-card ${this.selectedChannel === ch.type ? 'selected' : ''}"
             @click=${() => {
               const prev = this.selectedChannel;
-              if (prev === ch.type) return;
+              if (prev === ch.type) {return;}
               // Switching channel type invalidates any credentials the user
               // started entering (or that were scanned for a different type).
               this.channelAppId = "";
@@ -882,7 +882,7 @@ export class OnboardingWizard extends LitElement {
   }
 
   private get modelNextDisabled(): boolean {
-    if (this.saving) return true;
+    if (this.saving) {return true;}
     if (this.modelMode === "shared") {
       return !this.selectedSharedModelId || !this.selectedSharedSubModelId;
     }

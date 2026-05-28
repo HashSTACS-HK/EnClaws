@@ -71,7 +71,7 @@ function rowToPluginsConfig(row: Record<string, unknown>): SysPluginsConfigRow {
 // ---------------------------------------------------------------------------
 
 export async function getSysGatewayConfig(): Promise<SysGatewayConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.getSysGatewayConfig();
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.getSysGatewayConfig();}
   const result = await query("SELECT * FROM sys_gateway_config WHERE id = 1");
   return rowToGatewayConfig(result.rows[0]);
 }
@@ -79,7 +79,7 @@ export async function getSysGatewayConfig(): Promise<SysGatewayConfigRow> {
 export async function upsertSysGatewayConfig(
   data: Partial<Omit<SysGatewayConfigRow, "id" | "updatedAt">>,
 ): Promise<SysGatewayConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.upsertSysGatewayConfig(data);
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.upsertSysGatewayConfig(data);}
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -112,7 +112,7 @@ export async function upsertSysGatewayConfig(
 // ---------------------------------------------------------------------------
 
 export async function getSysLoggingConfig(): Promise<SysLoggingConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.getSysLoggingConfig();
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.getSysLoggingConfig();}
   const result = await query("SELECT * FROM sys_logging_config WHERE id = 1");
   return rowToLoggingConfig(result.rows[0]);
 }
@@ -120,7 +120,7 @@ export async function getSysLoggingConfig(): Promise<SysLoggingConfigRow> {
 export async function upsertSysLoggingConfig(
   data: Partial<Omit<SysLoggingConfigRow, "id" | "updatedAt">>,
 ): Promise<SysLoggingConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.upsertSysLoggingConfig(data);
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.upsertSysLoggingConfig(data);}
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -144,7 +144,7 @@ export async function upsertSysLoggingConfig(
 // ---------------------------------------------------------------------------
 
 export async function getSysPluginsConfig(): Promise<SysPluginsConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.getSysPluginsConfig();
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.getSysPluginsConfig();}
   const result = await query("SELECT * FROM sys_plugins_config WHERE id = 1");
   return rowToPluginsConfig(result.rows[0]);
 }
@@ -152,7 +152,7 @@ export async function getSysPluginsConfig(): Promise<SysPluginsConfigRow> {
 export async function upsertSysPluginsConfig(
   data: Partial<Omit<SysPluginsConfigRow, "id" | "updatedAt">>,
 ): Promise<SysPluginsConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.upsertSysPluginsConfig(data);
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.upsertSysPluginsConfig(data);}
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -201,7 +201,7 @@ function rowToToolsConfig(row: Record<string, unknown>): SysToolsConfigRow {
 }
 
 export async function getSysToolsConfig(): Promise<SysToolsConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.getSysToolsConfig();
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.getSysToolsConfig();}
   const result = await query("SELECT * FROM sys_tools_config WHERE id = 1");
   return rowToToolsConfig(result.rows[0]);
 }
@@ -209,7 +209,7 @@ export async function getSysToolsConfig(): Promise<SysToolsConfigRow> {
 export async function upsertSysToolsConfig(
   data: Partial<Omit<SysToolsConfigRow, "id" | "updatedAt">>,
 ): Promise<SysToolsConfigRow> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.upsertSysToolsConfig(data);
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.upsertSysToolsConfig(data);}
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -249,7 +249,7 @@ export async function loadAllSysConfig(): Promise<{
   plugins: SysPluginsConfigRow;
   tools: SysToolsConfigRow;
 }> {
-  if (getDbType() === DB_SQLITE) return sqliteSysConfig.loadAllSysConfig();
+  if (getDbType() === DB_SQLITE) {return sqliteSysConfig.loadAllSysConfig();}
   const [gateway, logging, plugins, tools] = await Promise.all([
     getSysGatewayConfig(),
     getSysLoggingConfig(),

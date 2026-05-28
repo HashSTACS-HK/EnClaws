@@ -169,22 +169,22 @@ describe("parseExtraAllowedPaths()", () => {
   it("parses a single read+write path", () => {
     const [rule] = parseExtraAllowedPaths("/data/shared");
     expect(rule).toBeDefined();
-    expect(rule!.ops.has("read")).toBe(true);
-    expect(rule!.ops.has("write")).toBe(true);
+    expect(rule.ops.has("read")).toBe(true);
+    expect(rule.ops.has("write")).toBe(true);
   });
 
   it("parses a single read-only path (`:read` suffix)", () => {
     const [rule] = parseExtraAllowedPaths("/mnt/reports:read");
     expect(rule).toBeDefined();
-    expect(rule!.ops.has("read")).toBe(true);
-    expect(rule!.ops.has("write")).toBe(false);
+    expect(rule.ops.has("read")).toBe(true);
+    expect(rule.ops.has("write")).toBe(false);
   });
 
   it("parses comma-separated paths", () => {
     const rules = parseExtraAllowedPaths("/data/shared,/mnt/reports:read");
     expect(rules).toHaveLength(2);
-    expect(rules[0]!.ops.has("write")).toBe(true);
-    expect(rules[1]!.ops.has("write")).toBe(false);
+    expect(rules[0].ops.has("write")).toBe(true);
+    expect(rules[1].ops.has("write")).toBe(false);
   });
 
   it("parses newline-separated paths", () => {
@@ -199,14 +199,14 @@ describe("parseExtraAllowedPaths()", () => {
 
   it("resolves relative paths to absolute", () => {
     const rules = parseExtraAllowedPaths("relative/path");
-    expect(path.isAbsolute(rules[0]!.prefix)).toBe(true);
+    expect(path.isAbsolute(rules[0].prefix)).toBe(true);
   });
 
   it("treats unknown suffix as read+write (not :read)", () => {
     // e.g. /path/to/dir:write — unknown suffix, fallback to full access
     const [rule] = parseExtraAllowedPaths("/data/shared:write");
-    expect(rule!.ops.has("read")).toBe(true);
-    expect(rule!.ops.has("write")).toBe(true);
+    expect(rule.ops.has("read")).toBe(true);
+    expect(rule.ops.has("write")).toBe(true);
   });
 });
 

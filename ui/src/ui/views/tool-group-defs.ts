@@ -87,7 +87,7 @@ for (const g of TOOL_GROUP_DEFS) {
   GROUP_LABEL_KEY[g.id] = g.labelKey;
   for (const td of g.tools) {
     TOOL_DESC_KEY[td.id] = td.descKey;
-    if (td.labelKey) TOOL_LABEL_KEY[td.id] = td.labelKey;
+    if (td.labelKey) {TOOL_LABEL_KEY[td.id] = td.labelKey;}
   }
 }
 // Server-side catalog splits nodes/image+tts into their own groups (nodes, media),

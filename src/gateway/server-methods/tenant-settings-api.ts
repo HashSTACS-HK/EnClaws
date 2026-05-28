@@ -120,7 +120,7 @@ async function syncTenantKnowledgeIndex(ctx: TenantContext, reason: string): Pro
 export const tenantSettingsHandlers: GatewayRequestHandlers = {
   "tenant.settings.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -146,7 +146,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.settings.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.update");
@@ -164,8 +164,8 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
     };
 
     const updates: Record<string, unknown> = {};
-    if (name !== undefined) updates.name = name;
-    if (identityPrompt !== undefined) updates.identityPrompt = identityPrompt;
+    if (name !== undefined) {updates.name = name;}
+    if (identityPrompt !== undefined) {updates.identityPrompt = identityPrompt;}
 
     if (Object.keys(updates).length === 0) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "No fields to update"));
@@ -199,7 +199,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -225,7 +225,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.update");
@@ -272,7 +272,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -310,7 +310,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.file.get": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -371,7 +371,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.file.set": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.update");
@@ -442,7 +442,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.delete": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.update");

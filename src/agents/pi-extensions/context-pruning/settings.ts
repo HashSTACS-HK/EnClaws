@@ -75,7 +75,7 @@ const OPTIMIZED_SOFT_TRIM: Record<string, SoftTrimThresholds> = {
 const DEFAULT_SOFT_TRIM: SoftTrimThresholds = { maxChars: 4_000, headChars: 1_500, tailChars: 1_500 };
 
 export function getEffectiveSoftTrimSettings(toolName?: string): SoftTrimThresholds {
-  if (!isOptEnabled("TRIM") || !toolName) return DEFAULT_SOFT_TRIM;
+  if (!isOptEnabled("TRIM") || !toolName) {return DEFAULT_SOFT_TRIM;}
   return OPTIMIZED_SOFT_TRIM[toolName] ?? DEFAULT_SOFT_TRIM;
 }
 

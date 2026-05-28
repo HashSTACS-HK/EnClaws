@@ -30,7 +30,7 @@ export async function archivePasswordHash(
   userId: string,
   currentHash: string,
 ): Promise<void> {
-  if (!currentHash) return;
+  if (!currentHash) {return;}
   if (getDbType() === DB_SQLITE) {
     const id = crypto.randomUUID();
     await query(

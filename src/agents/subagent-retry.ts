@@ -71,7 +71,7 @@ export function shouldRetrySubagentRun(params: {
   const { entry, taskResult, outcome, policy } = params;
 
   // Never retry if retries are disabled.
-  if (policy.maxRetries <= 0) return false;
+  if (policy.maxRetries <= 0) {return false;}
 
   // Check retry count.
   const currentRetryCount = entry.retryCount ?? 0;
@@ -197,7 +197,7 @@ export async function retrySubagentRun(params: {
   ].join("\n\n");
 
   const childIdem = crypto.randomUUID();
-  let childRunId = childIdem as `${string}-${string}-${string}-${string}-${string}`;
+  let childRunId = childIdem;
 
   try {
     const response = await callGateway<{ runId: string }>({
@@ -274,7 +274,7 @@ export async function evaluateAndRetryIfNeeded(params: {
   const policy = resolveRetryPolicy(cfg);
 
   // Skip retry logic for session-mode subagents (they persist).
-  if (entry.spawnMode === "session") return false;
+  if (entry.spawnMode === "session") {return false;}
 
   const taskResult = extractTaskResult(output);
 

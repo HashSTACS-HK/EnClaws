@@ -39,7 +39,7 @@ export async function buildSysConfig(): Promise<OpenClawConfig> {
   const envPort = process.env.ENCLAWS_GATEWAY_PORT;
   if (envPort && config.gateway) {
     const parsed = parseInt(envPort, 10);
-    if (!isNaN(parsed)) config.gateway.port = parsed;
+    if (!isNaN(parsed)) {config.gateway.port = parsed;}
   }
 
   // control_ui: built entirely from env vars
@@ -64,9 +64,9 @@ function buildGatewayConfig(row: SysGatewayConfigRow): GatewayConfig {
     port: row.port,
     auth: { mode: "none" },   // force no gateway auth — JWT handles it
   };
-  if (row.mode) cfg.mode = row.mode as GatewayConfig["mode"];
-  if (row.bind) cfg.bind = row.bind as GatewayConfig["bind"];
-  if (row.customBindHost) cfg.customBindHost = row.customBindHost;
+  if (row.mode) {cfg.mode = row.mode as GatewayConfig["mode"];}
+  if (row.bind) {cfg.bind = row.bind as GatewayConfig["bind"];}
+  if (row.customBindHost) {cfg.customBindHost = row.customBindHost;}
   if (row.tailscale && Object.keys(row.tailscale).length > 0) {
     cfg.tailscale = row.tailscale as GatewayConfig["tailscale"];
   }
@@ -88,7 +88,7 @@ function buildGatewayConfig(row: SysGatewayConfigRow): GatewayConfig {
   if (row.trustedProxies && row.trustedProxies.length > 0) {
     cfg.trustedProxies = row.trustedProxies;
   }
-  if (row.allowRealIpFallback) cfg.allowRealIpFallback = true;
+  if (row.allowRealIpFallback) {cfg.allowRealIpFallback = true;}
   if (row.tools && Object.keys(row.tools).length > 0) {
     cfg.tools = row.tools as GatewayConfig["tools"];
   }
@@ -103,13 +103,13 @@ function buildGatewayConfig(row: SysGatewayConfigRow): GatewayConfig {
 
 function buildLoggingConfig(row: SysLoggingConfigRow): LoggingConfig {
   const cfg: LoggingConfig = {};
-  if (row.level) cfg.level = row.level as LoggingConfig["level"];
-  if (row.file) cfg.file = row.file;
-  if (row.maxFileBytes != null) cfg.maxFileBytes = row.maxFileBytes;
-  if (row.consoleLevel) cfg.consoleLevel = row.consoleLevel as LoggingConfig["consoleLevel"];
-  if (row.consoleStyle) cfg.consoleStyle = row.consoleStyle as LoggingConfig["consoleStyle"];
-  if (row.redactSensitive) cfg.redactSensitive = row.redactSensitive as LoggingConfig["redactSensitive"];
-  if (row.redactPatterns && row.redactPatterns.length > 0) cfg.redactPatterns = row.redactPatterns;
+  if (row.level) {cfg.level = row.level as LoggingConfig["level"];}
+  if (row.file) {cfg.file = row.file;}
+  if (row.maxFileBytes != null) {cfg.maxFileBytes = row.maxFileBytes;}
+  if (row.consoleLevel) {cfg.consoleLevel = row.consoleLevel as LoggingConfig["consoleLevel"];}
+  if (row.consoleStyle) {cfg.consoleStyle = row.consoleStyle as LoggingConfig["consoleStyle"];}
+  if (row.redactSensitive) {cfg.redactSensitive = row.redactSensitive as LoggingConfig["redactSensitive"];}
+  if (row.redactPatterns && row.redactPatterns.length > 0) {cfg.redactPatterns = row.redactPatterns;}
   return cfg;
 }
 
@@ -117,22 +117,22 @@ function buildPluginsConfig(row: SysPluginsConfigRow): PluginsConfig {
   const cfg: PluginsConfig = {
     enabled: row.enabled,
   };
-  if (row.allow && row.allow.length > 0) cfg.allow = row.allow;
-  if (row.deny && row.deny.length > 0) cfg.deny = row.deny;
-  if (row.load && Object.keys(row.load).length > 0) cfg.load = row.load as PluginsConfig["load"];
-  if (row.slots && Object.keys(row.slots).length > 0) cfg.slots = row.slots as PluginsConfig["slots"];
-  if (row.entries && Object.keys(row.entries).length > 0) cfg.entries = row.entries as PluginsConfig["entries"];
-  if (row.installs && Object.keys(row.installs).length > 0) cfg.installs = row.installs as PluginsConfig["installs"];
+  if (row.allow && row.allow.length > 0) {cfg.allow = row.allow;}
+  if (row.deny && row.deny.length > 0) {cfg.deny = row.deny;}
+  if (row.load && Object.keys(row.load).length > 0) {cfg.load = row.load as PluginsConfig["load"];}
+  if (row.slots && Object.keys(row.slots).length > 0) {cfg.slots = row.slots as PluginsConfig["slots"];}
+  if (row.entries && Object.keys(row.entries).length > 0) {cfg.entries = row.entries as PluginsConfig["entries"];}
+  if (row.installs && Object.keys(row.installs).length > 0) {cfg.installs = row.installs as PluginsConfig["installs"];}
   return cfg;
 }
 
 function buildToolsConfig(row: SysToolsConfigRow): ToolsConfig {
   const cfg: ToolsConfig = {};
-  if (row.allowDangerousToolsOverride) cfg.allowDangerousToolsOverride = true;
-  if (row.profile) cfg.profile = row.profile as ToolsConfig["profile"];
-  if (row.allow && row.allow.length > 0) cfg.allow = row.allow;
-  if (row.alsoAllow && row.alsoAllow.length > 0) cfg.alsoAllow = row.alsoAllow;
-  if (row.deny && row.deny.length > 0) cfg.deny = row.deny;
+  if (row.allowDangerousToolsOverride) {cfg.allowDangerousToolsOverride = true;}
+  if (row.profile) {cfg.profile = row.profile as ToolsConfig["profile"];}
+  if (row.allow && row.allow.length > 0) {cfg.allow = row.allow;}
+  if (row.alsoAllow && row.alsoAllow.length > 0) {cfg.alsoAllow = row.alsoAllow;}
+  if (row.deny && row.deny.length > 0) {cfg.deny = row.deny;}
   if (row.byProvider && Object.keys(row.byProvider).length > 0) {
     cfg.byProvider = row.byProvider as ToolsConfig["byProvider"];
   }

@@ -47,7 +47,7 @@ function requirePlatformAdmin(
 
 export const platformOverviewHandlers: GatewayRequestHandlers = {
   "platform.overview.summary": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     try {
       const summary = await getPlatformSummary();
@@ -65,7 +65,7 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
   },
 
   "platform.overview.tokenTrend": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     const { days } = params as { days?: number };
     const d = days === 7 ? 7 : 30;
@@ -79,7 +79,7 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
   },
 
   "platform.overview.tokenRank": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     const { period, limit } = params as { period?: string; limit?: number };
     const p = (period === "month" || period === "today") ? period : "all";
@@ -94,7 +94,7 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
   },
 
   "platform.overview.llmStats": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     const { period } = params as { period?: string };
     const p = (period === "month" || period === "today") ? period : "all";
@@ -108,7 +108,7 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
   },
 
   "platform.overview.channelDistribution": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     try {
       const channels = await getChannelDistribution();
@@ -119,7 +119,7 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
   },
 
   "platform.overview.userActivity": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     try {
       const activity = await getUserActivity();

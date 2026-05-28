@@ -12,7 +12,7 @@ import { detectMime, extensionForMime } from "./mime.js";
 
 const resolveMediaDir = () => {
   const override = getCurrentTenantMediaDir();
-  if (override) return override;
+  if (override) {return override;}
   return path.join(resolveConfigDir(), "media");
 };
 

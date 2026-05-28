@@ -535,11 +535,11 @@ export async function startGatewayServer(
   const resolveTenantCron = (tenant: { tenantId: string; userId: string }) => {
     const key = `${tenant.tenantId}:${tenant.userId}`;
     let cached = tenantCronCache.get(key);
-    if (cached) return cached;
+    if (cached) {return cached;}
     // Skip cron init if the user's cron directory does not exist yet
     // (e.g. page-registered enterprise users whose dirs are created on-demand)
     const cronDir = resolveTenantCronDir(tenant.tenantId, tenant.userId);
-    if (!fs.existsSync(cronDir)) return undefined;
+    if (!fs.existsSync(cronDir)) {return undefined;}
     const tenantStorePath = resolveUserCronStorePath(tenant.tenantId, tenant.userId);
     const tenantCronState = buildTenantCronService({
       tenantId: tenant.tenantId,
@@ -564,7 +564,7 @@ export async function startGatewayServer(
   const resolveTenantAgentCron = (tenantId: string, agentId: string) => {
     const key = `${tenantId}:agent:${agentId}`;
     let cached = tenantAgentCronCache.get(key);
-    if (cached) return cached;
+    if (cached) {return cached;}
     const cronDir = resolveTenantAgentCronDir(tenantId, agentId);
     if (!fs.existsSync(cronDir)) {
       fs.mkdirSync(cronDir, { recursive: true });
@@ -603,7 +603,7 @@ export async function startGatewayServer(
     const prefix = `${tenantId}:agent:`;
     let total = 0;
     for (const [key, entry] of tenantAgentCronCache) {
-      if (!key.startsWith(prefix)) continue;
+      if (!key.startsWith(prefix)) {continue;}
       total += entry.cron.getInMemoryJobCount();
     }
     return total;

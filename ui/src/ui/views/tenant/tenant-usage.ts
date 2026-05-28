@@ -165,7 +165,7 @@ export class TenantUsageView extends LitElement {
 
   private showError(msg: string) {
     this.error = msg;
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.error = ""), 5000);
   }
 
@@ -181,10 +181,10 @@ export class TenantUsageView extends LitElement {
   /** Map active i18n locale to a BCP-47 tag the date-picker understands. */
   private get currentLocaleTag(): string {
     const loc = i18n.getLocale();
-    if (loc === "zh-CN") return "zh-CN";
-    if (loc === "zh-TW") return "zh-TW";
-    if (loc === "de") return "de-DE";
-    if (loc === "pt-BR") return "pt-BR";
+    if (loc === "zh-CN") {return "zh-CN";}
+    if (loc === "zh-TW") {return "zh-TW";}
+    if (loc === "de") {return "de-DE";}
+    if (loc === "pt-BR") {return "pt-BR";}
     return "en-US";
   }
 
@@ -210,15 +210,15 @@ export class TenantUsageView extends LitElement {
   }
 
   private formatNumber(n: number): string {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    if (n >= 1_000_000) {return `${(n / 1_000_000).toFixed(1)}M`;}
+    if (n >= 1_000) {return `${(n / 1_000).toFixed(1)}K`;}
     return String(n);
   }
 
   private quotaClass(pct: number | null): string {
-    if (pct === null) return "low";
-    if (pct > 90) return "high";
-    if (pct > 70) return "mid";
+    if (pct === null) {return "low";}
+    if (pct > 90) {return "high";}
+    if (pct > 70) {return "mid";}
     return "low";
   }
 
@@ -250,7 +250,7 @@ export class TenantUsageView extends LitElement {
   }
 
   render() {
-    if (this.loading && !this.tenantSummary) return html`<div class="loading">${t("tenantUsage.loading")}</div>`;
+    if (this.loading && !this.tenantSummary) {return html`<div class="loading">${t("tenantUsage.loading")}</div>`;}
 
     return html`
       <div class="header">

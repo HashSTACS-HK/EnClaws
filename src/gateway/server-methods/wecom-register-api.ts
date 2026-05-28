@@ -58,7 +58,7 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
    */
   "tenant.wecom.register.begin": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -104,7 +104,7 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
    */
   "tenant.wecom.register.poll": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "channel.create");

@@ -10,8 +10,8 @@ const PLATFORM_TENANT_ID = "00000000-0000-0000-0000-000000000001";
 
 // Time filter helper
 function periodCondition(column: string, period: "all" | "month" | "today"): string {
-  if (period === "month") return `${column} >= DATE('now', 'start of month')`;
-  if (period === "today") return `${column} >= DATE('now')`;
+  if (period === "month") {return `${column} >= DATE('now', 'start of month')`;}
+  if (period === "today") {return `${column} >= DATE('now')`;}
   return "1=1"; // all
 }
 

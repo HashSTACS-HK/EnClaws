@@ -34,7 +34,7 @@ function rowToAuditLog(row: Record<string, unknown>): AuditLog {
  * Create an audit log entry. Fire-and-forget safe — errors are logged, not thrown.
  */
 export async function createAuditLog(input: CreateAuditLogInput): Promise<void> {
-  if (getDbType() === DB_SQLITE) return sqliteAudit.createAuditLog(input);
+  if (getDbType() === DB_SQLITE) {return sqliteAudit.createAuditLog(input);}
   try {
     await query(
       `INSERT INTO audit_logs (tenant_id, user_id, action, resource, detail, ip_address, user_agent)
@@ -64,7 +64,7 @@ export async function listAuditLogs(
     since?: Date;
   },
 ): Promise<{ logs: AuditLog[]; total: number }> {
-  if (getDbType() === DB_SQLITE) return sqliteAudit.listAuditLogs(tenantId, opts);
+  if (getDbType() === DB_SQLITE) {return sqliteAudit.listAuditLogs(tenantId, opts);}
   const conditions: string[] = ["tenant_id = $1"];
   const values: unknown[] = [tenantId];
   let idx = 2;

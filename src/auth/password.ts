@@ -52,6 +52,6 @@ export async function verifyPassword(
   }
   // Plaintext: try SHA-256(plaintext) first (matches frontend-registered passwords),
   // then fall back to raw plaintext (matches legacy/test passwords)
-  if (await bcrypt.compare(sha256Hex(password), hash)) return true;
+  if (await bcrypt.compare(sha256Hex(password), hash)) {return true;}
   return bcrypt.compare(password, hash);
 }

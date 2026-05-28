@@ -53,12 +53,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -88,12 +88,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.update");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -134,12 +134,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "user.list");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -173,12 +173,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.invite": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "user.invite");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -277,7 +277,7 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const { userId, role, status, displayName } = params as {
       userId: string;
@@ -299,7 +299,7 @@ export const tenantHandlers: GatewayRequestHandlers = {
         assertPermission(ctx.role, "user.update");
       }
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -354,12 +354,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.remove": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "user.remove");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -412,12 +412,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.audit.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "audit.read");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 
@@ -445,12 +445,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.plan.current": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
     } catch (err) {
-      if (handleRbacError(err, respond)) return;
+      if (handleRbacError(err, respond)) {return;}
       throw err;
     }
 

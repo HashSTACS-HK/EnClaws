@@ -1127,7 +1127,7 @@ export class TenantAgentsView extends LitElement {
     // 统一转换：凡是在 TOOL_GROUP_DEFS 里有声明 key 的 id 就走 i18n，其余用原值。
     // 翻译缺失时 t() 会原样返回 key，视作未命中、fall back 到原始 label/description。
     const translated = (key: string | undefined, raw: string) => {
-      if (!key) return raw;
+      if (!key) {return raw;}
       const v = t(key);
       return v === key ? raw : v;
     };
@@ -1699,7 +1699,7 @@ export class TenantAgentsView extends LitElement {
 
   private async loadCronJobs() {
     const agent = this.agents.find(a => a.agentId === this.selectedAgentId);
-    if (!agent) return;
+    if (!agent) {return;}
     this.cronLoading = true;
     this.cronError = null;
     this.cronErrorIsHtml = false;
@@ -1885,7 +1885,7 @@ export class TenantAgentsView extends LitElement {
       cancelText: t("cron.remove.cancelButton"),
       danger: true,
     });
-    if (!confirmed) return;
+    if (!confirmed) {return;}
     this.cronBusy = true;
     try {
       await this.rpc("cron.remove", { _agentId: job.agentId, id: job.id });
@@ -1907,7 +1907,7 @@ export class TenantAgentsView extends LitElement {
     const disabledCount = this.cronJobs.length - enabledCount;
     const nextRunJob = this.cronJobs
       .filter(j => j.enabled && j.state?.nextRunAtMs)
-      .sort((a, b) => (a.state?.nextRunAtMs ?? 0) - (b.state?.nextRunAtMs ?? 0))[0];
+      .toSorted((a, b) => (a.state?.nextRunAtMs ?? 0) - (b.state?.nextRunAtMs ?? 0))[0];
     const nextRunText = nextRunJob?.state?.nextRunAtMs
       ? formatRelativeTimestamp(nextRunJob.state.nextRunAtMs)
       : "--";
@@ -2012,7 +2012,7 @@ export class TenantAgentsView extends LitElement {
 
     return html`
       <div style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; padding: 24px;"
-        @click=${(e: Event) => { if (e.target === e.currentTarget) this.closeCronModal(); }}>
+        @click=${(e: Event) => { if (e.target === e.currentTarget) {this.closeCronModal();} }}>
         <div style="background: var(--card, #ffffff); border: 1px solid var(--border, #e2eef2); border-radius: var(--radius, 8px); width: 90%; max-width: 960px; max-height: 90vh; overflow-y: auto; padding: 24px;"
           @click=${(e: Event) => e.stopPropagation()}>
 
@@ -2324,7 +2324,7 @@ export class TenantAgentsView extends LitElement {
   }
 
   private renderPanelSkills(agent: TenantAgent) {
-    const translated = (key: string | undefined, raw: string) => { if (!key) return raw; const v = t(key); return v === key ? raw : v; };
+    const translated = (key: string | undefined, raw: string) => { if (!key) {return raw;} const v = t(key); return v === key ? raw : v; };
     const allSkills = this.agentSkills;
     const allSkillNames = allSkills.map((s) => s.name);
     // skills field is now a denylist — names in the array are DISABLED
@@ -2542,7 +2542,7 @@ export class TenantAgentsView extends LitElement {
       const next = new Set(denySet);
       for (const id of ids) {
         // System-denied tools stay denied regardless of the bulk action.
-        if (this.systemDenySet.has(id)) continue;
+        if (this.systemDenySet.has(id)) {continue;}
         enable ? next.delete(id) : next.add(id);
       }
       this.toolsPendingDeny = [...next];

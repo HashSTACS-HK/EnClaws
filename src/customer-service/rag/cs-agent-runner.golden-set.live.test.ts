@@ -187,7 +187,7 @@ if (PER_CASE) {
 
     beforeAll(async () => {
       const dbUrl = process.env.ENCLAWS_DB_URL;
-      if (!dbUrl) throw new Error("ENCLAWS_DB_URL not set");
+      if (!dbUrl) {throw new Error("ENCLAWS_DB_URL not set");}
 
       const { initDb } = await import("../../db/index.js");
       initDb();

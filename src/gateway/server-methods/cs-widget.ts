@@ -157,25 +157,25 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
         // csCfg 已在上方 readCSConfig 时加载，此处直接复用，不再二次读取。
         Promise.resolve(csCfg).then(async (csCfg) => {
           const { appId, appSecret, chatId } = csCfg.feishu ?? {};
-          if (!appId || !appSecret || !chatId) return;
+          if (!appId || !appSecret || !chatId) {return;}
 
           const intervalMs = (csCfg.notifyIntervalMinutes ?? 10) * 60 * 1000;
-          const lastNotifiedAt = session!.metadata?.lastNotifiedAt as string | undefined;
+          const lastNotifiedAt = session.metadata?.lastNotifiedAt as string | undefined;
           const lastNotifiedMs = lastNotifiedAt ? new Date(lastNotifiedAt).getTime() : 0;
           const shouldNotify = Date.now() - lastNotifiedMs >= intervalMs;
 
-          if (!shouldNotify) return;
+          if (!shouldNotify) {return;}
 
-          await updateCSSessionNotifiedAt(session!.id, new Date().toISOString());
+          await updateCSSessionNotifiedAt(session.id, new Date().toISOString());
           return sendCSNotification({
             appId,
             appSecret,
             chatId,
             customerMessage: text,
             aiReply: reply,
-            sessionId: session!.id,
-            visitorName: session!.visitorName ?? undefined,
-            channel: session!.channel,
+            sessionId: session.id,
+            visitorName: session.visitorName ?? undefined,
+            channel: session.channel,
           });
         }).catch((err) => {
           const errMsg = err instanceof Error ? err.message : String(err);

@@ -26,12 +26,12 @@ export function registerFeishuMediaDownloadHook(registry: PluginRegistry): void 
       result?: unknown;
       error?: string;
     }) => {
-      if (!FEISHU_DOWNLOAD_TOOLS.has(event.toolName)) return;
-      if (event.error || !event.result) return;
+      if (!FEISHU_DOWNLOAD_TOOLS.has(event.toolName)) {return;}
+      if (event.error || !event.result) {return;}
 
       const result = event.result as Record<string, unknown>;
       const savedPath = result.saved_path as string | undefined;
-      if (!savedPath || typeof savedPath !== "string") return;
+      if (!savedPath || typeof savedPath !== "string") {return;}
 
       const workspace = process.env.ENCLAWS_USER_WORKSPACE || process.cwd();
       const downloadDir = path.join(workspace, "download");

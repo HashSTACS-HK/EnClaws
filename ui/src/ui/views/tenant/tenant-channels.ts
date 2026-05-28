@@ -328,7 +328,7 @@ export class TenantChannelsView extends LitElement {
     this.errorKey = key;
     this.successKey = "";
     this.msgParams = params ?? {};
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.errorKey = ""), 5000);
   }
 
@@ -336,16 +336,16 @@ export class TenantChannelsView extends LitElement {
     this.successKey = key;
     this.errorKey = "";
     this.msgParams = params ?? {};
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.successKey = ""), 5000);
   }
 
   /** Translate key at render time; map known server errors, pass through others. */
   private tr(key: string): string {
-    if (key.includes("频道名称已存在")) return t("tenantChannels.channelNameExists");
-    if (key.includes("已存在相同 App ID")) return t("tenantChannels.duplicateAppId");
-    if (key.includes("已在其他频道中注册")) return t("tenantChannels.duplicateAppIdAcrossChannels");
-    if (key.includes("存在重复的 App ID")) return t("tenantChannels.duplicateAppIdInPayload");
+    if (key.includes("频道名称已存在")) {return t("tenantChannels.channelNameExists");}
+    if (key.includes("已存在相同 App ID")) {return t("tenantChannels.duplicateAppId");}
+    if (key.includes("已在其他频道中注册")) {return t("tenantChannels.duplicateAppIdAcrossChannels");}
+    if (key.includes("存在重复的 App ID")) {return t("tenantChannels.duplicateAppIdInPayload");}
     const result = t(key, this.msgParams);
     return result === key ? key : result;
   }
@@ -378,7 +378,7 @@ export class TenantChannelsView extends LitElement {
       setTimeout(() => (this.scopesCopied = false), 2000);
     } catch {
       // Fallback: select textarea content
-      const textarea = this.renderRoot.querySelector(".modal-scopes-box") as HTMLTextAreaElement | null;
+      const textarea = this.renderRoot.querySelector(".modal-scopes-box");
       if (textarea) {
         textarea.select();
         document.execCommand("copy");
@@ -442,7 +442,7 @@ export class TenantChannelsView extends LitElement {
   }
 
   private handleChannelTypeChange(nextType: string) {
-    if (nextType === this.formChannelType) return;
+    if (nextType === this.formChannelType) {return;}
     // Switching type invalidates any in-flight scan state and any credentials
     // the user started typing — reset to a clean single-row form.
     this.clearAllFeishuTimers();
@@ -515,7 +515,7 @@ export class TenantChannelsView extends LitElement {
 
   private startFeishuPoll(index: number, intervalSec: number) {
     const app = this.formApps[index];
-    if (!app?.feishuDeviceCode) return;
+    if (!app?.feishuDeviceCode) {return;}
     const deviceCode = app.feishuDeviceCode;
     const domain = app.feishuDomain ?? "feishu";
     const env = app.feishuEnv ?? "prod";
@@ -548,7 +548,7 @@ export class TenantChannelsView extends LitElement {
           const a = apps[currentIndex];
           a.appId = result.appId;
           a.appSecret = result.appSecret;
-          if (result.botName) a.botName = result.botName;
+          if (result.botName) {a.botName = result.botName;}
           a.feishuPolling = false;
           a.feishuPollTimer = undefined;
           a.feishuMode = "manual"; // Switch to manual view to show filled fields
@@ -615,7 +615,7 @@ export class TenantChannelsView extends LitElement {
 
   private startWecomPoll(index: number, intervalSec: number) {
     const app = this.formApps[index];
-    if (!app?.wecomScode) return;
+    if (!app?.wecomScode) {return;}
     const scode = app.wecomScode;
     const timer = setInterval(async () => {
       const currentIndex = this.formApps.findIndex((a) => a.wecomScode === scode);
@@ -829,7 +829,7 @@ export class TenantChannelsView extends LitElement {
       cancelText: t("tenantChannels.cancel"),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
     this.errorKey = "";
     try {
       await this.rpc("tenant.channels.delete", { channelId: channel.id });

@@ -147,7 +147,7 @@ export async function updateTenantModel(
     values.push(updates.isActive ? 1 : 0);
   }
 
-  if (sets.length === 0) return getTenantModel(tenantId, id);
+  if (sets.length === 0) {return getTenantModel(tenantId, id);}
 
   values.push(tenantId, id);
   sqliteQuery(

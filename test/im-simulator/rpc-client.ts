@@ -75,10 +75,10 @@ export class RpcClient {
     return await new Promise<void>((resolve, reject) => {
       let settled = false;
       const finish = (err?: Error) => {
-        if (settled) return;
+        if (settled) {return;}
         settled = true;
         clearTimeout(timer);
-        if (err) reject(err);
+        if (err) {reject(err);}
         else {
           this._connected = true;
           resolve();

@@ -1,13 +1,13 @@
 import type { TestCaseAssert } from "./types.js";
 
 export function formatAssert(a?: TestCaseAssert): string {
-  if (!a) return "";
+  if (!a) {return "";}
   const parts: string[] = [];
-  if (a.contains) parts.push(`contains:"${a.contains}"`);
-  if (a.notContains) parts.push(`!contains:"${a.notContains}"`);
-  if (a.matches) parts.push(`matches:/${a.matches}/`);
-  if (a.minLength != null) parts.push(`min:${a.minLength}`);
-  if (a.maxLength != null) parts.push(`max:${a.maxLength}`);
+  if (a.contains) {parts.push(`contains:"${a.contains}"`);}
+  if (a.notContains) {parts.push(`!contains:"${a.notContains}"`);}
+  if (a.matches) {parts.push(`matches:/${a.matches}/`);}
+  if (a.minLength != null) {parts.push(`min:${a.minLength}`);}
+  if (a.maxLength != null) {parts.push(`max:${a.maxLength}`);}
   return parts.join(", ");
 }
 

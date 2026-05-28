@@ -81,7 +81,7 @@ describe("evaluateDenylist", () => {
   it("includes the matched rule in the reason", () => {
     const denylist = parseDenylist("rm:-[rRf]+\\s");
     const result = evaluateDenylist({ command: "rm -rf /x", denylist });
-    if (!result.blocked) throw new Error("expected blocked");
+    if (!result.blocked) {throw new Error("expected blocked");}
     expect(result.reason).toContain("rm");
     expect(result.reason).toContain("-[rRf]+");
   });
@@ -99,7 +99,7 @@ describe("evaluateDenylist", () => {
   it("evaluates entries in order and returns on first hit", () => {
     const denylist = parseDenylist("rm:-rf|kill");
     const result = evaluateDenylist({ command: "rm -rf /tmp && kill -9 1", denylist });
-    if (!result.blocked) throw new Error("expected blocked");
+    if (!result.blocked) {throw new Error("expected blocked");}
     expect(result.matched?.bin).toBe("rm"); // first in env order
   });
 });

@@ -330,7 +330,7 @@ describe("mention helpers", () => {
   it("builds regexes and skips invalid patterns", () => {
     const regexes = buildMentionRegexes({
       messages: {
-        groupChat: { mentionPatterns: ["\.enclaws\\b", "(invalid"] },
+        groupChat: { mentionPatterns: [".enclaws\\b", "(invalid"] },
       },
     });
     expect(regexes).toHaveLength(1);
@@ -343,7 +343,7 @@ describe("mention helpers", () => {
 
   it("matches patterns case-insensitively", () => {
     const regexes = buildMentionRegexes({
-      messages: { groupChat: { mentionPatterns: ["\.enclaws\\b"] } },
+      messages: { groupChat: { mentionPatterns: [".enclaws\\b"] } },
     });
     expect(matchesMentionPatterns("OPENCLAW: hi", regexes)).toBe(true);
   });

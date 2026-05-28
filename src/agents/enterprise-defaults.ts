@@ -670,7 +670,7 @@ export function getEnterpriseDefault(filename: string, locale?: string): string 
  */
 export function isCurrentEnterpriseDefault(filename: string, content: string): boolean {
   for (const defaults of Object.values(LOCALE_DEFAULTS)) {
-    if (defaults[filename] === content) return true;
+    if (defaults[filename] === content) {return true;}
   }
   return false;
 }

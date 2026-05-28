@@ -90,7 +90,7 @@ export async function updateChannelApp(
     values.push(updates.isActive);
   }
 
-  if (sets.length === 0) return null;
+  if (sets.length === 0) {return null;}
 
   values.push(tenantId, appDbId);
   sqliteQuery(
@@ -120,11 +120,11 @@ export async function findTenantByChannelApp(
      LIMIT 1`,
     [channelType, appId],
   );
-  if (result.rows.length === 0) return null;
+  if (result.rows.length === 0) {return null;}
   const row = result.rows[0];
   const tenantId = row.tenant_id as string;
   const userId = row.created_by as string | null;
-  if (!userId) return null;
+  if (!userId) {return null;}
   return { tenantId, userId, channelId: row.channel_id as string };
 }
 
@@ -163,7 +163,7 @@ export async function findChannelAppByAgent(
      LIMIT 1`,
     [tenantId, agentId],
   );
-  if (result.rows.length === 0) return null;
+  if (result.rows.length === 0) {return null;}
   const row = result.rows[0];
   return {
     channelType: row.channel_type as string,

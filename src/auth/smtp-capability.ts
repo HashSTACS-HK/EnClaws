@@ -34,10 +34,10 @@ export interface SmtpConfig {
 export function loadSmtpConfig(): SmtpConfig | null {
   const host = process.env.ENCLAWS_SMTP_HOST?.trim();
   const from = process.env.ENCLAWS_SMTP_FROM?.trim();
-  if (!host || !from) return null;
+  if (!host || !from) {return null;}
   const portRaw = process.env.ENCLAWS_SMTP_PORT?.trim();
   const port = portRaw ? Number(portRaw) : 587;
-  if (!Number.isFinite(port) || port <= 0) return null;
+  if (!Number.isFinite(port) || port <= 0) {return null;}
   return {
     host,
     port,
@@ -61,9 +61,9 @@ export function hasEmailCapability(): boolean {
  * work from the web UI's forgot-password form.
  */
 export function warnOnMissingPublicBaseUrl(): void {
-  if (!hasEmailCapability()) return;
+  if (!hasEmailCapability()) {return;}
   const base = process.env.ENCLAWS_PUBLIC_BASE_URL?.trim();
-  if (base) return;
+  if (base) {return;}
   console.warn(
     "[auth] ENCLAWS_SMTP_HOST is set but ENCLAWS_PUBLIC_BASE_URL is not — " +
     "password-reset emails will contain relative URLs that won't be clickable " +
@@ -226,7 +226,7 @@ export async function sendPasswordResetEmail(opts: {
   expiresInMinutes: number;
 }): Promise<boolean> {
   const cfg = loadSmtpConfig();
-  if (!cfg) return false;
+  if (!cfg) {return false;}
 
   const { subject, text, html } = buildPasswordResetEmail(opts);
   const from = cfg.fromName ? `"${cfg.fromName}" <${cfg.from}>` : cfg.from;
@@ -261,7 +261,7 @@ export async function sendVerifyEmail(opts: {
   expiresInHours: number;
 }): Promise<boolean> {
   const cfg = loadSmtpConfig();
-  if (!cfg) return false;
+  if (!cfg) {return false;}
 
   const safeUrl = escapeHtml(opts.verifyUrl);
   const ttl = opts.expiresInHours;

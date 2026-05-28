@@ -389,11 +389,11 @@ export function createGatewayHttpServer(opts: {
       const agents = listAgentEntries(cfg);
       const hasAgentWithModel = agents.some((a) => {
         const id = a?.id;
-        if (!id) return false;
+        if (!id) {return false;}
         const modelRef = resolveAgentEffectiveModelPrimary(cfg, id);
         return !!modelRef && modelRef.trim().length > 0;
       });
-      if (!hasAgentWithModel) return false;
+      if (!hasAgentWithModel) {return false;}
 
       const csCfg = await readCSConfig(tenantId);
       const hasChatId = !!csCfg.feishu?.chatId?.trim();
@@ -427,7 +427,7 @@ export function createGatewayHttpServer(opts: {
       // 用 new Date().getTime() 同时兼容两种类型，避免 localeCompare 对 Date 报错。
       const sorted = tenants
         .filter((t) => t.id !== PLATFORM_TENANT_ID_HTTP)
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        .toSorted((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       // Pick the earliest qualified one. Unqualified ones are skipped so the
       // widget bubble hides cleanly instead of appearing and failing on use.
       // 挑最早的合格租户——不合格的跳过，避免气泡出现但点进去报错。

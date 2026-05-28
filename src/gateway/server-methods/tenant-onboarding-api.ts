@@ -68,7 +68,7 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
    */
   "tenant.onboarding.setup": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "agent.create");
@@ -136,7 +136,7 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
             (err as { quotaMax?: number }).quotaMax = channelQuota.max;
             throw err;
           }
-          const userConfig = (channel.config ?? {}) as Record<string, unknown>;
+          const userConfig = (channel.config ?? {});
           const appId = (userConfig.appId as string) ?? "";
           const appSecret = (userConfig.appSecret as string) ?? "";
           const botName = (userConfig.botName as string) ?? "";
@@ -229,7 +229,7 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
         await seedAgentWorkspaceFiles(resolveTenantAgentDir(ctx.tenantId, agent.agentId), {
           locale,
           systemPrompt: typeof agent.config?.systemPrompt === "string"
-            ? (agent.config.systemPrompt as string)
+            ? (agent.config.systemPrompt)
             : undefined,
         });
         filesSeeded = true;

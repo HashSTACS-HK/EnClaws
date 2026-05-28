@@ -86,8 +86,8 @@ export class TenantCronView extends LitElement {
 
   private get filteredJobs(): CronJobWithAgent[] {
     let result = this.jobs;
-    if (this.filterEnabled === "enabled") result = result.filter(j => j.enabled);
-    else if (this.filterEnabled === "disabled") result = result.filter(j => !j.enabled);
+    if (this.filterEnabled === "enabled") {result = result.filter(j => j.enabled);}
+    else if (this.filterEnabled === "disabled") {result = result.filter(j => !j.enabled);}
     if (this.filterAgent) {
       const q = this.filterAgent.toLowerCase();
       result = result.filter(j => j._agentId.toLowerCase().includes(q));
@@ -104,7 +104,7 @@ export class TenantCronView extends LitElement {
   }
 
   private get agentIds(): string[] {
-    return [...new Set(this.jobs.map(j => j._agentId))].sort();
+    return [...new Set(this.jobs.map(j => j._agentId))].toSorted();
   }
 
   private async toggleJob(job: CronJobWithAgent, enabled: boolean) {
@@ -127,7 +127,7 @@ export class TenantCronView extends LitElement {
       cancelText: t("cron.remove.cancelButton"),
       danger: true,
     });
-    if (!confirmed) return;
+    if (!confirmed) {return;}
     this.busy = true;
     try {
       await this.rpc("cron.remove", { _agentId: job._agentId, id: job.id });

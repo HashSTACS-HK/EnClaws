@@ -67,6 +67,6 @@ export function verifyVisitorToken(
   const expected = generateVisitorToken(visitorId, secret ?? resolveSecret());
   // Constant-time comparison to prevent timing attacks
   // 常量时间比较，防止时序攻击
-  if (expected.length !== token.length) return false;
+  if (expected.length !== token.length) {return false;}
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(token));
 }

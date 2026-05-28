@@ -39,7 +39,7 @@ function resolveEffectiveSessionKey(
   sessionKey: string | undefined,
   ctx: { TenantUserId?: string; ChatType?: string },
 ): string {
-  if (!sessionKey) return "unknown";
+  if (!sessionKey) {return "unknown";}
   const key = sessionKey.toLowerCase();
   const tenantUser = ctx.TenantUserId?.trim();
   if (tenantUser && !key.includes(":group:") && !key.includes(":channel:")) {

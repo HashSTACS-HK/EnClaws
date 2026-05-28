@@ -162,12 +162,12 @@ export class PlatformModelsView extends LitElement {
 
   private showError(msg: string) {
     this.error = msg; this.success = "";
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.error = ""), 5000);
   }
   private showSuccess(msg: string) {
     this.success = msg; this.error = "";
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.success = ""), 5000);
   }
 
@@ -284,7 +284,7 @@ export class PlatformModelsView extends LitElement {
 
   private async handleSave(e: Event) {
     e.preventDefault();
-    if (!this.formProviderType || !this.formProviderName) return;
+    if (!this.formProviderType || !this.formProviderName) {return;}
     if (this.formModels.length === 0) {
       this.showError(t("models.needOneModel"));
       return;
@@ -343,7 +343,7 @@ export class PlatformModelsView extends LitElement {
       cancelText: t("models.cancel"),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
     try {
       await this.rpc("platform.models.delete", { id: config.id });
       this.showSuccess(t("models.configDeleted", { name: config.providerName }));

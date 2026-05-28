@@ -90,7 +90,7 @@ async function fetchChatMembers(
     }
     if (memberNameCache.size >= MAX_MEMBER_CACHE_ENTRIES) {
       const oldest = memberNameCache.keys().next().value;
-      if (oldest !== undefined) memberNameCache.delete(oldest);
+      if (oldest !== undefined) {memberNameCache.delete(oldest);}
     }
     memberNameCache.set(chatId, { members, expiresAt: Date.now() + MEMBER_CACHE_TTL_MS });
     return members;
@@ -166,13 +166,13 @@ export async function resolveFeishuUserName(params: {
   }
 
   const token = await getTenantAccessToken(appId, appSecret);
-  if (!token) return undefined;
+  if (!token) {return undefined;}
 
   // For p2p chats, resolve chat_id from the message_id directly
   if (!chatId && params.messageId) {
     chatId = await getChatIdFromMessage(token, params.messageId);
   }
-  if (!chatId) return undefined;
+  if (!chatId) {return undefined;}
 
   const members = await fetchChatMembers(token, chatId);
   return members?.get(openId);
@@ -188,7 +188,7 @@ export function extractFeishuCredentials(
 ): { appId: string; appSecret: string } | null {
   const channels = cfg.channels as Record<string, Record<string, unknown>> | undefined;
   const channelCfg = channels?.[provider];
-  if (!channelCfg) return null;
+  if (!channelCfg) {return null;}
 
   // Try account-scoped config first
   if (accountId) {

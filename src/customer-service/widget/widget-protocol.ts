@@ -45,7 +45,7 @@ export function serializeServerMessage(msg: CSWidgetServerMessage): string {
 export function parseClientMessage(data: string): CSWidgetClientMessage | null {
   try {
     const parsed = JSON.parse(data);
-    if (!parsed || typeof parsed !== "object" || !parsed.type) return null;
+    if (!parsed || typeof parsed !== "object" || !parsed.type) {return null;}
     return parsed as CSWidgetClientMessage;
   } catch {
     return null;

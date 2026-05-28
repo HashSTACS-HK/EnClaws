@@ -178,12 +178,12 @@ export class DatePicker extends LitElement {
 
   private _prevMonth() {
     if (this.viewMonth === 0) { this.viewYear--; this.viewMonth = 11; }
-    else this.viewMonth--;
+    else {this.viewMonth--;}
   }
 
   private _nextMonth() {
     if (this.viewMonth === 11) { this.viewYear++; this.viewMonth = 0; }
-    else this.viewMonth++;
+    else {this.viewMonth++;}
   }
 
   private _select(dateStr: string) {
@@ -204,8 +204,8 @@ export class DatePicker extends LitElement {
   }
 
   private _isDisabled(dateStr: string): boolean {
-    if (this.min && dateStr < this.min) return true;
-    if (this.max && dateStr > this.max) return true;
+    if (this.min && dateStr < this.min) {return true;}
+    if (this.max && dateStr > this.max) {return true;}
     return false;
   }
 
@@ -242,7 +242,7 @@ export class DatePicker extends LitElement {
   }
 
   private _formatDisplay(): string {
-    if (!this.value) return "";
+    if (!this.value) {return "";}
     const [y, m, d] = this.value.split("-").map(Number);
     const months = MONTH_LABELS[this.locale] ?? MONTH_LABELS["en-US"];
     if (this.locale.startsWith("zh")) {
@@ -281,7 +281,7 @@ export class DatePicker extends LitElement {
           <div class="days">
             ${this._getDays().map((c) => html`
               <button class="day ${c.currentMonth ? "" : "other-month"} ${c.today ? "today" : ""} ${c.selected ? "selected" : ""} ${c.disabled ? "disabled" : ""}"
-                @click=${() => { if (!c.disabled) this._select(c.dateStr); }}>${c.day}</button>
+                @click=${() => { if (!c.disabled) {this._select(c.dateStr);} }}>${c.day}</button>
             `)}
           </div>
           <div class="footer">

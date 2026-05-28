@@ -92,7 +92,7 @@ async function buildTenantConfig(
   const tenantModelsMap = new Map<string, import("../db/types.js").TenantModel>();
   if (tenantModels.length > 0) {
     const providers: Record<string, unknown> = {
-      ...((config as any).models?.providers ?? {}),
+      ...(config as any).models?.providers,
     };
     for (const tm of tenantModels) {
       tenantModelsMap.set(tm.id, tm);
@@ -117,7 +117,7 @@ async function buildTenantConfig(
     config.models = {
       ...(config as any).models,
       providers,
-    } as any;
+    };
   }
 
   // Override agents if tenant has their own.

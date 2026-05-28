@@ -165,7 +165,7 @@ export function deriveGroupSessionPatch(params: {
 }
 
 function isPlaceholderSenderName(name: string | undefined): boolean {
-  if (!name) return true;
+  if (!name) {return true;}
   return name.startsWith("ou_") || name.startsWith("on_") || name.startsWith("oc_");
 }
 
@@ -200,7 +200,7 @@ export function deriveSessionMetaPatch(params: {
     return null;
   }
 
-  const patch: Partial<SessionEntry> = groupPatch ? { ...groupPatch } : { ...(directPatch ?? {}) };
+  const patch: Partial<SessionEntry> = groupPatch ? { ...groupPatch } : { ...directPatch };
   const mergedOrigin = mergeOrigin(params.existing?.origin, origin);
   if (mergedOrigin) {
     patch.origin = mergedOrigin;

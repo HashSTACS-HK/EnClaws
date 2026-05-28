@@ -43,7 +43,7 @@ export function base32Decode(encoded: string): Buffer {
   const bytes: number[] = [];
   for (const ch of cleaned) {
     const idx = BASE32_ALPHABET.indexOf(ch);
-    if (idx < 0) throw new Error(`Invalid base32 character: ${ch}`);
+    if (idx < 0) {throw new Error(`Invalid base32 character: ${ch}`);}
     value = (value << 5) | idx;
     bits += 5;
     if (bits >= 8) {

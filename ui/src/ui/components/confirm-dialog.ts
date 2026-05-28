@@ -90,7 +90,7 @@ export class ConfirmDialog extends LitElement {
   }
 
   private _overlayClick(e: Event) {
-    if (e.target === e.currentTarget) this._cancel();
+    if (e.target === e.currentTarget) {this._cancel();}
   }
 
   render() {
@@ -114,10 +114,10 @@ export function showConfirm(opts: ConfirmDialogOptions): Promise<boolean> {
     const el = document.createElement("confirm-dialog") as ConfirmDialog;
     el.title = opts.title;
     el.message = opts.message;
-    if (opts.confirmText) el.confirmText = opts.confirmText;
-    if (opts.cancelText) el.cancelText = opts.cancelText;
-    if (opts.danger) el.danger = true;
-    if (opts.hideCancel) el.hideCancel = true;
+    if (opts.confirmText) {el.confirmText = opts.confirmText;}
+    if (opts.cancelText) {el.cancelText = opts.cancelText;}
+    if (opts.danger) {el.danger = true;}
+    if (opts.hideCancel) {el.hideCancel = true;}
     el.show(resolve);
     document.body.appendChild(el);
   });

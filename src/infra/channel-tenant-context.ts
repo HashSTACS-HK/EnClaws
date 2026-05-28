@@ -33,7 +33,7 @@ export async function resolveChannelTenantContext(
   channelType: string,
   appId: string,
 ): Promise<TenantContext | undefined> {
-  if (!isDbInitialized()) return undefined;
+  if (!isDbInitialized()) {return undefined;}
 
   const key = cacheKey(channelType, appId);
   const cached = cache.get(key);

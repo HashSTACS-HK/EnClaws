@@ -17,8 +17,8 @@ function buildConnectParams(jwtToken: string | null) {
   const gatewayToken = settings.token || undefined;
   // Send gateway token for legacy connect auth, and JWT separately for tenant context
   const auth: Record<string, string> = {};
-  if (gatewayToken) auth.token = gatewayToken;
-  if (jwtToken) auth.jwt = jwtToken;
+  if (gatewayToken) {auth.token = gatewayToken;}
+  if (jwtToken) {auth.jwt = jwtToken;}
   return {
     minProtocol: 3,
     maxProtocol: 3,
@@ -39,12 +39,12 @@ function buildConnectParams(jwtToken: string | null) {
 async function resolveToken(): Promise<string | null> {
   // Try cached access token first
   const token = getAccessToken();
-  if (token) return token;
+  if (token) {return token;}
   // Access token expired — try refresh
   const auth = loadAuth();
   if (auth?.refreshToken) {
     const refreshed = await refreshAccessToken();
-    if (refreshed) return refreshed.accessToken;
+    if (refreshed) {return refreshed.accessToken;}
   }
   return null;
 }
@@ -132,7 +132,7 @@ export function quotaErrorKey(
     code?: string;
     details?: { resource?: string; current?: number; max?: number; contactLink?: string };
   };
-  if (e?.code !== "QUOTA_EXCEEDED") return null;
+  if (e?.code !== "QUOTA_EXCEEDED") {return null;}
   const resource = String(e.details?.resource ?? "");
   const params: Record<string, string> = {
     current: String(e.details?.current ?? 0),

@@ -59,7 +59,7 @@ function groupBySource(skills: SkillStatusEntry[]): SourceGroup[] {
   const map = new Map<string, SkillStatusEntry[]>();
   for (const s of skills) {
     const key = s.source || "other";
-    if (!map.has(key)) map.set(key, []);
+    if (!map.has(key)) {map.set(key, []);}
     map.get(key)!.push(s);
   }
   const order = ["enclaws-tenant", "enclaws-workspace", "agents-skills-project", "agents-skills-personal", "enclaws-managed", "enclaws-extra", "enclaws-bundled"];

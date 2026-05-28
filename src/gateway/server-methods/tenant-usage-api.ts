@@ -67,7 +67,7 @@ export const tenantUsageHandlers: GatewayRequestHandlers = {
    */
   "tenant.usage.summary": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -101,7 +101,7 @@ export const tenantUsageHandlers: GatewayRequestHandlers = {
    */
   "tenant.usage.quota": async ({ client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const tenant = await getTenantById(ctx.tenantId);
     if (!tenant) {

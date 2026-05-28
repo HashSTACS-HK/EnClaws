@@ -42,7 +42,7 @@ export interface MultiTenantAuthResult extends GatewayAuthResult {
  */
 function extractBearerToken(req: IncomingMessage): string | null {
   const authHeader = req.headers.authorization;
-  if (!authHeader) return null;
+  if (!authHeader) {return null;}
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
   return match ? match[1] : null;
 }
@@ -53,13 +53,13 @@ function extractBearerToken(req: IncomingMessage): string | null {
  */
 export async function tryJwtAuth(req: IncomingMessage): Promise<MultiTenantAuthResult | null> {
   // Only attempt JWT auth if DB is initialized (multi-tenant mode)
-  if (!isDbInitialized()) return null;
+  if (!isDbInitialized()) {return null;}
 
   const token = extractBearerToken(req);
-  if (!token) return null;
+  if (!token) {return null;}
 
   // Don't intercept legacy gateway tokens (they're typically hex strings, not JWTs)
-  if (!token.includes(".")) return null;
+  if (!token.includes(".")) {return null;}
 
   let payload: JwtPayload;
   try {
@@ -85,7 +85,7 @@ export async function tryJwtAuth(req: IncomingMessage): Promise<MultiTenantAuthR
     return { ok: false, method: "token", reason: "Tenant is not active" };
   }
 
-  const scopes = mapRoleToGatewayScopes(user.role as UserRole);
+  const scopes = mapRoleToGatewayScopes(user.role);
 
   return {
     ok: true,
@@ -95,7 +95,7 @@ export async function tryJwtAuth(req: IncomingMessage): Promise<MultiTenantAuthR
       tenantId: tenant.id,
       userId: user.id,
       email: user.email ?? undefined,
-      role: user.role as UserRole,
+      role: user.role,
       scopes,
     },
   };
@@ -141,6 +141,6 @@ export function extractTenantFromSessionKey(
   sessionKey: string,
 ): { tenantId: string; innerKey: string } | null {
   const match = sessionKey.match(/^t:([^:]+):(.+)$/);
-  if (!match) return null;
+  if (!match) {return null;}
   return { tenantId: match[1], innerKey: match[2] };
 }

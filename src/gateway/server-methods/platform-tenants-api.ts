@@ -47,7 +47,7 @@ function requirePlatformAdmin(
 
 export const platformTenantsHandlers: GatewayRequestHandlers = {
   "platform.tenants.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     const { status, search, limit, offset } = params as {
       status?: TenantStatus;
@@ -76,7 +76,7 @@ export const platformTenantsHandlers: GatewayRequestHandlers = {
   },
 
   "platform.tenants.get": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
 
     const { tenantId } = params as { tenantId: string };
     if (!tenantId) {
@@ -98,7 +98,7 @@ export const platformTenantsHandlers: GatewayRequestHandlers = {
 
   "platform.tenants.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = requirePlatformAdmin(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const { tenantId, plan, quotas, name } = params as {
       tenantId: string;
@@ -117,7 +117,7 @@ export const platformTenantsHandlers: GatewayRequestHandlers = {
       if (plan || quotas) {
         const targetPlan = plan ?? (await getTenantById(tenantId))?.plan ?? "free";
         const planDefaults = await getPlanQuotas(targetPlan);
-        resolvedQuotas = { ...planDefaults, ...(quotas ?? {}) };
+        resolvedQuotas = { ...planDefaults, ...quotas };
       }
 
       const updated = await updateTenant(tenantId, {
@@ -149,7 +149,7 @@ export const platformTenantsHandlers: GatewayRequestHandlers = {
 
   "platform.tenants.suspend": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = requirePlatformAdmin(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const { tenantId } = params as { tenantId: string };
     if (!tenantId) {
@@ -183,7 +183,7 @@ export const platformTenantsHandlers: GatewayRequestHandlers = {
    * can reset quota inputs when the admin picks a different plan.
    */
   "platform.plans.quotas": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) return;
+    if (!requirePlatformAdmin(client, respond)) {return;}
     try {
       const [free, pro, enterprise] = await Promise.all([
         getPlanQuotas("free"),
@@ -198,7 +198,7 @@ export const platformTenantsHandlers: GatewayRequestHandlers = {
 
   "platform.tenants.unsuspend": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = requirePlatformAdmin(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const { tenantId } = params as { tenantId: string };
     if (!tenantId) {

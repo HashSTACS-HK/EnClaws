@@ -145,8 +145,8 @@ export class TenantKnowledgeView extends LitElement {
 
   private normalizeName(raw: string): string | null {
     const clean = raw.trim().replace(/\\/g, "/");
-    if (!clean) return null;
-    if (clean === "MEMORY.md" || clean === "memory.md") return clean;
+    if (!clean) {return null;}
+    if (clean === "MEMORY.md" || clean === "memory.md") {return clean;}
     const withoutPrefix = clean.startsWith("memory/") ? clean.slice("memory/".length) : clean;
     const safeName = withoutPrefix
       .split("/")
@@ -154,7 +154,7 @@ export class TenantKnowledgeView extends LitElement {
       .map((part) => part.replace(/[^a-zA-Z0-9\-_.]/g, ""))
       .filter(Boolean)
       .join("/");
-    if (!safeName) return null;
+    if (!safeName) {return null;}
     const hasSupportedExt = this.supportedExtensions.some((ext) =>
       safeName.toLowerCase().endsWith(ext),
     );
@@ -176,9 +176,9 @@ export class TenantKnowledgeView extends LitElement {
   }
 
   private formatSize(bytes?: number): string {
-    if (bytes == null) return "";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes == null) {return "";}
+    if (bytes < 1024) {return `${bytes} B`;}
+    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
@@ -199,7 +199,7 @@ export class TenantKnowledgeView extends LitElement {
 
   private async selectFile(name: string) {
     this.active = name;
-    if (Object.hasOwn(this.contents, name)) return;
+    if (Object.hasOwn(this.contents, name)) {return;}
     this.loading = true;
     this.error = null;
     try {
@@ -229,7 +229,7 @@ export class TenantKnowledgeView extends LitElement {
       if (result.file) {
         const files = this.list?.files ?? [];
         const nextFiles = files.some((file) => file.name === result.file?.name)
-          ? files.map((file) => (file.name === result.file?.name ? result.file! : file))
+          ? files.map((file) => (file.name === result.file?.name ? result.file : file))
           : [...files, result.file];
         this.list = { workspace: this.list?.workspace ?? "", files: nextFiles };
       }
@@ -241,7 +241,7 @@ export class TenantKnowledgeView extends LitElement {
   }
 
   private async deleteFile(name: string) {
-    if (!confirm(`确认删除企业知识库文件 "${name}"？`)) return;
+    if (!confirm(`确认删除企业知识库文件 "${name}"？`)) {return;}
     this.saving = true;
     this.error = null;
     try {
@@ -250,7 +250,7 @@ export class TenantKnowledgeView extends LitElement {
         workspace: this.list?.workspace ?? "",
         files: (this.list?.files ?? []).filter((file) => file.name !== name),
       };
-      if (this.active === name) this.active = null;
+      if (this.active === name) {this.active = null;}
     } catch (err) {
       this.error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -286,7 +286,7 @@ export class TenantKnowledgeView extends LitElement {
     try {
       for (const file of files) {
         const name = this.normalizeName(file.name);
-        if (!name) continue;
+        if (!name) {continue;}
         if (this.isEditable(name)) {
           await tenantRpc("tenant.memory.file.set", { name, content: await file.text() });
         } else {
@@ -303,7 +303,7 @@ export class TenantKnowledgeView extends LitElement {
     } finally {
       this.saving = false;
       const input = this.shadowRoot?.querySelector<HTMLInputElement>("#tenant-kb-upload");
-      if (input) input.value = "";
+      if (input) {input.value = "";}
     }
   }
 
@@ -325,7 +325,7 @@ export class TenantKnowledgeView extends LitElement {
           <input id="tenant-kb-upload" type="file" accept=".md,.txt,.csv,.docx,.xlsx,.pdf,text/markdown,text/plain,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple
             @change=${(e: Event) => {
               const input = e.target as HTMLInputElement;
-              if (input.files?.length) void this.uploadFiles(input.files);
+              if (input.files?.length) {void this.uploadFiles(input.files);}
             }}
           />
         </div>
@@ -338,7 +338,7 @@ export class TenantKnowledgeView extends LitElement {
             <button class="btn" @click=${() => {
               const name = window.prompt("新建文件名", "memory/product.md");
               const normalized = name ? this.normalizeName(name) : null;
-              if (normalized) void this.selectFile(normalized);
+              if (normalized) {void this.selectFile(normalized);}
             }}>新建</button>
           </div>
           <div class="drop ${this.dragover ? "active" : ""}"
@@ -348,7 +348,7 @@ export class TenantKnowledgeView extends LitElement {
             @drop=${(e: DragEvent) => {
               e.preventDefault();
               this.dragover = false;
-              if (e.dataTransfer?.files?.length) void this.uploadFiles(e.dataTransfer.files);
+              if (e.dataTransfer?.files?.length) {void this.uploadFiles(e.dataTransfer.files);}
             }}
           >点击或拖放 .md 文件上传</div>
           ${this.loading && files.length === 0

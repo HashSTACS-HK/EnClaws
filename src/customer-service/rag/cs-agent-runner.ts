@@ -92,7 +92,7 @@ export async function runCSAgentReply(params: {
   let companyName = "EC";
   try {
     const tenant = await getTenantById(tenantId);
-    if (tenant?.name) companyName = tenant.name;
+    if (tenant?.name) {companyName = tenant.name;}
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.warn(`failed to resolve tenant name for ${tenantId}: ${message}`);

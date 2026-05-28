@@ -69,8 +69,8 @@ function enrichTurnsWithSessionMeta(
           tenantId,
           userId: turn.userId ?? undefined,
         });
-        if (entry?.displayName) sessionDisplayName = entry.displayName;
-        if (entry?.channel) sessionChannel = entry.channel;
+        if (entry?.displayName) {sessionDisplayName = entry.displayName;}
+        if (entry?.channel) {sessionChannel = entry.channel;}
       } catch {
         // Non-fatal: session file may not exist for old/pruned sessions
       }
@@ -85,7 +85,7 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.turns": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "audit.read");
@@ -126,7 +126,7 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.turn": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "audit.read");
@@ -159,7 +159,7 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "audit.read");
@@ -199,7 +199,7 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.detail": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "audit.read");

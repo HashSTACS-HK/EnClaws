@@ -57,7 +57,7 @@ async function getAppliedMigrations(): Promise<Set<string>> {
 function getPendingMigrations(applied: Set<string>): string[] {
   const files = fs.readdirSync(MIGRATIONS_DIR)
     .filter((f) => f.endsWith(".sql"))
-    .sort();
+    .toSorted();
   return files.filter((f) => !applied.has(f));
 }
 

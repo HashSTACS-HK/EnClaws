@@ -78,7 +78,7 @@ export function getAgentTaskOverview(filterAgentId?: string): AgentTaskOverview[
     }
     const bucket = ensure(agentId);
     for (let i = 0; i < qState.items.length; i++) {
-      const item = qState.items[i]!;
+      const item = qState.items[i];
       bucket.queued.push({
         sessionKey: item.run.sessionKey ?? queueKey,
         state: "queued",
@@ -92,7 +92,7 @@ export function getAgentTaskOverview(filterAgentId?: string): AgentTaskOverview[
 
   // 3. Build result array sorted by agent ID
   const result: AgentTaskOverview[] = [];
-  for (const [agentId, data] of [...agentMap.entries()].sort((a, b) =>
+  for (const [agentId, data] of [...agentMap.entries()].toSorted((a, b) =>
     a[0].localeCompare(b[0]),
   )) {
     result.push({

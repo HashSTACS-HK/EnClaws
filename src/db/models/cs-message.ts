@@ -82,7 +82,7 @@ export async function createCSMessage(params: {
 export async function getCSMessage(id: string): Promise<CSMessage | null> {
   if (getDbType() === DB_SQLITE) {
     const result = sqliteQuery("SELECT * FROM cs_messages WHERE id = ?", [id]);
-    return result.rows.length > 0 ? rowToMessage(result.rows[0] as Record<string, unknown>) : null;
+    return result.rows.length > 0 ? rowToMessage(result.rows[0]) : null;
   }
   const result = await query("SELECT * FROM cs_messages WHERE id = $1", [id]);
   return result.rows.length > 0 ? rowToMessage(result.rows[0]) : null;
@@ -97,7 +97,7 @@ export async function getLastCSMessageForSession(sessionId: string): Promise<CSM
       "SELECT * FROM cs_messages WHERE session_id = ? ORDER BY created_at DESC LIMIT 1",
       [sessionId],
     );
-    return result.rows.length > 0 ? rowToMessage(result.rows[0] as Record<string, unknown>) : null;
+    return result.rows.length > 0 ? rowToMessage(result.rows[0]) : null;
   }
   const result = await query(
     "SELECT * FROM cs_messages WHERE session_id = $1 ORDER BY created_at DESC LIMIT 1",
@@ -122,7 +122,7 @@ export async function listCSMessages(
          ORDER BY created_at DESC LIMIT ?`,
         [sessionId, opts.beforeId, limit],
       );
-      return result.rows.map(rowToMessage).reverse();
+      return result.rows.map(rowToMessage).toReversed();
     }
     const result = sqliteQuery(
       "SELECT * FROM cs_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT ?",
@@ -138,7 +138,7 @@ export async function listCSMessages(
        ORDER BY created_at DESC LIMIT $3`,
       [sessionId, opts.beforeId, limit],
     );
-    return result.rows.map(rowToMessage).reverse();
+    return result.rows.map(rowToMessage).toReversed();
   }
 
   const result = await query(

@@ -51,7 +51,7 @@ export interface DbConfig {
  * Get the active database type. Throws if not initialized.
  */
 export function getDbType(): DbType {
-  if (!dbType) throw new Error("[db] Database not initialized. Call initDb() first.");
+  if (!dbType) {throw new Error("[db] Database not initialized. Call initDb() first.");}
   return dbType;
 }
 
@@ -78,7 +78,7 @@ function resolveDbConfig(): DbConfig {
  * Initialize the database connection. Safe to call multiple times.
  */
 export function initDb(overrides?: DbConfig): DbPool | null {
-  if (dbType) return pool;
+  if (dbType) {return pool;}
 
   const url = process.env.ENCLAWS_DB_URL ?? "";
 

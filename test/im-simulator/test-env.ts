@@ -59,7 +59,7 @@ export class TestEnv {
    * If JWT is available, the connection carries tenant context.
    */
   private async ensureClient(): Promise<RpcClient> {
-    if (this.client?.connected) return this.client;
+    if (this.client?.connected) {return this.client;}
     this.client?.close();
     this.client = new RpcClient({
       url: this.connOpts.url,
@@ -268,7 +268,7 @@ export class TestEnv {
 function extractTextFromMessage(
   message?: ChatEventPayload["message"],
 ): string {
-  if (!message?.content || !Array.isArray(message.content)) return "";
+  if (!message?.content || !Array.isArray(message.content)) {return "";}
   return message.content
     .filter((block) => block.type === "text" && typeof block.text === "string")
     .map((block) => block.text!)

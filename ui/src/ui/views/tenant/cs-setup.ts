@@ -488,7 +488,7 @@ export class CSSetupView extends LitElement {
 
   private async _loadConfig() {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     this.loading = true;
     try {
       const result = await tenantRpc("cs.config.get", { tenantId }) as {
@@ -555,7 +555,7 @@ export class CSSetupView extends LitElement {
    */
   private async _saveChannels() {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     try {
       const channelsToSave = this.channels
         .filter((ch) => ch.html !== null)
@@ -567,9 +567,9 @@ export class CSSetupView extends LitElement {
   }
 
   private _validateConfig(): string | null {
-    if (!this.appId.trim()) return "请填写飞书 App ID";
-    if (!this.hasExistingSecret && !this.appSecret) return "请填写飞书 App Secret";
-    if (!this.chatId.trim()) return "请填写飞书群聊 Chat ID";
+    if (!this.appId.trim()) {return "请填写飞书 App ID";}
+    if (!this.hasExistingSecret && !this.appSecret) {return "请填写飞书 App Secret";}
+    if (!this.chatId.trim()) {return "请填写飞书群聊 Chat ID";}
     return null;
   }
 
@@ -580,7 +580,7 @@ export class CSSetupView extends LitElement {
       return;
     }
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     this.saving = true;
     try {
       await tenantRpc("cs.config.set", {
@@ -610,7 +610,7 @@ export class CSSetupView extends LitElement {
 
   private async _testConfig() {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     this.testing = true;
     this.checkResults = null;
     this.checkResultsAt = null;
@@ -708,7 +708,7 @@ export class CSSetupView extends LitElement {
   }
 
   private _addChannel() {
-    if (this.channels.length >= MAX_CHANNELS) return;
+    if (this.channels.length >= MAX_CHANNELS) {return;}
     this.channels = [...this.channels, { label: "", html: null, mode: "initial", prevLabel: "", prevHtml: null, expanded: false }];
   }
 
@@ -718,8 +718,8 @@ export class CSSetupView extends LitElement {
     const errs: Record<number, string> = {};
     Object.entries(this.channelErrors).forEach(([k, v]) => {
       const ki = parseInt(k, 10);
-      if (ki < idx) errs[ki] = v;
-      else if (ki > idx) errs[ki - 1] = v;
+      if (ki < idx) {errs[ki] = v;}
+      else if (ki > idx) {errs[ki - 1] = v;}
     });
     this.channelErrors = errs;
     // Persist after remove
@@ -740,7 +740,7 @@ export class CSSetupView extends LitElement {
 
   private async _copyHtml(idx: number) {
     const embedHtml = this.channels[idx].html;
-    if (!embedHtml) return;
+    if (!embedHtml) {return;}
     try {
       await navigator.clipboard.writeText(embedHtml);
       this.copiedIdx = idx;
@@ -859,7 +859,7 @@ export class CSSetupView extends LitElement {
             .value=${String(this.notifyIntervalMinutes)}
             @input=${(e: Event) => {
               const v = parseInt((e.target as HTMLInputElement).value, 10);
-              if (!isNaN(v)) this.notifyIntervalMinutes = Math.max(1, Math.min(60, v));
+              if (!isNaN(v)) {this.notifyIntervalMinutes = Math.max(1, Math.min(60, v));}
             }}
           />
           <p class="hint">同一会话内两次通知的最小间隔，默认 10 分钟（1–60）</p>

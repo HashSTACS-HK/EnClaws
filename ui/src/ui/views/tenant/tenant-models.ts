@@ -169,7 +169,7 @@ export class TenantModelsView extends LitElement {
     this.errorKey = key;
     this.successKey = "";
     this.msgParams = params ?? {};
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.errorKey = ""), 5000);
   }
 
@@ -177,7 +177,7 @@ export class TenantModelsView extends LitElement {
     this.successKey = key;
     this.errorKey = "";
     this.msgParams = params ?? {};
-    if (this.msgTimer) clearTimeout(this.msgTimer);
+    if (this.msgTimer) {clearTimeout(this.msgTimer);}
     this.msgTimer = setTimeout(() => (this.successKey = ""), 5000);
   }
 
@@ -318,7 +318,7 @@ export class TenantModelsView extends LitElement {
 
   private async handleSave(e: Event) {
     e.preventDefault();
-    if (!this.formProviderType || !this.formProviderName) return;
+    if (!this.formProviderType || !this.formProviderName) {return;}
     if (this.formModels.length === 0) {
       this.showError("models.needOneModel");
       return;
@@ -369,7 +369,7 @@ export class TenantModelsView extends LitElement {
       cancelText: t("models.cancel"),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
     this.errorKey = "";
     try {
       await this.rpc("tenant.models.delete", { id: config.id });

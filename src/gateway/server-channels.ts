@@ -361,12 +361,12 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
 
   const loadConfigWithDb = (): OpenClawConfig => {
     // Return cached enriched config if available (set by startChannels)
-    if (dbChannelsCache) return dbChannelsCache;
+    if (dbChannelsCache) {return dbChannelsCache;}
     return loadConfig();
   };
 
   const loadDbChannels = async (): Promise<void> => {
-    if (!isDbInitialized()) return;
+    if (!isDbInitialized()) {return;}
 
     try {
       const { listTenantChannels } = await import("../db/models/tenant-channel.js");
@@ -404,11 +404,11 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
         const allTenantApps = new Map<string, import("../db/types.js").TenantChannelApp>();
 
         for (const ch of channels) {
-          if (!ch.isActive || ch.channelPolicy === "disabled") continue;
+          if (!ch.isActive || ch.channelPolicy === "disabled") {continue;}
 
           const apps = await listChannelApps(ch.id);
           const enabledApps = apps.filter((a) => a.isActive && a.groupPolicy !== "disabled");
-          if (enabledApps.length === 0) continue;
+          if (enabledApps.length === 0) {continue;}
 
           for (const app of enabledApps) {
             allTenantApps.set(app.id, app);
@@ -470,9 +470,9 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
         // Generate bindings from app.agentId (new: one-to-many, app points to agent)
         for (const [appDbId, appInfo] of channelAppIdToInfo) {
           const app = allTenantApps.get(appDbId);
-          if (!app?.agentId) continue;
+          if (!app?.agentId) {continue;}
           const agent = agents.find((a) => a.agentId === app.agentId && a.isActive);
-          if (!agent) continue;
+          if (!agent) {continue;}
 
           appBoundByAppAgentId.add(appDbId);
 
@@ -497,7 +497,7 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
             acct.tenantUserByAgent = userMap;
             acct.tenantUserId = agent.createdBy ?? acct.tenantUserId;
 
-            const agentConfig = agent.config as Record<string, unknown>;
+            const agentConfig = agent.config;
             const feishuOpenId = (agentConfig?.feishuOpenId as string)?.trim();
             if (feishuOpenId) {
               const senderMap = (acct.senderToAgent ?? {}) as Record<string, string>;
@@ -557,7 +557,7 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
         merged.models = {
           ...(merged as any).models,
           providers: tenantProviders,
-        } as any;
+        };
       }
 
       // Merge all tenant agents into config.agents.list.

@@ -88,10 +88,10 @@ export async function enrichTenantContext(
   }
 
   // Skip if the plugin already injected tenant info (e.g. the old built-in feishu plugin)
-  if (ctx.TenantId) return;
+  if (ctx.TenantId) {return;}
 
   const provider = (ctx.Provider ?? ctx.Surface ?? "").toLowerCase();
-  if (!provider) return;
+  if (!provider) {return;}
 
   // Read tenantId from the account-scoped channel config.
   // In multi-tenant mode, server-channels.ts merges DB tenant data into the
@@ -119,10 +119,10 @@ export async function enrichTenantContext(
       tenantId = accountEntry?.tenantId as string | undefined;
     }
   }
-  if (!tenantId) return;
+  if (!tenantId) {return;}
 
   const senderId = ctx.SenderId;
-  if (!senderId) return;
+  if (!senderId) {return;}
 
   try {
     const { autoProvisionTenantUser } = await import("../../infra/channel-auto-provision.js");
@@ -245,10 +245,10 @@ function syncFeishuSkillConfig(
       provider,
       accountId,
     ) as { appId: string; appSecret: string } | null;
-    if (!creds?.appId || !creds?.appSecret) return;
+    if (!creds?.appId || !creds?.appSecret) {return;}
 
     const cacheKey = `${tenantId}:${creds.appId}`;
-    if (skillConfigSynced.has(cacheKey)) return;
+    if (skillConfigSynced.has(cacheKey)) {return;}
 
     const { resolveTenantSkillsDir } = require("../../config/sessions/tenant-paths.js");
     const sharedDir = path.join(resolveTenantSkillsDir(tenantId), "feishu-auth");
@@ -290,8 +290,8 @@ function syncFeishuSkillConfig(
  */
 function extractChatId(ctx: FinalizedMsgContext): string | undefined {
   const to = (ctx as Record<string, unknown>).To as string | undefined;
-  if (!to) return undefined;
-  if (to.startsWith("chat:")) return to.slice(5);
+  if (!to) {return undefined;}
+  if (to.startsWith("chat:")) {return to.slice(5);}
   return undefined;
 }
 
@@ -304,10 +304,10 @@ async function resolveFeishuSenderName(
   cfg: OpenClawConfig,
 ): Promise<void> {
   const provider = (ctx.Provider ?? ctx.Surface ?? "").toLowerCase();
-  if (provider !== "feishu") return;
+  if (provider !== "feishu") {return;}
 
   const senderId = ctx.SenderId;
-  if (!senderId) return;
+  if (!senderId) {return;}
 
   const chatId = extractChatId(ctx);
 
@@ -316,7 +316,7 @@ async function resolveFeishuSenderName(
 
     const accountId = (ctx as Record<string, unknown>).AccountId as string | undefined;
     const creds = extractFeishuCredentials(cfg as unknown as Record<string, unknown>, provider, accountId);
-    if (!creds) return;
+    if (!creds) {return;}
 
     const messageId = (ctx as Record<string, unknown>).MessageSid as string | undefined;
     const name = await resolveFeishuUserName({

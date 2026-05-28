@@ -71,7 +71,7 @@ async function fetchFeishuAppName(
       code?: number;
       tenant_access_token?: string;
     };
-    if (tokenJson.code !== 0 || !tokenJson.tenant_access_token) return null;
+    if (tokenJson.code !== 0 || !tokenJson.tenant_access_token) {return null;}
 
     const infoRes = await fetch(
       `${base}/open-apis/application/v6/applications/${appId}?lang=zh_cn`,
@@ -84,7 +84,7 @@ async function fetchFeishuAppName(
       code?: number;
       data?: { app?: { app_name?: string } };
     };
-    if (infoJson.code !== 0) return null;
+    if (infoJson.code !== 0) {return null;}
     return infoJson.data?.app?.app_name ?? null;
   } catch {
     return null;
@@ -148,7 +148,7 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
    */
   "tenant.feishu.register.begin": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -226,7 +226,7 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
    */
   "tenant.feishu.register.poll": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     try {
       assertPermission(ctx.role, "channel.create");

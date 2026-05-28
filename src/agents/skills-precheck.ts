@@ -37,7 +37,7 @@ export function resolveSkillNameFromPath(
   changedPath: string,
   entries: SkillEntry[],
 ): string | null {
-  if (!changedPath.endsWith("SKILL.md")) return null;
+  if (!changedPath.endsWith("SKILL.md")) {return null;}
   const changedDir = path.normalize(path.resolve(changedPath, ".."));
   const match = entries.find(
     (e) => path.normalize(path.resolve(e.skill.baseDir)) === changedDir,
@@ -67,7 +67,7 @@ export function formatPrecheckMessage(
     lines.push(`  - 操作系统: ${missing.os.join(", ")}`);
   }
 
-  if (lines.length === 0) return null;
+  if (lines.length === 0) {return null;}
 
   const parts = [`技能 "${name}" 缺少以下依赖:`, ...lines];
 

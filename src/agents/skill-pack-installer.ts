@@ -41,14 +41,14 @@ const DEFAULT_GIT_URL = "https://github.com/hashSTACS-Global/feishu-skills.git";
 // ---------------------------------------------------------------------------
 
 function shouldExclude(name: string): boolean {
-  if (EXCLUDE.has(name)) return true;
+  if (EXCLUDE.has(name)) {return true;}
   return EXCLUDE_EXT.some((ext) => name.endsWith(ext));
 }
 
 function copyDirRecursive(src: string, dst: string): void {
   fs.mkdirSync(dst, { recursive: true });
   for (const entry of fs.readdirSync(src)) {
-    if (shouldExclude(entry)) continue;
+    if (shouldExclude(entry)) {continue;}
     const srcPath = path.join(src, entry);
     const dstPath = path.join(dst, entry);
     if (fs.statSync(srcPath).isDirectory()) {
@@ -103,7 +103,7 @@ async function cloneToTemp(gitUrl: string): Promise<string | null> {
   // Check git availability
   try {
     const check = await runCommandWithTimeout(["git", "--version"], { timeoutMs: 5_000 });
-    if (check.code !== 0) return null;
+    if (check.code !== 0) {return null;}
   } catch {
     return null;
   }
@@ -143,7 +143,7 @@ export type SkillPackResult = {
  */
 function hasSkillPack(tenantId: string): boolean {
   const targetDir = path.join(resolveTenantSkillsDir(tenantId), "feishu-skills");
-  if (!fs.existsSync(targetDir)) return false;
+  if (!fs.existsSync(targetDir)) {return false;}
   return SKILLS.some((s) => fs.existsSync(path.join(targetDir, s)));
 }
 
@@ -156,10 +156,10 @@ export async function ensureSkillPacksForAllTenants(
   log?: { info: (msg: string) => void; warn: (msg: string) => void },
 ): Promise<void> {
   const autoInstall = process.env.SKILL_PACK_AUTO_INSTALL?.trim().toLowerCase();
-  if (autoInstall === "false" || autoInstall === "0") return;
+  if (autoInstall === "false" || autoInstall === "0") {return;}
 
   for (const tenantId of tenantIds) {
-    if (hasSkillPack(tenantId)) continue;
+    if (hasSkillPack(tenantId)) {continue;}
     log?.info(`skill-pack: tenant ${tenantId} missing skill pack, installing...`);
     const result = await installSkillPack(tenantId);
     if (result.ok && result.installed.length > 0) {
@@ -211,7 +211,7 @@ export async function installSkillPack(tenantId: string): Promise<SkillPackResul
 
   for (const skill of SKILLS) {
     const src = path.join(sourceDir, skill);
-    if (!fs.existsSync(src)) continue;
+    if (!fs.existsSync(src)) {continue;}
     try {
       const dst = path.join(targetDir, skill);
       copyDirRecursive(src, dst);

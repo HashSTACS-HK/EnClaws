@@ -93,9 +93,9 @@ export async function runLayer3TestFiles(opts: RunnerOptions & {
  */
 function resolveCredential(jsonValue: string | undefined, envVar: string): string | undefined {
   const isPlaceholder = (v?: string): boolean => {
-    if (!v) return true;
+    if (!v) {return true;}
     const trimmed = v.trim();
-    if (!trimmed) return true;
+    if (!trimmed) {return true;}
     return trimmed === "xxx"
       || trimmed === "cli_xxx"
       || trimmed === "ou_xxx"
@@ -105,9 +105,9 @@ function resolveCredential(jsonValue: string | undefined, envVar: string): strin
   };
   // Env var always wins if it's set
   const envValue = process.env[envVar];
-  if (envValue && !isPlaceholder(envValue)) return envValue;
+  if (envValue && !isPlaceholder(envValue)) {return envValue;}
   // Otherwise, fall back to JSON value if it's not a placeholder
-  if (!isPlaceholder(jsonValue)) return jsonValue;
+  if (!isPlaceholder(jsonValue)) {return jsonValue;}
   return undefined;
 }
 
@@ -125,7 +125,7 @@ async function runSingleFile(
   function record(row: ResultRow, error?: string) {
     results.push(row);
     csv.append(row);
-    if (error) errors.push(error);
+    if (error) {errors.push(error);}
   }
 
   // Resolve credentials: env vars take precedence, JSON values are fallback.
@@ -199,7 +199,7 @@ async function runSingleFile(
         expected: formatAssert(tc.assert), actual: "", failures: `ERROR: ${(e as Error).message}`,
         passed: false, duration: "-",
       }, `[${fileName}] "${label}": ${(e as Error).message}`);
-      if (!opts.continueOnFailure) break;
+      if (!opts.continueOnFailure) {break;}
       continue;
     }
 
@@ -245,7 +245,7 @@ async function runSingleFile(
       duration: `${reply.durationMs}ms`,
     }, failures.length > 0 ? `[${fileName}] "${label}": ${failures.join("; ")}` : undefined);
 
-    if (caseFailed && !opts.continueOnFailure) break;
+    if (caseFailed && !opts.continueOnFailure) {break;}
   }
 
   return { results, errors };

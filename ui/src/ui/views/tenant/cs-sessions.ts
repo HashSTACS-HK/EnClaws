@@ -237,7 +237,7 @@ export class CSSessionsView extends LitElement {
 
   private async _loadSessions(reset = false) {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     if (reset) { this.offset = 0; this.sessions = []; }
     this.loading = true;
     this.error = null;

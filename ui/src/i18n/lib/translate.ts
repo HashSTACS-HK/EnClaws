@@ -55,10 +55,10 @@ class I18nManager {
   }
 
   public async setLocale(locale: Locale) {
-    if (this.locale === locale) return;
+    if (this.locale === locale) {return;}
     // All locales are statically imported in `translations` above, so the
     // map is always populated — no dynamic import path is needed.
-    if (!this.translations[locale]) return;
+    if (!this.translations[locale]) {return;}
 
     this.locale = locale;
     localStorage.setItem("enclaws.i18n.locale", locale);

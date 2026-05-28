@@ -241,7 +241,7 @@ export function renderChatControls(state: AppViewState, tenantAgents?: TenantAge
               ?disabled=${!state.connected}
               @change=${(e: Event) => {
                 const agentId = (e.target as HTMLSelectElement).value;
-                if (!agentId) return;
+                if (!agentId) {return;}
                 // Find the most recent channel session for this agent, fall back to chat
                 const agentPrefix = `agent:${agentId}:`;
                 const agentSessions = sessionOptions.filter(

@@ -68,7 +68,7 @@ export async function autoProvisionTenantUser(params: {
   displayName?: string;
   channelId?: string;
 }): Promise<AutoProvisionResult | AutoProvisionQuotaExceeded | AutoProvisionUserSuspended | null> {
-  if (!isDbInitialized()) return null;
+  if (!isDbInitialized()) {return null;}
 
   const { tenantId, openId, unionId, displayName, channelId } = params;
   const key = cacheKey(tenantId, openId, channelId);

@@ -55,13 +55,13 @@ export async function resolveEffectiveQuotas(tenant: Tenant): Promise<TenantQuot
   const planDefaults = await getPlanQuotas(tenant.plan);
   const stored: Record<string, number> = {};
   for (const [k, v] of Object.entries(tenant.quotas ?? {})) {
-    if (typeof v === "number" && !Number.isNaN(v)) stored[k] = v;
+    if (typeof v === "number" && !Number.isNaN(v)) {stored[k] = v;}
   }
   return { ...planDefaults, ...stored } as TenantQuotas;
 }
 
 export async function getPlanQuotas(planId: string): Promise<TenantQuotas> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.getPlanQuotas(planId);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.getPlanQuotas(planId);}
   try {
     const result = await query(
       `SELECT max_users, max_agents, max_channels, max_tokens_per_month, max_cron_jobs
@@ -69,7 +69,7 @@ export async function getPlanQuotas(planId: string): Promise<TenantQuotas> {
       [planId],
     );
     const row = result.rows[0];
-    if (!row) return FALLBACK_FREE_QUOTAS;
+    if (!row) {return FALLBACK_FREE_QUOTAS;}
     return {
       maxUsers: parseInt(row.max_users as string, 10),
       maxAgents: parseInt(row.max_agents as string, 10),
@@ -84,7 +84,7 @@ export async function getPlanQuotas(planId: string): Promise<TenantQuotas> {
 }
 
 export async function createTenant(input: CreateTenantInput): Promise<Tenant> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.createTenant(input);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.createTenant(input);}
   // Quotas come from the plans table snapshot for this plan, with optional
   // per-tenant overrides supplied by the caller (e.g. platform admin granting
   // a custom quota beyond the plan's defaults).
@@ -105,7 +105,7 @@ export async function createTenant(input: CreateTenantInput): Promise<Tenant> {
 }
 
 export async function getTenantById(id: string): Promise<Tenant | null> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.getTenantById(id);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.getTenantById(id);}
   const result = await query("SELECT * FROM tenants WHERE id = $1", [id]);
   return result.rows.length > 0 ? rowToTenant(result.rows[0]) : null;
 }
@@ -116,7 +116,7 @@ export async function listTenants(opts?: {
   limit?: number;
   offset?: number;
 }): Promise<{ tenants: Tenant[]; total: number }> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.listTenants(opts);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.listTenants(opts);}
   const conditions: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -153,7 +153,7 @@ export async function updateTenant(
   id: string,
   updates: Partial<Pick<Tenant, "name" | "plan" | "status" | "settings" | "quotas" | "traceEnabled" | "identityPrompt">>,
 ): Promise<Tenant | null> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.updateTenant(id, updates);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.updateTenant(id, updates);}
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -187,7 +187,7 @@ export async function updateTenant(
     values.push(updates.identityPrompt);
   }
 
-  if (sets.length === 0) return getTenantById(id);
+  if (sets.length === 0) {return getTenantById(id);}
 
   values.push(id);
   const result = await query(
@@ -198,7 +198,7 @@ export async function updateTenant(
 }
 
 export async function deleteTenant(id: string): Promise<boolean> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.deleteTenant(id);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.deleteTenant(id);}
   const result = await query(
     "UPDATE tenants SET status = 'deleted' WHERE id = $1 AND status != 'deleted'",
     [id],
@@ -213,9 +213,9 @@ export async function checkTenantQuota(
   tenantId: string,
   resource: "users" | "agents" | "channels",
 ): Promise<{ allowed: boolean; current: number; max: number }> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.checkTenantQuota(tenantId, resource);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.checkTenantQuota(tenantId, resource);}
   const tenant = await getTenantById(tenantId);
-  if (!tenant) return { allowed: false, current: 0, max: 0 };
+  if (!tenant) {return { allowed: false, current: 0, max: 0 };}
 
   const tableMap = {
     users: "users",
@@ -236,12 +236,12 @@ export async function checkTenantQuota(
   const max = tenant.quotas[quotaKeyMap[resource]];
 
   // -1 means unlimited (enterprise plan).
-  if (max < 0) return { allowed: true, current, max };
+  if (max < 0) {return { allowed: true, current, max };}
   return { allowed: current < max, current, max };
 }
 
 export async function getMonthlyTokenUsage(tenantId: string): Promise<number> {
-  if (getDbType() === DB_SQLITE) return sqliteTenant.getMonthlyTokenUsage(tenantId);
+  if (getDbType() === DB_SQLITE) {return sqliteTenant.getMonthlyTokenUsage(tenantId);}
   const result = await query(
     `SELECT COALESCE(SUM(input_tokens + output_tokens + cache_read_tokens + cache_write_tokens), 0) AS total
      FROM usage_records

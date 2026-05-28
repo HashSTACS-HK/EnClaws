@@ -57,7 +57,7 @@ function getRefreshExpires(): string {
 
 function parseExpiresIn(expr: string): number {
   const match = expr.match(/^(\d+)(s|m|h|d)$/);
-  if (!match) return 900; // default 15 minutes
+  if (!match) {return 900;} // default 15 minutes
   const num = parseInt(match[1], 10);
   const unit = match[2];
   switch (unit) {
@@ -159,7 +159,7 @@ export async function verifyRefreshToken(
     [tokenHash],
   );
 
-  if (result.rows.length === 0) return null;
+  if (result.rows.length === 0) {return null;}
   return { userId: result.rows[0].user_id as string };
 }
 

@@ -140,7 +140,7 @@ export class EnClawsSessionsList extends LitElement {
 
   private async revokeAllOthers() {
     const auth = loadAuth();
-    if (!auth?.refreshToken) return;
+    if (!auth?.refreshToken) {return;}
     try {
       await callAuthRpc("auth.revokeAllOtherSessions", { currentRefreshToken: auth.refreshToken });
       this.sessions = this.sessions.filter((s) => s.isCurrent);
@@ -153,7 +153,7 @@ export class EnClawsSessionsList extends LitElement {
 
   render() {
     void this.i18nCtrl;
-    if (this.loading) return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;
+    if (this.loading) {return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;}
     return html`
       <div class="card">
         <h1>${t("auth.sessions.title")}</h1>
@@ -195,7 +195,7 @@ export class EnClawsPendingVerification extends LitElement {
   @state() private error = "";
 
   private async resend() {
-    if (!this.email) return;
+    if (!this.email) {return;}
     this.resending = true;
     this.error = "";
     try {
@@ -234,7 +234,7 @@ export class EnClawsPendingVerification extends LitElement {
 function readHashParam(name: string): string {
   const hash = window.location.hash || "";
   const q = hash.indexOf("?");
-  if (q < 0) return "";
+  if (q < 0) {return "";}
   return new URLSearchParams(hash.slice(q + 1)).get(name) ?? "";
 }
 
@@ -264,7 +264,7 @@ export class EnClawsVerifyEmail extends LitElement {
 
   render() {
     void this.i18nCtrl;
-    if (this.loading) return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;
+    if (this.loading) {return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;}
     if (this.ok) {
       return html`
         <div class="card">
@@ -350,7 +350,7 @@ export class EnClawsMfaSetup extends LitElement {
 
   render() {
     void this.i18nCtrl;
-    if (this.loading) return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;
+    if (this.loading) {return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;}
 
     if (this.step === "done") {
       return html`

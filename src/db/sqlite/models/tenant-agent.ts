@@ -106,7 +106,7 @@ export async function updateTenantAgent(
     values.push(updates.isActive);
   }
 
-  if (sets.length === 0) return getTenantAgent(tenantId, agentId);
+  if (sets.length === 0) {return getTenantAgent(tenantId, agentId);}
 
   values.push(tenantId, agentId);
   sqliteQuery(

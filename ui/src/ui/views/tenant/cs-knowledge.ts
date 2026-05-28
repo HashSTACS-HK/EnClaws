@@ -235,7 +235,7 @@ export class CSKnowledgeView extends LitElement {
 
   private async _loadFiles() {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     this.loading = true;
     this.error = null;
     try {
@@ -255,7 +255,7 @@ export class CSKnowledgeView extends LitElement {
 
   private async _uploadFiles(fileList: FileList | File[]) {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
 
     const files = Array.from(fileList);
     const mdFiles = files.filter((f) => f.name.endsWith(".md"));
@@ -267,7 +267,7 @@ export class CSKnowledgeView extends LitElement {
       this.error = null;
     }
 
-    if (mdFiles.length === 0) return;
+    if (mdFiles.length === 0) {return;}
 
     this.uploading = true;
     this.successMsg = null;
@@ -295,7 +295,7 @@ export class CSKnowledgeView extends LitElement {
 
     // Reset input so the same file can be re-uploaded
     const input = this.shadowRoot?.querySelector<HTMLInputElement>("#file-input");
-    if (input) input.value = "";
+    if (input) {input.value = "";}
 
     await this._loadFiles();
   }
@@ -327,7 +327,7 @@ export class CSKnowledgeView extends LitElement {
 
   private async _viewFile(name: string) {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     try {
       const result = await tenantRpc("cs.knowledge.view", { tenantId, name }) as { content: string };
       const blob = new Blob([result.content], { type: "text/plain;charset=utf-8" });
@@ -335,7 +335,7 @@ export class CSKnowledgeView extends LitElement {
       const win = window.open(url, "_blank");
       // Revoke after tab has had time to load
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
-      if (!win) this.error = "弹窗被浏览器拦截，请允许弹窗后重试";
+      if (!win) {this.error = "弹窗被浏览器拦截，请允许弹窗后重试";}
     } catch (err) {
       this.error = err instanceof Error ? err.message : "加载文件失败";
     }
@@ -343,7 +343,7 @@ export class CSKnowledgeView extends LitElement {
 
   private async _downloadFile(name: string) {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
+    if (!tenantId) {return;}
     try {
       const result = await tenantRpc("cs.knowledge.view", { tenantId, name }) as { content: string };
       const blob = new Blob([result.content], { type: "text/markdown;charset=utf-8" });
@@ -360,8 +360,8 @@ export class CSKnowledgeView extends LitElement {
 
   private async _deleteFile(name: string) {
     const tenantId = this.tenantId;
-    if (!tenantId) return;
-    if (!confirm(`确认删除知识库文件 "${name}"？`)) return;
+    if (!tenantId) {return;}
+    if (!confirm(`确认删除知识库文件 "${name}"？`)) {return;}
 
     this.deletingFile = name;
     this.error = null;
@@ -378,8 +378,8 @@ export class CSKnowledgeView extends LitElement {
   }
 
   private _formatSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {return `${bytes} B`;}
+    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 

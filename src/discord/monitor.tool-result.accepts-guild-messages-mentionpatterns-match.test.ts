@@ -274,7 +274,7 @@ describe("discord tool result dispatch", () => {
       const cfg = createMentionRequiredGuildConfig({
         messages: {
           responsePrefix: "PFX",
-          groupChat: { mentionPatterns: ["\.enclaws\\b"] },
+          groupChat: { mentionPatterns: [".enclaws\\b"] },
         },
       });
 

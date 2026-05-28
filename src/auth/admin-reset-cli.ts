@@ -31,9 +31,9 @@ function parseArgs(argv: string[]): CliArgs {
   const out: CliArgs = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--help" || a === "-h") out.help = true;
-    else if (a === "--email" || a === "-e") out.email = argv[++i];
-    else if (a === "--tenant-id" || a === "-t") out.tenantId = argv[++i];
+    if (a === "--help" || a === "-h") {out.help = true;}
+    else if (a === "--email" || a === "-e") {out.email = argv[++i];}
+    else if (a === "--tenant-id" || a === "-t") {out.tenantId = argv[++i];}
   }
   return out;
 }

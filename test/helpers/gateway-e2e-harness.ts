@@ -155,8 +155,8 @@ export async function spawnGatewayInstance(
     };
     if (opts?.extraEnv) {
       for (const [k, v] of Object.entries(opts.extraEnv)) {
-        if (v === undefined) delete mergedEnv[k];
-        else mergedEnv[k] = v;
+        if (v === undefined) {delete mergedEnv[k];}
+        else {mergedEnv[k] = v;}
       }
     }
 
