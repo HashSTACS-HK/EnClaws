@@ -1,11 +1,11 @@
 /**
- * CS API Mode view — API Object CRUD for Agenora S2 integration.
+ * CS API Mode view — AI Service CRUD for Agenora S2 integration.
  *
  * Allows tenant owners/admins to:
- *   - List all API Objects
- *   - Create a new API Object (name, description, agentId)
+ *   - List all AI Services
+ *   - Create a new AI Service (name, description, agentId)
  *   - Regenerate the app secret (one-time reveal)
- *   - Delete an API Object (blocked if active sessions exist)
+ *   - Delete an AI Service (blocked if active sessions exist)
  *
  * All REST calls go to /api/cs-api/* with JWT Bearer auth.
  * Agent list is fetched via WebSocket RPC (tenant.agents.list).

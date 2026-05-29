@@ -1191,10 +1191,10 @@ export const pt_BR: TranslationMap = {
     },
     apiMode: {
       title: "Modo API",
-      newBtn: "+ Novo Objeto de API",
-      emptyState: "Nenhum Objeto de API ainda. Crie um para habilitar a integração direta via API.",
+      newBtn: "+ Novo Serviço de IA",
+      emptyState: "Nenhum Serviço de IA ainda. Crie um para habilitar a integração direta via API.",
       loading: "Carregando…",
-      loadError: "Falha ao carregar Objetos de API",
+      loadError: "Falha ao carregar Serviços de IA",
       table: {
         name: "Nome",
         agent: "Agente",
@@ -1205,7 +1205,7 @@ export const pt_BR: TranslationMap = {
         deleteBtn: "Excluir",
       },
       create: {
-        title: "Novo Objeto de API",
+        title: "Novo Serviço de IA",
         nameLabel: "Nome",
         namePlaceholder: "ex.: Integração de Produção",
         nameRequired: "O nome é obrigatório",
@@ -1216,7 +1216,7 @@ export const pt_BR: TranslationMap = {
         submitBtn: "Criar",
         submitting: "Criando…",
         cancelBtn: "Cancelar",
-        error: "Falha ao criar Objeto de API",
+        error: "Falha ao criar Serviço de IA",
       },
       regenerate: {
         confirmTitle: "Regenerar Secret?",
@@ -1225,11 +1225,11 @@ export const pt_BR: TranslationMap = {
         error: "Falha ao regenerar o secret",
       },
       delete: {
-        confirmTitle: "Excluir Objeto de API?",
+        confirmTitle: "Excluir Serviço de IA?",
         confirmMessage: "Excluir \"{name}\"? Essa ação não pode ser desfeita.",
         confirmBtn: "Excluir",
-        activeSessionsError: "Não é possível excluir: este Objeto de API possui sessões ativas. Feche-as primeiro.",
-        error: "Falha ao excluir Objeto de API",
+        activeSessionsError: "Não é possível excluir: este Serviço de IA possui sessões ativas. Feche-as primeiro.",
+        error: "Falha ao excluir Serviço de IA",
       },
       secretDialog: {
         title: "Credenciais de API",
@@ -1247,10 +1247,10 @@ export const pt_BR: TranslationMap = {
     action: {
       cs: {
         "api-object": {
-          create: "Objeto de API criado",
-          update: "Objeto de API atualizado",
+          create: "Serviço de IA criado",
+          update: "Serviço de IA atualizado",
           "regenerate-secret": "App Secret regenerado",
-          delete: "Objeto de API excluído",
+          delete: "Serviço de IA excluído",
         },
       },
     },

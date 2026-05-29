@@ -1188,10 +1188,10 @@ export const zh_TW: TranslationMap = {
     },
     apiMode: {
       title: "API 模式",
-      newBtn: "+ 新增 API 物件",
-      emptyState: "尚無 API 物件。建立一個以啟用 API 直連整合。",
+      newBtn: "+ 新增 AI 服務",
+      emptyState: "尚無 AI 服務。建立一個以啟用 API 直連整合。",
       loading: "載入中…",
-      loadError: "載入 API 物件失敗",
+      loadError: "載入 AI 服務失敗",
       table: {
         name: "名稱",
         agent: "Agent",
@@ -1202,7 +1202,7 @@ export const zh_TW: TranslationMap = {
         deleteBtn: "刪除",
       },
       create: {
-        title: "新增 API 物件",
+        title: "新增 AI 服務",
         nameLabel: "名稱",
         namePlaceholder: "例如：生產環境整合",
         nameRequired: "名稱不能為空",
@@ -1213,7 +1213,7 @@ export const zh_TW: TranslationMap = {
         submitBtn: "建立",
         submitting: "建立中…",
         cancelBtn: "取消",
-        error: "建立 API 物件失敗",
+        error: "建立 AI 服務失敗",
       },
       regenerate: {
         confirmTitle: "重新生成密鑰？",
@@ -1222,11 +1222,11 @@ export const zh_TW: TranslationMap = {
         error: "重新生成密鑰失敗",
       },
       delete: {
-        confirmTitle: "刪除 API 物件？",
+        confirmTitle: "刪除 AI 服務？",
         confirmMessage: "刪除「{name}」？此操作無法復原。",
         confirmBtn: "刪除",
-        activeSessionsError: "無法刪除：該 API 物件存在活躍會話，請先關閉這些會話。",
-        error: "刪除 API 物件失敗",
+        activeSessionsError: "無法刪除：該 AI 服務存在活躍會話，請先關閉這些會話。",
+        error: "刪除 AI 服務失敗",
       },
       secretDialog: {
         title: "API 憑證",
@@ -1244,10 +1244,10 @@ export const zh_TW: TranslationMap = {
     action: {
       cs: {
         "api-object": {
-          create: "建立了 API 物件",
-          update: "更新了 API 物件",
+          create: "建立了 AI 服務",
+          update: "更新了 AI 服務",
           "regenerate-secret": "重新生成了 App Secret",
-          delete: "刪除了 API 物件",
+          delete: "刪除了 AI 服務",
         },
       },
     },

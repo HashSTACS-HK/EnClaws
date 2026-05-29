@@ -1192,10 +1192,10 @@ export const de: TranslationMap = {
     },
     apiMode: {
       title: "API-Modus",
-      newBtn: "+ Neues API-Objekt",
-      emptyState: "Noch keine API-Objekte. Erstellen Sie eines, um die direkte API-Integration zu aktivieren.",
+      newBtn: "+ Neuer KI-Dienst",
+      emptyState: "Noch keine KI-Dienste. Erstellen Sie einen, um die direkte API-Integration zu aktivieren.",
       loading: "Wird geladen…",
-      loadError: "API-Objekte konnten nicht geladen werden",
+      loadError: "KI-Dienste konnten nicht geladen werden",
       table: {
         name: "Name",
         agent: "Agent",
@@ -1206,7 +1206,7 @@ export const de: TranslationMap = {
         deleteBtn: "Löschen",
       },
       create: {
-        title: "Neues API-Objekt",
+        title: "Neuer KI-Dienst",
         nameLabel: "Name",
         namePlaceholder: "z. B. Produktionsintegration",
         nameRequired: "Name ist erforderlich",
@@ -1217,7 +1217,7 @@ export const de: TranslationMap = {
         submitBtn: "Erstellen",
         submitting: "Wird erstellt…",
         cancelBtn: "Abbrechen",
-        error: "API-Objekt konnte nicht erstellt werden",
+        error: "KI-Dienst konnte nicht erstellt werden",
       },
       regenerate: {
         confirmTitle: "Secret neu generieren?",
@@ -1226,11 +1226,11 @@ export const de: TranslationMap = {
         error: "Secret konnte nicht neu generiert werden",
       },
       delete: {
-        confirmTitle: "API-Objekt löschen?",
-        confirmMessage: "„{name}“ löschen? Dies kann nicht rückgängig gemacht werden.",
-        confirmBtn: "Löschen",
-        activeSessionsError: "Löschen nicht möglich: Dieses API-Objekt hat aktive Sitzungen. Bitte zuerst schließen.",
-        error: "API-Objekt konnte nicht gelöscht werden",
+        confirmTitle: “KI-Dienst löschen?”,
+        confirmMessage: “„{name}” löschen? Dies kann nicht rückgängig gemacht werden.”,
+        confirmBtn: “Löschen”,
+        activeSessionsError: “Löschen nicht möglich: Dieser KI-Dienst hat aktive Sitzungen. Bitte zuerst schließen.”,
+        error: “KI-Dienst konnte nicht gelöscht werden”,
       },
       secretDialog: {
         title: "API-Anmeldedaten",
@@ -1248,10 +1248,10 @@ export const de: TranslationMap = {
     action: {
       cs: {
         "api-object": {
-          create: "API-Objekt erstellt",
-          update: "API-Objekt aktualisiert",
+          create: "KI-Dienst erstellt",
+          update: "KI-Dienst aktualisiert",
           "regenerate-secret": "App Secret neu generiert",
-          delete: "API-Objekt gelöscht",
+          delete: "KI-Dienst gelöscht",
         },
       },
     },

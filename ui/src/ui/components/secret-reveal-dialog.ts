@@ -1,7 +1,7 @@
 /**
- * One-time secret reveal dialog for CS API Objects.
+ * One-time secret reveal dialog for CS AI Services.
  *
- * Displayed immediately after creating or regenerating a CS API Object secret.
+ * Displayed immediately after creating or regenerating a CS AI Service secret.
  * The plaintext secret is only available at this moment — the server never
  * returns it again.  The user MUST copy it before closing.
  *
@@ -9,7 +9,7 @@
  *   import { showSecretReveal } from "../components/secret-reveal-dialog.ts";
  *   await showSecretReveal({ appId, appSecret, endpointUrl });
  *
- * CS API 对象一次性密钥展示弹窗。创建或重置密钥后立即弹出，关闭即消失，无法再次获取。
+ * CS AI 服务一次性密钥展示弹窗。创建或重置密钥后立即弹出，关闭即消失，无法再次获取。
  */
 
 import { html, css, LitElement } from "lit";

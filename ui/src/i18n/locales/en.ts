@@ -1627,10 +1627,10 @@ export const en: TranslationMap = {
     },
     apiMode: {
       title: "API Mode",
-      newBtn: "+ New API Object",
-      emptyState: "No API Objects yet. Create one to enable direct API integration.",
+      newBtn: "+ New AI Service",
+      emptyState: "No AI Services yet. Create one to enable direct API integration.",
       loading: "Loading…",
-      loadError: "Failed to load API Objects",
+      loadError: "Failed to load AI Services",
       table: {
         name: "Name",
         agent: "Agent",
@@ -1641,7 +1641,7 @@ export const en: TranslationMap = {
         deleteBtn: "Delete",
       },
       create: {
-        title: "New API Object",
+        title: "New AI Service",
         nameLabel: "Name",
         namePlaceholder: "e.g. Production Integration",
         nameRequired: "Name is required",
@@ -1652,7 +1652,7 @@ export const en: TranslationMap = {
         submitBtn: "Create",
         submitting: "Creating…",
         cancelBtn: "Cancel",
-        error: "Failed to create API Object",
+        error: "Failed to create AI Service",
       },
       regenerate: {
         confirmTitle: "Regenerate Secret?",
@@ -1661,11 +1661,11 @@ export const en: TranslationMap = {
         error: "Failed to regenerate secret",
       },
       delete: {
-        confirmTitle: "Delete API Object?",
+        confirmTitle: "Delete AI Service?",
         confirmMessage: "Delete \"{name}\"? This cannot be undone.",
         confirmBtn: "Delete",
-        activeSessionsError: "Cannot delete: this API Object has active sessions. Close them first.",
-        error: "Failed to delete API Object",
+        activeSessionsError: "Cannot delete: this AI Service has active sessions. Close them first.",
+        error: "Failed to delete AI Service",
       },
       secretDialog: {
         title: "API Credentials",
@@ -1683,10 +1683,10 @@ export const en: TranslationMap = {
     action: {
       cs: {
         "api-object": {
-          create: "Created API Object",
-          update: "Updated API Object",
+          create: "Created AI Service",
+          update: "Updated AI Service",
           "regenerate-secret": "Regenerated App Secret",
-          delete: "Deleted API Object",
+          delete: "Deleted AI Service",
         },
       },
     },
