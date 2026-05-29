@@ -33,10 +33,10 @@ import { getTenantById } from "../../db/models/tenant.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
   buildCSSystemPrompt,
-  DEFAULT_CS_BASE_PROMPT,
   renderCSBasePrompt,
   type CSRestrictions,
 } from "./cs-system-prompt.js";
+import { loadAgentPersona, selectBasePrompt } from "./cs-persona.js";
 
 const log = createSubsystemLogger("cs-agent-runner");
 
@@ -103,10 +103,16 @@ export async function runCSAgentReply(params: {
     log.warn(`failed to resolve tenant name for ${tenantId}: ${message}`);
   }
 
-  // Build base prompt: use custom if provided, else default template.
-  // 构建基础 prompt：优先使用自定义，否则用默认模板，替换企业名占位符。
+  // Build base prompt: the bound agent inherits its persona (IDENTITY/SOUL/AGENTS).
+  // When persona files exist, they REPLACE the custom/default CS prompt so tenant
+  // edits to the agent's people-set take effect; when absent, fall back to the
+  // custom prompt or the default template (no regression). {companyName} is then
+  // substituted on whichever base was selected.
+  // 构建基础 prompt：绑定 agent 继承其 persona（IDENTITY/SOUL/AGENTS），
+  // persona 非空则取代自定义/默认 prompt；为空回退；最后统一替换企业名占位符。
+  const persona = await loadAgentPersona(agentDir);
   const basePrompt = renderCSBasePrompt(
-    params.customSystemPrompt || DEFAULT_CS_BASE_PROMPT,
+    selectBasePrompt({ persona, customSystemPrompt: params.customSystemPrompt }),
     companyName,
   );
 
