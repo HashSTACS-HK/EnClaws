@@ -3,7 +3,8 @@ import type { TranslationMap } from "../lib/types.ts";
 export const en: TranslationMap = {
   rpc: {
     errors: {
-      requestTimeout: "Request timed out after 60s. Backend may still be processing — click 'Refresh' shortly to check the result.",
+      requestTimeout:
+        "Request timed out after 60s. Backend may still be processing — click 'Refresh' shortly to check the result.",
       connectionFailed: "Connection failed. Please check the gateway URL and network status.",
     },
   },
@@ -78,7 +79,6 @@ export const en: TranslationMap = {
     "platform-tools": "Tool Management",
     "platform-tenants": "Tenants",
     "cs-setup": "CS Console",
-    "cs-knowledge": "CS Knowledge",
     "cs-sessions": "CS Sessions",
   },
   subtitles: {
@@ -108,14 +108,16 @@ export const en: TranslationMap = {
     "tenant-traces": "Trace every LLM interaction for debugging and optimization.",
     "tenant-usage": "View your current plan, quota usage, and token consumption.",
     "tenant-cron": "Monitor all scheduled jobs across agents.",
-    "platform-tools": "Configure platform-level tool access policy applied to all agents by default.",
+    "platform-tools":
+      "Configure platform-level tool access policy applied to all agents by default.",
     "platform-tenants": "Manage all tenant plans, quotas, and statuses.",
-    "cs-setup": "Configure AI customer service console — Widget embed mode and API integration mode.",
-    "cs-knowledge": "Manage knowledge base files for the AI customer service agent.",
+    "cs-setup":
+      "Configure AI customer service console — Widget embed mode and API integration mode.",
     "cs-sessions": "View AI customer service session records and message threads.",
   },
   platformTools: {
-    infoBanner: "This is the platform-level tool policy. It defines which tools are available to all agents by default. Individual agents or tenants may apply stricter overrides on top of this policy.",
+    infoBanner:
+      "This is the platform-level tool policy. It defines which tools are available to all agents by default. Individual agents or tenants may apply stricter overrides on top of this policy.",
     statsTotal: "Total tools",
     statsEnabled: "Enabled",
     statsDenied: "Denied",
@@ -128,13 +130,17 @@ export const en: TranslationMap = {
     updateNow: "Update now",
     updating: "Updating…",
     successRestart: "Update successful. Please restart the service manually to apply changes.",
-    successRestarting: "Update successful. Service is restarting — please refresh the page in a few seconds.",
+    successRestarting:
+      "Update successful. Service is restarting — please refresh the page in a few seconds.",
     commitsBehind: "{count} commit(s) behind upstream",
-    dirtyWorkspace: "Update skipped: workspace has uncommitted changes. Please commit or stash first.",
+    dirtyWorkspace:
+      "Update skipped: workspace has uncommitted changes. Please commit or stash first.",
     successDone: "Update successful! Refreshing page…",
-    connectionLost: "Service is restarting. Please refresh the page shortly to check the update result.",
+    connectionLost:
+      "Service is restarting. Please refresh the page shortly to check the update result.",
     ebusyRestarting: "Files are locked. Restarting service to retry update automatically…",
-    installerHint: "This is a bundled installer. Online updates are not supported. Please download the latest version from the official website.",
+    installerHint:
+      "This is a bundled installer. Online updates are not supported. Please download the latest version from the official website.",
     failed: "Update failed: {reason}",
     close: "Close",
   },
@@ -242,7 +248,8 @@ export const en: TranslationMap = {
     complete: "Complete",
     saveFailed: "Save failed",
     channelTitle: "Connect a Channel",
-    channelDesc: "Choose your team's messaging platform so EnClaws can receive and reply to messages.",
+    channelDesc:
+      "Choose your team's messaging platform so EnClaws can receive and reply to messages.",
     selectChannel: "Please select a channel",
     feishuScan: "Scan to Create",
     feishuManual: "Manual Input",
@@ -270,7 +277,8 @@ export const en: TranslationMap = {
     selectModel: "Please select a model provider",
     apiKeyRequired: "API Key is required",
     apiAddress: "Address",
-    apiAddressHint: "API endpoint for the model service. Leave empty for official service, fill in for proxy or private deployment.",
+    apiAddressHint:
+      "API endpoint for the model service. Leave empty for official service, fill in for proxy or private deployment.",
     modelId: "Model Name",
     modelHint: "Enter the specific model ID you want to use. You can change this later.",
     agentTitle: "Create Agent",
@@ -279,7 +287,8 @@ export const en: TranslationMap = {
     doneDesc: "Your EnClaws is ready. Enter the console to view and adjust configurations.",
     enterConsole: "Enter Console",
     skipConfirmTitle: "Skip setup?",
-    skipConfirmDesc: "You can always complete the model, agent, and channel setup later in the console.",
+    skipConfirmDesc:
+      "You can always complete the model, agent, and channel setup later in the console.",
     continueSetup: "Continue Setup",
     confirmSkip: "Skip",
     channels: {
@@ -390,7 +399,8 @@ export const en: TranslationMap = {
     optional: "(optional)",
     delete: "Delete",
     inherit: "default",
-    deleteConfirm: "Delete session \"{key}\"?\n\nDeletes the session entry and archives its transcript.",
+    deleteConfirm:
+      'Delete session "{key}"?\n\nDeletes the session entry and archives its transcript.',
     thinkOff: "off",
     thinkMinimal: "minimal",
     thinkLow: "low",
@@ -632,7 +642,7 @@ export const en: TranslationMap = {
     },
     remove: {
       confirmTitle: "Remove Job",
-      confirmMessage: "Remove scheduled job \"{name}\"? This cannot be undone.",
+      confirmMessage: 'Remove scheduled job "{name}"? This cannot be undone.',
       confirmButton: "Remove",
       cancelButton: "Cancel",
     },
@@ -644,9 +654,12 @@ export const en: TranslationMap = {
       alertCustom: "Custom",
       alertAfter: "After N failures",
       alertCooldown: "Cooldown (seconds)",
-      deliveryToHelp: "Fill in the user's openId (ou_xxx) to send to a specific person, or the group chatId (oc_xxx) to send to a group chat.",
-      sessionIsolatedHelp: "Each run creates a temporary conversation. Suitable for periodic reports, inspections, and other one-off tasks.",
-      sessionMainHelp: "Sends a message into the agent's main conversation. The agent will not generate a reply — only the message is inserted.",
+      deliveryToHelp:
+        "Fill in the user's openId (ou_xxx) to send to a specific person, or the group chatId (oc_xxx) to send to a group chat.",
+      sessionIsolatedHelp:
+        "Each run creates a temporary conversation. Suitable for periodic reports, inspections, and other one-off tasks.",
+      sessionMainHelp:
+        "Sends a message into the agent's main conversation. The agent will not generate a reply — only the message is inserted.",
       messageContent: "Message content",
     },
   },
@@ -699,7 +712,7 @@ export const en: TranslationMap = {
       saveChanges: "Save Changes",
       saving: "Saving...",
       selectFileHint: "Select a knowledge file from the list to view or edit its contents.",
-      promptNewFile: "Enter new file name (e.g., guide.md):"
+      promptNewFile: "Enter new file name (e.g., guide.md):",
     },
     persona: {
       title: "Persona & Standards",
@@ -724,44 +737,46 @@ export const en: TranslationMap = {
         file: "AGENTS.md",
         desc: "Workflows, collaboration rules, and task handling",
       },
-      missingHint: "This file has not been created yet. The default content is shown. Saving will create it in the agent workspace.",
-      noDefault: "This file has not been created yet. Saving will create it in the agent workspace.",
+      missingHint:
+        "This file has not been created yet. The default content is shown. Saving will create it in the agent workspace.",
+      noDefault:
+        "This file has not been created yet. Saving will create it in the agent workspace.",
       workspace: "Workspace",
-    }
+    },
   },
   sandbox: {
     relativeTime: {
       secondsAgo: "{seconds} seconds ago",
       minutesAgo: "{minutes} minutes ago",
-      hoursAgo: "{hours} hours ago"
+      hoursAgo: "{hours} hours ago",
     },
     status: {
       snapping: "🔥 Snapping claws!",
       stuck: "💥 Claws stuck!",
-      beach: "🏖️ Chilling on the beach"
+      beach: "🏖️ Chilling on the beach",
     },
     timeline: {
       waiting: "Waiting for events...",
       today: "Today",
-      older: "Yesterday & Older"
+      older: "Yesterday & Older",
     },
     plan: {
       resting: "Elder lobster is resting. No active blueprints to build.",
       tasksProgress: "{done}/{total} tasks",
-      allDone: "All tasks completed!"
+      allDone: "All tasks completed!",
     },
     card: {
-      progress: "Progress"
+      progress: "Progress",
     },
     health: {
       excellent: "Excellent",
       degraded: "Degraded",
-      critical: "Critical"
+      critical: "Critical",
     },
     zones: {
       hq: "👑 Elder Headquarters",
       dev: "👷 Builder Cave",
-      cafe: "🏖️ Rest Beach"
+      cafe: "🏖️ Rest Beach",
     },
     header: {
       title: "🦞 Lobster Empire Sandbox",
@@ -770,7 +785,7 @@ export const en: TranslationMap = {
       busy: "{count} Busy",
       idle: "{count} Idle",
       forceRestartTitle: "Clear states and restart task pipeline",
-      forceRestart: "Force restart pipeline"
+      forceRestart: "Force restart pipeline",
     },
     sidebar: {
       blueprints: "📋 Empire Blueprints",
@@ -780,14 +795,14 @@ export const en: TranslationMap = {
       online: "Online",
       orchestrating: "Orchestrating plans...",
       noWorkers: "No active lobster workers.",
-      history: "Delegation History"
+      history: "Delegation History",
     },
     stage: {
       managerHover: "Monitoring office",
       managerLabel: "👑 Manager",
       quiet: "The Lobster Empire is currently quiet.",
       runComplex: "Run a complex task to see the lobster workers in action.",
-      waiting: "Waiting for instructions"
+      waiting: "Waiting for instructions",
     },
     browserPreview: {
       title: "🌐 Browser Live Preview",
@@ -796,7 +811,7 @@ export const en: TranslationMap = {
       collapse: "Collapse preview",
       expand: "Expand preview",
       lastUpdated: "Updated {time}",
-    }
+    },
   },
   tenantChannels: {
     title: "Channel Management",
@@ -804,7 +819,7 @@ export const en: TranslationMap = {
     createChannel: "Create Channel",
     cancel: "Cancel",
     loading: "Loading...",
-    empty: "No channels yet. Click \"Create Channel\" to add one.",
+    empty: 'No channels yet. Click "Create Channel" to add one.',
     emptyNoModels: "No models available. Please add models in Model Management.",
     addModelLink: "Add Model",
     loadFailed: "Failed to load channel list",
@@ -846,7 +861,8 @@ export const en: TranslationMap = {
     agentDisplayNamePlaceholder: "Enter agent name",
     agentId: "Agent ID",
     agentIdPlaceholder: "Enter agent ID",
-    agentIdHint: "Lowercase letters, digits, hyphens, and underscores only. Auto-generated from Bot Name.",
+    agentIdHint:
+      "Lowercase letters, digits, hyphens, and underscores only. Auto-generated from Bot Name.",
     agentIdReadonly: "Agent ID cannot be changed after creation",
     agentIdPattern: "Lowercase letters, digits, hyphens, and underscores only, 1-64 characters",
     modelBinding: "Model Selection",
@@ -862,7 +878,8 @@ export const en: TranslationMap = {
     systemPromptPlaceholder: "Enter system prompt...",
     toolAccess: "Tool Access",
     toolsEnabled: "{enabled}/{total} enabled",
-    toolsHint: "All tools allowed by default. Uncheck to deny agent access to a tool (hard constraint, agent cannot invoke it).",
+    toolsHint:
+      "All tools allowed by default. Uncheck to deny agent access to a tool (hard constraint, agent cannot invoke it).",
     enableAll: "Enable All",
     disableAll: "Disable All",
     channelNameRequired: "Please enter channel name",
@@ -905,14 +922,17 @@ export const en: TranslationMap = {
     dingtalkClientSecret: "Client Secret (AppSecret)",
     dingtalkClientSecretPlaceholder: "Enter DingTalk AppSecret / Client Secret",
     feishuAuthTitle: "Bot Created Successfully",
-    feishuAuthDesc: "Bot credentials have been auto-filled into the form. To enable full functionality, you need to complete permission authorization on the Feishu Open Platform.",
-    feishuAuthStep1: "Click the link below to go to the Feishu Open Platform permission management page",
+    feishuAuthDesc:
+      "Bot credentials have been auto-filled into the form. To enable full functionality, you need to complete permission authorization on the Feishu Open Platform.",
+    feishuAuthStep1:
+      "Click the link below to go to the Feishu Open Platform permission management page",
     feishuAuthStep2: "Enable the required app permissions and user permissions on the page",
-    feishuAuthStep3: "Click \"Publish Version\" to activate the permissions",
+    feishuAuthStep3: 'Click "Publish Version" to activate the permissions',
     feishuScopesList: "Required Permissions",
     feishuCopied: "Copied",
     feishuCopyScopes: "Copy Permissions",
-    feishuScopesHint: "Tip: After copying permissions, bulk import/export them on the Feishu Open Platform permission management page. You can skip this and configure later.",
+    feishuScopesHint:
+      "Tip: After copying permissions, bulk import/export them on the Feishu Open Platform permission management page. You can skip this and configure later.",
     feishuGoAuth: "Go to Authorization",
     feishuLater: "Later",
     toolGroupFs: "File Operations",
@@ -926,10 +946,12 @@ export const en: TranslationMap = {
     toolGroupNodes: "Nodes",
     toolGroupMedia: "Media",
     toolGroupOther: "Other",
-    toolRead: "Read text files, images or PDFs — returns line-numbered content with optional offset/limit",
+    toolRead:
+      "Read text files, images or PDFs — returns line-numbered content with optional offset/limit",
     toolWrite: "Create a new file or overwrite an existing one with complete content",
     toolEdit: "Make precise string replacements in a file; only the matched segment is changed",
-    toolApplyPatch: "Run an OpenAI-format patch script that adds, deletes, edits and renames files across the workspace in a single call",
+    toolApplyPatch:
+      "Run an OpenAI-format patch script that adds, deletes, edits and renames files across the workspace in a single call",
     toolGrep: "Regex search inside file contents (ripgrep), with filters by file type or directory",
     toolFind: "Find file paths by glob pattern (e.g. src/**/*.ts)",
     toolLs: "List files and subdirectories under a path to explore the project layout",
@@ -952,7 +974,8 @@ export const en: TranslationMap = {
     toolCanvas: "Render structured visual content on a canvas for interactive UIs",
     toolNodes: "Manage runtime nodes and devices (status, task assignment, online/offline)",
     toolAgentsList: "List every agent in the current tenant with its name, model and status",
-    toolImage: "Image understanding — recognise objects/scenes, extract text, answer visual questions",
+    toolImage:
+      "Image understanding — recognise objects/scenes, extract text, answer visual questions",
     toolTts: "Convert text into speech audio with selectable voices",
     channelFeishu: "Feishu (Lark)",
     channelDingtalk: "DingTalk",
@@ -980,7 +1003,7 @@ export const en: TranslationMap = {
     createAgent: "Create Agent",
     cancel: "Cancel",
     loading: "Loading...",
-    empty: "No agents yet. Click \"Create Agent\" to add one.",
+    empty: 'No agents yet. Click "Create Agent" to add one.',
     configuredCount: "Agents configured: {count}",
     selectToView: "Select an agent to view details",
     createdAt: "Created",
@@ -995,7 +1018,8 @@ export const en: TranslationMap = {
     loadFailed: "Failed to load agent list",
     saveFailed: "Save failed",
     deleteFailed: "Delete failed",
-    deleteInUse: "Cannot delete: agent is bound to channel(s): {channels}. Please unbind or delete the channel(s) first.",
+    deleteInUse:
+      "Cannot delete: agent is bound to channel(s): {channels}. Please unbind or delete the channel(s) first.",
     agentCreated: "Agent created",
     agentUpdated: "Agent updated",
     agentDeleted: "Agent {name} deleted",
@@ -1008,7 +1032,8 @@ export const en: TranslationMap = {
     agentDisplayName: "Agent Name",
     agentDisplayNamePlaceholder: "Enter agent name",
     agentIdPlaceholder: "Enter agent ID",
-    agentIdHint: "Lowercase letters, digits, hyphens, and underscores only. Auto-generated from name.",
+    agentIdHint:
+      "Lowercase letters, digits, hyphens, and underscores only. Auto-generated from name.",
     agentIdReadonly: "Agent ID cannot be changed after creation",
     agentIdPattern: "Lowercase letters, digits, hyphens, and underscores only, 1-64 characters",
     nameRequired: "Please enter agent name",
@@ -1026,7 +1051,8 @@ export const en: TranslationMap = {
     fallbackLabel: "Fallback",
     setAsDefault: "Set as default",
     fallbackN: "Fallback #{n}",
-    fallbackExplain: "When the default model is unavailable, fallback models will be tried in order",
+    fallbackExplain:
+      "When the default model is unavailable, fallback models will be tried in order",
     noChannels: "This agent is not linked to any channels",
     channelActive: "Active",
     channelInactive: "Inactive",
@@ -1041,11 +1067,13 @@ export const en: TranslationMap = {
     systemPromptPlaceholder: "Enter system prompt...",
     advancedSettings: "Advanced Settings",
     timeoutMinutes: "Timeout (minutes)",
-    timeoutMinutesHint: "Maximum execution time per conversation turn. Leave empty to use global default ({default} min).",
+    timeoutMinutesHint:
+      "Maximum execution time per conversation turn. Leave empty to use global default ({default} min).",
     timeoutMinutesPlaceholder: "Default: {default}",
     toolAccess: "Tool Access",
     toolsEnabled: "{enabled}/{total} enabled",
-    toolsHint: "All tools allowed by default. Uncheck to deny agent access to a tool (hard constraint, agent cannot invoke it).",
+    toolsHint:
+      "All tools allowed by default. Uncheck to deny agent access to a tool (hard constraint, agent cannot invoke it).",
     enableAll: "Enable All",
     disableAll: "Disable All",
     toolsReset: "Reset",
@@ -1064,10 +1092,12 @@ export const en: TranslationMap = {
     toolGroupNodes: "Nodes",
     toolGroupMedia: "Media",
     toolGroupOther: "Other",
-    toolRead: "Read text files, images or PDFs — returns line-numbered content with optional offset/limit",
+    toolRead:
+      "Read text files, images or PDFs — returns line-numbered content with optional offset/limit",
     toolWrite: "Create a new file or overwrite an existing one with complete content",
     toolEdit: "Make precise string replacements in a file; only the matched segment is changed",
-    toolApplyPatch: "Run an OpenAI-format patch script that adds, deletes, edits and renames files across the workspace in a single call",
+    toolApplyPatch:
+      "Run an OpenAI-format patch script that adds, deletes, edits and renames files across the workspace in a single call",
     toolGrep: "Regex search inside file contents (ripgrep), with filters by file type or directory",
     toolFind: "Find file paths by glob pattern (e.g. src/**/*.ts)",
     toolLs: "List files and subdirectories under a path to explore the project layout",
@@ -1090,7 +1120,8 @@ export const en: TranslationMap = {
     toolCanvas: "Render structured visual content on a canvas for interactive UIs",
     toolNodes: "Manage runtime nodes and devices (status, task assignment, online/offline)",
     toolAgentsList: "List every agent in the current tenant with its name, model and status",
-    toolImage: "Image understanding — recognise objects/scenes, extract text, answer visual questions",
+    toolImage:
+      "Image understanding — recognise objects/scenes, extract text, answer visual questions",
     toolTts: "Convert text into speech audio with selectable voices",
   },
   logs: {
@@ -1166,10 +1197,13 @@ export const en: TranslationMap = {
     skillLabelFeishuTask: "Tasks",
     skillLabelFeishuUpdateDoc: "Update Doc",
     skillLabelFeishuWiki: "Wiki",
-    skillCodingAgent: "Delegate coding tasks to Claude Code/Codex for features, PR reviews, and refactoring",
-    skillHealthcheck: "Host security audit and hardening for SSH, firewall, updates, and risk exposure",
+    skillCodingAgent:
+      "Delegate coding tasks to Claude Code/Codex for features, PR reviews, and refactoring",
+    skillHealthcheck:
+      "Host security audit and hardening for SSH, firewall, updates, and risk exposure",
     skillMcporter: "List, configure, auth, and call MCP servers and tools via the mcporter CLI",
-    skillMemoryManager: "3-step memory protocol: research context before tasks, save decisions after",
+    skillMemoryManager:
+      "3-step memory protocol: research context before tasks, save decisions after",
     skillPingtest: "Simple echo test returning your message with a timestamp for debugging",
     skillSessionLogs: "Search and analyze past session logs using jq and ripgrep",
     skillSkillCreator: "Design and package AgentSkills with scripts, references, and assets",
@@ -1185,7 +1219,8 @@ export const en: TranslationMap = {
     skillFeishuDocxDownload: "Download and extract content from attachments (Word/PDF/PPT/Excel)",
     skillFeishuDrive: "Directory listing, create, copy, and move operations in Feishu Drive",
     skillFeishuFetchDoc: "Read Feishu online cloud document content, returns Markdown",
-    skillFeishuImFileAnalyze: "Download and parse Feishu IM message attachments (pdf/docx/pptx etc.)",
+    skillFeishuImFileAnalyze:
+      "Download and parse Feishu IM message attachments (pdf/docx/pptx etc.)",
     skillFeishuImMessage: "Send or reply to Feishu IM messages as the current user",
     skillFeishuImRead: "Read Feishu IM conversation history and search across sessions",
     skillFeishuImageOcr: "OCR text recognition from images using the Feishu API",
@@ -1243,7 +1278,8 @@ export const en: TranslationMap = {
     loading: "Loading...",
     loadFailed: "Failed to load",
     loadDetailFailed: "Failed to load details",
-    empty: "No interaction records yet. Every interaction between the system and LLM is automatically recorded here.",
+    empty:
+      "No interaction records yet. Every interaction between the system and LLM is automatically recorded here.",
     noRecords: "No interaction records",
     filterAgent: "Agent ID:",
     filterAgentPlaceholder: "Enter agent ID",
@@ -1344,12 +1380,18 @@ export const en: TranslationMap = {
   },
   errors: {
     quotaExceeded: {
-      agents: "Agent quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
-      channels: "Channel quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
-      users: "User quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
-      tokensPerMonth: "Monthly token quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
-      cronJobs: "Scheduled task quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
-      generic: "Plan quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
+      agents:
+        "Agent quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
+      channels:
+        "Channel quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
+      users:
+        "User quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
+      tokensPerMonth:
+        "Monthly token quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
+      cronJobs:
+        "Scheduled task quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
+      generic:
+        "Plan quota reached ({current}/{max}). Please <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>contact your administrator</a> to upgrade your plan.",
     },
   },
   tenantSettings: {
@@ -1357,8 +1399,10 @@ export const en: TranslationMap = {
     name: "Company Name",
     namePlaceholder: "Enter company name",
     identityPrompt: "Enterprise Identity",
-    identityPromptPlaceholder: "Describe the enterprise identity, e.g.: We are XX Tech Co., Ltd., specializing in XX business...",
-    identityPromptHint: "This content will be injected as enterprise context into all AI assistant system prompts",
+    identityPromptPlaceholder:
+      "Describe the enterprise identity, e.g.: We are XX Tech Co., Ltd., specializing in XX business...",
+    identityPromptHint:
+      "This content will be injected as enterprise context into all AI assistant system prompts",
     save: "Save Settings",
     saving: "Saving...",
     saved: "Settings saved",
@@ -1371,7 +1415,8 @@ export const en: TranslationMap = {
     memorySaving: "Saving...",
     memorySaved: "Enterprise memory saved",
     memorySaveFailed: "Failed to save enterprise memory",
-    memoryHint: "This content is auto-maintained by AI assistants and can be manually edited. It will be injected as enterprise context into all AI conversations.",
+    memoryHint:
+      "This content is auto-maintained by AI assistants and can be manually edited. It will be injected as enterprise context into all AI conversations.",
     tenantIdLabel: "Tenant ID:",
     tenantIdCopy: "Copy",
     tenantIdCopied: "Copied",
@@ -1420,10 +1465,12 @@ export const en: TranslationMap = {
     errRequired: "Please fill in {field}",
     errEmailInvalid: "Please enter a valid email address",
     errPasswordTooShort: "Password must be at least 8 characters",
-    errPasswordWeak: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
+    errPasswordWeak:
+      "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
     forgotPassword: "Forgot password?",
     pendingVerification: "Please verify your email before signing in",
-    tenantSuspended: "This organization has been suspended. Please contact the platform administrator.",
+    tenantSuspended:
+      "This organization has been suspended. Please contact the platform administrator.",
     rateLimited: "Too many login attempts, please try again later",
     themeLight: "Light",
     themeSystem: "Auto",
@@ -1446,7 +1493,8 @@ export const en: TranslationMap = {
       feat3Title: "Hierarchical Memory",
       feat3Desc: "Industry → Company → Department → Personal layers of knowledge.",
       pitch: "One signup, your whole team is in",
-      pitchDesc: "After creating a workspace, every member can use it immediately — no individual setup required",
+      pitchDesc:
+        "After creating a workspace, every member can use it immediately — no individual setup required",
     },
   },
   auth: {
@@ -1459,7 +1507,8 @@ export const en: TranslationMap = {
     policy: {
       tooShort: "Password must be at least 8 characters",
       tooLong: "Password must be at most 128 characters",
-      missingClasses: "Password must contain at least 3 of 4 character classes: uppercase, lowercase, number, special",
+      missingClasses:
+        "Password must contain at least 3 of 4 character classes: uppercase, lowercase, number, special",
       repeatedChars: "Password cannot contain 3 or more consecutive identical characters",
       hint: "At least 8 characters, including at least 3 of: uppercase, lowercase, number, special",
     },
@@ -1468,10 +1517,12 @@ export const en: TranslationMap = {
       subtitle: "Enter your account email and we'll send you a password reset link.",
       checking: "Checking available reset methods…",
       noEmailTitle: "Forgot password",
-      noEmailBody: "This deployment does not have email service configured, so self-service password reset is unavailable.",
+      noEmailBody:
+        "This deployment does not have email service configured, so self-service password reset is unavailable.",
       contactAdmin: "Please contact the platform administrator to reset your password.",
       sentTitle: "Sent",
-      sentBody: "If that account exists, we've sent it a password reset link. Please check your inbox — the link expires in 30 minutes.",
+      sentBody:
+        "If that account exists, we've sent it a password reset link. Please check your inbox — the link expires in 30 minutes.",
       emailLabel: "Email",
       emailPlaceholder: "you@example.com",
       submit: "Send reset link",
@@ -1492,7 +1543,8 @@ export const en: TranslationMap = {
     },
     tempView: {
       title: "Temporary password",
-      subtitle: "This is your one-time temporary password. This page can only be viewed once — once closed it cannot be accessed again.",
+      subtitle:
+        "This is your one-time temporary password. This page can only be viewed once — once closed it cannot be accessed again.",
       checking: "Fetching temporary password…",
       invalidTitle: "Cannot display",
       linkExpired: "Link expired or already used",
@@ -1504,7 +1556,8 @@ export const en: TranslationMap = {
     change: {
       title: "Change password",
       forcedTitle: "Please change your password",
-      forcedSubtitle: "For account security, you must change your password before you can use the console.",
+      forcedSubtitle:
+        "For account security, you must change your password before you can use the console.",
       currentLabel: "Current password",
       currentRequired: "Please enter your current password",
       cannotReuse: "New password cannot be the same as the current one",
@@ -1517,7 +1570,8 @@ export const en: TranslationMap = {
     },
     banner: {
       willExpireToday: "Your password expires today. Please change it to avoid losing access.",
-      willExpireDays: "Your password will expire in {days} days. Please change it to avoid losing access.",
+      willExpireDays:
+        "Your password will expire in {days} days. Please change it to avoid losing access.",
       changeNow: "Change now",
       closeLabel: "Close",
     },
@@ -1531,7 +1585,8 @@ export const en: TranslationMap = {
     },
     verify: {
       pendingTitle: "Verify your email",
-      pendingBody: "We've sent a verification email to your address. Click the link in the email to activate your account.",
+      pendingBody:
+        "We've sent a verification email to your address. Click the link in the email to activate your account.",
       resendBtn: "Resend verification email",
       resent: "Verification email resent.",
       invalidLink: "Invalid verification link",
@@ -1546,7 +1601,8 @@ export const en: TranslationMap = {
       scanHint: "Use Google Authenticator or any TOTP app to scan the code below.",
       manualHint: "Can't scan? Enter this key manually",
       step2: "Step 2: Save your backup codes",
-      backupHint: "Store these codes in a safe place. If you lose your phone, you can use them to sign in.",
+      backupHint:
+        "Store these codes in a safe place. If you lose your phone, you can use them to sign in.",
       step3: "Step 3: Enter verification code",
       codeLabel: "6-digit code",
       invalidCode: "Please enter a valid code",
@@ -1564,7 +1620,7 @@ export const en: TranslationMap = {
     addProvider: "Add Provider",
     cancel: "Cancel",
     loading: "Loading...",
-    empty: "No model configs yet. Click \"Add Provider\" to get started.",
+    empty: 'No model configs yet. Click "Add Provider" to get started.',
     editTitle: "Edit Model Config",
     createTitle: "Add Model Config",
     providerType: "Provider Type",
@@ -1604,12 +1660,13 @@ export const en: TranslationMap = {
     configUpdated: "Model config updated",
     configCreated: "Model config created",
     configDeleted: "Model config {name} deleted",
-    confirmDelete: "Delete model config \"{name}\"?",
+    confirmDelete: 'Delete model config "{name}"?',
     saveFailed: "Save failed",
     loadFailed: "Failed to load model configs",
     toggleFailed: "Toggle failed",
     deleteFailed: "Delete failed",
-    deleteInUse: "Cannot delete: model is in use by agent(s): {agents}. Please unbind or delete the agent(s) first.",
+    deleteInUse:
+      "Cannot delete: model is in use by agent(s): {agents}. Please unbind or delete the agent(s) first.",
     removeModelInUse: "Cannot remove model(s) in use by agent(s): {agents}",
     needOneModel: "Please add at least one model",
     modelIdRequired: "Please enter model ID",
@@ -1656,20 +1713,23 @@ export const en: TranslationMap = {
       },
       regenerate: {
         confirmTitle: "Regenerate Secret?",
-        confirmMessage: "The current secret will enter a 24-hour grace period and then be invalidated. Your integrations must be updated before that window expires.",
+        confirmMessage:
+          "The current secret will enter a 24-hour grace period and then be invalidated. Your integrations must be updated before that window expires.",
         confirmBtn: "Regenerate",
         error: "Failed to regenerate secret",
       },
       delete: {
         confirmTitle: "Delete AI Service?",
-        confirmMessage: "Delete \"{name}\"? This cannot be undone.",
+        confirmMessage: 'Delete "{name}"? This cannot be undone.',
         confirmBtn: "Delete",
-        activeSessionsError: "Cannot delete: this AI Service has active sessions. Close them first.",
+        activeSessionsError:
+          "Cannot delete: this AI Service has active sessions. Close them first.",
         error: "Failed to delete AI Service",
       },
       secretDialog: {
         title: "API Credentials",
-        warning: "This is your only chance to copy the App Secret. It is stored as a one-way hash — the server cannot show it again.",
+        warning:
+          "This is your only chance to copy the App Secret. It is stored as a one-way hash — the server cannot show it again.",
         appId: "App ID",
         appSecret: "App Secret",
         endpointUrl: "Full Endpoint URL",

@@ -78,7 +78,6 @@ export const zh_CN: TranslationMap = {
     "platform-tools": "工具管理",
     "platform-tenants": "企业管理",
     "cs-setup": "客服控制台",
-    "cs-knowledge": "客服知识库",
     "cs-sessions": "客服会话",
   },
   subtitles: {
@@ -111,11 +110,11 @@ export const zh_CN: TranslationMap = {
     "platform-tools": "配置平台级工具访问策略，默认应用于所有 Agent。",
     "platform-tenants": "管理平台所有企业的套餐、配额和状态。",
     "cs-setup": "AI 客服控制台 — Widget 嵌入模式和 API 集成模式。",
-    "cs-knowledge": "管理 AI 客服知识库文件，支持上传、删除 Markdown 文档。",
     "cs-sessions": "查看 AI 客服会话记录和消息详情。",
   },
   platformTools: {
-    infoBanner: "这是平台级工具策略，定义了所有 Agent 默认可用的工具。各企业或 Agent 可在此基础上叠加更严格的限制。",
+    infoBanner:
+      "这是平台级工具策略，定义了所有 Agent 默认可用的工具。各企业或 Agent 可在此基础上叠加更严格的限制。",
     statsTotal: "工具总数",
     statsEnabled: "已启用",
     statsDenied: "已禁用",
@@ -389,7 +388,7 @@ export const zh_CN: TranslationMap = {
     optional: "（可选）",
     delete: "删除",
     inherit: "默认",
-    deleteConfirm: "确定要删除会话 \"{key}\" 吗？\n\n将删除会话条目并归档其对话记录。",
+    deleteConfirm: '确定要删除会话 "{key}" 吗？\n\n将删除会话条目并归档其对话记录。',
     thinkOff: "关闭",
     thinkMinimal: "最小",
     thinkLow: "低",
@@ -692,7 +691,7 @@ export const zh_CN: TranslationMap = {
       saveChanges: "保存更改",
       saving: "保存中...",
       selectFileHint: "从列表中选择一个知识库文件以查看或编辑其内容。",
-      promptNewFile: "输入新文件名 (例如: guide.md):"
+      promptNewFile: "输入新文件名 (例如: guide.md):",
     },
     persona: {
       title: "人设与规范",
@@ -720,41 +719,41 @@ export const zh_CN: TranslationMap = {
       missingHint: "该文件尚未创建，当前显示的是默认内容。保存后将在 Agent 工作区中创建此文件。",
       noDefault: "该文件尚未创建。保存后将在 Agent 工作区中创建此文件。",
       workspace: "工作区",
-    }
+    },
   },
   sandbox: {
     relativeTime: {
       secondsAgo: "{seconds} 秒前",
       minutesAgo: "{minutes} 分钟前",
-      hoursAgo: "{hours} 小时前"
+      hoursAgo: "{hours} 小时前",
     },
     status: {
       snapping: "🔥 疯狂挥舞双钳中!",
       stuck: "💥 钳子卡住了!",
-      beach: "🏖️ 沙滩摸鱼中"
+      beach: "🏖️ 沙滩摸鱼中",
     },
     timeline: {
       waiting: "等待事件中...",
       today: "今天",
-      older: "昨天及更早"
+      older: "昨天及更早",
     },
     plan: {
       resting: "龙虾长老正在小憩。目前没有活跃的蓝图需要构建。",
       tasksProgress: "{done}/{total} 个任务",
-      allDone: "所有任务已完成！"
+      allDone: "所有任务已完成！",
     },
     card: {
-      progress: "进度"
+      progress: "进度",
     },
     health: {
       excellent: "优",
       degraded: "降级",
-      critical: "危机"
+      critical: "危机",
     },
     zones: {
       hq: "👑 龙虾长老总部",
       dev: "👷 建筑工穴",
-      cafe: "🏖️ 休息海滩"
+      cafe: "🏖️ 休息海滩",
     },
     header: {
       title: "🦞 龙虾帝国沙盒 (Lobster Empire)",
@@ -763,7 +762,7 @@ export const zh_CN: TranslationMap = {
       busy: "{count} 工作中",
       idle: "{count} 摸鱼中",
       forceRestartTitle: "清空状态并重启任务流水线",
-      forceRestart: "强制重启流水线"
+      forceRestart: "强制重启流水线",
     },
     sidebar: {
       blueprints: "📋 帝国蓝图",
@@ -773,14 +772,14 @@ export const zh_CN: TranslationMap = {
       online: "在线",
       orchestrating: "正在编排计划...",
       noWorkers: "目前没有活跃的龙虾工人。",
-      history: "委派历史"
+      history: "委派历史",
     },
     stage: {
       managerHover: "监视办公室",
       managerLabel: "👑 经理",
       quiet: "龙虾帝国目前很安静。",
       runComplex: "运行复杂的任务以查看龙虾工人的运作。",
-      waiting: "等待指令"
+      waiting: "等待指令",
     },
     browserPreview: {
       title: "🌐 浏览器实时预览",
@@ -789,7 +788,7 @@ export const zh_CN: TranslationMap = {
       collapse: "折叠预览",
       expand: "展开预览",
       lastUpdated: "更新于 {time}",
-    }
+    },
   },
   tenantChannels: {
     title: "频道管理",
@@ -797,7 +796,7 @@ export const zh_CN: TranslationMap = {
     createChannel: "创建频道",
     cancel: "取消",
     loading: "加载中...",
-    empty: "暂无频道，点击\"创建频道\"添加",
+    empty: '暂无频道，点击"创建频道"添加',
     emptyNoModels: "暂无可用模型，请在模型管理添加模型",
     addModelLink: "添加模型",
     loadFailed: "加载频道列表失败",
@@ -898,14 +897,16 @@ export const zh_CN: TranslationMap = {
     dingtalkClientSecret: "Client Secret (AppSecret)",
     dingtalkClientSecretPlaceholder: "请输入钉钉应用的 AppSecret / Client Secret",
     feishuAuthTitle: "机器人创建成功",
-    feishuAuthDesc: "机器人凭证已自动填入表单。为了让机器人正常使用全部功能，还需要在飞书开放平台完成权限授权。",
+    feishuAuthDesc:
+      "机器人凭证已自动填入表单。为了让机器人正常使用全部功能，还需要在飞书开放平台完成权限授权。",
     feishuAuthStep1: "点击下方链接，前往飞书开放平台的权限管理页面",
     feishuAuthStep2: "在页面中开通所需的应用权限和用户权限",
-    feishuAuthStep3: "完成后点击\"发布版本\"使权限生效",
+    feishuAuthStep3: '完成后点击"发布版本"使权限生效',
     feishuScopesList: "所需权限列表",
     feishuCopied: "已复制",
     feishuCopyScopes: "复制权限",
-    feishuScopesHint: "提示：复制权限后，在飞书开放平台的权限管理页面中批量导入、导出权限开通。如果暂时跳过，后续可随时配置。",
+    feishuScopesHint:
+      "提示：复制权限后，在飞书开放平台的权限管理页面中批量导入、导出权限开通。如果暂时跳过，后续可随时配置。",
     feishuGoAuth: "前往授权",
     feishuLater: "稍后再说",
     toolGroupFs: "文件操作",
@@ -1365,12 +1366,18 @@ export const zh_CN: TranslationMap = {
   },
   errors: {
     quotaExceeded: {
-      agents: "Agent 数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
-      channels: "频道数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
-      users: "用户数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
-      tokensPerMonth: "本月 Token 用量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
-      cronJobs: "定时任务数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
-      generic: "已达套餐限额 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
+      agents:
+        "Agent 数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
+      channels:
+        "频道数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
+      users:
+        "用户数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
+      tokensPerMonth:
+        "本月 Token 用量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
+      cronJobs:
+        "定时任务数量已达上限 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
+      generic:
+        "已达套餐限额 ({current}/{max})，请<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>联系管理员</a>升级套餐。",
     },
   },
   tenantSettings: {
@@ -1677,7 +1684,8 @@ export const zh_CN: TranslationMap = {
       },
       regenerate: {
         confirmTitle: "重新生成密钥？",
-        confirmMessage: "当前密钥将进入 24 小时宽限期，随后失效。请在宽限期结束前更新您的集成配置。",
+        confirmMessage:
+          "当前密钥将进入 24 小时宽限期，随后失效。请在宽限期结束前更新您的集成配置。",
         confirmBtn: "重新生成",
         error: "重新生成密钥失败",
       },

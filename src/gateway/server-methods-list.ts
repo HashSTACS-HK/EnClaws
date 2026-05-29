@@ -122,10 +122,6 @@ const BASE_METHODS = [
   "cs.widget.send",
   "cs.widget.history",
   // Customer Service Admin methods
-  "cs.knowledge.list",
-  "cs.knowledge.upload",
-  "cs.knowledge.view",
-  "cs.knowledge.delete",
   "cs.sessions.list",
   "cs.session.messages",
   "cs.config.get",

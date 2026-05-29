@@ -70,7 +70,6 @@ export const zh_TW: TranslationMap = {
     "platform-tools": "工具管理",
     "platform-tenants": "企業管理",
     "cs-setup": "客服控制台",
-    "cs-knowledge": "客服知識庫",
     "cs-sessions": "客服會話",
   },
   subtitles: {
@@ -100,11 +99,11 @@ export const zh_TW: TranslationMap = {
     "platform-tools": "設定平台級工具存取策略，預設套用至所有 Agent。",
     "platform-tenants": "管理平台所有企業的方案、配額和狀態。",
     "cs-setup": "AI 客服控制台 — Widget 嵌入模式和 API 整合模式。",
-    "cs-knowledge": "管理 AI 客服知識庫檔案，支援上傳、刪除 Markdown 文件。",
     "cs-sessions": "查看 AI 客服會話紀錄和訊息詳情。",
   },
   platformTools: {
-    infoBanner: "這是平台級工具策略，定義了所有 Agent 預設可用的工具。各企業或 Agent 可在此基礎上疊加更嚴格的限制。",
+    infoBanner:
+      "這是平台級工具策略，定義了所有 Agent 預設可用的工具。各企業或 Agent 可在此基礎上疊加更嚴格的限制。",
     statsTotal: "工具總數",
     statsEnabled: "已啟用",
     statsDenied: "已停用",
@@ -377,7 +376,7 @@ export const zh_TW: TranslationMap = {
     optional: "（可選）",
     delete: "刪除",
     inherit: "預設",
-    deleteConfirm: "確定要刪除會話 \"{key}\" 嗎？\n\n將刪除會話條目並歸檔其對話記錄。",
+    deleteConfirm: '確定要刪除會話 "{key}" 嗎？\n\n將刪除會話條目並歸檔其對話記錄。',
     thinkOff: "關閉",
     thinkMinimal: "最小",
     thinkLow: "低",
@@ -629,14 +628,16 @@ export const zh_TW: TranslationMap = {
     dingtalkClientSecret: "Client Secret (AppSecret)",
     dingtalkClientSecretPlaceholder: "請輸入釘釘應用的 AppSecret / Client Secret",
     feishuAuthTitle: "機器人建立成功",
-    feishuAuthDesc: "機器人憑證已自動填入表單。為了讓機器人正常使用全部功能，還需要在飛書開放平台完成權限授權。",
+    feishuAuthDesc:
+      "機器人憑證已自動填入表單。為了讓機器人正常使用全部功能，還需要在飛書開放平台完成權限授權。",
     feishuAuthStep1: "點擊下方連結，前往飛書開放平台的權限管理頁面",
     feishuAuthStep2: "在頁面中開通所需的應用權限和使用者權限",
     feishuAuthStep3: "完成後點擊「發布版本」使權限生效",
     feishuScopesList: "所需權限列表",
     feishuCopied: "已複製",
     feishuCopyScopes: "複製權限",
-    feishuScopesHint: "提示：複製權限後，在飛書開放平台的權限管理頁面中批量匯入、匯出權限開通。如果暫時跳過，後續可隨時設定。",
+    feishuScopesHint:
+      "提示：複製權限後，在飛書開放平台的權限管理頁面中批量匯入、匯出權限開通。如果暫時跳過，後續可隨時設定。",
     feishuGoAuth: "前往授權",
     feishuLater: "稍後再說",
     toolGroupFs: "檔案操作",
@@ -938,12 +939,18 @@ export const zh_TW: TranslationMap = {
   },
   errors: {
     quotaExceeded: {
-      agents: "Agent 數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
-      channels: "頻道數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
-      users: "使用者數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
-      tokensPerMonth: "本月 Token 用量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
-      cronJobs: "定時任務數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
-      generic: "已達方案限額 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
+      agents:
+        "Agent 數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
+      channels:
+        "頻道數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
+      users:
+        "使用者數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
+      tokensPerMonth:
+        "本月 Token 用量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
+      cronJobs:
+        "定時任務數量已達上限 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
+      generic:
+        "已達方案限額 ({current}/{max})，請<a href='{contactLink}' target='_blank' rel='noopener noreferrer'>聯絡管理員</a>升級方案。",
     },
   },
   tenantSettings: {
@@ -1115,9 +1122,42 @@ export const zh_TW: TranslationMap = {
       changeNow: "立即修改",
       closeLabel: "關閉",
     },
-    sessions: { title: "活躍工作階段", subtitle: "以下是您目前登入的所有裝置。", noSessions: "沒有活躍工作階段。", currentDevice: "（本機）", revoke: "登出", revokeAllOthers: "登出其他所有裝置" },
-    verify: { pendingTitle: "請驗證信箱", pendingBody: "我們已向您的信箱寄送驗證郵件，請點擊連結以啟用帳戶。", resendBtn: "重新寄送驗證信", resent: "驗證信已重新寄出。", invalidLink: "驗證連結無效", doneTitle: "信箱驗證成功", doneBody: "您的信箱已驗證，現在可以登入了。", failedTitle: "驗證失敗" },
-    mfa: { setupTitle: "啟用兩步驟驗證", setupSubtitle: "兩步驟驗證為您的帳戶增加額外安全防護。", step1: "第 1 步：掃描 QR 碼", scanHint: "使用 Google Authenticator 或其他 TOTP 應用掃描以下 QR 碼。", manualHint: "無法掃描？手動輸入金鑰", step2: "第 2 步：儲存備用恢復碼", backupHint: "請將恢復碼儲存在安全的地方。", step3: "第 3 步：輸入驗證碼", codeLabel: "6 位驗證碼", invalidCode: "請輸入有效的驗證碼", verifyBtn: "驗證並啟用", enabledTitle: "兩步驟驗證已啟用", enabledBody: "您的帳戶已受兩步驟驗證保護。", challengeTitle: "兩步驟驗證", challengeSubtitle: "請輸入身分驗證器中的 6 位驗證碼。", backupCodeHint: "也可以輸入 8 位備用恢復碼。" },
+    sessions: {
+      title: "活躍工作階段",
+      subtitle: "以下是您目前登入的所有裝置。",
+      noSessions: "沒有活躍工作階段。",
+      currentDevice: "（本機）",
+      revoke: "登出",
+      revokeAllOthers: "登出其他所有裝置",
+    },
+    verify: {
+      pendingTitle: "請驗證信箱",
+      pendingBody: "我們已向您的信箱寄送驗證郵件，請點擊連結以啟用帳戶。",
+      resendBtn: "重新寄送驗證信",
+      resent: "驗證信已重新寄出。",
+      invalidLink: "驗證連結無效",
+      doneTitle: "信箱驗證成功",
+      doneBody: "您的信箱已驗證，現在可以登入了。",
+      failedTitle: "驗證失敗",
+    },
+    mfa: {
+      setupTitle: "啟用兩步驟驗證",
+      setupSubtitle: "兩步驟驗證為您的帳戶增加額外安全防護。",
+      step1: "第 1 步：掃描 QR 碼",
+      scanHint: "使用 Google Authenticator 或其他 TOTP 應用掃描以下 QR 碼。",
+      manualHint: "無法掃描？手動輸入金鑰",
+      step2: "第 2 步：儲存備用恢復碼",
+      backupHint: "請將恢復碼儲存在安全的地方。",
+      step3: "第 3 步：輸入驗證碼",
+      codeLabel: "6 位驗證碼",
+      invalidCode: "請輸入有效的驗證碼",
+      verifyBtn: "驗證並啟用",
+      enabledTitle: "兩步驟驗證已啟用",
+      enabledBody: "您的帳戶已受兩步驟驗證保護。",
+      challengeTitle: "兩步驟驗證",
+      challengeSubtitle: "請輸入身分驗證器中的 6 位驗證碼。",
+      backupCodeHint: "也可以輸入 8 位備用恢復碼。",
+    },
   },
   models: {
     title: "模型管理",
@@ -1217,7 +1257,8 @@ export const zh_TW: TranslationMap = {
       },
       regenerate: {
         confirmTitle: "重新生成密鑰？",
-        confirmMessage: "目前密鑰將進入 24 小時寬限期，隨後失效。請在寬限期結束前更新您的整合設定。",
+        confirmMessage:
+          "目前密鑰將進入 24 小時寬限期，隨後失效。請在寬限期結束前更新您的整合設定。",
         confirmBtn: "重新生成",
         error: "重新生成密鑰失敗",
       },

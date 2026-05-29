@@ -3,8 +3,10 @@ import type { TranslationMap } from "../lib/types.ts";
 export const de: TranslationMap = {
   rpc: {
     errors: {
-      requestTimeout: "Anfrage nach 60 s abgelaufen. Backend verarbeitet möglicherweise noch — klicken Sie kurz danach auf „Aktualisieren“, um das Ergebnis zu prüfen.",
-      connectionFailed: "Verbindung fehlgeschlagen. Bitte prüfen Sie die Gateway-Adresse und den Netzwerkstatus.",
+      requestTimeout:
+        "Anfrage nach 60 s abgelaufen. Backend verarbeitet möglicherweise noch — klicken Sie kurz danach auf „Aktualisieren“, um das Ergebnis zu prüfen.",
+      connectionFailed:
+        "Verbindung fehlgeschlagen. Bitte prüfen Sie die Gateway-Adresse und den Netzwerkstatus.",
     },
   },
   channels: {
@@ -70,7 +72,6 @@ export const de: TranslationMap = {
     "platform-tools": "Werkzeugverwaltung",
     "platform-tenants": "Mandanten",
     "cs-setup": "CS-Konsole",
-    "cs-knowledge": "CS-Wissensbasis",
     "cs-sessions": "CS-Sitzungen",
   },
   subtitles: {
@@ -91,20 +92,22 @@ export const de: TranslationMap = {
     "tenant-overview": "Unternehmensübersicht, Ressourcennutzung und aktuelle Aktivitäten.",
     "tenant-settings": "Unternehmensnamen und Identitätsbeschreibung verwalten.",
     "tenant-users": "Mandantenbenutzer und Rollen verwalten.",
-    "tenant-agents": "KI-Agenten erstellen und verwalten, Modelle und Werkzeugberechtigungen konfigurieren.",
+    "tenant-agents":
+      "KI-Agenten erstellen und verwalten, Modelle und Werkzeugberechtigungen konfigurieren.",
     "tenant-channels": "Mandantenspezifische Nachrichtenkanäle verwalten.",
     "tenant-models": "LLM-Anbieter und Modellkonfigurationen verwalten.",
     "tenant-skills": "Skills für dieses Unternehmen anzeigen und verwalten.",
     "tenant-traces": "Jede LLM-Interaktion zur Fehlersuche und Optimierung verfolgen.",
     "tenant-usage": "Aktuellen Tarif, Kontingentnutzung und Token-Verbrauch anzeigen.",
-    "platform-tools": "Plattformweite Tool-Zugriffsrichtlinie konfigurieren, die standardmäßig für alle Agenten gilt.",
+    "platform-tools":
+      "Plattformweite Tool-Zugriffsrichtlinie konfigurieren, die standardmäßig für alle Agenten gilt.",
     "platform-tenants": "Alle Mandanten-Tarife, Kontingente und Status verwalten.",
     "cs-setup": "KI-Kundenservice-Konsole — Widget-Einbettungsmodus und API-Integrationsmodus.",
-    "cs-knowledge": "Wissensdatenbankdateien für den KI-Kundenservice-Agenten verwalten.",
     "cs-sessions": "KI-Kundenservice-Sitzungsaufzeichnungen und Nachrichtenverläufe anzeigen.",
   },
   platformTools: {
-    infoBanner: "Dies ist die plattformweite Werkzeugrichtlinie. Sie legt fest, welche Werkzeuge allen Agenten standardmäßig zur Verfügung stehen. Einzelne Agenten oder Mandanten können darüber hinaus strengere Einschränkungen anwenden.",
+    infoBanner:
+      "Dies ist die plattformweite Werkzeugrichtlinie. Sie legt fest, welche Werkzeuge allen Agenten standardmäßig zur Verfügung stehen. Einzelne Agenten oder Mandanten können darüber hinaus strengere Einschränkungen anwenden.",
     statsTotal: "Werkzeuge gesamt",
     statsEnabled: "Aktiviert",
     statsDenied: "Deaktiviert",
@@ -116,14 +119,20 @@ export const de: TranslationMap = {
     downloadInstall: "Zum Download",
     updateNow: "Jetzt aktualisieren",
     updating: "Aktualisierung…",
-    successRestart: "Update erfolgreich. Bitte starten Sie den Dienst manuell neu, um die Änderungen anzuwenden.",
-    successRestarting: "Update erfolgreich. Der Dienst wird neu gestartet — bitte aktualisieren Sie die Seite in wenigen Sekunden.",
+    successRestart:
+      "Update erfolgreich. Bitte starten Sie den Dienst manuell neu, um die Änderungen anzuwenden.",
+    successRestarting:
+      "Update erfolgreich. Der Dienst wird neu gestartet — bitte aktualisieren Sie die Seite in wenigen Sekunden.",
     commitsBehind: "{count} Commit(s) hinter Upstream",
-    dirtyWorkspace: "Update übersprungen: Arbeitsbereich hat nicht commitete Änderungen. Bitte zuerst committen oder stashen.",
+    dirtyWorkspace:
+      "Update übersprungen: Arbeitsbereich hat nicht commitete Änderungen. Bitte zuerst committen oder stashen.",
     successDone: "Update erfolgreich! Seite wird aktualisiert…",
-    connectionLost: "Der Dienst wird neu gestartet. Bitte aktualisieren Sie die Seite in Kürze, um das Ergebnis zu überprüfen.",
-    ebusyRestarting: "Dateien sind gesperrt. Dienst wird neu gestartet und Update automatisch wiederholt…",
-    installerHint: "Dies ist ein gebündeltes Installationspaket. Online-Updates werden nicht unterstützt. Bitte laden Sie die neueste Version von der offiziellen Website herunter.",
+    connectionLost:
+      "Der Dienst wird neu gestartet. Bitte aktualisieren Sie die Seite in Kürze, um das Ergebnis zu überprüfen.",
+    ebusyRestarting:
+      "Dateien sind gesperrt. Dienst wird neu gestartet und Update automatisch wiederholt…",
+    installerHint:
+      "Dies ist ein gebündeltes Installationspaket. Online-Updates werden nicht unterstützt. Bitte laden Sie die neueste Version von der offiziellen Website herunter.",
     failed: "Update fehlgeschlagen: {reason}",
     close: "Schließen",
   },
@@ -131,10 +140,13 @@ export const de: TranslationMap = {
     title: "Plattform-gemeinsame Modelle",
     addProvider: "Modell hinzufügen",
     createTitle: "Modell erstellen",
-    empty: "Noch keine gemeinsamen Modelle. Erstellen Sie eines, um es allen Mandanten zur Verfügung zu stellen.",
+    empty:
+      "Noch keine gemeinsamen Modelle. Erstellen Sie eines, um es allen Mandanten zur Verfügung zu stellen.",
     shared: "Gemeinsam",
-    deleteInUse: "Löschen nicht möglich: Das Modell wird von folgenden Agent(en) verwendet: {agents}",
-    removeModelInUse: "Modell {modelId} kann nicht entfernt werden: wird von Agent(en) verwendet: {agents}",
+    deleteInUse:
+      "Löschen nicht möglich: Das Modell wird von folgenden Agent(en) verwendet: {agents}",
+    removeModelInUse:
+      "Modell {modelId} kann nicht entfernt werden: wird von Agent(en) verwendet: {agents}",
   },
   platformTenants: {
     title: "Unternehmensverwaltung",
@@ -277,7 +289,8 @@ export const de: TranslationMap = {
   },
   onboarding: {
     welcomeTitle: "Willkommen bei EnClaws",
-    welcomeDesc: "Ihr Arbeitsbereich ist bereit. Schließen Sie ein paar einfache Schritte ab, um loszulegen.",
+    welcomeDesc:
+      "Ihr Arbeitsbereich ist bereit. Schließen Sie ein paar einfache Schritte ab, um loszulegen.",
     startSetup: "Einrichtung starten",
     skipAll: "Jetzt überspringen",
     step: "Schritt {current}/{total}",
@@ -288,7 +301,8 @@ export const de: TranslationMap = {
     complete: "Abschließen",
     saveFailed: "Speichern fehlgeschlagen",
     channelTitle: "Kanal verbinden",
-    channelDesc: "Wählen Sie die Messaging-Plattform Ihres Teams, damit EnClaws Nachrichten empfangen und beantworten kann.",
+    channelDesc:
+      "Wählen Sie die Messaging-Plattform Ihres Teams, damit EnClaws Nachrichten empfangen und beantworten kann.",
     selectChannel: "Bitte wählen Sie einen Kanal",
     feishuScan: "Scannen zum Erstellen",
     feishuManual: "Manuelle Eingabe",
@@ -308,7 +322,8 @@ export const de: TranslationMap = {
     channelHint: "App ID und Secret können später in der Kanalverwaltung konfiguriert werden.",
     optional: "Optional, später konfigurieren",
     modelTitle: "KI-Modell konfigurieren",
-    modelDesc: "Wählen Sie einen KI-Modellanbieter und geben Sie Ihren API-Schlüssel ein. Dies betreibt EnClaws.",
+    modelDesc:
+      "Wählen Sie einen KI-Modellanbieter und geben Sie Ihren API-Schlüssel ein. Dies betreibt EnClaws.",
     useSharedModel: "Plattform-Modell verwenden",
     useCustomModel: "Eigenes Modell hinzufügen",
     selectSubModel: "Modell auswählen",
@@ -316,16 +331,19 @@ export const de: TranslationMap = {
     selectModel: "Bitte wählen Sie einen Modellanbieter",
     apiKeyRequired: "API-Schlüssel ist erforderlich",
     apiAddress: "Adresse",
-    apiAddressHint: "API-Endpunkt für den Modelldienst. Für offiziellen Dienst leer lassen, für Proxy oder private Bereitstellung ausfüllen.",
+    apiAddressHint:
+      "API-Endpunkt für den Modelldienst. Für offiziellen Dienst leer lassen, für Proxy oder private Bereitstellung ausfüllen.",
     modelId: "Modellname",
     modelHint: "Geben Sie die gewünschte Modell-ID ein. Sie können dies später ändern.",
     agentTitle: "Agent erstellen",
     defaultAgentName: "EnClaws AI Assistent",
     doneTitle: "Einrichtung abgeschlossen!",
-    doneDesc: "Ihr EnClaws ist bereit. Betreten Sie die Konsole, um Konfigurationen anzuzeigen und anzupassen.",
+    doneDesc:
+      "Ihr EnClaws ist bereit. Betreten Sie die Konsole, um Konfigurationen anzuzeigen und anzupassen.",
     enterConsole: "Konsole öffnen",
     skipConfirmTitle: "Einrichtung überspringen?",
-    skipConfirmDesc: "Sie können die Modell-, Agent- und Kanal-Einrichtung jederzeit später in der Konsole abschließen.",
+    skipConfirmDesc:
+      "Sie können die Modell-, Agent- und Kanal-Einrichtung jederzeit später in der Konsole abschließen.",
     continueSetup: "Einrichtung fortsetzen",
     confirmSkip: "Überspringen",
     channels: {
@@ -381,7 +399,8 @@ export const de: TranslationMap = {
     optional: "(optional)",
     delete: "Löschen",
     inherit: "Standard",
-    deleteConfirm: "Sitzung \"{key}\" löschen?\n\nLöscht den Sitzungseintrag und archiviert das Transkript.",
+    deleteConfirm:
+      'Sitzung "{key}" löschen?\n\nLöscht den Sitzungseintrag und archiviert das Transkript.',
     thinkOff: "aus",
     thinkMinimal: "minimal",
     thinkLow: "niedrig",
@@ -417,8 +436,9 @@ export const de: TranslationMap = {
     createChannel: "Kanal erstellen",
     cancel: "Abbrechen",
     loading: "Wird geladen...",
-    empty: "Noch keine Kanale. Klicken Sie auf \"Kanal erstellen\", um einen hinzuzufugen.",
-    emptyNoModels: "Keine Modelle verfugbar. Bitte fugen Sie Modelle in der Modellverwaltung hinzu.",
+    empty: 'Noch keine Kanale. Klicken Sie auf "Kanal erstellen", um einen hinzuzufugen.',
+    emptyNoModels:
+      "Keine Modelle verfugbar. Bitte fugen Sie Modelle in der Modellverwaltung hinzu.",
     addModelLink: "Modell hinzufugen",
     loadFailed: "Kanalliste konnte nicht geladen werden",
     saveFailed: "Speichern fehlgeschlagen",
@@ -459,12 +479,14 @@ export const de: TranslationMap = {
     agentDisplayNamePlaceholder: "Agentennamen eingeben",
     agentId: "Agenten-ID",
     agentIdPlaceholder: "Agenten-ID eingeben",
-    agentIdHint: "Nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche. Wird automatisch aus dem Bot-Namen generiert.",
+    agentIdHint:
+      "Nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche. Wird automatisch aus dem Bot-Namen generiert.",
     agentIdReadonly: "Die Agenten-ID kann nach der Erstellung nicht geandert werden",
     agentIdPattern: "Nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche, 1-64 Zeichen",
     modelBinding: "Modellauswahl",
     modelBindingHint: "Mehrfachauswahl, Standard festlegen, Fallback in Reihenfolge",
-    noModelsAvailable: "Keine Modelle verfugbar. Bitte fugen Sie Modelle in der Modellverwaltung hinzu.",
+    noModelsAvailable:
+      "Keine Modelle verfugbar. Bitte fugen Sie Modelle in der Modellverwaltung hinzu.",
     modelId: "Modell-ID",
     modelName: "Modellname",
     provider: "Anbieter",
@@ -475,7 +497,8 @@ export const de: TranslationMap = {
     systemPromptPlaceholder: "System-Prompt eingeben...",
     toolAccess: "Werkzeugzugriff",
     toolsEnabled: "{enabled}/{total} aktiviert",
-    toolsHint: "Alle Werkzeuge sind standardmassig erlaubt. Deaktivieren Sie ein Werkzeug, um dem Agenten den Zugriff zu verweigern (harte Einschrankung, Agent kann es nicht aufrufen).",
+    toolsHint:
+      "Alle Werkzeuge sind standardmassig erlaubt. Deaktivieren Sie ein Werkzeug, um dem Agenten den Zugriff zu verweigern (harte Einschrankung, Agent kann es nicht aufrufen).",
     enableAll: "Alle aktivieren",
     disableAll: "Alle deaktivieren",
     channelNameRequired: "Bitte geben Sie einen Kanalnamen ein",
@@ -518,14 +541,19 @@ export const de: TranslationMap = {
     dingtalkClientSecret: "Client Secret (AppSecret)",
     dingtalkClientSecretPlaceholder: "DingTalk AppSecret / Client Secret eingeben",
     feishuAuthTitle: "Bot erfolgreich erstellt",
-    feishuAuthDesc: "Bot-Anmeldedaten wurden automatisch in das Formular eingetragen. Um die volle Funktionalitat zu aktivieren, mussen Sie die Berechtigungsautorisierung auf der Feishu Open Platform abschliessen.",
-    feishuAuthStep1: "Klicken Sie auf den unten stehenden Link, um zur Berechtigungsverwaltungsseite der Feishu Open Platform zu gelangen",
-    feishuAuthStep2: "Aktivieren Sie die erforderlichen App-Berechtigungen und Benutzerberechtigungen auf der Seite",
-    feishuAuthStep3: "Klicken Sie auf \"Version veroffentlichen\", um die Berechtigungen zu aktivieren",
+    feishuAuthDesc:
+      "Bot-Anmeldedaten wurden automatisch in das Formular eingetragen. Um die volle Funktionalitat zu aktivieren, mussen Sie die Berechtigungsautorisierung auf der Feishu Open Platform abschliessen.",
+    feishuAuthStep1:
+      "Klicken Sie auf den unten stehenden Link, um zur Berechtigungsverwaltungsseite der Feishu Open Platform zu gelangen",
+    feishuAuthStep2:
+      "Aktivieren Sie die erforderlichen App-Berechtigungen und Benutzerberechtigungen auf der Seite",
+    feishuAuthStep3:
+      'Klicken Sie auf "Version veroffentlichen", um die Berechtigungen zu aktivieren',
     feishuScopesList: "Erforderliche Berechtigungen",
     feishuCopied: "Kopiert",
     feishuCopyScopes: "Berechtigungen kopieren",
-    feishuScopesHint: "Tipp: Nach dem Kopieren der Berechtigungen konnen Sie diese auf der Berechtigungsverwaltungsseite der Feishu Open Platform massenhaft importieren/exportieren. Sie konnen dies uberspringen und spater konfigurieren.",
+    feishuScopesHint:
+      "Tipp: Nach dem Kopieren der Berechtigungen konnen Sie diese auf der Berechtigungsverwaltungsseite der Feishu Open Platform massenhaft importieren/exportieren. Sie konnen dies uberspringen und spater konfigurieren.",
     feishuGoAuth: "Zur Autorisierung",
     feishuLater: "Spater",
     toolGroupFs: "Dateioperationen",
@@ -539,33 +567,43 @@ export const de: TranslationMap = {
     toolGroupNodes: "Knoten",
     toolGroupMedia: "Medien",
     toolGroupOther: "Sonstige",
-    toolRead: "Text-, Bild- oder PDF-Dateien lesen — gibt zeilennummerierten Inhalt mit optionalem Offset/Limit zuruck",
+    toolRead:
+      "Text-, Bild- oder PDF-Dateien lesen — gibt zeilennummerierten Inhalt mit optionalem Offset/Limit zuruck",
     toolWrite: "Neue Datei erstellen oder vorhandene mit komplettem Inhalt uberschreiben",
-    toolEdit: "Prazise String-Ersetzungen in einer Datei vornehmen; nur das passende Segment wird geandert",
-    toolApplyPatch: "Ein Patch-Skript im OpenAI-Format ausfuhren, das Dateien im Workspace in einem Aufruf hinzufugt, loscht, bearbeitet und umbenennt",
+    toolEdit:
+      "Prazise String-Ersetzungen in einer Datei vornehmen; nur das passende Segment wird geandert",
+    toolApplyPatch:
+      "Ein Patch-Skript im OpenAI-Format ausfuhren, das Dateien im Workspace in einem Aufruf hinzufugt, loscht, bearbeitet und umbenennt",
     toolGrep: "Regex-Suche in Dateiinhalten (ripgrep), mit Filtern nach Dateityp oder Verzeichnis",
     toolFind: "Dateipfade per Glob-Muster finden (z. B. src/**/*.ts)",
-    toolLs: "Dateien und Unterverzeichnisse unter einem Pfad auflisten, um die Projektstruktur zu erkunden",
+    toolLs:
+      "Dateien und Unterverzeichnisse unter einem Pfad auflisten, um die Projektstruktur zu erkunden",
     toolExec: "Shell-Befehle (Bash) im Workspace ausfuhren — Build, Test, Git usw.",
-    toolProcess: "Hintergrundprozesse starten, prufen und stoppen (Dev-Server, langlaufende Aufgaben)",
+    toolProcess:
+      "Hintergrundprozesse starten, prufen und stoppen (Dev-Server, langlaufende Aufgaben)",
     toolWebSearch: "Live-Websuche mit Titeln, Snippets und Links",
     toolWebFetch: "Eine URL als Text abrufen — praktisch zum Lesen von Docs oder API-Antworten",
     toolMemorySearch: "Semantische Suche im Langzeitspeicher, um relevanten Kontext abzurufen",
-    toolMemoryGet: "Einen gespeicherten Speichereintrag per Name lesen (Nutzereinstellungen, Projektkontext usw.)",
+    toolMemoryGet:
+      "Einen gespeicherten Speichereintrag per Name lesen (Nutzereinstellungen, Projektkontext usw.)",
     toolSessionsList: "Alle Sitzungen unter dem aktuellen Agenten auflisten",
-    toolSessionsHistory: "Den vollstandigen Nachrichtenverlauf einer Sitzung lesen, fur Kontext oder Fortsetzung",
+    toolSessionsHistory:
+      "Den vollstandigen Nachrichtenverlauf einer Sitzung lesen, fur Kontext oder Fortsetzung",
     toolSessionsSend: "Eine Text- oder Rich-Media-Nachricht in eine Sitzung posten",
     toolSessionsSpawn: "Eine neue Sub-Agent-Sitzung starten und eine Teilaufgabe delegieren",
     toolSubagents: "Laufende Sub-Agenten prufen und steuern (Status, Stop, Folgeanweisungen)",
     toolSessionStatus: "Prufen, ob eine Sitzung leerlauft, lauft oder auf Eingabe wartet",
     toolMessage: "Kanal-Messaging-Aktionen (Antworten, Weiterleiten, Reaktionen, Zuruckrufen usw.)",
     toolCron: "Cron-geplante Aufgaben für autonome Agentenlaufe erstellen, auflisten und löschen",
-    toolGateway: "Gateway-Verwaltung — Kanal neu starten, Konfiguration synchronisieren, Routen aktualisieren",
-    toolBrowser: "Einen Headless-Browser steuern, um sich anzumelden, zu klicken, Formulare auszufullen und Screenshots zu erfassen",
+    toolGateway:
+      "Gateway-Verwaltung — Kanal neu starten, Konfiguration synchronisieren, Routen aktualisieren",
+    toolBrowser:
+      "Einen Headless-Browser steuern, um sich anzumelden, zu klicken, Formulare auszufullen und Screenshots zu erfassen",
     toolCanvas: "Strukturierte visuelle Inhalte auf einem Canvas fur interaktive UIs rendern",
     toolNodes: "Laufzeit-Knoten und Gerate verwalten (Status, Aufgabenzuweisung, Online/Offline)",
     toolAgentsList: "Jeden Agenten im aktuellen Mandanten mit Name, Modell und Status auflisten",
-    toolImage: "Bildverstandnis — Objekte/Szenen erkennen, Text extrahieren, visuelle Fragen beantworten",
+    toolImage:
+      "Bildverstandnis — Objekte/Szenen erkennen, Text extrahieren, visuelle Fragen beantworten",
     toolTts: "Text in Sprachaudio mit auswahlbaren Stimmen umwandeln",
     channelFeishu: "Feishu (Lark)",
     channelDingtalk: "DingTalk",
@@ -582,7 +620,7 @@ export const de: TranslationMap = {
     createAgent: "Agent erstellen",
     cancel: "Abbrechen",
     loading: "Laden...",
-    empty: "Noch keine Agenten. Klicken Sie auf \"Agent erstellen\".",
+    empty: 'Noch keine Agenten. Klicken Sie auf "Agent erstellen".',
     configuredCount: "Agenten konfiguriert: {count}",
     selectToView: "Wählen Sie einen Agenten aus, um Details anzuzeigen",
     createdAt: "Erstellt",
@@ -592,12 +630,14 @@ export const de: TranslationMap = {
     panelTools: "Werkzeuge",
     noModelsConfigured: "Keine Modelle konfiguriert",
     noPromptConfigured: "Kein System-Prompt konfiguriert",
-    emptyNoModels: "Keine Modelle verfügbar. Bitte fügen Sie Modelle in der Modellverwaltung hinzu.",
+    emptyNoModels:
+      "Keine Modelle verfügbar. Bitte fügen Sie Modelle in der Modellverwaltung hinzu.",
     addModelLink: "Modell hinzufügen",
     loadFailed: "Agentenliste konnte nicht geladen werden",
     saveFailed: "Speichern fehlgeschlagen",
     deleteFailed: "Löschen fehlgeschlagen",
-    deleteInUse: "Löschen nicht möglich: Agent ist an folgende Kanäle gebunden: {channels}. Bitte zuerst die Bindung aufheben oder die Kanäle löschen.",
+    deleteInUse:
+      "Löschen nicht möglich: Agent ist an folgende Kanäle gebunden: {channels}. Bitte zuerst die Bindung aufheben oder die Kanäle löschen.",
     agentCreated: "Agent erstellt",
     agentUpdated: "Agent aktualisiert",
     agentDeleted: "Agent {name} gelöscht",
@@ -610,7 +650,8 @@ export const de: TranslationMap = {
     agentDisplayName: "Agent-Name",
     agentDisplayNamePlaceholder: "Agent-Name eingeben",
     agentIdPlaceholder: "Agent-ID eingeben",
-    agentIdHint: "Nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche. Wird automatisch aus dem Namen generiert.",
+    agentIdHint:
+      "Nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche. Wird automatisch aus dem Namen generiert.",
     agentIdReadonly: "Agent-ID kann nach Erstellung nicht geändert werden",
     agentIdPattern: "Nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche, 1-64 Zeichen",
     nameRequired: "Bitte Agent-Name eingeben",
@@ -618,7 +659,8 @@ export const de: TranslationMap = {
     modelRequired: "Bitte mindestens ein Modell auswählen",
     modelBinding: "Modellauswahl",
     modelBindingHint: "Mehrfachauswahl, Standard festlegen, Fallback nach Reihenfolge",
-    noModelsAvailable: "Keine Modelle verfügbar. Bitte fügen Sie Modelle in der Modellverwaltung hinzu.",
+    noModelsAvailable:
+      "Keine Modelle verfügbar. Bitte fügen Sie Modelle in der Modellverwaltung hinzu.",
     modelId: "Modell-ID",
     modelName: "Modellname",
     provider: "Anbieter",
@@ -628,7 +670,8 @@ export const de: TranslationMap = {
     fallbackLabel: "Ersatzmodell",
     setAsDefault: "Als Standard",
     fallbackN: "Ersatz #{n}",
-    fallbackExplain: "Wenn das Standardmodell nicht verfügbar ist, werden Ersatzmodelle der Reihe nach versucht",
+    fallbackExplain:
+      "Wenn das Standardmodell nicht verfügbar ist, werden Ersatzmodelle der Reihe nach versucht",
     noChannels: "Dieser Agent ist mit keinem Kanal verknüpft",
     channelActive: "Aktiv",
     channelInactive: "Inaktiv",
@@ -643,7 +686,8 @@ export const de: TranslationMap = {
     systemPromptPlaceholder: "Systemprompt eingeben...",
     toolAccess: "Werkzeugzugriff",
     toolsEnabled: "{enabled}/{total} aktiviert",
-    toolsHint: "Alle Werkzeuge standardmäßig erlaubt. Deaktivieren Sie den Zugriff des Agenten auf ein Werkzeug (harte Einschränkung).",
+    toolsHint:
+      "Alle Werkzeuge standardmäßig erlaubt. Deaktivieren Sie den Zugriff des Agenten auf ein Werkzeug (harte Einschränkung).",
     enableAll: "Alle aktivieren",
     disableAll: "Alle deaktivieren",
     toolsReset: "Zurücksetzen",
@@ -662,33 +706,43 @@ export const de: TranslationMap = {
     toolGroupNodes: "Knoten",
     toolGroupMedia: "Medien",
     toolGroupOther: "Sonstiges",
-    toolRead: "Text-, Bild- oder PDF-Dateien lesen — gibt zeilennummerierten Inhalt mit optionalem Offset/Limit zuruck",
+    toolRead:
+      "Text-, Bild- oder PDF-Dateien lesen — gibt zeilennummerierten Inhalt mit optionalem Offset/Limit zuruck",
     toolWrite: "Neue Datei erstellen oder vorhandene mit komplettem Inhalt uberschreiben",
-    toolEdit: "Prazise String-Ersetzungen in einer Datei vornehmen; nur das passende Segment wird geandert",
-    toolApplyPatch: "Ein Patch-Skript im OpenAI-Format ausfuhren, das Dateien im Workspace in einem Aufruf hinzufugt, loscht, bearbeitet und umbenennt",
+    toolEdit:
+      "Prazise String-Ersetzungen in einer Datei vornehmen; nur das passende Segment wird geandert",
+    toolApplyPatch:
+      "Ein Patch-Skript im OpenAI-Format ausfuhren, das Dateien im Workspace in einem Aufruf hinzufugt, loscht, bearbeitet und umbenennt",
     toolGrep: "Regex-Suche in Dateiinhalten (ripgrep), mit Filtern nach Dateityp oder Verzeichnis",
     toolFind: "Dateipfade per Glob-Muster finden (z. B. src/**/*.ts)",
-    toolLs: "Dateien und Unterverzeichnisse unter einem Pfad auflisten, um die Projektstruktur zu erkunden",
+    toolLs:
+      "Dateien und Unterverzeichnisse unter einem Pfad auflisten, um die Projektstruktur zu erkunden",
     toolExec: "Shell-Befehle (Bash) im Workspace ausfuhren — Build, Test, Git usw.",
-    toolProcess: "Hintergrundprozesse starten, prufen und stoppen (Dev-Server, langlaufende Aufgaben)",
+    toolProcess:
+      "Hintergrundprozesse starten, prufen und stoppen (Dev-Server, langlaufende Aufgaben)",
     toolWebSearch: "Live-Websuche mit Titeln, Snippets und Links",
     toolWebFetch: "Eine URL als Text abrufen — praktisch zum Lesen von Docs oder API-Antworten",
     toolMemorySearch: "Semantische Suche im Langzeitspeicher, um relevanten Kontext abzurufen",
-    toolMemoryGet: "Einen gespeicherten Speichereintrag per Name lesen (Nutzereinstellungen, Projektkontext usw.)",
+    toolMemoryGet:
+      "Einen gespeicherten Speichereintrag per Name lesen (Nutzereinstellungen, Projektkontext usw.)",
     toolSessionsList: "Alle Sitzungen unter dem aktuellen Agenten auflisten",
-    toolSessionsHistory: "Den vollstandigen Nachrichtenverlauf einer Sitzung lesen, fur Kontext oder Fortsetzung",
+    toolSessionsHistory:
+      "Den vollstandigen Nachrichtenverlauf einer Sitzung lesen, fur Kontext oder Fortsetzung",
     toolSessionsSend: "Eine Text- oder Rich-Media-Nachricht in eine Sitzung posten",
     toolSessionsSpawn: "Eine neue Sub-Agent-Sitzung starten und eine Teilaufgabe delegieren",
     toolSubagents: "Laufende Sub-Agenten prufen und steuern (Status, Stop, Folgeanweisungen)",
     toolSessionStatus: "Prufen, ob eine Sitzung leerlauft, lauft oder auf Eingabe wartet",
     toolMessage: "Kanal-Messaging-Aktionen (Antworten, Weiterleiten, Reaktionen, Zuruckrufen usw.)",
     toolCron: "Cron-geplante Aufgaben für autonome Agentenlaufe erstellen, auflisten und löschen",
-    toolGateway: "Gateway-Verwaltung — Kanal neu starten, Konfiguration synchronisieren, Routen aktualisieren",
-    toolBrowser: "Einen Headless-Browser steuern, um sich anzumelden, zu klicken, Formulare auszufullen und Screenshots zu erfassen",
+    toolGateway:
+      "Gateway-Verwaltung — Kanal neu starten, Konfiguration synchronisieren, Routen aktualisieren",
+    toolBrowser:
+      "Einen Headless-Browser steuern, um sich anzumelden, zu klicken, Formulare auszufullen und Screenshots zu erfassen",
     toolCanvas: "Strukturierte visuelle Inhalte auf einem Canvas fur interaktive UIs rendern",
     toolNodes: "Laufzeit-Knoten und Gerate verwalten (Status, Aufgabenzuweisung, Online/Offline)",
     toolAgentsList: "Jeden Agenten im aktuellen Mandanten mit Name, Modell und Status auflisten",
-    toolImage: "Bildverstandnis — Objekte/Szenen erkennen, Text extrahieren, visuelle Fragen beantworten",
+    toolImage:
+      "Bildverstandnis — Objekte/Szenen erkennen, Text extrahieren, visuelle Fragen beantworten",
     toolTts: "Text in Sprachaudio mit auswahlbaren Stimmen umwandeln",
   },
   logs: {
@@ -764,14 +818,20 @@ export const de: TranslationMap = {
     skillLabelFeishuTask: "Aufgaben",
     skillLabelFeishuUpdateDoc: "Dokument aktualisieren",
     skillLabelFeishuWiki: "Wiki",
-    skillCodingAgent: "Coding-Aufgaben an Claude Code/Codex delegieren: neue Features, PR-Reviews, Refactoring",
-    skillHealthcheck: "Host-Sicherheitsaudit und -härtung für SSH, Firewall, Updates und Risikoerkennung",
-    skillMcporter: "MCP-Server und -Tools über die mcporter CLI auflisten, konfigurieren und aufrufen",
-    skillMemoryManager: "3-Schritt-Speicherprotokoll: Kontext vorher recherchieren, Entscheidungen danach speichern",
+    skillCodingAgent:
+      "Coding-Aufgaben an Claude Code/Codex delegieren: neue Features, PR-Reviews, Refactoring",
+    skillHealthcheck:
+      "Host-Sicherheitsaudit und -härtung für SSH, Firewall, Updates und Risikoerkennung",
+    skillMcporter:
+      "MCP-Server und -Tools über die mcporter CLI auflisten, konfigurieren und aufrufen",
+    skillMemoryManager:
+      "3-Schritt-Speicherprotokoll: Kontext vorher recherchieren, Entscheidungen danach speichern",
     skillPingtest: "Einfacher Echo-Test: gibt Ihre Nachricht mit Zeitstempel zurück",
-    skillSessionLogs: "Vergangene Sitzungsprotokolle mit jq und ripgrep durchsuchen und analysieren",
+    skillSessionLogs:
+      "Vergangene Sitzungsprotokolle mit jq und ripgrep durchsuchen und analysieren",
     skillSkillCreator: "AgentSkills entwerfen und verpacken mit Skripten, Referenzen und Assets",
-    skillWeather: "Aktuelles Wetter und Vorhersagen über wttr.in abrufen, kein API-Key erforderlich",
+    skillWeather:
+      "Aktuelles Wetter und Vorhersagen über wttr.in abrufen, kein API-Key erforderlich",
     skillFeishuAskUser: "Frage per Feishu-Interaktionskarte stellen und auf Benutzerantwort warten",
     skillFeishuAuth: "Persönliche Feishu-OAuth-Autorisierung abschließen",
     skillFeishuBitable: "Vollständige CRUD-Operationen für Feishu Bitable",
@@ -787,7 +847,8 @@ export const de: TranslationMap = {
     skillFeishuImMessage: "Feishu-IM-Nachrichten als aktueller Benutzer senden oder beantworten",
     skillFeishuImRead: "Feishu-IM-Gesprächsverlauf lesen und sitzungsübergreifend suchen",
     skillFeishuImageOcr: "OCR-Texterkennung aus Bildern über die Feishu-API",
-    skillFeishuMeetingMinutes: "Feishu-Besprechungsaufzeichnungen transkribieren und Protokolle erstellen",
+    skillFeishuMeetingMinutes:
+      "Feishu-Besprechungsaufzeichnungen transkribieren und Protokolle erstellen",
     skillFeishuQuickSetup: "Feishu-Bot mit einem Klick erstellen und Anmeldedaten speichern",
     skillFeishuSearchDoc: "Feishu-Cloud-Dokumente und Wikis nach Schlüsselwörtern durchsuchen",
     skillFeishuSearchUser: "Feishu-Benutzer nach Schlüsselwort, ID oder Selbstabfrage suchen",
@@ -841,7 +902,8 @@ export const de: TranslationMap = {
     loading: "Wird geladen...",
     loadFailed: "Laden fehlgeschlagen",
     loadDetailFailed: "Details konnten nicht geladen werden",
-    empty: "Noch keine Interaktionsaufzeichnungen. Jede Interaktion zwischen System und LLM wird hier automatisch aufgezeichnet.",
+    empty:
+      "Noch keine Interaktionsaufzeichnungen. Jede Interaktion zwischen System und LLM wird hier automatisch aufgezeichnet.",
     noRecords: "Keine Interaktionsaufzeichnungen",
     filterAgent: "Agenten-ID:",
     filterAgentPlaceholder: "Agenten-ID eingeben",
@@ -942,12 +1004,18 @@ export const de: TranslationMap = {
   },
   errors: {
     quotaExceeded: {
-      agents: "Agent-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
-      channels: "Kanal-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
-      users: "Benutzer-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
-      tokensPerMonth: "Monatliches Token-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
-      cronJobs: "Kontingent für geplante Aufgaben erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
-      generic: "Tarif-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
+      agents:
+        "Agent-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
+      channels:
+        "Kanal-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
+      users:
+        "Benutzer-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
+      tokensPerMonth:
+        "Monatliches Token-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
+      cronJobs:
+        "Kontingent für geplante Aufgaben erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
+      generic:
+        "Tarif-Kontingent erreicht ({current}/{max}). Bitte <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>kontaktieren Sie Ihren Administrator</a>, um Ihren Tarif zu aktualisieren.",
     },
   },
   tenantSettings: {
@@ -956,7 +1024,8 @@ export const de: TranslationMap = {
     namePlaceholder: "Unternehmensname eingeben",
     identityPrompt: "Unternehmensidentitat",
     identityPromptPlaceholder: "Beschreiben Sie die Unternehmensidentitat...",
-    identityPromptHint: "Dieser Inhalt wird als Unternehmenskontext in alle KI-Systemaufforderungen eingefugt",
+    identityPromptHint:
+      "Dieser Inhalt wird als Unternehmenskontext in alle KI-Systemaufforderungen eingefugt",
     save: "Einstellungen speichern",
     saving: "Speichern...",
     saved: "Einstellungen gespeichert",
@@ -969,7 +1038,8 @@ export const de: TranslationMap = {
     memorySaving: "Speichern...",
     memorySaved: "Unternehmensspeicher gespeichert",
     memorySaveFailed: "Unternehmensspeicher konnte nicht gespeichert werden",
-    memoryHint: "Dieser Inhalt wird von KI-Assistenten automatisch gepflegt und kann manuell bearbeitet werden.",
+    memoryHint:
+      "Dieser Inhalt wird von KI-Assistenten automatisch gepflegt und kann manuell bearbeitet werden.",
     tenantIdLabel: "Mandanten-ID:",
     tenantIdCopy: "Kopieren",
     tenantIdCopied: "Kopiert",
@@ -1018,10 +1088,12 @@ export const de: TranslationMap = {
     errRequired: "Bitte fullen Sie {field} aus",
     errEmailInvalid: "Bitte geben Sie eine gultige E-Mail-Adresse ein",
     errPasswordTooShort: "Das Passwort muss mindestens 8 Zeichen lang sein",
-    errPasswordWeak: "Passwort muss mindestens 8 Zeichen lang sein und Gross-/Kleinbuchstaben, Zahlen und Sonderzeichen enthalten",
+    errPasswordWeak:
+      "Passwort muss mindestens 8 Zeichen lang sein und Gross-/Kleinbuchstaben, Zahlen und Sonderzeichen enthalten",
     forgotPassword: "Passwort vergessen?",
     pendingVerification: "Bitte bestätigen Sie Ihre E-Mail vor der Anmeldung",
-    tenantSuspended: "Dieses Unternehmenskonto wurde gesperrt. Bitte kontaktieren Sie den Plattformadministrator.",
+    tenantSuspended:
+      "Dieses Unternehmenskonto wurde gesperrt. Bitte kontaktieren Sie den Plattformadministrator.",
     rateLimited: "Zu viele Anmeldeversuche, bitte versuchen Sie es später erneut",
     themeLight: "Hell",
     themeSystem: "Auto",
@@ -1035,16 +1107,19 @@ export const de: TranslationMap = {
       tagline: "Container-Plattform",
       headline1: "Unternehmenstaugliche",
       headline2: "Digitale KI-Belegschaft",
-      subline: "Erstellen, planen und verwalten Sie digitale Assistenten in Ihrer gesamten Organisation.",
+      subline:
+        "Erstellen, planen und verwalten Sie digitale Assistenten in Ihrer gesamten Organisation.",
       status: "Alle Systeme betriebsbereit",
       feat1Title: "Parallele Ausführung",
-      feat1Desc: "Ein Assistent, viele parallele Aufgaben — für das gesamte Unternehmen gleichzeitig.",
+      feat1Desc:
+        "Ein Assistent, viele parallele Aufgaben — für das gesamte Unternehmen gleichzeitig.",
       feat2Title: "Mandantentrennung",
       feat2Desc: "Isolierter Kontext, Speicher und Grenzen für jedes Team und jeden Benutzer.",
       feat3Title: "Hierarchisches Gedächtnis",
       feat3Desc: "Branche → Unternehmen → Abteilung → Persönlich.",
       pitch: "Einmal registrieren, das ganze Team legt los",
-      pitchDesc: "Nach der Einrichtung eines Arbeitsbereichs kann jedes Mitglied sofort loslegen — ohne individuelle Konfiguration",
+      pitchDesc:
+        "Nach der Einrichtung eines Arbeitsbereichs kann jedes Mitglied sofort loslegen — ohne individuelle Konfiguration",
     },
   },
   auth: {
@@ -1057,19 +1132,23 @@ export const de: TranslationMap = {
     policy: {
       tooShort: "Das Passwort muss mindestens 8 Zeichen lang sein",
       tooLong: "Das Passwort darf höchstens 128 Zeichen lang sein",
-      missingClasses: "Das Passwort muss mindestens 3 von 4 Zeichenklassen enthalten: Großbuchstaben, Kleinbuchstaben, Ziffern, Sonderzeichen",
+      missingClasses:
+        "Das Passwort muss mindestens 3 von 4 Zeichenklassen enthalten: Großbuchstaben, Kleinbuchstaben, Ziffern, Sonderzeichen",
       repeatedChars: "Das Passwort darf nicht 3 oder mehr identische Zeichen in Folge enthalten",
       hint: "Mindestens 8 Zeichen, davon mindestens 3 Klassen: Groß-/Kleinbuchstaben, Ziffern, Sonderzeichen",
     },
     forgot: {
       title: "Passwort vergessen",
-      subtitle: "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen des Passworts.",
+      subtitle:
+        "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen des Passworts.",
       checking: "Verfügbare Reset-Methoden werden geprüft…",
       noEmailTitle: "Passwort vergessen",
-      noEmailBody: "In dieser Installation ist kein E-Mail-Dienst konfiguriert, daher ist kein Selbstbedienungs-Reset möglich.",
+      noEmailBody:
+        "In dieser Installation ist kein E-Mail-Dienst konfiguriert, daher ist kein Selbstbedienungs-Reset möglich.",
       contactAdmin: "Bitte wenden Sie sich an den Plattformadministrator.",
       sentTitle: "Gesendet",
-      sentBody: "Falls das Konto existiert, wurde ein Link zum Zurücksetzen gesendet. Der Link ist 30 Minuten gültig.",
+      sentBody:
+        "Falls das Konto existiert, wurde ein Link zum Zurücksetzen gesendet. Der Link ist 30 Minuten gültig.",
       emailLabel: "E-Mail",
       emailPlaceholder: "you@example.com",
       submit: "Reset-Link senden",
@@ -1090,7 +1169,8 @@ export const de: TranslationMap = {
     },
     tempView: {
       title: "Temporäres Passwort",
-      subtitle: "Dies ist Ihr einmaliges temporäres Passwort. Diese Seite kann nur einmal angezeigt werden.",
+      subtitle:
+        "Dies ist Ihr einmaliges temporäres Passwort. Diese Seite kann nur einmal angezeigt werden.",
       checking: "Temporäres Passwort wird abgerufen…",
       invalidTitle: "Nicht verfügbar",
       linkExpired: "Link abgelaufen oder bereits verwendet",
@@ -1102,7 +1182,8 @@ export const de: TranslationMap = {
     change: {
       title: "Passwort ändern",
       forcedTitle: "Bitte Passwort ändern",
-      forcedSubtitle: "Aus Sicherheitsgründen müssen Sie Ihr Passwort ändern, bevor Sie die Konsole nutzen können.",
+      forcedSubtitle:
+        "Aus Sicherheitsgründen müssen Sie Ihr Passwort ändern, bevor Sie die Konsole nutzen können.",
       currentLabel: "Aktuelles Passwort",
       currentRequired: "Bitte geben Sie das aktuelle Passwort ein",
       cannotReuse: "Das neue Passwort darf nicht mit dem aktuellen übereinstimmen",
@@ -1119,9 +1200,43 @@ export const de: TranslationMap = {
       changeNow: "Jetzt ändern",
       closeLabel: "Schließen",
     },
-    sessions: { title: "Aktive Sitzungen", subtitle: "Diese Geräte sind aktuell angemeldet.", noSessions: "Keine aktiven Sitzungen.", currentDevice: "(dieses Gerät)", revoke: "Abmelden", revokeAllOthers: "Alle anderen Geräte abmelden" },
-    verify: { pendingTitle: "E-Mail bestätigen", pendingBody: "Wir haben Ihnen eine Bestätigungsmail gesendet. Klicken Sie auf den Link, um Ihr Konto zu aktivieren.", resendBtn: "Bestätigungsmail erneut senden", resent: "Bestätigungsmail erneut gesendet.", invalidLink: "Ungültiger Bestätigungslink", doneTitle: "E-Mail bestätigt", doneBody: "Ihre E-Mail wurde bestätigt. Sie können sich jetzt anmelden.", failedTitle: "Bestätigung fehlgeschlagen" },
-    mfa: { setupTitle: "Zwei-Faktor-Authentifizierung aktivieren", setupSubtitle: "Zwei-Faktor-Authentifizierung erhöht die Sicherheit Ihres Kontos.", step1: "Schritt 1: QR-Code scannen", scanHint: "Verwenden Sie Google Authenticator oder eine andere TOTP-App.", manualHint: "QR-Code nicht scanbar? Schlüssel manuell eingeben", step2: "Schritt 2: Backup-Codes sichern", backupHint: "Bewahren Sie diese Codes sicher auf.", step3: "Schritt 3: Code eingeben", codeLabel: "6-stelliger Code", invalidCode: "Bitte geben Sie einen gültigen Code ein", verifyBtn: "Überprüfen und aktivieren", enabledTitle: "Zwei-Faktor-Authentifizierung aktiviert", enabledBody: "Ihr Konto ist jetzt durch 2FA geschützt.", challengeTitle: "Zwei-Faktor-Authentifizierung", challengeSubtitle: "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.", backupCodeHint: "Alternativ einen 8-stelligen Backup-Code eingeben." },
+    sessions: {
+      title: "Aktive Sitzungen",
+      subtitle: "Diese Geräte sind aktuell angemeldet.",
+      noSessions: "Keine aktiven Sitzungen.",
+      currentDevice: "(dieses Gerät)",
+      revoke: "Abmelden",
+      revokeAllOthers: "Alle anderen Geräte abmelden",
+    },
+    verify: {
+      pendingTitle: "E-Mail bestätigen",
+      pendingBody:
+        "Wir haben Ihnen eine Bestätigungsmail gesendet. Klicken Sie auf den Link, um Ihr Konto zu aktivieren.",
+      resendBtn: "Bestätigungsmail erneut senden",
+      resent: "Bestätigungsmail erneut gesendet.",
+      invalidLink: "Ungültiger Bestätigungslink",
+      doneTitle: "E-Mail bestätigt",
+      doneBody: "Ihre E-Mail wurde bestätigt. Sie können sich jetzt anmelden.",
+      failedTitle: "Bestätigung fehlgeschlagen",
+    },
+    mfa: {
+      setupTitle: "Zwei-Faktor-Authentifizierung aktivieren",
+      setupSubtitle: "Zwei-Faktor-Authentifizierung erhöht die Sicherheit Ihres Kontos.",
+      step1: "Schritt 1: QR-Code scannen",
+      scanHint: "Verwenden Sie Google Authenticator oder eine andere TOTP-App.",
+      manualHint: "QR-Code nicht scanbar? Schlüssel manuell eingeben",
+      step2: "Schritt 2: Backup-Codes sichern",
+      backupHint: "Bewahren Sie diese Codes sicher auf.",
+      step3: "Schritt 3: Code eingeben",
+      codeLabel: "6-stelliger Code",
+      invalidCode: "Bitte geben Sie einen gültigen Code ein",
+      verifyBtn: "Überprüfen und aktivieren",
+      enabledTitle: "Zwei-Faktor-Authentifizierung aktiviert",
+      enabledBody: "Ihr Konto ist jetzt durch 2FA geschützt.",
+      challengeTitle: "Zwei-Faktor-Authentifizierung",
+      challengeSubtitle: "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
+      backupCodeHint: "Alternativ einen 8-stelligen Backup-Code eingeben.",
+    },
   },
   models: {
     title: "Modellverwaltung",
@@ -1129,7 +1244,8 @@ export const de: TranslationMap = {
     addProvider: "Anbieter hinzufügen",
     cancel: "Abbrechen",
     loading: "Laden...",
-    empty: "Noch keine Modellkonfigurationen. Klicken Sie auf \u201EAnbieter hinzuf\u00FCgen\u201C.",
+    empty:
+      "Noch keine Modellkonfigurationen. Klicken Sie auf \u201EAnbieter hinzuf\u00FCgen\u201C.",
     editTitle: "Modellkonfiguration bearbeiten",
     createTitle: "Modellkonfiguration hinzufügen",
     providerType: "Anbietertyp",
@@ -1174,7 +1290,8 @@ export const de: TranslationMap = {
     loadFailed: "Modellkonfigurationen konnten nicht geladen werden",
     toggleFailed: "Statuswechsel fehlgeschlagen",
     deleteFailed: "Löschen fehlgeschlagen",
-    deleteInUse: "Löschen nicht möglich: Modell wird von folgenden Agents verwendet: {agents}. Bitte zuerst die Bindung aufheben oder die Agents löschen.",
+    deleteInUse:
+      "Löschen nicht möglich: Modell wird von folgenden Agents verwendet: {agents}. Bitte zuerst die Bindung aufheben oder die Agents löschen.",
     removeModelInUse: "Entfernen nicht möglich: Folgende Agents verwenden diese Modelle: {agents}",
     needOneModel: "Bitte mindestens ein Modell hinzufügen",
     modelIdRequired: "Bitte Modell-ID eingeben",
@@ -1193,7 +1310,8 @@ export const de: TranslationMap = {
     apiMode: {
       title: "API-Modus",
       newBtn: "+ Neuer KI-Dienst",
-      emptyState: "Noch keine KI-Dienste. Erstellen Sie einen, um die direkte API-Integration zu aktivieren.",
+      emptyState:
+        "Noch keine KI-Dienste. Erstellen Sie einen, um die direkte API-Integration zu aktivieren.",
       loading: "Wird geladen…",
       loadError: "KI-Dienste konnten nicht geladen werden",
       table: {
@@ -1221,7 +1339,8 @@ export const de: TranslationMap = {
       },
       regenerate: {
         confirmTitle: "Secret neu generieren?",
-        confirmMessage: "Das aktuelle Secret tritt in eine 24-Stunden-Nachfrist ein und wird danach ungültig. Ihre Integrationen müssen vor Ablauf dieser Frist aktualisiert werden.",
+        confirmMessage:
+          "Das aktuelle Secret tritt in eine 24-Stunden-Nachfrist ein und wird danach ungültig. Ihre Integrationen müssen vor Ablauf dieser Frist aktualisiert werden.",
         confirmBtn: "Neu generieren",
         error: "Secret konnte nicht neu generiert werden",
       },
@@ -1229,12 +1348,14 @@ export const de: TranslationMap = {
         confirmTitle: "KI-Dienst löschen?",
         confirmMessage: "„{name}“ löschen? Dies kann nicht rückgängig gemacht werden.",
         confirmBtn: "Löschen",
-        activeSessionsError: "Löschen nicht möglich: Dieser KI-Dienst hat aktive Sitzungen. Bitte zuerst schließen.",
+        activeSessionsError:
+          "Löschen nicht möglich: Dieser KI-Dienst hat aktive Sitzungen. Bitte zuerst schließen.",
         error: "KI-Dienst konnte nicht gelöscht werden",
       },
       secretDialog: {
         title: "API-Anmeldedaten",
-        warning: "Dies ist Ihre einzige Möglichkeit, das App Secret zu kopieren. Es wird als Einweg-Hash gespeichert — der Server kann es nicht erneut anzeigen.",
+        warning:
+          "Dies ist Ihre einzige Möglichkeit, das App Secret zu kopieren. Es wird als Einweg-Hash gespeichert — der Server kann es nicht erneut anzeigen.",
         appId: "App ID",
         appSecret: "App Secret",
         endpointUrl: "Vollständige Endpunkt-URL",

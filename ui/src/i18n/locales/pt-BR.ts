@@ -3,7 +3,8 @@ import type { TranslationMap } from "../lib/types.ts";
 export const pt_BR: TranslationMap = {
   rpc: {
     errors: {
-      requestTimeout: "Solicitação expirou após 60 s. O backend pode ainda estar processando — clique em \"Atualizar\" em instantes para conferir o resultado.",
+      requestTimeout:
+        'Solicitação expirou após 60 s. O backend pode ainda estar processando — clique em "Atualizar" em instantes para conferir o resultado.',
       connectionFailed: "Falha na conexão. Verifique o endereço do gateway e o estado da rede.",
     },
   },
@@ -70,7 +71,6 @@ export const pt_BR: TranslationMap = {
     "platform-tools": "Gerenciamento de Ferramentas",
     "platform-tenants": "Inquilinos",
     "cs-setup": "Console do CS",
-    "cs-knowledge": "Base de Conhecimento do CS",
     "cs-sessions": "Sessões do CS",
   },
   subtitles: {
@@ -87,24 +87,29 @@ export const pt_BR: TranslationMap = {
     config: "Editar ~/.enclaws/enclaws.json com segurança.",
     debug: "Snapshots do gateway, eventos e chamadas RPC manuais.",
     logs: "Acompanhamento ao vivo dos logs de arquivo do gateway.",
-    "platform-models": "Gerenciar modelos compartilhados da plataforma disponíveis para todos os inquilinos.",
+    "platform-models":
+      "Gerenciar modelos compartilhados da plataforma disponíveis para todos os inquilinos.",
     "tenant-overview": "Visão geral da empresa, uso de recursos e atividades recentes.",
     "tenant-settings": "Gerenciar nome e descrição de identidade da empresa.",
     "tenant-users": "Gerenciar usuários e funções do inquilino.",
-    "tenant-agents": "Criar e gerenciar agentes de IA, configurar modelos e permissões de ferramentas.",
+    "tenant-agents":
+      "Criar e gerenciar agentes de IA, configurar modelos e permissões de ferramentas.",
     "tenant-channels": "Gerenciar canais de mensagens do inquilino.",
     "tenant-models": "Gerenciar provedores LLM e configurações de modelos.",
     "tenant-skills": "Visualizar e gerenciar habilidades disponíveis para esta empresa.",
     "tenant-traces": "Rastrear cada interação LLM para depuração e otimização.",
     "tenant-usage": "Veja o plano atual, uso de cotas e consumo de tokens.",
-    "platform-tools": "Configurar política de acesso a ferramentas em nível de plataforma, aplicada a todos os agentes por padrão.",
+    "platform-tools":
+      "Configurar política de acesso a ferramentas em nível de plataforma, aplicada a todos os agentes por padrão.",
     "platform-tenants": "Gerenciar planos, cotas e status de todos os inquilinos.",
-    "cs-setup": "Console de atendimento ao cliente com IA — modo Widget e modo de integração de API.",
-    "cs-knowledge": "Gerenciar arquivos da base de conhecimento para o agente de atendimento ao cliente com IA.",
-    "cs-sessions": "Visualizar registros de sessões e threads de mensagens do atendimento ao cliente com IA.",
+    "cs-setup":
+      "Console de atendimento ao cliente com IA — modo Widget e modo de integração de API.",
+    "cs-sessions":
+      "Visualizar registros de sessões e threads de mensagens do atendimento ao cliente com IA.",
   },
   platformTools: {
-    infoBanner: "Esta é a política de ferramentas em nível de plataforma. Ela define quais ferramentas estão disponíveis para todos os agentes por padrão. Agentes ou inquilinos individuais podem aplicar restrições mais rígidas.",
+    infoBanner:
+      "Esta é a política de ferramentas em nível de plataforma. Ela define quais ferramentas estão disponíveis para todos os agentes por padrão. Agentes ou inquilinos individuais podem aplicar restrições mais rígidas.",
     statsTotal: "Total de ferramentas",
     statsEnabled: "Habilitadas",
     statsDenied: "Desabilitadas",
@@ -116,14 +121,19 @@ export const pt_BR: TranslationMap = {
     downloadInstall: "Ir para download",
     updateNow: "Atualizar agora",
     updating: "Atualizando…",
-    successRestart: "Atualização concluída. Reinicie o serviço manualmente para aplicar as alterações.",
-    successRestarting: "Atualização concluída. O serviço está reiniciando — atualize a página em alguns segundos.",
+    successRestart:
+      "Atualização concluída. Reinicie o serviço manualmente para aplicar as alterações.",
+    successRestarting:
+      "Atualização concluída. O serviço está reiniciando — atualize a página em alguns segundos.",
     commitsBehind: "{count} commit(s) atrás do upstream",
-    dirtyWorkspace: "Atualização ignorada: há alterações não commitadas. Faça commit ou stash primeiro.",
+    dirtyWorkspace:
+      "Atualização ignorada: há alterações não commitadas. Faça commit ou stash primeiro.",
     successDone: "Atualização concluída! Atualizando a página…",
-    connectionLost: "O serviço está reiniciando. Atualize a página em breve para verificar o resultado.",
+    connectionLost:
+      "O serviço está reiniciando. Atualize a página em breve para verificar o resultado.",
     ebusyRestarting: "Arquivos em uso. Reiniciando o serviço para tentar a atualização novamente…",
-    installerHint: "Este é um pacote de instalação. Atualizações online não são suportadas. Baixe a versão mais recente no site oficial.",
+    installerHint:
+      "Este é um pacote de instalação. Atualizações online não são suportadas. Baixe a versão mais recente no site oficial.",
     failed: "Atualização falhou: {reason}",
     close: "Fechar",
   },
@@ -131,10 +141,12 @@ export const pt_BR: TranslationMap = {
     title: "Modelos Compartilhados da Plataforma",
     addProvider: "Adicionar Modelo",
     createTitle: "Criar Modelo",
-    empty: "Nenhum modelo compartilhado ainda. Crie um para disponibilizá-lo a todos os inquilinos.",
+    empty:
+      "Nenhum modelo compartilhado ainda. Crie um para disponibilizá-lo a todos os inquilinos.",
     shared: "Compartilhado",
     deleteInUse: "Não é possível excluir: o modelo está sendo usado pelo(s) agente(s): {agents}",
-    removeModelInUse: "Não é possível remover o modelo {modelId}: usado pelo(s) agente(s): {agents}",
+    removeModelInUse:
+      "Não é possível remover o modelo {modelId}: usado pelo(s) agente(s): {agents}",
   },
   platformTenants: {
     title: "Gerenciamento de Empresas",
@@ -287,7 +299,8 @@ export const pt_BR: TranslationMap = {
     complete: "Concluir",
     saveFailed: "Falha ao salvar",
     channelTitle: "Conectar um Canal",
-    channelDesc: "Escolha a plataforma de mensagens da sua equipe para que o EnClaws possa receber e responder mensagens.",
+    channelDesc:
+      "Escolha a plataforma de mensagens da sua equipe para que o EnClaws possa receber e responder mensagens.",
     selectChannel: "Selecione um canal",
     feishuScan: "Escanear para Criar",
     feishuManual: "Entrada Manual",
@@ -315,16 +328,19 @@ export const pt_BR: TranslationMap = {
     selectModel: "Selecione um provedor de modelo",
     apiKeyRequired: "API Key é obrigatória",
     apiAddress: "Endereço",
-    apiAddressHint: "Endpoint da API do serviço de modelo. Deixe vazio para serviço oficial, preencha para proxy ou implantação privada.",
+    apiAddressHint:
+      "Endpoint da API do serviço de modelo. Deixe vazio para serviço oficial, preencha para proxy ou implantação privada.",
     modelId: "Nome do Modelo",
     modelHint: "Insira o ID específico do modelo que deseja usar. Você pode alterar depois.",
     agentTitle: "Criar Agente",
     defaultAgentName: "Assistente EnClaws AI",
     doneTitle: "Configuração Concluída!",
-    doneDesc: "Seu EnClaws está pronto. Entre no console para visualizar e ajustar as configurações.",
+    doneDesc:
+      "Seu EnClaws está pronto. Entre no console para visualizar e ajustar as configurações.",
     enterConsole: "Entrar no Console",
     skipConfirmTitle: "Pular configuração?",
-    skipConfirmDesc: "Você pode concluir a configuração do modelo, agent e canal a qualquer momento no console.",
+    skipConfirmDesc:
+      "Você pode concluir a configuração do modelo, agent e canal a qualquer momento no console.",
     continueSetup: "Continuar Configuração",
     confirmSkip: "Pular",
     channels: {
@@ -380,7 +396,8 @@ export const pt_BR: TranslationMap = {
     optional: "(opcional)",
     delete: "Excluir",
     inherit: "padrão",
-    deleteConfirm: "Excluir sessão \"{key}\"?\n\nExclui a entrada da sessão e arquiva sua transcrição.",
+    deleteConfirm:
+      'Excluir sessão "{key}"?\n\nExclui a entrada da sessão e arquiva sua transcrição.',
     thinkOff: "desligado",
     thinkMinimal: "mínimo",
     thinkLow: "baixo",
@@ -416,7 +433,7 @@ export const pt_BR: TranslationMap = {
     createChannel: "Criar Canal",
     cancel: "Cancelar",
     loading: "Carregando...",
-    empty: "Nenhum canal ainda. Clique em \"Criar Canal\" para adicionar.",
+    empty: 'Nenhum canal ainda. Clique em "Criar Canal" para adicionar.',
     emptyNoModels: "Nenhum modelo disponivel. Adicione modelos no Gerenciamento de Modelos.",
     addModelLink: "Adicionar Modelo",
     loadFailed: "Falha ao carregar lista de canais",
@@ -458,7 +475,8 @@ export const pt_BR: TranslationMap = {
     agentDisplayNamePlaceholder: "Digite o nome do agente",
     agentId: "ID do Agente",
     agentIdPlaceholder: "Digite o ID do agente",
-    agentIdHint: "Apenas letras minusculas, digitos, hifens e underscores. Gerado automaticamente a partir do Nome do Bot.",
+    agentIdHint:
+      "Apenas letras minusculas, digitos, hifens e underscores. Gerado automaticamente a partir do Nome do Bot.",
     agentIdReadonly: "O ID do agente nao pode ser alterado apos a criacao",
     agentIdPattern: "Apenas letras minusculas, digitos, hifens e underscores, 1-64 caracteres",
     modelBinding: "Seleção de Modelo",
@@ -474,7 +492,8 @@ export const pt_BR: TranslationMap = {
     systemPromptPlaceholder: "Digite o prompt do sistema...",
     toolAccess: "Acesso a Ferramentas",
     toolsEnabled: "{enabled}/{total} ativado(s)",
-    toolsHint: "Todas as ferramentas sao permitidas por padrao. Desmarque para negar ao agente o acesso a uma ferramenta (restricao rigida, o agente nao podera invoca-la).",
+    toolsHint:
+      "Todas as ferramentas sao permitidas por padrao. Desmarque para negar ao agente o acesso a uma ferramenta (restricao rigida, o agente nao podera invoca-la).",
     enableAll: "Ativar Todos",
     disableAll: "Desativar Todos",
     channelNameRequired: "Por favor, insira o nome do canal",
@@ -517,14 +536,17 @@ export const pt_BR: TranslationMap = {
     dingtalkClientSecret: "Client Secret (AppSecret)",
     dingtalkClientSecretPlaceholder: "Insira o AppSecret / Client Secret do DingTalk",
     feishuAuthTitle: "Bot Criado com Sucesso",
-    feishuAuthDesc: "As credenciais do bot foram preenchidas automaticamente no formulario. Para ativar a funcionalidade completa, voce precisa completar a autorizacao de permissoes na Feishu Open Platform.",
-    feishuAuthStep1: "Clique no link abaixo para ir a pagina de gerenciamento de permissoes da Feishu Open Platform",
+    feishuAuthDesc:
+      "As credenciais do bot foram preenchidas automaticamente no formulario. Para ativar a funcionalidade completa, voce precisa completar a autorizacao de permissoes na Feishu Open Platform.",
+    feishuAuthStep1:
+      "Clique no link abaixo para ir a pagina de gerenciamento de permissoes da Feishu Open Platform",
     feishuAuthStep2: "Ative as permissoes de app e permissoes de usuario necessarias na pagina",
-    feishuAuthStep3: "Clique em \"Publicar Versao\" para ativar as permissoes",
+    feishuAuthStep3: 'Clique em "Publicar Versao" para ativar as permissoes',
     feishuScopesList: "Permissoes Necessarias",
     feishuCopied: "Copiado",
     feishuCopyScopes: "Copiar Permissoes",
-    feishuScopesHint: "Dica: Apos copiar as permissoes, importe/exporte em massa na pagina de gerenciamento de permissoes da Feishu Open Platform. Voce pode pular e configurar depois.",
+    feishuScopesHint:
+      "Dica: Apos copiar as permissoes, importe/exporte em massa na pagina de gerenciamento de permissoes da Feishu Open Platform. Voce pode pular e configurar depois.",
     feishuGoAuth: "Ir para Autorizacao",
     feishuLater: "Mais tarde",
     toolGroupFs: "Operacoes de Arquivo",
@@ -538,33 +560,47 @@ export const pt_BR: TranslationMap = {
     toolGroupNodes: "Nos",
     toolGroupMedia: "Midia",
     toolGroupOther: "Outros",
-    toolRead: "Ler arquivos de texto, imagens ou PDFs — retorna o conteudo com numeracao de linhas, com offset/limite opcional",
+    toolRead:
+      "Ler arquivos de texto, imagens ou PDFs — retorna o conteudo com numeracao de linhas, com offset/limite opcional",
     toolWrite: "Criar um novo arquivo ou sobrescrever um existente com o conteudo completo",
-    toolEdit: "Fazer substituicoes precisas de strings em um arquivo; apenas o trecho correspondente e alterado",
-    toolApplyPatch: "Executar um script de patch no formato OpenAI que adiciona, remove, edita e renomeia arquivos no workspace em uma unica chamada",
-    toolGrep: "Busca por regex no conteudo dos arquivos (ripgrep), com filtros por tipo de arquivo ou diretorio",
+    toolEdit:
+      "Fazer substituicoes precisas de strings em um arquivo; apenas o trecho correspondente e alterado",
+    toolApplyPatch:
+      "Executar um script de patch no formato OpenAI que adiciona, remove, edita e renomeia arquivos no workspace em uma unica chamada",
+    toolGrep:
+      "Busca por regex no conteudo dos arquivos (ripgrep), com filtros por tipo de arquivo ou diretorio",
     toolFind: "Encontrar caminhos de arquivos por padrao glob (ex.: src/**/*.ts)",
     toolLs: "Listar arquivos e subdiretorios sob um caminho para explorar a estrutura do projeto",
     toolExec: "Executar comandos shell (Bash) no workspace — build, test, git, etc.",
-    toolProcess: "Iniciar, inspecionar e parar processos em segundo plano (servidores de dev, tarefas longas)",
+    toolProcess:
+      "Iniciar, inspecionar e parar processos em segundo plano (servidores de dev, tarefas longas)",
     toolWebSearch: "Busca web ao vivo retornando titulos, trechos e links",
     toolWebFetch: "Buscar a pagina de uma URL como texto — util para ler docs ou respostas de API",
     toolMemorySearch: "Busca semantica na memoria de longo prazo para recuperar contexto relevante",
-    toolMemoryGet: "Ler uma entrada de memoria salva pelo nome (preferencias do usuario, contexto do projeto, etc.)",
+    toolMemoryGet:
+      "Ler uma entrada de memoria salva pelo nome (preferencias do usuario, contexto do projeto, etc.)",
     toolSessionsList: "Listar todas as sessoes do agente atual",
-    toolSessionsHistory: "Ler o historico completo de mensagens de uma sessao para contexto ou continuacao",
+    toolSessionsHistory:
+      "Ler o historico completo de mensagens de uma sessao para contexto ou continuacao",
     toolSessionsSend: "Postar uma mensagem de texto ou rich media em uma sessao",
     toolSessionsSpawn: "Criar uma nova sessao de sub-agente e delegar uma subtarefa",
-    toolSubagents: "Inspecionar e controlar sub-agentes em execucao (status, parar, instrucoes de acompanhamento)",
+    toolSubagents:
+      "Inspecionar e controlar sub-agentes em execucao (status, parar, instrucoes de acompanhamento)",
     toolSessionStatus: "Verificar se uma sessao esta ociosa, em execucao ou aguardando entrada",
-    toolMessage: "Acoes de mensageria do canal (responder, encaminhar, reacoes, desfazer envio, etc.)",
-    toolCron: "Criar, listar e remover tarefas agendadas via cron para execucoes autonomas do agente",
-    toolGateway: "Gerenciamento do gateway — reiniciar canal, sincronizar configuracao, atualizar rotas",
-    toolBrowser: "Controlar um navegador headless para login, cliques, preenchimento de formularios e capturas de tela",
+    toolMessage:
+      "Acoes de mensageria do canal (responder, encaminhar, reacoes, desfazer envio, etc.)",
+    toolCron:
+      "Criar, listar e remover tarefas agendadas via cron para execucoes autonomas do agente",
+    toolGateway:
+      "Gerenciamento do gateway — reiniciar canal, sincronizar configuracao, atualizar rotas",
+    toolBrowser:
+      "Controlar um navegador headless para login, cliques, preenchimento de formularios e capturas de tela",
     toolCanvas: "Renderizar conteudo visual estruturado em um canvas para UIs interativas",
-    toolNodes: "Gerenciar nos e dispositivos em execucao (status, atribuicao de tarefas, online/offline)",
+    toolNodes:
+      "Gerenciar nos e dispositivos em execucao (status, atribuicao de tarefas, online/offline)",
     toolAgentsList: "Listar todos os agentes do tenant atual com nome, modelo e status",
-    toolImage: "Compreensao de imagens — reconhecer objetos/cenas, extrair texto, responder perguntas visuais",
+    toolImage:
+      "Compreensao de imagens — reconhecer objetos/cenas, extrair texto, responder perguntas visuais",
     toolTts: "Converter texto em audio de fala com vozes selecionaveis",
     selectAgent: "Selecionar agente...",
     noAgentsAvailable: "Nenhum agente disponível. Crie um no Gerenciamento de Agentes.",
@@ -581,7 +617,7 @@ export const pt_BR: TranslationMap = {
     createAgent: "Criar Agente",
     cancel: "Cancelar",
     loading: "Carregando...",
-    empty: "Nenhum agente ainda. Clique em \"Criar Agente\" para adicionar.",
+    empty: 'Nenhum agente ainda. Clique em "Criar Agente" para adicionar.',
     configuredCount: "Agentes configurados: {count}",
     selectToView: "Selecione um agente para ver os detalhes",
     createdAt: "Criado em",
@@ -596,7 +632,8 @@ export const pt_BR: TranslationMap = {
     loadFailed: "Falha ao carregar lista de agentes",
     saveFailed: "Falha ao salvar",
     deleteFailed: "Falha ao excluir",
-    deleteInUse: "Não é possível excluir: agente está vinculado ao(s) canal(is): {channels}. Por favor, desvincule ou exclua o(s) canal(is) primeiro.",
+    deleteInUse:
+      "Não é possível excluir: agente está vinculado ao(s) canal(is): {channels}. Por favor, desvincule ou exclua o(s) canal(is) primeiro.",
     agentCreated: "Agente criado",
     agentUpdated: "Agente atualizado",
     agentDeleted: "Agente {name} excluído",
@@ -609,7 +646,8 @@ export const pt_BR: TranslationMap = {
     agentDisplayName: "Nome do Agente",
     agentDisplayNamePlaceholder: "Digite o nome do agente",
     agentIdPlaceholder: "Digite o ID do agente",
-    agentIdHint: "Apenas letras minúsculas, dígitos, hífens e sublinhados. Gerado automaticamente a partir do nome.",
+    agentIdHint:
+      "Apenas letras minúsculas, dígitos, hífens e sublinhados. Gerado automaticamente a partir do nome.",
     agentIdReadonly: "ID do agente não pode ser alterado após a criação",
     agentIdPattern: "Apenas letras minúsculas, dígitos, hífens e sublinhados, 1-64 caracteres",
     nameRequired: "Digite o nome do agente",
@@ -627,7 +665,8 @@ export const pt_BR: TranslationMap = {
     fallbackLabel: "Modelo reserva",
     setAsDefault: "Definir padrão",
     fallbackN: "Reserva #{n}",
-    fallbackExplain: "Quando o modelo padrão não estiver disponível, os modelos reserva serão tentados em sequência",
+    fallbackExplain:
+      "Quando o modelo padrão não estiver disponível, os modelos reserva serão tentados em sequência",
     noChannels: "Este agente não está vinculado a nenhum canal",
     channelActive: "Ativo",
     channelInactive: "Inativo",
@@ -642,7 +681,8 @@ export const pt_BR: TranslationMap = {
     systemPromptPlaceholder: "Digite o prompt do sistema...",
     toolAccess: "Acesso a Ferramentas",
     toolsEnabled: "{enabled}/{total} habilitadas",
-    toolsHint: "Todas as ferramentas permitidas por padrão. Desmarque para negar acesso do agente à ferramenta (restrição rígida).",
+    toolsHint:
+      "Todas as ferramentas permitidas por padrão. Desmarque para negar acesso do agente à ferramenta (restrição rígida).",
     enableAll: "Habilitar Todas",
     disableAll: "Desabilitar Todas",
     toolsReset: "Redefinir",
@@ -661,33 +701,47 @@ export const pt_BR: TranslationMap = {
     toolGroupNodes: "Nos",
     toolGroupMedia: "Midia",
     toolGroupOther: "Outros",
-    toolRead: "Ler arquivos de texto, imagens ou PDFs — retorna o conteudo com numeracao de linhas, com offset/limite opcional",
+    toolRead:
+      "Ler arquivos de texto, imagens ou PDFs — retorna o conteudo com numeracao de linhas, com offset/limite opcional",
     toolWrite: "Criar um novo arquivo ou sobrescrever um existente com o conteudo completo",
-    toolEdit: "Fazer substituicoes precisas de strings em um arquivo; apenas o trecho correspondente e alterado",
-    toolApplyPatch: "Executar um script de patch no formato OpenAI que adiciona, remove, edita e renomeia arquivos no workspace em uma unica chamada",
-    toolGrep: "Busca por regex no conteudo dos arquivos (ripgrep), com filtros por tipo de arquivo ou diretorio",
+    toolEdit:
+      "Fazer substituicoes precisas de strings em um arquivo; apenas o trecho correspondente e alterado",
+    toolApplyPatch:
+      "Executar um script de patch no formato OpenAI que adiciona, remove, edita e renomeia arquivos no workspace em uma unica chamada",
+    toolGrep:
+      "Busca por regex no conteudo dos arquivos (ripgrep), com filtros por tipo de arquivo ou diretorio",
     toolFind: "Encontrar caminhos de arquivos por padrao glob (ex.: src/**/*.ts)",
     toolLs: "Listar arquivos e subdiretorios sob um caminho para explorar a estrutura do projeto",
     toolExec: "Executar comandos shell (Bash) no workspace — build, test, git, etc.",
-    toolProcess: "Iniciar, inspecionar e parar processos em segundo plano (servidores de dev, tarefas longas)",
+    toolProcess:
+      "Iniciar, inspecionar e parar processos em segundo plano (servidores de dev, tarefas longas)",
     toolWebSearch: "Busca web ao vivo retornando titulos, trechos e links",
     toolWebFetch: "Buscar a pagina de uma URL como texto — util para ler docs ou respostas de API",
     toolMemorySearch: "Busca semantica na memoria de longo prazo para recuperar contexto relevante",
-    toolMemoryGet: "Ler uma entrada de memoria salva pelo nome (preferencias do usuario, contexto do projeto, etc.)",
+    toolMemoryGet:
+      "Ler uma entrada de memoria salva pelo nome (preferencias do usuario, contexto do projeto, etc.)",
     toolSessionsList: "Listar todas as sessoes do agente atual",
-    toolSessionsHistory: "Ler o historico completo de mensagens de uma sessao para contexto ou continuacao",
+    toolSessionsHistory:
+      "Ler o historico completo de mensagens de uma sessao para contexto ou continuacao",
     toolSessionsSend: "Postar uma mensagem de texto ou rich media em uma sessao",
     toolSessionsSpawn: "Criar uma nova sessao de sub-agente e delegar uma subtarefa",
-    toolSubagents: "Inspecionar e controlar sub-agentes em execucao (status, parar, instrucoes de acompanhamento)",
+    toolSubagents:
+      "Inspecionar e controlar sub-agentes em execucao (status, parar, instrucoes de acompanhamento)",
     toolSessionStatus: "Verificar se uma sessao esta ociosa, em execucao ou aguardando entrada",
-    toolMessage: "Acoes de mensageria do canal (responder, encaminhar, reacoes, desfazer envio, etc.)",
-    toolCron: "Criar, listar e remover tarefas agendadas via cron para execucoes autonomas do agente",
-    toolGateway: "Gerenciamento do gateway — reiniciar canal, sincronizar configuracao, atualizar rotas",
-    toolBrowser: "Controlar um navegador headless para login, cliques, preenchimento de formularios e capturas de tela",
+    toolMessage:
+      "Acoes de mensageria do canal (responder, encaminhar, reacoes, desfazer envio, etc.)",
+    toolCron:
+      "Criar, listar e remover tarefas agendadas via cron para execucoes autonomas do agente",
+    toolGateway:
+      "Gerenciamento do gateway — reiniciar canal, sincronizar configuracao, atualizar rotas",
+    toolBrowser:
+      "Controlar um navegador headless para login, cliques, preenchimento de formularios e capturas de tela",
     toolCanvas: "Renderizar conteudo visual estruturado em um canvas para UIs interativas",
-    toolNodes: "Gerenciar nos e dispositivos em execucao (status, atribuicao de tarefas, online/offline)",
+    toolNodes:
+      "Gerenciar nos e dispositivos em execucao (status, atribuicao de tarefas, online/offline)",
     toolAgentsList: "Listar todos os agentes do tenant atual com nome, modelo e status",
-    toolImage: "Compreensao de imagens — reconhecer objetos/cenas, extrair texto, responder perguntas visuais",
+    toolImage:
+      "Compreensao de imagens — reconhecer objetos/cenas, extrair texto, responder perguntas visuais",
     toolTts: "Converter texto em audio de fala com vozes selecionaveis",
   },
   logs: {
@@ -763,17 +817,22 @@ export const pt_BR: TranslationMap = {
     skillLabelFeishuTask: "Tarefas",
     skillLabelFeishuUpdateDoc: "Atualizar Doc",
     skillLabelFeishuWiki: "Wiki",
-    skillCodingAgent: "Delegar tarefas de código ao Claude Code/Codex: novos recursos, revisões de PR, refatoração",
-    skillHealthcheck: "Auditoria e hardening de segurança do host: SSH, firewall, atualizações e exposição de risco",
-    skillMcporter: "Listar, configurar, autenticar e chamar servidores e ferramentas MCP via mcporter CLI",
-    skillMemoryManager: "Protocolo de memória em 3 etapas: pesquisar contexto antes, salvar decisões depois",
+    skillCodingAgent:
+      "Delegar tarefas de código ao Claude Code/Codex: novos recursos, revisões de PR, refatoração",
+    skillHealthcheck:
+      "Auditoria e hardening de segurança do host: SSH, firewall, atualizações e exposição de risco",
+    skillMcporter:
+      "Listar, configurar, autenticar e chamar servidores e ferramentas MCP via mcporter CLI",
+    skillMemoryManager:
+      "Protocolo de memória em 3 etapas: pesquisar contexto antes, salvar decisões depois",
     skillPingtest: "Teste de eco simples: retorna sua mensagem com timestamp para depuração",
     skillSessionLogs: "Pesquisar e analisar logs de sessões anteriores com jq e ripgrep",
     skillSkillCreator: "Projetar e empacotar AgentSkills com scripts, referências e assets",
     skillWeather: "Obter clima e previsões via wttr.in, sem necessidade de API key",
     skillFeishuAskUser: "Fazer perguntas via cartão interativo Feishu e aguardar resposta",
     skillFeishuAuth: "Concluir autorização OAuth pessoal do Feishu",
-    skillFeishuBitable: "CRUD completo para Feishu Bitable: apps, tabelas, campos, registros e visualizações",
+    skillFeishuBitable:
+      "CRUD completo para Feishu Bitable: apps, tabelas, campos, registros e visualizações",
     skillFeishuCalendar: "CRUD de calendário e eventos Feishu com gerenciamento de participantes",
     skillFeishuChat: "Pesquisar grupos Feishu, obter detalhes e listas de membros",
     skillFeishuCreateDoc: "Criar um documento na nuvem Feishu",
@@ -840,7 +899,8 @@ export const pt_BR: TranslationMap = {
     loading: "Carregando...",
     loadFailed: "Falha ao carregar",
     loadDetailFailed: "Falha ao carregar detalhes",
-    empty: "Nenhum registro de interacao ainda. Cada interacao entre o sistema e o LLM e registrada automaticamente aqui.",
+    empty:
+      "Nenhum registro de interacao ainda. Cada interacao entre o sistema e o LLM e registrada automaticamente aqui.",
     noRecords: "Nenhum registro de interacao",
     filterAgent: "ID do Agente:",
     filterAgentPlaceholder: "Digite o ID do agente",
@@ -941,12 +1001,18 @@ export const pt_BR: TranslationMap = {
   },
   errors: {
     quotaExceeded: {
-      agents: "Cota de agents atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
-      channels: "Cota de canais atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
-      users: "Cota de usuários atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
-      tokensPerMonth: "Cota mensal de tokens atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
-      cronJobs: "Cota de tarefas agendadas atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
-      generic: "Cota do plano atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
+      agents:
+        "Cota de agents atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
+      channels:
+        "Cota de canais atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
+      users:
+        "Cota de usuários atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
+      tokensPerMonth:
+        "Cota mensal de tokens atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
+      cronJobs:
+        "Cota de tarefas agendadas atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
+      generic:
+        "Cota do plano atingida ({current}/{max}). <a href='{contactLink}' target='_blank' rel='noopener noreferrer'>Entre em contato com o administrador</a> para fazer upgrade do plano.",
     },
   },
   tenantSettings: {
@@ -955,7 +1021,8 @@ export const pt_BR: TranslationMap = {
     namePlaceholder: "Digite o nome da empresa",
     identityPrompt: "Identidade da Empresa",
     identityPromptPlaceholder: "Descreva a identidade da empresa...",
-    identityPromptHint: "Este conteudo sera injetado como contexto empresarial em todos os prompts do sistema de IA",
+    identityPromptHint:
+      "Este conteudo sera injetado como contexto empresarial em todos os prompts do sistema de IA",
     save: "Salvar Configuracoes",
     saving: "Salvando...",
     saved: "Configuracoes salvas",
@@ -968,7 +1035,8 @@ export const pt_BR: TranslationMap = {
     memorySaving: "Salvando...",
     memorySaved: "Memoria da empresa salva",
     memorySaveFailed: "Falha ao salvar memoria da empresa",
-    memoryHint: "Este conteudo e mantido automaticamente pelos assistentes de IA e pode ser editado manualmente.",
+    memoryHint:
+      "Este conteudo e mantido automaticamente pelos assistentes de IA e pode ser editado manualmente.",
     tenantIdLabel: "ID do tenant:",
     tenantIdCopy: "Copiar",
     tenantIdCopied: "Copiado",
@@ -1017,10 +1085,12 @@ export const pt_BR: TranslationMap = {
     errRequired: "Por favor, preencha {field}",
     errEmailInvalid: "Por favor, insira um endereco de e-mail valido",
     errPasswordTooShort: "A senha deve ter pelo menos 8 caracteres",
-    errPasswordWeak: "A senha deve ter pelo menos 8 caracteres e incluir maiusculas, minusculas, numeros e caracteres especiais",
+    errPasswordWeak:
+      "A senha deve ter pelo menos 8 caracteres e incluir maiusculas, minusculas, numeros e caracteres especiais",
     forgotPassword: "Esqueceu a senha?",
     pendingVerification: "Verifique seu email antes de entrar",
-    tenantSuspended: "Esta organização foi suspensa. Entre em contato com o administrador da plataforma.",
+    tenantSuspended:
+      "Esta organização foi suspensa. Entre em contato com o administrador da plataforma.",
     rateLimited: "Muitas tentativas de login, tente novamente mais tarde",
     themeLight: "Claro",
     themeSystem: "Auto",
@@ -1043,7 +1113,8 @@ export const pt_BR: TranslationMap = {
       feat3Title: "Memória Hierárquica",
       feat3Desc: "Setor → Empresa → Departamento → Pessoal.",
       pitch: "Um cadastro, toda a equipe pronta",
-      pitchDesc: "Após criar um workspace, cada membro pode usar imediatamente — sem configuração individual",
+      pitchDesc:
+        "Após criar um workspace, cada membro pode usar imediatamente — sem configuração individual",
     },
   },
   auth: {
@@ -1056,7 +1127,8 @@ export const pt_BR: TranslationMap = {
     policy: {
       tooShort: "A senha deve ter pelo menos 8 caracteres",
       tooLong: "A senha deve ter no maximo 128 caracteres",
-      missingClasses: "A senha deve conter pelo menos 3 de 4 classes: maiusculas, minusculas, numeros, caracteres especiais",
+      missingClasses:
+        "A senha deve conter pelo menos 3 de 4 classes: maiusculas, minusculas, numeros, caracteres especiais",
       repeatedChars: "A senha nao pode conter 3 ou mais caracteres identicos consecutivos",
       hint: "Pelo menos 8 caracteres, incluindo pelo menos 3 classes: maiusculas, minusculas, numeros, especiais",
     },
@@ -1065,10 +1137,12 @@ export const pt_BR: TranslationMap = {
       subtitle: "Digite o email da sua conta e enviaremos um link para redefinir a senha.",
       checking: "Verificando metodos de redefinicao disponiveis…",
       noEmailTitle: "Esqueceu a senha",
-      noEmailBody: "Esta instalacao nao tem servico de email configurado, portanto a redefinicao automatica nao esta disponivel.",
+      noEmailBody:
+        "Esta instalacao nao tem servico de email configurado, portanto a redefinicao automatica nao esta disponivel.",
       contactAdmin: "Entre em contato com o administrador da plataforma para redefinir sua senha.",
       sentTitle: "Enviado",
-      sentBody: "Se essa conta existir, enviamos um link de redefinicao. Verifique sua caixa de entrada — o link expira em 30 minutos.",
+      sentBody:
+        "Se essa conta existir, enviamos um link de redefinicao. Verifique sua caixa de entrada — o link expira em 30 minutos.",
       emailLabel: "Email",
       emailPlaceholder: "you@example.com",
       submit: "Enviar link de redefinicao",
@@ -1089,7 +1163,8 @@ export const pt_BR: TranslationMap = {
     },
     tempView: {
       title: "Senha temporaria",
-      subtitle: "Esta e sua senha temporaria de uso unico. Esta pagina so pode ser exibida uma vez.",
+      subtitle:
+        "Esta e sua senha temporaria de uso unico. Esta pagina so pode ser exibida uma vez.",
       checking: "Buscando senha temporaria…",
       invalidTitle: "Nao foi possivel exibir",
       linkExpired: "Link expirado ou ja utilizado",
@@ -1101,7 +1176,8 @@ export const pt_BR: TranslationMap = {
     change: {
       title: "Alterar senha",
       forcedTitle: "Por favor altere sua senha",
-      forcedSubtitle: "Por seguranca da conta, voce deve alterar sua senha antes de usar o console.",
+      forcedSubtitle:
+        "Por seguranca da conta, voce deve alterar sua senha antes de usar o console.",
       currentLabel: "Senha atual",
       currentRequired: "Digite sua senha atual",
       cannotReuse: "A nova senha nao pode ser igual a atual",
@@ -1118,9 +1194,42 @@ export const pt_BR: TranslationMap = {
       changeNow: "Alterar agora",
       closeLabel: "Fechar",
     },
-    sessions: { title: "Sessoes ativas", subtitle: "Estes sao os dispositivos conectados a sua conta.", noSessions: "Nenhuma sessao ativa.", currentDevice: "(este dispositivo)", revoke: "Sair", revokeAllOthers: "Sair de todos os outros dispositivos" },
-    verify: { pendingTitle: "Verifique seu email", pendingBody: "Enviamos um email de verificacao. Clique no link para ativar sua conta.", resendBtn: "Reenviar email de verificacao", resent: "Email de verificacao reenviado.", invalidLink: "Link de verificacao invalido", doneTitle: "Email verificado", doneBody: "Seu email foi verificado. Agora voce pode entrar.", failedTitle: "Verificacao falhou" },
-    mfa: { setupTitle: "Ativar autenticacao em duas etapas", setupSubtitle: "A autenticacao em duas etapas adiciona seguranca extra a sua conta.", step1: "Passo 1: Escaneie o QR code", scanHint: "Use o Google Authenticator ou outro app TOTP.", manualHint: "Nao consegue escanear? Insira a chave manualmente", step2: "Passo 2: Salve os codigos de backup", backupHint: "Guarde esses codigos em um local seguro.", step3: "Passo 3: Insira o codigo de verificacao", codeLabel: "Codigo de 6 digitos", invalidCode: "Insira um codigo valido", verifyBtn: "Verificar e ativar", enabledTitle: "Autenticacao em duas etapas ativada", enabledBody: "Sua conta agora esta protegida por 2FA.", challengeTitle: "Autenticacao em duas etapas", challengeSubtitle: "Insira o codigo de 6 digitos do seu app autenticador.", backupCodeHint: "Voce tambem pode inserir um codigo de backup de 8 caracteres." },
+    sessions: {
+      title: "Sessoes ativas",
+      subtitle: "Estes sao os dispositivos conectados a sua conta.",
+      noSessions: "Nenhuma sessao ativa.",
+      currentDevice: "(este dispositivo)",
+      revoke: "Sair",
+      revokeAllOthers: "Sair de todos os outros dispositivos",
+    },
+    verify: {
+      pendingTitle: "Verifique seu email",
+      pendingBody: "Enviamos um email de verificacao. Clique no link para ativar sua conta.",
+      resendBtn: "Reenviar email de verificacao",
+      resent: "Email de verificacao reenviado.",
+      invalidLink: "Link de verificacao invalido",
+      doneTitle: "Email verificado",
+      doneBody: "Seu email foi verificado. Agora voce pode entrar.",
+      failedTitle: "Verificacao falhou",
+    },
+    mfa: {
+      setupTitle: "Ativar autenticacao em duas etapas",
+      setupSubtitle: "A autenticacao em duas etapas adiciona seguranca extra a sua conta.",
+      step1: "Passo 1: Escaneie o QR code",
+      scanHint: "Use o Google Authenticator ou outro app TOTP.",
+      manualHint: "Nao consegue escanear? Insira a chave manualmente",
+      step2: "Passo 2: Salve os codigos de backup",
+      backupHint: "Guarde esses codigos em um local seguro.",
+      step3: "Passo 3: Insira o codigo de verificacao",
+      codeLabel: "Codigo de 6 digitos",
+      invalidCode: "Insira um codigo valido",
+      verifyBtn: "Verificar e ativar",
+      enabledTitle: "Autenticacao em duas etapas ativada",
+      enabledBody: "Sua conta agora esta protegida por 2FA.",
+      challengeTitle: "Autenticacao em duas etapas",
+      challengeSubtitle: "Insira o codigo de 6 digitos do seu app autenticador.",
+      backupCodeHint: "Voce tambem pode inserir um codigo de backup de 8 caracteres.",
+    },
   },
   models: {
     title: "Gerenciamento de Modelos",
@@ -1128,7 +1237,7 @@ export const pt_BR: TranslationMap = {
     addProvider: "Adicionar Provedor",
     cancel: "Cancelar",
     loading: "Carregando...",
-    empty: "Nenhuma configuração de modelo ainda. Clique em \"Adicionar Provedor\" para começar.",
+    empty: 'Nenhuma configuração de modelo ainda. Clique em "Adicionar Provedor" para começar.',
     editTitle: "Editar Configuração de Modelo",
     createTitle: "Adicionar Configuração de Modelo",
     providerType: "Tipo de Provedor",
@@ -1168,12 +1277,13 @@ export const pt_BR: TranslationMap = {
     configUpdated: "Configuração de modelo atualizada",
     configCreated: "Configuração de modelo criada",
     configDeleted: "Configuracao de modelo {name} excluida",
-    confirmDelete: "Excluir configuração de modelo \"{name}\"?",
+    confirmDelete: 'Excluir configuração de modelo "{name}"?',
     saveFailed: "Falha ao salvar",
     loadFailed: "Falha ao carregar configurações de modelo",
     toggleFailed: "Falha ao alternar status",
     deleteFailed: "Falha ao excluir",
-    deleteInUse: "Não é possível excluir: modelo em uso pelo(s) agent(s): {agents}. Por favor, desvincule ou exclua o(s) agent(s) primeiro.",
+    deleteInUse:
+      "Não é possível excluir: modelo em uso pelo(s) agent(s): {agents}. Por favor, desvincule ou exclua o(s) agent(s) primeiro.",
     removeModelInUse: "Não é possível remover modelo(s) em uso pelo(s) agent(s): {agents}",
     needOneModel: "Adicione pelo menos um modelo",
     modelIdRequired: "Por favor, insira o ID do modelo",
@@ -1220,20 +1330,23 @@ export const pt_BR: TranslationMap = {
       },
       regenerate: {
         confirmTitle: "Regenerar Secret?",
-        confirmMessage: "O secret atual entrará em um período de carência de 24 horas e depois será invalidado. Suas integrações devem ser atualizadas antes que esse prazo expire.",
+        confirmMessage:
+          "O secret atual entrará em um período de carência de 24 horas e depois será invalidado. Suas integrações devem ser atualizadas antes que esse prazo expire.",
         confirmBtn: "Regenerar",
         error: "Falha ao regenerar o secret",
       },
       delete: {
         confirmTitle: "Excluir Serviço de IA?",
-        confirmMessage: "Excluir \"{name}\"? Essa ação não pode ser desfeita.",
+        confirmMessage: 'Excluir "{name}"? Essa ação não pode ser desfeita.',
         confirmBtn: "Excluir",
-        activeSessionsError: "Não é possível excluir: este Serviço de IA possui sessões ativas. Feche-as primeiro.",
+        activeSessionsError:
+          "Não é possível excluir: este Serviço de IA possui sessões ativas. Feche-as primeiro.",
         error: "Falha ao excluir Serviço de IA",
       },
       secretDialog: {
         title: "Credenciais de API",
-        warning: "Esta é sua única chance de copiar o App Secret. Ele é armazenado como hash unidirecional — o servidor não pode mostrá-lo novamente.",
+        warning:
+          "Esta é sua única chance de copiar o App Secret. Ele é armazenado como hash unidirecional — o servidor não pode mostrá-lo novamente.",
         appId: "App ID",
         appSecret: "App Secret",
         endpointUrl: "URL completa do endpoint",

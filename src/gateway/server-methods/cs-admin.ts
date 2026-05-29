@@ -4,9 +4,6 @@
  * 客服管理后台 RPC 处理器。
  *
  * Methods:
- *   cs.knowledge.list    — list KB files for tenant
- *   cs.knowledge.upload  — upload / replace a KB .md file
- *   cs.knowledge.delete  — delete a KB file
  *   cs.sessions.list     — paginated list of CS sessions
  *   cs.session.messages  — messages for a specific session
  *   cs.config.get        — read tenant CS config (feishu credentials)
@@ -16,14 +13,17 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
+import { resolveTenantDir } from "../../config/sessions/tenant-paths.js";
+import {
+  DEFAULT_CS_BASE_PROMPT,
+  renderCSBasePrompt,
+} from "../../customer-service/rag/cs-system-prompt.js";
+import { listCSMessages, getLastCSMessageForSession } from "../../db/models/cs-message.js";
+import { listCSSessions } from "../../db/models/cs-session.js";
+import { getTenantById } from "../../db/models/tenant.js";
+import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
 import type { GatewayRequestHandlers } from "./types.js";
-import { resolveTenantDir } from "../../config/sessions/tenant-paths.js";
-import { listCSSessions } from "../../db/models/cs-session.js";
-import { listCSMessages, getLastCSMessageForSession } from "../../db/models/cs-message.js";
-import { getTenantById } from "../../db/models/tenant.js";
-import { DEFAULT_CS_BASE_PROMPT, renderCSBasePrompt } from "../../customer-service/rag/cs-system-prompt.js";
-import { createSubsystemLogger } from "../../logging/subsystem.js";
 
 const log = createSubsystemLogger("cs-admin-handler");
 
@@ -112,156 +112,7 @@ async function writeCSConfig(tenantId: string, config: CSConfig): Promise<void> 
   await fs.writeFile(filePath, JSON.stringify(config, null, 2), "utf-8");
 }
 
-/** Resolve the tenant-level CS knowledge directory.
- *  ~/.enclaws/tenants/{tenantId}/customer-service/memory/
- *  租户级客服知识库目录 — 与 cs-agent-runner 保持一致。
- */
-function csKnowledgeDir(tenantId: string): string {
-  return path.join(resolveTenantDir(tenantId), "customer-service", "memory");
-}
-
-/** Sanitize file name: allow only safe chars, force .md extension. */
-function sanitizeFileName(raw: string): string | null {
-  const base = path.basename(raw).replace(/[^a-zA-Z0-9\-_.]/g, "");
-  if (!base) {return null;}
-  return base.endsWith(".md") ? base : `${base}.md`;
-}
-
 export const csAdminHandlers: GatewayRequestHandlers = {
-  /**
-   * cs.knowledge.list — list all KB files for the tenant.
-   *
-   * Params: { tenantId }
-   * Response: { files: [{ name, size, updatedAt }] }
-   */
-  "cs.knowledge.list": async ({ params, respond, context }) => {
-    const tenantId = params.tenantId as string | undefined;
-    if (!tenantId) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "tenantId is required"));
-      return;
-    }
-    try {
-      const dir = csKnowledgeDir(tenantId);
-      await fs.mkdir(dir, { recursive: true });
-      const entries = await fs.readdir(dir, { withFileTypes: true });
-      const files = await Promise.all(
-        entries
-          .filter((e) => e.isFile() && e.name.endsWith(".md"))
-          .map(async (e) => {
-            const stat = await fs.stat(path.join(dir, e.name));
-            return { name: e.name, size: stat.size, updatedAt: stat.mtime.toISOString() };
-          }),
-      );
-      respond(true, { files });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      log.error(`cs.knowledge.list failed: ${message}`);
-      respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, "Failed to list KB files"));
-    }
-  },
-
-  /**
-   * cs.knowledge.upload — write a KB file (creates or overwrites).
-   *
-   * Params: { tenantId, name, content }
-   * Response: { name, size }
-   */
-  "cs.knowledge.upload": async ({ params, respond, context }) => {
-    const tenantId = params.tenantId as string | undefined;
-    const rawName = params.name as string;
-    const content = params.content as string;
-
-    if (!tenantId || !rawName || typeof content !== "string") {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "tenantId, name, and content are required"));
-      return;
-    }
-
-    const fileName = sanitizeFileName(rawName);
-    if (!fileName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Invalid file name"));
-      return;
-    }
-
-    try {
-      const dir = csKnowledgeDir(tenantId);
-      await fs.mkdir(dir, { recursive: true });
-      const filePath = path.join(dir, fileName);
-      await fs.writeFile(filePath, content, "utf-8");
-      const stat = await fs.stat(filePath);
-      log.info(`cs.knowledge.upload: wrote ${fileName} (${stat.size}B) for tenant ${tenantId}`);
-      respond(true, { name: fileName, size: stat.size });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      log.error(`cs.knowledge.upload failed: ${message}`);
-      respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, "Failed to upload KB file"));
-    }
-  },
-
-  /**
-   * cs.knowledge.view — read raw content of a KB file.
-   *
-   * Params: { tenantId, name }
-   * Response: { name, content }
-   */
-  "cs.knowledge.view": async ({ params, respond }) => {
-    const tenantId = params.tenantId as string | undefined;
-    const rawName = params.name as string;
-
-    if (!tenantId || !rawName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "tenantId and name are required"));
-      return;
-    }
-
-    const fileName = sanitizeFileName(rawName);
-    if (!fileName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Invalid file name"));
-      return;
-    }
-
-    try {
-      const filePath = path.join(csKnowledgeDir(tenantId), fileName);
-      const content = await fs.readFile(filePath, "utf-8");
-      respond(true, { name: fileName, content });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      log.error(`cs.knowledge.view failed: ${message}`);
-      respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, "Failed to read KB file"));
-    }
-  },
-
-  /**
-   * cs.knowledge.delete — remove a KB file.
-   *
-   * Params: { tenantId, name }
-   * Response: { ok: true }
-   */
-  "cs.knowledge.delete": async ({ params, respond, context }) => {
-    const tenantId = params.tenantId as string | undefined;
-    const rawName = params.name as string;
-
-    if (!tenantId || !rawName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "tenantId and name are required"));
-      return;
-    }
-
-    const fileName = sanitizeFileName(rawName);
-    if (!fileName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Invalid file name"));
-      return;
-    }
-
-    try {
-      const filePath = path.join(csKnowledgeDir(tenantId), fileName);
-      await fs.unlink(filePath);
-      log.info(`cs.knowledge.delete: removed ${fileName} for tenant ${tenantId}`);
-      respond(true, { ok: true });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      log.error(`cs.knowledge.delete failed: ${message}`);
-      respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, "Failed to delete KB file"));
-    }
-  },
-
   /**
    * cs.sessions.list — paginated list of CS sessions for the tenant.
    *
@@ -283,9 +134,7 @@ export const csAdminHandlers: GatewayRequestHandlers = {
       // Attach last message to each session for "last speaker" display in admin console.
       // Parallel fetch: one query per session, acceptable for page sizes ≤ 50.
       // 并行获取每个 session 最后一条消息，用于后台"最后发言方"列展示。
-      const lastMessages = await Promise.all(
-        sessions.map((s) => getLastCSMessageForSession(s.id)),
-      );
+      const lastMessages = await Promise.all(sessions.map((s) => getLastCSMessageForSession(s.id)));
       const sessionsWithLast = sessions.map((s, i) => ({
         ...s,
         lastMessage: lastMessages[i]
@@ -339,10 +188,7 @@ export const csAdminHandlers: GatewayRequestHandlers = {
       return;
     }
     try {
-      const [cfg, tenant] = await Promise.all([
-        readCSConfig(tenantId),
-        getTenantById(tenantId),
-      ]);
+      const [cfg, tenant] = await Promise.all([readCSConfig(tenantId), getTenantById(tenantId)]);
       const companyName = tenant?.name ?? "EC";
 
       // Mask appSecret for display — never send plaintext secret to frontend
@@ -371,10 +217,10 @@ export const csAdminHandlers: GatewayRequestHandlers = {
           channels: cfg.channels ?? [],
           notifyIntervalMinutes: cfg.notifyIntervalMinutes ?? 10,
           restrictions: {
-            disableSkills:       cfg.restrictions?.disableSkills       ?? true,
+            disableSkills: cfg.restrictions?.disableSkills ?? true,
             strictKnowledgeBase: cfg.restrictions?.strictKnowledgeBase ?? true,
-            disableMarkdown:     cfg.restrictions?.disableMarkdown     ?? true,
-            hideInternals:       cfg.restrictions?.hideInternals       ?? true,
+            disableMarkdown: cfg.restrictions?.disableMarkdown ?? true,
+            hideInternals: cfg.restrictions?.hideInternals ?? true,
           },
           companyName,
           customSystemPrompt: renderedPrompt,
@@ -413,9 +259,7 @@ export const csAdminHandlers: GatewayRequestHandlers = {
           appId: feishu.appId !== undefined ? feishu.appId : (existing.feishu?.appId ?? ""),
           // Only update appSecret if a non-empty value is provided
           // 只有用户显式传入非空值才更新 appSecret，否则保留旧值
-          appSecret: feishu.appSecret
-            ? feishu.appSecret
-            : (existing.feishu?.appSecret ?? ""),
+          appSecret: feishu.appSecret ? feishu.appSecret : (existing.feishu?.appSecret ?? ""),
           chatId: feishu.chatId !== undefined ? feishu.chatId : (existing.feishu?.chatId ?? ""),
         };
       }
@@ -441,13 +285,27 @@ export const csAdminHandlers: GatewayRequestHandlers = {
 
       // Update restrictions if provided — merge with existing, all fields optional
       // 只有传入时才更新限制项；逐字段合并，未传入的字段保留旧值
-      const incoming = params.restrictions as Partial<NonNullable<CSConfig["restrictions"]>> | undefined;
+      const incoming = params.restrictions as
+        | Partial<NonNullable<CSConfig["restrictions"]>>
+        | undefined;
       if (incoming !== undefined) {
         updated.restrictions = {
-          disableSkills:       incoming.disableSkills      !== undefined ? Boolean(incoming.disableSkills)      : (updated.restrictions?.disableSkills      ?? true),
-          strictKnowledgeBase: incoming.strictKnowledgeBase !== undefined ? Boolean(incoming.strictKnowledgeBase) : (updated.restrictions?.strictKnowledgeBase ?? true),
-          disableMarkdown:     incoming.disableMarkdown    !== undefined ? Boolean(incoming.disableMarkdown)    : (updated.restrictions?.disableMarkdown    ?? true),
-          hideInternals:       incoming.hideInternals      !== undefined ? Boolean(incoming.hideInternals)      : (updated.restrictions?.hideInternals      ?? true),
+          disableSkills:
+            incoming.disableSkills !== undefined
+              ? Boolean(incoming.disableSkills)
+              : (updated.restrictions?.disableSkills ?? true),
+          strictKnowledgeBase:
+            incoming.strictKnowledgeBase !== undefined
+              ? Boolean(incoming.strictKnowledgeBase)
+              : (updated.restrictions?.strictKnowledgeBase ?? true),
+          disableMarkdown:
+            incoming.disableMarkdown !== undefined
+              ? Boolean(incoming.disableMarkdown)
+              : (updated.restrictions?.disableMarkdown ?? true),
+          hideInternals:
+            incoming.hideInternals !== undefined
+              ? Boolean(incoming.hideInternals)
+              : (updated.restrictions?.hideInternals ?? true),
         };
       }
 
@@ -476,9 +334,8 @@ export const csAdminHandlers: GatewayRequestHandlers = {
    * Checks:
    *   1. Feishu credentials are set
    *   2. Feishu access token can be obtained (live API call)
-   *   3. CS knowledge base has at least one file
    *
-   * 连通性预检：飞书凭据有效性 + 知识库已上传。
+   * 连通性预检：飞书凭据有效性。
    *
    * Params: { tenantId }
    * Response: { checks: [{ name, ok, message }] }
@@ -519,7 +376,7 @@ export const csAdminHandlers: GatewayRequestHandlers = {
             }),
           },
         );
-        const data = await res.json() as { code?: number; msg?: string };
+        const data = (await res.json()) as { code?: number; msg?: string };
         const tokenOk = data.code === 0;
         checks.push({
           name: "飞书 API 连通",
@@ -535,24 +392,6 @@ export const csAdminHandlers: GatewayRequestHandlers = {
           message: `飞书 API 请求失败: ${err instanceof Error ? err.message : String(err)}`,
         });
       }
-    }
-
-    // Check 3: KB files uploaded
-    // 检查 3：知识库已上传文件
-    try {
-      const dir = csKnowledgeDir(tenantId);
-      await fs.mkdir(dir, { recursive: true });
-      const entries = await fs.readdir(dir);
-      const mdFiles = entries.filter((e) => e.endsWith(".md"));
-      checks.push({
-        name: "知识库",
-        ok: mdFiles.length > 0,
-        message: mdFiles.length > 0
-          ? `已上传 ${mdFiles.length} 个知识库文件`
-          : "暂无知识库文件，AI 将无法检索相关内容",
-      });
-    } catch {
-      checks.push({ name: "知识库", ok: false, message: "无法读取知识库目录" });
     }
 
     respond(true, { checks });
