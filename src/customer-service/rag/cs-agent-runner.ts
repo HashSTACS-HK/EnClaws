@@ -68,9 +68,10 @@ export async function runCSAgentReply(params: {
    */
   customSystemPrompt?: string;
   /**
-   * Behavior restrictions. All default to true (restricted / safe mode).
-   * Passed through from CSConfig.restrictions.
-   * 行为限制项，全部默认 true（受限/安全模式）。
+   * Behavior restrictions, passed through from CSConfig.restrictions.
+   * S2 defaults: strictKnowledgeBase + hideInternals ON; tools (disableSkills)
+   * + markdown (disableMarkdown) RELEASED (off / allowed unless explicitly set).
+   * 行为限制项：strictKB + hideInternals 默认开；工具与 Markdown 默认放开。
    */
   restrictions?: CSRestrictions;
   /**
@@ -80,9 +81,14 @@ export async function runCSAgentReply(params: {
   agentId?: string;
 }): Promise<CSAgentReplyResult> {
   const { tenantId, sessionId, customerMessage, visitorName, cfg } = params;
-  // disableSkills defaults to true (restricted mode). Code-level enforcement.
-  // disableSkills 默认 true（受限模式），代码层强制，不依赖 LLM 遵从。
-  const disableTools = params.restrictions?.disableSkills ?? true;
+  // S2: tools are RELEASED — the CS agent inherits the tools configured on the
+  // bound agent. Only force-disable when a tenant explicitly opts in via
+  // restrictions.disableSkills=true. (disableMessageTool stays true below: CS
+  // replies go out via the SSE response, the agent must not self-send messages.)
+  // S2 放开工具：CS agent 继承绑定 agent 的工具配置，仅当租户显式
+  // disableSkills=true 时才强制禁用。（disableMessageTool 仍为 true：
+  // 回复经 SSE 下发，agent 不得自行发消息。）
+  const disableTools = params.restrictions?.disableSkills ?? false;
 
   const agentId = params.agentId ?? resolveDefaultAgentId(cfg);
   // CS knowledge base is a shared tenant-level resource — NOT user-scoped workspace.
