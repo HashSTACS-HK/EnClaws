@@ -19,8 +19,23 @@ import {
   readConfigFileSnapshot,
   writeConfigFile,
 } from "../config/config.js";
+import { isMultiTenantMode } from "../config/multi-tenant.js";
 import { applyPluginAutoEnable } from "../config/plugin-auto-enable.js";
 import { resolveMainSessionKey } from "../config/sessions.js";
+import {
+  resolveTenantDevicesDir,
+  resolveTenantCredentialsDir,
+  resolveTenantCronDir,
+  resolveTenantAgentCronDir,
+  resolveTenantAgentCronStorePath,
+  resolveTenantAgentWorkspaceDir,
+  resolveTenantAgentSessionsDir,
+} from "../config/sessions/tenant-paths.js";
+import { CronService } from "../cron/service.js";
+import { resolveUserCronStorePath } from "../cron/store.js";
+import { isDbInitialized } from "../db/index.js";
+import { listTenants } from "../db/models/tenant.js";
+import { listUsers, seedUserDirFiles } from "../db/models/user.js";
 import { clearAgentRunContext, onAgentEvent } from "../infra/agent-events.js";
 import {
   ensureControlUiAssetsBuilt,
@@ -61,6 +76,7 @@ import { createAuthRateLimiter, type AuthRateLimiter } from "./auth-rate-limit.j
 import { startChannelHealthMonitor } from "./channel-health-monitor.js";
 import { startGatewayConfigReloader } from "./config-reload.js";
 import type { ControlUiRootState } from "./control-ui.js";
+import { startSessionCloser, stopSessionCloser } from "./cs-api/session-closer.js";
 import {
   GATEWAY_EVENT_UPDATE_AVAILABLE,
   type GatewayUpdateAvailableEventPayload,
@@ -72,21 +88,6 @@ import { createChannelManager } from "./server-channels.js";
 import { createAgentEventHandler } from "./server-chat.js";
 import { createGatewayCloseHandler } from "./server-close.js";
 import { buildGatewayCronService, buildTenantCronService } from "./server-cron.js";
-import { CronService } from "../cron/service.js";
-import { resolveUserCronStorePath } from "../cron/store.js";
-import {
-  resolveTenantDevicesDir,
-  resolveTenantCredentialsDir,
-  resolveTenantCronDir,
-  resolveTenantAgentCronDir,
-  resolveTenantAgentCronStorePath,
-  resolveTenantAgentWorkspaceDir,
-  resolveTenantAgentSessionsDir,
-} from "../config/sessions/tenant-paths.js";
-import { isMultiTenantMode } from "../config/multi-tenant.js";
-import { isDbInitialized } from "../db/index.js";
-import { listTenants } from "../db/models/tenant.js";
-import { listUsers, seedUserDirFiles } from "../db/models/user.js";
 import { startGatewayDiscovery } from "./server-discovery-runtime.js";
 import { applyGatewayLaneConcurrency } from "./server-lanes.js";
 import { startGatewayMaintenanceTimers } from "./server-maintenance.js";
@@ -216,8 +217,6 @@ export async function startGatewayServer(
 ): Promise<GatewayServer> {
   const minimalTestGateway =
     process.env.VITEST === "1" && process.env.ENCLAWS_TEST_MINIMAL_GATEWAY === "1";
-
-
 
   // Ensure all default port derivations (browser/canvas) see the actual runtime port.
   process.env.ENCLAWS_GATEWAY_PORT = String(port);
@@ -535,11 +534,15 @@ export async function startGatewayServer(
   const resolveTenantCron = (tenant: { tenantId: string; userId: string }) => {
     const key = `${tenant.tenantId}:${tenant.userId}`;
     let cached = tenantCronCache.get(key);
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
     // Skip cron init if the user's cron directory does not exist yet
     // (e.g. page-registered enterprise users whose dirs are created on-demand)
     const cronDir = resolveTenantCronDir(tenant.tenantId, tenant.userId);
-    if (!fs.existsSync(cronDir)) {return undefined;}
+    if (!fs.existsSync(cronDir)) {
+      return undefined;
+    }
     const tenantStorePath = resolveUserCronStorePath(tenant.tenantId, tenant.userId);
     const tenantCronState = buildTenantCronService({
       tenantId: tenant.tenantId,
@@ -551,9 +554,9 @@ export async function startGatewayServer(
       cronEnabled: cronState.cronEnabled,
     });
     // Start the tenant cron service so its timer is armed and jobs execute.
-    void tenantCronState.cron.start().catch((err) =>
-      logCron.error(`tenant cron start failed (${key}): ${String(err)}`),
-    );
+    void tenantCronState.cron
+      .start()
+      .catch((err) => logCron.error(`tenant cron start failed (${key}): ${String(err)}`));
     cached = { cron: tenantCronState.cron, cronStorePath: tenantCronState.storePath };
     tenantCronCache.set(key, cached);
     return cached;
@@ -564,7 +567,9 @@ export async function startGatewayServer(
   const resolveTenantAgentCron = (tenantId: string, agentId: string) => {
     const key = `${tenantId}:agent:${agentId}`;
     let cached = tenantAgentCronCache.get(key);
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
     const cronDir = resolveTenantAgentCronDir(tenantId, agentId);
     if (!fs.existsSync(cronDir)) {
       fs.mkdirSync(cronDir, { recursive: true });
@@ -573,7 +578,13 @@ export async function startGatewayServer(
     // cron runs can acquire the session write-lock without ENOENT.
     // Sessions live under tenants/{tid}/users/{agentId}/sessions/ (agentId is
     // used as the userId for agent-scoped cron).
-    const tenantAgentSessionsDir = resolveTenantAgentSessionsDir(tenantId, agentId, undefined, undefined, agentId);
+    const tenantAgentSessionsDir = resolveTenantAgentSessionsDir(
+      tenantId,
+      agentId,
+      undefined,
+      undefined,
+      agentId,
+    );
     if (!fs.existsSync(tenantAgentSessionsDir)) {
       fs.mkdirSync(tenantAgentSessionsDir, { recursive: true });
     }
@@ -587,9 +598,9 @@ export async function startGatewayServer(
       broadcast,
       cronEnabled: cronState.cronEnabled,
     });
-    void agentCronState.cron.start().catch((err) =>
-      logCron.error(`agent cron start failed (${key}): ${String(err)}`),
-    );
+    void agentCronState.cron
+      .start()
+      .catch((err) => logCron.error(`agent cron start failed (${key}): ${String(err)}`));
     cached = { cron: agentCronState.cron, cronStorePath: agentCronState.storePath };
     tenantAgentCronCache.set(key, cached);
     return cached;
@@ -603,7 +614,9 @@ export async function startGatewayServer(
     const prefix = `${tenantId}:agent:`;
     let total = 0;
     for (const [key, entry] of tenantAgentCronCache) {
-      if (!key.startsWith(prefix)) {continue;}
+      if (!key.startsWith(prefix)) {
+        continue;
+      }
       total += entry.cron.getInMemoryJobCount();
     }
     return total;
@@ -614,8 +627,14 @@ export async function startGatewayServer(
     channelLogs,
     channelRuntimeEnvs,
   });
-  const { getRuntimeSnapshot, startChannels, startChannel, stopChannel, reloadDbChannels, markChannelLoggedOut } =
-    channelManager;
+  const {
+    getRuntimeSnapshot,
+    startChannels,
+    startChannel,
+    stopChannel,
+    reloadDbChannels,
+    markChannelLoggedOut,
+  } = channelManager;
 
   if (!minimalTestGateway) {
     const machineDisplayName = await getMachineDisplayName();
@@ -718,6 +737,14 @@ export async function startGatewayServer(
         channelManager,
         checkIntervalMs: (healthCheckMinutes ?? 5) * 60_000,
       });
+
+  // CS-API auto-close cron (v1.2 §F state machine, Task 7): scans for cs-api
+  // sessions idle > 300s with no customer activity and closes them. Skipped in
+  // minimalTestGateway mode (unit tests bring their own DB lifecycle).
+  // cs-api 自动关闭 cron：300s 无客户消息的会话自动 close；测试模式跳过。
+  if (!minimalTestGateway) {
+    startSessionCloser();
+  }
 
   if (!minimalTestGateway && !isMultiTenantMode()) {
     void cron.start().catch((err) => logCron.error(`failed to start: ${String(err)}`));
@@ -954,8 +981,12 @@ export async function startGatewayServer(
       try {
         const { tenants } = await listTenants();
         if (tenants.length > 0) {
-          const { ensureSkillPacksForAllTenants } = await import("../agents/skill-pack-installer.js");
-          await ensureSkillPacksForAllTenants(tenants.map((t: { id: string }) => t.id), log);
+          const { ensureSkillPacksForAllTenants } =
+            await import("../agents/skill-pack-installer.js");
+          await ensureSkillPacksForAllTenants(
+            tenants.map((t: { id: string }) => t.id),
+            log,
+          );
         }
       } catch (err) {
         log.warn(`skill-pack startup check failed: ${String(err)}`);
@@ -1070,6 +1101,7 @@ export async function startGatewayServer(
       authRateLimiter?.dispose();
       browserAuthRateLimiter.dispose();
       channelHealthMonitor?.stop();
+      stopSessionCloser();
       clearSecretsRuntimeSnapshot();
       await close(opts);
     },

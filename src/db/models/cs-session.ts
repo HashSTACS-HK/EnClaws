@@ -4,9 +4,9 @@
  * 客服会话 CRUD，支持 PostgreSQL 和 SQLite 双后端。
  */
 
+import type { CSSession, CSSessionState } from "../../customer-service/types.js";
 import { query, getDbType, DB_SQLITE } from "../index.js";
 import { sqliteQuery } from "../sqlite/index.js";
-import type { CSSession, CSSessionState } from "../../customer-service/types.js";
 
 // ── CS-API session types (Agenora S2 jiumi) ─────────────────────────────────
 
@@ -54,7 +54,11 @@ export interface CsApiSession {
 function rowToSession(row: Record<string, unknown>): CSSession {
   const parseJson = (val: unknown, fallback: unknown) => {
     if (typeof val === "string") {
-      try { return JSON.parse(val); } catch { return fallback; }
+      try {
+        return JSON.parse(val);
+      } catch {
+        return fallback;
+      }
     }
     return val ?? fallback;
   };
@@ -91,7 +95,16 @@ export async function createCSSession(params: {
     sqliteQuery(
       `INSERT INTO cs_sessions (id, tenant_id, visitor_id, visitor_name, state, channel, tags, identity_anchors, metadata, created_at, updated_at)
        VALUES (?, ?, ?, ?, 'ai_active', ?, '[]', '{}', ?, ?, ?)`,
-      [id, params.tenantId, params.visitorId, params.visitorName ?? null, params.channel ?? "web_widget", JSON.stringify(params.metadata ?? {}), now, now],
+      [
+        id,
+        params.tenantId,
+        params.visitorId,
+        params.visitorName ?? null,
+        params.channel ?? "web_widget",
+        JSON.stringify(params.metadata ?? {}),
+        now,
+        now,
+      ],
     );
     return getCSSession(id) as Promise<CSSession>;
   }
@@ -100,7 +113,13 @@ export async function createCSSession(params: {
     `INSERT INTO cs_sessions (tenant_id, visitor_id, visitor_name, channel, metadata)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [params.tenantId, params.visitorId, params.visitorName ?? null, params.channel ?? "web_widget", JSON.stringify(params.metadata ?? {})],
+    [
+      params.tenantId,
+      params.visitorId,
+      params.visitorName ?? null,
+      params.channel ?? "web_widget",
+      JSON.stringify(params.metadata ?? {}),
+    ],
   );
   return rowToSession(result.rows[0]);
 }
@@ -152,15 +171,13 @@ export async function findActiveCSSession(
  * 把状态字面量直接写入 state 列：cs-api 用新四值枚举，S1 widget 仍用旧值。
  * DB 列无 CHECK 约束，rowToSession 不变，cs-api 出参经 dbStateToCsApi 归一化。
  */
-export async function updateCSSessionState(
-  id: string,
-  state: string,
-): Promise<void> {
+export async function updateCSSessionState(id: string, state: string): Promise<void> {
   if (getDbType() === DB_SQLITE) {
-    sqliteQuery(
-      "UPDATE cs_sessions SET state = ?, updated_at = ? WHERE id = ?",
-      [state, new Date().toISOString(), id],
-    );
+    sqliteQuery("UPDATE cs_sessions SET state = ?, updated_at = ? WHERE id = ?", [
+      state,
+      new Date().toISOString(),
+      id,
+    ]);
     return;
   }
   await query("UPDATE cs_sessions SET state = $1, updated_at = NOW() WHERE id = $2", [state, id]);
@@ -176,9 +193,17 @@ export async function updateCSSessionMeta(
   const values: unknown[] = [];
 
   if (getDbType() === DB_SQLITE) {
-    if (updates.tags) { sets.push("tags = ?"); values.push(JSON.stringify(updates.tags)); }
-    if (updates.identityAnchors) { sets.push("identity_anchors = ?"); values.push(JSON.stringify(updates.identityAnchors)); }
-    if (sets.length === 0) {return;}
+    if (updates.tags) {
+      sets.push("tags = ?");
+      values.push(JSON.stringify(updates.tags));
+    }
+    if (updates.identityAnchors) {
+      sets.push("identity_anchors = ?");
+      values.push(JSON.stringify(updates.identityAnchors));
+    }
+    if (sets.length === 0) {
+      return;
+    }
     sets.push("updated_at = ?");
     values.push(new Date().toISOString());
     values.push(id);
@@ -187,9 +212,19 @@ export async function updateCSSessionMeta(
   }
 
   let idx = 0;
-  if (updates.tags) { idx++; sets.push(`tags = $${idx}`); values.push(JSON.stringify(updates.tags)); }
-  if (updates.identityAnchors) { idx++; sets.push(`identity_anchors = $${idx}`); values.push(JSON.stringify(updates.identityAnchors)); }
-  if (sets.length === 0) {return;}
+  if (updates.tags) {
+    idx++;
+    sets.push(`tags = $${idx}`);
+    values.push(JSON.stringify(updates.tags));
+  }
+  if (updates.identityAnchors) {
+    idx++;
+    sets.push(`identity_anchors = $${idx}`);
+    values.push(JSON.stringify(updates.identityAnchors));
+  }
+  if (sets.length === 0) {
+    return;
+  }
   sets.push("updated_at = NOW()");
   idx++;
   values.push(id);
@@ -231,18 +266,27 @@ export async function updateCSSessionNotifiedAt(id: string, notifiedAt: string):
     const raw = result.rows[0] as Record<string, unknown> | undefined;
     const existing = raw?.metadata;
     const meta: Record<string, unknown> =
-      typeof existing === "string" ? (() => { try { return JSON.parse(existing); } catch { return {}; } })() :
-      typeof existing === "object" && existing !== null ? existing as Record<string, unknown> : {};
+      typeof existing === "string"
+        ? (() => {
+            try {
+              return JSON.parse(existing);
+            } catch {
+              return {};
+            }
+          })()
+        : typeof existing === "object" && existing !== null
+          ? (existing as Record<string, unknown>)
+          : {};
     meta.lastNotifiedAt = notifiedAt;
     sqliteQuery("UPDATE cs_sessions SET metadata = ? WHERE id = ?", [JSON.stringify(meta), id]);
     return;
   }
   // PostgreSQL: use jsonb || merge operator
   // PostgreSQL 用 jsonb 合并操作符
-  await query(
-    "UPDATE cs_sessions SET metadata = metadata || $1::jsonb WHERE id = $2",
-    [JSON.stringify({ lastNotifiedAt: notifiedAt }), id],
-  );
+  await query("UPDATE cs_sessions SET metadata = metadata || $1::jsonb WHERE id = $2", [
+    JSON.stringify({ lastNotifiedAt: notifiedAt }),
+    id,
+  ]);
 }
 
 // -- Count active sessions for an API object (used by delete guard) --
@@ -284,6 +328,58 @@ export async function countActiveSessionsForApiObject(
   return Number(result.rows[0]?.cnt ?? 0);
 }
 
+/**
+ * Find cs-api sessions whose latest customer message is older than `idleMs`.
+ *
+ * "cs-api session" = row has `app_object_id IS NOT NULL` (excludes S1 widget
+ * sessions, which never carry an app_object_id). Sessions already in `closed`
+ * state are excluded — only the three active cs-api states are returned
+ * (`ai-handling`, `notifying`, `human-handling`).
+ *
+ * Sessions with NO customer messages at all are also excluded (we have no
+ * activity baseline for them; they'll get picked up once a customer speaks).
+ *
+ * cs-api 会话超过 idleMs 无客户消息时返回（不含 closed / widget）。
+ * 无客户消息历史的会话不参与判定。
+ */
+export async function findInactiveCsApiSessions(idleMs: number): Promise<CSSession[]> {
+  const threshold = new Date(Date.now() - idleMs).toISOString();
+  if (getDbType() === DB_SQLITE) {
+    const result = sqliteQuery(
+      `SELECT s.* FROM cs_sessions s
+       WHERE s.app_object_id IS NOT NULL
+         AND s.state IN ('ai-handling', 'notifying', 'human-handling')
+         AND EXISTS (
+           SELECT 1 FROM cs_messages m
+           WHERE m.session_id = s.id AND m.role = 'customer'
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM cs_messages m
+           WHERE m.session_id = s.id AND m.role = 'customer'
+             AND m.created_at >= ?
+         )`,
+      [threshold],
+    );
+    return result.rows.map((row) => rowToSession(row));
+  }
+  const result = await query(
+    `SELECT s.* FROM cs_sessions s
+     WHERE s.app_object_id IS NOT NULL
+       AND s.state IN ('ai-handling', 'notifying', 'human-handling')
+       AND EXISTS (
+         SELECT 1 FROM cs_messages m
+         WHERE m.session_id = s.id AND m.role = 'customer'
+       )
+       AND NOT EXISTS (
+         SELECT 1 FROM cs_messages m
+         WHERE m.session_id = s.id AND m.role = 'customer'
+           AND m.created_at >= $1
+       )`,
+    [threshold],
+  );
+  return result.rows.map((row) => rowToSession(row));
+}
+
 // ── CS-API session helpers (Agenora S2 jiumi) ────────────────────────────────
 
 /**
@@ -294,7 +390,11 @@ export async function countActiveSessionsForApiObject(
 function rowToCsApiSession(row: Record<string, unknown>): CsApiSession {
   const parseJson = <T>(val: unknown, fallback: T): T => {
     if (typeof val === "string") {
-      try { return JSON.parse(val) as T; } catch { return fallback; }
+      try {
+        return JSON.parse(val) as T;
+      } catch {
+        return fallback;
+      }
     }
     return (val as T) ?? fallback;
   };
@@ -309,8 +409,8 @@ function rowToCsApiSession(row: Record<string, unknown>): CsApiSession {
     channel: (row.channel as string) ?? "cs-api",
     activeResponder: parseJson<CsApiActiveResponder | null>(row.metadata_active_responder, null),
     metadata: parseJson<Record<string, unknown>>(row.metadata, {}),
-    createdAt: (row.created_at as Date | string),
-    updatedAt: (row.updated_at as Date | string),
+    createdAt: row.created_at as Date | string,
+    updatedAt: row.updated_at as Date | string,
     messages: [],
   };
 }
@@ -337,7 +437,9 @@ export async function findOrCreateCsApiSession(params: {
   const channel = channelId ?? "cs-api";
 
   // Helper: load messages for a session id
-  async function loadMessages(sessionId: string): Promise<Array<{ role: string; content: string }>> {
+  async function loadMessages(
+    sessionId: string,
+  ): Promise<Array<{ role: string; content: string }>> {
     if (getDbType() === DB_SQLITE) {
       const r = sqliteQuery(
         "SELECT role, content FROM cs_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT 100",
@@ -363,20 +465,20 @@ export async function findOrCreateCsApiSession(params: {
   // 1. Requested session id lookup
   if (requestedSessionId) {
     if (getDbType() === DB_SQLITE) {
-      const r = sqliteQuery(
-        "SELECT * FROM cs_sessions WHERE id = ? AND tenant_id = ?",
-        [requestedSessionId, tenantId],
-      );
+      const r = sqliteQuery("SELECT * FROM cs_sessions WHERE id = ? AND tenant_id = ?", [
+        requestedSessionId,
+        tenantId,
+      ]);
       if (r.rows.length > 0) {
         const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
         sess.messages = await loadMessages(sess.id);
         return sess;
       }
     } else {
-      const r = await query(
-        "SELECT * FROM cs_sessions WHERE id = $1 AND tenant_id = $2",
-        [requestedSessionId, tenantId],
-      );
+      const r = await query("SELECT * FROM cs_sessions WHERE id = $1 AND tenant_id = $2", [
+        requestedSessionId,
+        tenantId,
+      ]);
       if (r.rows.length > 0) {
         const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
         sess.messages = await loadMessages(sess.id);
@@ -385,12 +487,17 @@ export async function findOrCreateCsApiSession(params: {
     }
   }
 
-  // 2. Existing active session lookup
+  // 2. Existing reusable session lookup.
+  // Includes the 4 v1.2 §F state values (ai-handling / notifying /
+  // human-handling / closed): closed sessions are reused so that the cs-api
+  // wake-up path (closed → ai-handling, Task 7) transitions the SAME row
+  // rather than orphaning the previous one with the customer's history.
+  // 复用已存在会话（含 closed，供 Task 7 唤醒路径使用），避免历史孤立。
   if (getDbType() === DB_SQLITE) {
     const r = sqliteQuery(
       `SELECT * FROM cs_sessions
        WHERE tenant_id = ? AND visitor_id = ? AND app_object_id = ?
-         AND state IN ('ai-handling', 'human-handling')
+         AND state IN ('ai-handling', 'notifying', 'human-handling', 'closed')
        ORDER BY created_at DESC LIMIT 1`,
       [tenantId, customerId, appObjectId],
     );
@@ -403,7 +510,7 @@ export async function findOrCreateCsApiSession(params: {
     const r = await query(
       `SELECT * FROM cs_sessions
        WHERE tenant_id = $1 AND visitor_id = $2 AND app_object_id = $3
-         AND state IN ('ai-handling', 'human-handling')
+         AND state IN ('ai-handling', 'notifying', 'human-handling', 'closed')
        ORDER BY created_at DESC LIMIT 1`,
       [tenantId, customerId, appObjectId],
     );
@@ -454,7 +561,11 @@ export async function findOrCreateCsApiSession(params: {
 function flattenMetadata(row: Record<string, unknown>): Record<string, unknown> {
   let meta: Record<string, unknown> = {};
   if (typeof row.metadata === "string") {
-    try { meta = JSON.parse(row.metadata) as Record<string, unknown>; } catch { /* ignore */ }
+    try {
+      meta = JSON.parse(row.metadata) as Record<string, unknown>;
+    } catch {
+      /* ignore */
+    }
   } else if (typeof row.metadata === "object" && row.metadata !== null) {
     meta = row.metadata as Record<string, unknown>;
   }
@@ -538,15 +649,21 @@ export async function setSessionState(params: {
   // We store activeResponder in the metadata JSON blob
   if (getDbType() === DB_SQLITE) {
     // Read current metadata
-    const cur = sqliteQuery(
-      "SELECT metadata FROM cs_sessions WHERE id = ? AND tenant_id = ?",
-      [sessionId, tenantId],
-    );
-    if (cur.rows.length === 0) { return null; }
+    const cur = sqliteQuery("SELECT metadata FROM cs_sessions WHERE id = ? AND tenant_id = ?", [
+      sessionId,
+      tenantId,
+    ]);
+    if (cur.rows.length === 0) {
+      return null;
+    }
     const row0 = cur.rows[0];
     let meta: Record<string, unknown> = {};
     if (typeof row0.metadata === "string") {
-      try { meta = JSON.parse(row0.metadata) as Record<string, unknown>; } catch { /* ignore */ }
+      try {
+        meta = JSON.parse(row0.metadata) as Record<string, unknown>;
+      } catch {
+        /* ignore */
+      }
     }
     meta.activeResponder = activeResponder;
     const now = new Date().toISOString();
@@ -555,22 +672,30 @@ export async function setSessionState(params: {
       [state, JSON.stringify(meta), now, sessionId, tenantId],
     );
     const r2 = sqliteQuery("SELECT * FROM cs_sessions WHERE id = ?", [sessionId]);
-    if (r2.rows.length === 0) { return null; }
+    if (r2.rows.length === 0) {
+      return null;
+    }
     const sess = rowToCsApiSession(flattenMetadata(r2.rows[0]));
     sess.activeResponder = activeResponder;
     return sess;
   }
 
   // PostgreSQL
-  const cur = await query(
-    "SELECT metadata FROM cs_sessions WHERE id = $1 AND tenant_id = $2",
-    [sessionId, tenantId],
-  );
-  if (cur.rows.length === 0) { return null; }
+  const cur = await query("SELECT metadata FROM cs_sessions WHERE id = $1 AND tenant_id = $2", [
+    sessionId,
+    tenantId,
+  ]);
+  if (cur.rows.length === 0) {
+    return null;
+  }
   let meta: Record<string, unknown> = {};
   const metaVal = cur.rows[0].metadata;
   if (typeof metaVal === "string") {
-    try { meta = JSON.parse(metaVal) as Record<string, unknown>; } catch { /* ignore */ }
+    try {
+      meta = JSON.parse(metaVal) as Record<string, unknown>;
+    } catch {
+      /* ignore */
+    }
   } else if (metaVal && typeof metaVal === "object") {
     meta = metaVal as Record<string, unknown>;
   }
@@ -580,7 +705,9 @@ export async function setSessionState(params: {
      WHERE id = $3 AND tenant_id = $4 RETURNING *`,
     [state, JSON.stringify(meta), sessionId, tenantId],
   );
-  if (r.rows.length === 0) { return null; }
+  if (r.rows.length === 0) {
+    return null;
+  }
   const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
   sess.activeResponder = activeResponder;
   return sess;
@@ -607,10 +734,17 @@ function encodeCursor(updatedAt: Date | string, id: string): string {
  */
 function decodeSessionCursor(s: string): { updatedAt: string; id: string } | null {
   try {
-    const obj = JSON.parse(Buffer.from(s, "base64").toString("utf8")) as { u?: unknown; i?: unknown };
-    if (typeof obj.u !== "string" || typeof obj.i !== "string") { return null; }
+    const obj = JSON.parse(Buffer.from(s, "base64").toString("utf8")) as {
+      u?: unknown;
+      i?: unknown;
+    };
+    if (typeof obj.u !== "string" || typeof obj.i !== "string") {
+      return null;
+    }
     return { updatedAt: obj.u, id: obj.i };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -630,10 +764,17 @@ function encodeTranscriptCursor(createdAt: Date | string, id: string): string {
  */
 function decodeTranscriptCursor(s: string): { createdAt: string; id: string } | null {
   try {
-    const obj = JSON.parse(Buffer.from(s, "base64").toString("utf8")) as { c?: unknown; i?: unknown };
-    if (typeof obj.c !== "string" || typeof obj.i !== "string") { return null; }
+    const obj = JSON.parse(Buffer.from(s, "base64").toString("utf8")) as {
+      c?: unknown;
+      i?: unknown;
+    };
+    if (typeof obj.c !== "string" || typeof obj.i !== "string") {
+      return null;
+    }
     return { createdAt: obj.c, id: obj.i };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export interface CsApiSessionSummary {
@@ -691,14 +832,22 @@ function rowToSessionSummary(
 ): CsApiSessionSummary {
   const parseJson = <T>(val: unknown, fallback: T): T => {
     if (typeof val === "string") {
-      try { return JSON.parse(val) as T; } catch { return fallback; }
+      try {
+        return JSON.parse(val) as T;
+      } catch {
+        return fallback;
+      }
     }
     return (val as T) ?? fallback;
   };
 
   let sessionMeta: Record<string, unknown> = {};
   if (typeof row.metadata === "string") {
-    try { sessionMeta = JSON.parse(row.metadata) as Record<string, unknown>; } catch { /* ignore */ }
+    try {
+      sessionMeta = JSON.parse(row.metadata) as Record<string, unknown>;
+    } catch {
+      /* ignore */
+    }
   } else if (row.metadata && typeof row.metadata === "object") {
     sessionMeta = row.metadata as Record<string, unknown>;
   }
@@ -708,8 +857,14 @@ function rowToSessionSummary(
     null,
   );
 
-  const createdAt = typeof row.created_at === "string" ? row.created_at : (row.created_at as Date)?.toISOString?.() ?? "";
-  const updatedAt = typeof row.updated_at === "string" ? row.updated_at : (row.updated_at as Date)?.toISOString?.() ?? "";
+  const createdAt =
+    typeof row.created_at === "string"
+      ? row.created_at
+      : ((row.created_at as Date)?.toISOString?.() ?? "");
+  const updatedAt =
+    typeof row.updated_at === "string"
+      ? row.updated_at
+      : ((row.updated_at as Date)?.toISOString?.() ?? "");
 
   return {
     id: row.id as string,
@@ -742,15 +897,21 @@ export async function listCsApiSessions(
 
   if (getDbType() === DB_SQLITE) {
     // Build WHERE conditions
-    const conditions: string[] = [
-      "s.tenant_id = ?",
-      "s.app_object_id = ?",
-    ];
+    const conditions: string[] = ["s.tenant_id = ?", "s.app_object_id = ?"];
     const values: unknown[] = [tenantId, appObjectId];
 
-    if (state) { conditions.push("s.state = ?"); values.push(state); }
-    if (customerId) { conditions.push("s.visitor_id = ?"); values.push(customerId); }
-    if (updatedAfter) { conditions.push("s.updated_at > ?"); values.push(updatedAfter); }
+    if (state) {
+      conditions.push("s.state = ?");
+      values.push(state);
+    }
+    if (customerId) {
+      conditions.push("s.visitor_id = ?");
+      values.push(customerId);
+    }
+    if (updatedAfter) {
+      conditions.push("s.updated_at > ?");
+      values.push(updatedAfter);
+    }
     if (cursorDecoded) {
       conditions.push("(s.updated_at < ? OR (s.updated_at = ? AND s.id < ?))");
       values.push(cursorDecoded.updatedAt, cursorDecoded.updatedAt, cursorDecoded.id);
@@ -785,37 +946,54 @@ export async function listCsApiSessions(
         [sessionId],
       ).rows[0] as Record<string, unknown> | undefined;
       const lastMessageAt = lastMsgResult?.created_at
-        ? (lastMsgResult.created_at instanceof Date ? lastMsgResult.created_at.toISOString()
-          : typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at
-          : (lastMsgResult.created_at as { toString(): string }).toString())
+        ? lastMsgResult.created_at instanceof Date
+          ? lastMsgResult.created_at.toISOString()
+          : typeof lastMsgResult.created_at === "string"
+            ? lastMsgResult.created_at
+            : (lastMsgResult.created_at as { toString(): string }).toString()
         : null;
-      const rawContent = lastMsgResult?.content as string | null ?? null;
+      const rawContent = (lastMsgResult?.content as string | null) ?? null;
       const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
 
       sessions.push(rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount }));
     }
 
-    const nextCursor = hasMore && pageRows.length > 0
-      ? encodeCursor(pageRows[pageRows.length - 1].updated_at as string, pageRows[pageRows.length - 1].id as string)
-      : null;
+    const nextCursor =
+      hasMore && pageRows.length > 0
+        ? encodeCursor(
+            pageRows[pageRows.length - 1].updated_at as string,
+            pageRows[pageRows.length - 1].id as string,
+          )
+        : null;
 
     return { sessions, nextCursor };
   }
 
   // PostgreSQL
-  const conditions: string[] = [
-    "s.tenant_id = $1",
-    "s.app_object_id = $2",
-  ];
+  const conditions: string[] = ["s.tenant_id = $1", "s.app_object_id = $2"];
   const values: unknown[] = [tenantId, appObjectId];
   let idx = 2;
 
-  if (state) { idx++; conditions.push(`s.state = $${idx}`); values.push(state); }
-  if (customerId) { idx++; conditions.push(`s.visitor_id = $${idx}`); values.push(customerId); }
-  if (updatedAfter) { idx++; conditions.push(`s.updated_at > $${idx}`); values.push(updatedAfter); }
+  if (state) {
+    idx++;
+    conditions.push(`s.state = $${idx}`);
+    values.push(state);
+  }
+  if (customerId) {
+    idx++;
+    conditions.push(`s.visitor_id = $${idx}`);
+    values.push(customerId);
+  }
+  if (updatedAfter) {
+    idx++;
+    conditions.push(`s.updated_at > $${idx}`);
+    values.push(updatedAfter);
+  }
   if (cursorDecoded) {
-    idx++; const uIdx = idx;
-    idx++; const iIdx = idx;
+    idx++;
+    const uIdx = idx;
+    idx++;
+    const iIdx = idx;
     conditions.push(`(s.updated_at < $${uIdx} OR (s.updated_at = $${uIdx} AND s.id < $${iIdx}))`);
     values.push(cursorDecoded.updatedAt, cursorDecoded.id);
   }
@@ -848,21 +1026,24 @@ export async function listCsApiSessions(
   const sessions: CsApiSessionSummary[] = pageRows.map((row) => {
     const messageCount = Number(row.msg_count ?? 0);
     const lastMessageAt = row.last_message_at
-      ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString()
-        : typeof row.last_message_at === "string" ? row.last_message_at
-        : (row.last_message_at as { toString(): string }).toString())
+      ? row.last_message_at instanceof Date
+        ? row.last_message_at.toISOString()
+        : typeof row.last_message_at === "string"
+          ? row.last_message_at
+          : (row.last_message_at as { toString(): string }).toString()
       : null;
-    const rawContent = row.last_message_content as string | null ?? null;
+    const rawContent = (row.last_message_content as string | null) ?? null;
     const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
     return rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount });
   });
 
-  const nextCursor = hasMore && pageRows.length > 0
-    ? encodeCursor(
-        pageRows[pageRows.length - 1].updated_at as Date,
-        pageRows[pageRows.length - 1].id as string,
-      )
-    : null;
+  const nextCursor =
+    hasMore && pageRows.length > 0
+      ? encodeCursor(
+          pageRows[pageRows.length - 1].updated_at as Date,
+          pageRows[pageRows.length - 1].id as string,
+        )
+      : null;
 
   return { sessions, nextCursor };
 }
@@ -885,13 +1066,14 @@ export async function getCsApiSessionMetadata(p: {
       "SELECT * FROM cs_sessions WHERE id = ? AND tenant_id = ? AND app_object_id = ?",
       [sessionId, tenantId, appObjectId],
     );
-    if (r.rows.length === 0) { return null; }
+    if (r.rows.length === 0) {
+      return null;
+    }
     const row = r.rows[0];
 
-    const cntResult = sqliteQuery(
-      "SELECT COUNT(*) as cnt FROM cs_messages WHERE session_id = ?",
-      [sessionId],
-    ).rows[0] as Record<string, unknown> | undefined;
+    const cntResult = sqliteQuery("SELECT COUNT(*) as cnt FROM cs_messages WHERE session_id = ?", [
+      sessionId,
+    ]).rows[0] as Record<string, unknown> | undefined;
     const messageCount = Number(cntResult?.cnt ?? 0);
 
     const lastMsgResult = sqliteQuery(
@@ -899,11 +1081,13 @@ export async function getCsApiSessionMetadata(p: {
       [sessionId],
     ).rows[0] as Record<string, unknown> | undefined;
     const lastMessageAt = lastMsgResult?.created_at
-      ? (lastMsgResult.created_at instanceof Date ? lastMsgResult.created_at.toISOString()
-        : typeof lastMsgResult.created_at === "string" ? lastMsgResult.created_at
-        : (lastMsgResult.created_at as { toString(): string }).toString())
+      ? lastMsgResult.created_at instanceof Date
+        ? lastMsgResult.created_at.toISOString()
+        : typeof lastMsgResult.created_at === "string"
+          ? lastMsgResult.created_at
+          : (lastMsgResult.created_at as { toString(): string }).toString()
       : null;
-    const rawContent = lastMsgResult?.content as string | null ?? null;
+    const rawContent = (lastMsgResult?.content as string | null) ?? null;
     const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
 
     return rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount });
@@ -921,15 +1105,19 @@ export async function getCsApiSessionMetadata(p: {
      GROUP BY s.id`,
     [sessionId, tenantId, appObjectId],
   );
-  if (r.rows.length === 0) { return null; }
+  if (r.rows.length === 0) {
+    return null;
+  }
   const row = r.rows[0] as Record<string, unknown>;
   const messageCount = Number(row.msg_count ?? 0);
   const lastMessageAt = row.last_message_at
-    ? (row.last_message_at instanceof Date ? row.last_message_at.toISOString()
-      : typeof row.last_message_at === "string" ? row.last_message_at
-      : (row.last_message_at as { toString(): string }).toString())
+    ? row.last_message_at instanceof Date
+      ? row.last_message_at.toISOString()
+      : typeof row.last_message_at === "string"
+        ? row.last_message_at
+        : (row.last_message_at as { toString(): string }).toString()
     : null;
-  const rawContent = row.last_message_content as string | null ?? null;
+  const rawContent = (row.last_message_content as string | null) ?? null;
   const lastMessagePreview = rawContent ? rawContent.slice(0, 120) : null;
   return rowToSessionSummary(row, { lastMessageAt, lastMessagePreview, messageCount });
 }
@@ -1004,11 +1192,18 @@ export async function listCsApiTranscript(
 
     const messages: CsApiMessage[] = pageRows.map((row) => {
       const sourceChunks = (() => {
-        try { return typeof row.source_chunks === "string" ? JSON.parse(row.source_chunks) as unknown[] : null; } catch { return null; }
+        try {
+          return typeof row.source_chunks === "string"
+            ? (JSON.parse(row.source_chunks) as unknown[])
+            : null;
+        } catch {
+          return null;
+        }
       })();
-      const senderParty = Array.isArray(sourceChunks) && sourceChunks.length > 0
-        ? (sourceChunks[0] as Record<string, unknown>)?.senderParty as string | undefined
-        : undefined;
+      const senderParty =
+        Array.isArray(sourceChunks) && sourceChunks.length > 0
+          ? ((sourceChunks[0] as Record<string, unknown>)?.senderParty as string | undefined)
+          : undefined;
       return {
         id: row.id as string,
         role: row.role as string,
@@ -1023,10 +1218,7 @@ export async function listCsApiTranscript(
     let nextCursor: string | null = null;
     if (hasMore && pageRows.length > 0) {
       const edgeRow = direction === "before" ? pageRows[0] : pageRows[pageRows.length - 1];
-      nextCursor = encodeTranscriptCursor(
-        edgeRow.created_at as string,
-        edgeRow.id as string,
-      );
+      nextCursor = encodeTranscriptCursor(edgeRow.created_at as string, edgeRow.id as string);
     }
 
     return { messages, nextCursor, hasMore };
@@ -1039,13 +1231,17 @@ export async function listCsApiTranscript(
 
   if (cursorDecoded) {
     if (direction === "before") {
-      idx++; const cIdx = idx;
-      idx++; const iIdx = idx;
+      idx++;
+      const cIdx = idx;
+      idx++;
+      const iIdx = idx;
       conditions.push(`(created_at < $${cIdx} OR (created_at = $${cIdx} AND id < $${iIdx}))`);
       values.push(cursorDecoded.createdAt, cursorDecoded.id);
     } else {
-      idx++; const cIdx = idx;
-      idx++; const iIdx = idx;
+      idx++;
+      const cIdx = idx;
+      idx++;
+      const iIdx = idx;
       conditions.push(`(created_at > $${cIdx} OR (created_at = $${cIdx} AND id > $${iIdx}))`);
       values.push(cursorDecoded.createdAt, cursorDecoded.id);
     }
@@ -1074,20 +1270,26 @@ export async function listCsApiTranscript(
   const messages: CsApiMessage[] = pageRows.map((row) => {
     const sourceChunks = (() => {
       if (typeof row.source_chunks === "string") {
-        try { return JSON.parse(row.source_chunks) as unknown[]; } catch { return null; }
+        try {
+          return JSON.parse(row.source_chunks) as unknown[];
+        } catch {
+          return null;
+        }
       }
-      return Array.isArray(row.source_chunks) ? row.source_chunks as unknown[] : null;
+      return Array.isArray(row.source_chunks) ? (row.source_chunks as unknown[]) : null;
     })();
-    const senderParty = Array.isArray(sourceChunks) && sourceChunks.length > 0
-      ? (sourceChunks[0] as Record<string, unknown>)?.senderParty as string | undefined
-      : undefined;
+    const senderParty =
+      Array.isArray(sourceChunks) && sourceChunks.length > 0
+        ? ((sourceChunks[0] as Record<string, unknown>)?.senderParty as string | undefined)
+        : undefined;
     return {
       id: row.id as string,
       role: row.role as string,
       source: (row.source as string) ?? "agenora-ai",
       content: row.content as string,
       ...(senderParty ? { senderParty } : {}),
-      createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
+      createdAt:
+        row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
     };
   });
 
@@ -1107,7 +1309,11 @@ export async function listCsApiTranscript(
 export async function closeCSSession(id: string): Promise<void> {
   if (getDbType() === DB_SQLITE) {
     const now = new Date().toISOString();
-    sqliteQuery("UPDATE cs_sessions SET closed_at = ?, updated_at = ? WHERE id = ?", [now, now, id]);
+    sqliteQuery("UPDATE cs_sessions SET closed_at = ?, updated_at = ? WHERE id = ?", [
+      now,
+      now,
+      id,
+    ]);
     return;
   }
   await query("UPDATE cs_sessions SET closed_at = NOW(), updated_at = NOW() WHERE id = $1", [id]);

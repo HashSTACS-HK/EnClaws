@@ -86,9 +86,15 @@ describe("SSE helpers", () => {
       setHeader(name: string, value: string | number | string[]) {
         headers[name] = value;
       },
-      flushHeaders() { /* noop */ },
-      write(chunk: string) { written.push(chunk); },
-      end() { state.ended = true; },
+      flushHeaders() {
+        /* noop */
+      },
+      write(chunk: string) {
+        written.push(chunk);
+      },
+      end() {
+        state.ended = true;
+      },
     } as unknown as ServerResponse;
     return { res, written, state, headers };
   }
@@ -218,8 +224,12 @@ describe("POST /{appId}/messages", () => {
     let pendingEvent = "";
     const res = {
       statusCode: 200,
-      setHeader() { /* noop */ },
-      flushHeaders() { /* noop */ },
+      setHeader() {
+        /* noop */
+      },
+      flushHeaders() {
+        /* noop */
+      },
       write(chunk: string) {
         const lines = chunk.split("\n");
         for (const line of lines) {
@@ -235,7 +245,9 @@ describe("POST /{appId}/messages", () => {
           }
         }
       },
-      end() { state.ended = true; },
+      end() {
+        state.ended = true;
+      },
     } as unknown as ServerResponse;
     return { res, events, state };
   }
@@ -248,14 +260,37 @@ describe("POST /{appId}/messages", () => {
   } {
     const state = { body: "", statusCode: 200 };
     const res = {
-      get statusCode() { return state.statusCode; },
-      set statusCode(v: number) { state.statusCode = v; },
-      setHeader() { /* noop */ },
-      flushHeaders() { /* noop */ },
-      write(c: string) { state.body += c; return true; },
-      end(c?: string) { if (c) { state.body += c; } },
+      get statusCode() {
+        return state.statusCode;
+      },
+      set statusCode(v: number) {
+        state.statusCode = v;
+      },
+      setHeader() {
+        /* noop */
+      },
+      flushHeaders() {
+        /* noop */
+      },
+      write(c: string) {
+        state.body += c;
+        return true;
+      },
+      end(c?: string) {
+        if (c) {
+          state.body += c;
+        }
+      },
     } as unknown as ServerResponse;
-    return { res, get body() { return state.body; }, get statusCode() { return state.statusCode; } };
+    return {
+      res,
+      get body() {
+        return state.body;
+      },
+      get statusCode() {
+        return state.statusCode;
+      },
+    };
   }
 
   it("returns 401 when no Authorization header", async () => {
@@ -315,7 +350,11 @@ describe("POST /{appId}/messages", () => {
 
     // done has confidence 0.85 (extracted from mock reply) + placeholder fields
     const done = events.find((e) => e.event === "done");
-    const doneData = done?.data as { confidence?: number; modelActuallyUsed?: string; finishReason?: string };
+    const doneData = done?.data as {
+      confidence?: number;
+      modelActuallyUsed?: string;
+      finishReason?: string;
+    };
     expect(doneData?.confidence).toBeCloseTo(0.85);
     expect(doneData?.modelActuallyUsed).toBe("unknown");
     expect(doneData?.finishReason).toBe("stop");
@@ -372,7 +411,8 @@ describe("findOrCreateCsApiSession / appendCsApiMessage / setSessionState", () =
   });
 
   it("appends messages and retrieves them in history", async () => {
-    const { findOrCreateCsApiSession, appendCsApiMessage } = await import("../../db/models/cs-session.js");
+    const { findOrCreateCsApiSession, appendCsApiMessage } =
+      await import("../../db/models/cs-session.js");
     const session = await findOrCreateCsApiSession({
       tenantId,
       appObjectId,
@@ -406,7 +446,8 @@ describe("findOrCreateCsApiSession / appendCsApiMessage / setSessionState", () =
   });
 
   it("setSessionState transitions to human-handling and back", async () => {
-    const { findOrCreateCsApiSession, setSessionState } = await import("../../db/models/cs-session.js");
+    const { findOrCreateCsApiSession, setSessionState } =
+      await import("../../db/models/cs-session.js");
     const session = await findOrCreateCsApiSession({
       tenantId,
       appObjectId,
@@ -445,8 +486,103 @@ describe("findOrCreateCsApiSession / appendCsApiMessage / setSessionState", () =
     expect(result).toBeNull();
   });
 
+  it("auto-wakes closed session on new customer message (closed → ai-handling)", async () => {
+    // Seed a cs-api session in closed state, then POST /messages — runtime should
+    // transition it back to ai-handling before invoking the agent.
+    // 先把会话置为 closed，再调 handleMessages，应自动唤醒为 ai-handling。
+    const { handleMessages } = await import("./runtime.js");
+    const { findOrCreateCsApiSession, setSessionState, getCSSession } =
+      await import("../../db/models/cs-session.js");
+
+    const seeded = await findOrCreateCsApiSession({
+      tenantId,
+      appObjectId,
+      agentId: "agent-x",
+      customerId: "cust-wake-001",
+    });
+    const closed = await setSessionState({
+      tenantId,
+      sessionId: seeded.id,
+      state: "closed",
+      activeResponder: null,
+    });
+    expect(closed?.state).toBe("closed");
+
+    // Re-use the messages-endpoint request helper from the upper describe.
+    // We have to rebuild it locally since this describe doesn't have it in scope.
+    const { Readable } = await import("node:stream");
+    // Need plainSecret + appId — fetch a fresh secret/app via a new CsApiObject.
+    const bcrypt = (await import("bcryptjs")).default;
+    const { createCsApiObject } = await import("../../db/models/cs-api-object.js");
+    const wakeSecret = "wake-secret-xyz";
+    const wakeHash = await bcrypt.hash(wakeSecret, 10);
+    const wakeObj = await createCsApiObject({
+      tenantId,
+      name: "Wake Test App",
+      agentId: "agent-x",
+      appSecretHash: wakeHash,
+      endpointUrl: "https://wake.example.com",
+    });
+
+    // The session was created under a different appObject — handleMessages will
+    // find-or-create against (tenantId, customerId, wakeObj.id) which yields a NEW
+    // session. To test the wake path we must seed under the same appObject.
+    // 用同一个 appObject 重新种一个 closed 会话再测唤醒。
+    const seeded2 = await findOrCreateCsApiSession({
+      tenantId,
+      appObjectId: wakeObj.id,
+      agentId: "agent-x",
+      customerId: "cust-wake-002",
+    });
+    await setSessionState({
+      tenantId,
+      sessionId: seeded2.id,
+      state: "closed",
+      activeResponder: null,
+    });
+
+    const body = { customerId: "cust-wake-002", content: "hello again" };
+    const bodyStr = JSON.stringify(body);
+    const req = new Readable({
+      read() {
+        this.push(bodyStr);
+        this.push(null);
+      },
+    }) as unknown as import("node:http").IncomingMessage;
+    (req as unknown as { method: string }).method = "POST";
+    (req as unknown as { headers: Record<string, string> }).headers = {
+      "content-type": "application/json",
+      authorization: `Bearer ${wakeSecret}`,
+    };
+
+    // Drain SSE without inspecting it.
+    const writtenChunks: string[] = [];
+    const res = {
+      statusCode: 200,
+      setHeader() {
+        /* noop */
+      },
+      flushHeaders() {
+        /* noop */
+      },
+      write(c: string) {
+        writtenChunks.push(c);
+        return true;
+      },
+      end() {
+        /* noop */
+      },
+    } as unknown as import("node:http").ServerResponse;
+
+    await handleMessages(req, res, wakeObj.appId);
+
+    const after = await getCSSession(seeded2.id);
+    expect(after?.state).toBe("ai-handling");
+  });
+
   it("countActiveSessionsForApiObject counts only active sessions", async () => {
-    const { findOrCreateCsApiSession, countActiveSessionsForApiObject } = await import("../../db/models/cs-session.js");
+    const { findOrCreateCsApiSession, countActiveSessionsForApiObject } =
+      await import("../../db/models/cs-session.js");
     const { createCsApiObject } = await import("../../db/models/cs-api-object.js");
     const obj2 = await createCsApiObject({
       tenantId,

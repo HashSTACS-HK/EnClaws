@@ -12,14 +12,16 @@
 
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { Value } from "@sinclair/typebox/value";
 import { tryAppSecretAuth } from "../../auth/app-secret.js";
+import { loadTenantConfig } from "../../config/tenant-config.js";
+import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
+import { dbStateToCsApi } from "../../customer-service/state-mapping.js";
 import {
   findOrCreateCsApiSession,
   appendCsApiMessage,
   setSessionState,
 } from "../../db/models/cs-session.js";
-import { loadTenantConfig } from "../../config/tenant-config.js";
-import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
   HandoffInput,
@@ -28,11 +30,9 @@ import {
   ReleaseInput,
   SendMessageInput,
 } from "../protocol/schema/cs-api.js";
-import { Value } from "@sinclair/typebox/value";
-import { dbStateToCsApi } from "../../customer-service/state-mapping.js";
+import { extractConfidence } from "./confidence.js";
 import { readJsonBody, sendError, sendJson } from "./http-helpers.js";
 import { endSse, startSse, writeSseEvent } from "./sse.js";
-import { extractConfidence } from "./confidence.js";
 
 const log = createSubsystemLogger("cs-api-runtime");
 
@@ -82,6 +82,21 @@ export async function handleMessages(
     channelId: input.channelId,
     requestedSessionId: input.sessionId,
   });
+
+  // 4b. Implicit wake: if the session was previously auto-closed (300s idle
+  // cron) and a customer reaches out again, transition back to ai-handling
+  // before appending the new message. Per v1.2 §F state machine (Task 7),
+  // closed → ai-handling is automatic on new customer activity.
+  // 隐式唤醒：若会话曾被 300s cron 自动关闭，客户再次发消息时自动唤醒。
+  if (session.state === "closed") {
+    await setSessionState({
+      tenantId,
+      sessionId: session.id,
+      state: "ai-handling",
+      activeResponder: null,
+    });
+    session.state = "ai-handling";
+  }
 
   // 5. Append customer message to DB
   await appendCsApiMessage({
