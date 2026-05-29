@@ -3,7 +3,7 @@ import type { TranslationMap } from "../lib/types.ts";
 export const de: TranslationMap = {
   rpc: {
     errors: {
-      requestTimeout: "Anfrage nach 60 s abgelaufen. Backend verarbeitet möglicherweise noch — klicken Sie kurz danach auf „Aktualisieren", um das Ergebnis zu prüfen.",
+      requestTimeout: "Anfrage nach 60 s abgelaufen. Backend verarbeitet möglicherweise noch — klicken Sie kurz danach auf „Aktualisieren“, um das Ergebnis zu prüfen.",
       connectionFailed: "Verbindung fehlgeschlagen. Bitte prüfen Sie die Gateway-Adresse und den Netzwerkstatus.",
     },
   },
@@ -1226,11 +1226,11 @@ export const de: TranslationMap = {
         error: "Secret konnte nicht neu generiert werden",
       },
       delete: {
-        confirmTitle: “KI-Dienst löschen?”,
-        confirmMessage: “„{name}” löschen? Dies kann nicht rückgängig gemacht werden.”,
-        confirmBtn: “Löschen”,
-        activeSessionsError: “Löschen nicht möglich: Dieser KI-Dienst hat aktive Sitzungen. Bitte zuerst schließen.”,
-        error: “KI-Dienst konnte nicht gelöscht werden”,
+        confirmTitle: "KI-Dienst löschen?",
+        confirmMessage: "„{name}“ löschen? Dies kann nicht rückgängig gemacht werden.",
+        confirmBtn: "Löschen",
+        activeSessionsError: "Löschen nicht möglich: Dieser KI-Dienst hat aktive Sitzungen. Bitte zuerst schließen.",
+        error: "KI-Dienst konnte nicht gelöscht werden",
       },
       secretDialog: {
         title: "API-Anmeldedaten",
