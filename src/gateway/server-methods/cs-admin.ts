@@ -13,7 +13,9 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { TenantContext } from "../../auth/middleware.js";
 import { resolveTenantDir } from "../../config/sessions/tenant-paths.js";
+import { buildRecommendedPersona } from "../../customer-service/rag/cs-recommended-persona.js";
 import {
   DEFAULT_CS_BASE_PROMPT,
   renderCSBasePrompt,
@@ -23,7 +25,7 @@ import { listCSSessions } from "../../db/models/cs-session.js";
 import { getTenantById } from "../../db/models/tenant.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
-import type { GatewayRequestHandlers } from "./types.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 const log = createSubsystemLogger("cs-admin-handler");
 
@@ -110,6 +112,24 @@ async function writeCSConfig(tenantId: string, config: CSConfig): Promise<void> 
   const filePath = csConfigPath(tenantId);
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(config, null, 2), "utf-8");
+}
+
+/**
+ * Extract tenant context from the client; sends an error response and returns null when absent.
+ * Mirrors the pattern used in tenant-api.ts for tenant-scoped RPC handlers.
+ *
+ * 从 client 中提取租户上下文；缺失时发送错误并返回 null，与 tenant-api.ts 保持一致。
+ */
+function getTenantCtx(
+  client: GatewayRequestHandlerOptions["client"],
+  respond: GatewayRequestHandlerOptions["respond"],
+): TenantContext | null {
+  const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
+  if (!tenant) {
+    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Authentication required"));
+    return null;
+  }
+  return tenant;
 }
 
 export const csAdminHandlers: GatewayRequestHandlers = {
@@ -395,5 +415,48 @@ export const csAdminHandlers: GatewayRequestHandlers = {
     }
 
     respond(true, { checks });
+  },
+
+  /**
+   * tenant.cs.recommended-persona.get — return the 3 recommended persona MDs with
+   * {companyName} substituted to the tenant's real company name.
+   *
+   * 租户推荐人设读取 RPC：返回三段推荐人设 MD（IDENTITY/SOUL/AGENTS），
+   * 将 {companyName} 替换为租户实际企业名。无需参数，从 JWT 上下文读取 tenantId。
+   *
+   * Params: none (tenant id resolved from JWT context)
+   * Response: { identity: string; soul: string; agents: string }
+   *
+   * Used by: P5 UI "启用推荐配置" button — reads these, then writes them via
+   *          agents.files.set to the bound agent's IDENTITY/SOUL/AGENTS.md.
+   * P5 UI「启用推荐配置」按钮：读取三段内容后，通过 agents.files.set 写入绑定 agent。
+   */
+  "tenant.cs.recommended-persona.get": async ({ client, respond }) => {
+    const ctx = getTenantCtx(client, respond);
+    if (!ctx) {
+      return;
+    }
+
+    try {
+      // Resolve company name from tenant record (same pattern as cs-agent-runner).
+      // Falls back to "EC" when tenant has no name set.
+      // 与 cs-agent-runner 保持一致：从租户记录获取企业名，无名称时回退 "EC"。
+      let companyName = "EC";
+      const tenant = await getTenantById(ctx.tenantId);
+      if (tenant?.name) {
+        companyName = tenant.name;
+      }
+
+      const persona = buildRecommendedPersona(companyName);
+      respond(true, persona);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      log.error(`tenant.cs.recommended-persona.get failed: ${message}`);
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.UNAVAILABLE, "Failed to build recommended persona"),
+      );
+    }
   },
 };

@@ -127,6 +127,7 @@ const BASE_METHODS = [
   "cs.config.get",
   "cs.config.set",
   "cs.config.test",
+  "tenant.cs.recommended-persona.get",
 ];
 
 export function listGatewayMethods(): string[] {
