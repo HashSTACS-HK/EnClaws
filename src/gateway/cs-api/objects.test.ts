@@ -8,7 +8,7 @@
  * 测试策略：mock 所有外部依赖，直接调用 handler，不启动 HTTP 服务器。
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
 
@@ -217,5 +217,46 @@ describe("listObjects", () => {
     const parsed = JSON.parse(res._body) as { objects: unknown[] };
     expect(Array.isArray(parsed.objects)).toBe(true);
     expect(parsed.objects).toHaveLength(1);
+  });
+});
+
+// ── endpointUrlFor env handling ───────────────────────────────────────────────
+// Uses vi.resetModules() + dynamic import so each test gets a fresh module
+// evaluation with the desired env vars set.
+
+describe("endpointUrlFor env handling", () => {
+  let originalBaseUrl: string | undefined;
+  let originalPublicUrl: string | undefined;
+  let originalPort: string | undefined;
+
+  beforeEach(() => {
+    originalBaseUrl = process.env.AGENORA_BASE_URL;
+    originalPublicUrl = process.env.AGENORA_PUBLIC_URL;
+    originalPort = process.env.ENCLAWS_GATEWAY_PORT;
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    if (originalBaseUrl === undefined) { delete process.env.AGENORA_BASE_URL; }
+    else { process.env.AGENORA_BASE_URL = originalBaseUrl; }
+    if (originalPublicUrl === undefined) { delete process.env.AGENORA_PUBLIC_URL; }
+    else { process.env.AGENORA_PUBLIC_URL = originalPublicUrl; }
+    if (originalPort === undefined) { delete process.env.ENCLAWS_GATEWAY_PORT; }
+    else { process.env.ENCLAWS_GATEWAY_PORT = originalPort; }
+  });
+
+  it("uses AGENORA_BASE_URL when set", async () => {
+    delete process.env.AGENORA_PUBLIC_URL;
+    process.env.AGENORA_BASE_URL = "https://prod.example.com";
+    const { endpointUrlFor } = await import("./objects.js");
+    expect(endpointUrlFor("appid-1")).toBe("https://prod.example.com/api/cs-api/appid-1");
+  });
+
+  it("falls back to ENCLAWS_GATEWAY_PORT when AGENORA_BASE_URL unset", async () => {
+    delete process.env.AGENORA_BASE_URL;
+    delete process.env.AGENORA_PUBLIC_URL;
+    process.env.ENCLAWS_GATEWAY_PORT = "12345";
+    const { endpointUrlFor } = await import("./objects.js");
+    expect(endpointUrlFor("appid-2")).toBe("http://localhost:12345/api/cs-api/appid-2");
   });
 });
