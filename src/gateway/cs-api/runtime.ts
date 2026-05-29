@@ -17,11 +17,13 @@ import { tryAppSecretAuth } from "../../auth/app-secret.js";
 import { loadTenantConfig } from "../../config/tenant-config.js";
 import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
 import { dbStateToCsApi } from "../../customer-service/state-mapping.js";
+import { getCsApiObjectById } from "../../db/models/cs-api-object.js";
 import {
   findOrCreateCsApiSession,
   appendCsApiMessage,
   setSessionState,
 } from "../../db/models/cs-session.js";
+import { getTenantAgent } from "../../db/models/tenant-agent.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
   HandoffInput,
@@ -315,6 +317,47 @@ export async function handleMarkNotifying(
   }
 
   sendJson(res, 200, { session: { ...session, state: apiState } });
+}
+
+// ── Handler: GET /{appId} ────────────────────────────────────────────────────
+
+/**
+ * Return the readable identity of the AI service behind an appId:
+ *   { appId, name, agentName }
+ * where `name` is the cs-api object's service name and `agentName` is the
+ * associated agent's display name (falling back to the raw agentId when the
+ * agent has no display name / no tenant_agents row). jiumi (需求3) uses this
+ * to render the ticket creator as "XX（AI员工）".
+ *
+ * 返回 appId 背后 AI 服务的可读身份：服务名 + 关联 AI 员工可读名
+ * （无显示名时回退 agentId）。供 jiumi 在工单"创建人"处显示"XX（AI员工）"。
+ */
+export async function handleGetObject(
+  req: IncomingMessage,
+  res: ServerResponse,
+  appId: string,
+): Promise<void> {
+  const authResult = await tryAppSecretAuth(req, appId);
+  if (!authResult.ok) {
+    sendError(res, 401, authResult.code, authResult.message);
+    return;
+  }
+  const { tenantId, appObjectId, agentId } = authResult.tenant;
+
+  // Re-fetch tenant-scoped to read the service name (auth context carries ids only).
+  // 按 tenant 作用域回读服务名（鉴权上下文只带 id，不带 name）。
+  const obj = await getCsApiObjectById(appObjectId, tenantId);
+  if (!obj) {
+    sendError(res, 404, "OBJECT_NOT_FOUND", `API Object not found: ${appId}`);
+    return;
+  }
+
+  // Resolve agent display name; fall back to agentId when missing.
+  // 解析 AI 员工可读名，缺失则回退 agentId。
+  const agent = await getTenantAgent(tenantId, agentId);
+  const agentName = agent?.name ?? agentId;
+
+  sendJson(res, 200, { appId, name: obj.name, agentName });
 }
 
 // ── Handler: POST /{appId}/sessions/{sessionId}/messages/observer ────────────

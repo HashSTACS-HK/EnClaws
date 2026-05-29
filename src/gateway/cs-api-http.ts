@@ -22,6 +22,7 @@ import {
   handleRelease,
   handleMarkNotifying,
   handleObserver,
+  handleGetObject,
 } from "./cs-api/runtime.js";
 import {
   handleListSessions,
@@ -140,6 +141,17 @@ export async function handleCsApiRequest(
   const getSessMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)$/);
   if (getSessMatch && req.method === "GET") {
     await handleGetSession(req, res, getSessMatch[1], getSessMatch[2]);
+    return true;
+  }
+
+  // GET /api/cs-api/{appId} — service identity (name + agentName) for jiumi (需求3).
+  // IMPORTANT: single-segment GET. Registered LAST among GET routes so it never
+  // shadows the admin `/objects` list (also single-segment) — that route is
+  // matched earlier above. Multi-segment `{appId}/...` routes are unaffected.
+  // 单段 GET，注册在最后，避免吞掉 admin 的 /objects 列表；多段 {appId}/... 路由不受影响。
+  const getObjMatch = path.match(/^\/([^/]+)$/);
+  if (getObjMatch && req.method === "GET") {
+    await handleGetObject(req, res, getObjMatch[1]);
     return true;
   }
 
