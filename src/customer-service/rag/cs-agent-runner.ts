@@ -51,6 +51,28 @@ const CS_KNOWLEDGE_MIN_SCORE = 0.1;
 export interface CSAgentReplyResult {
   reply: string;
   sourceChunks: MemorySearchResult[];
+  /**
+   * The model that actually produced the reply, in `provider/model` form,
+   * reflecting any fallback that occurred. Undefined when the run failed before
+   * a model answered (early-return error paths).
+   * 实际产出回复的模型（含 fallback 后的真实选择），格式 provider/model；
+   * 在模型应答前就失败的早退路径下为 undefined。
+   */
+  modelUsed?: string;
+  /**
+   * Token usage for the run (last-turn totals from the embedded agent meta).
+   * Undefined when the underlying runner did not report usage.
+   * 本次运行的 token 用量（取嵌入 agent 的最后一轮统计）；底层未上报时为 undefined。
+   */
+  tokensUsed?: { prompt: number; completion: number; total: number };
+  /**
+   * Run correlation id (= the `cs-run-<ts>` runId passed to the embedded agent),
+   * used as the turnId for upper-layer reasoning summaries. Always present on
+   * the happy path; undefined only on pre-run failures.
+   * 运行关联 id（即传给嵌入 agent 的 cs-run-<ts> runId），作为上层推理摘要的
+   * turnId；happy path 必有，仅在运行前失败时为 undefined。
+   */
+  turnId?: string;
 }
 
 /**
@@ -205,6 +227,11 @@ export async function runCSAgentReply(params: {
     const defaultProvider = parsed?.provider ?? DEFAULT_PROVIDER;
     const defaultModel = parsed?.model ?? DEFAULT_MODEL;
 
+    // Run correlation id — generated once here so it is stable across fallback
+    // attempts and can be surfaced as the turnId for upper-layer reasoning.
+    // 运行关联 id：在此处生成一次，跨 fallback 尝试保持稳定，并作为 turnId 上抛。
+    const turnId = `cs-run-${Date.now()}`;
+
     // Step 5: Call LLM with model fallback
     // promptMode: "none" — skip the 800+ line EC agent prompt entirely.
     // The full system prompt is: "You are a personal assistant running inside EnClaws." + extraSystemPrompt.
@@ -228,7 +255,7 @@ export async function runCSAgentReply(params: {
           provider: providerOverride,
           model: modelOverride,
           timeoutMs: CS_AGENT_TIMEOUT_MS,
-          runId: `cs-run-${Date.now()}`,
+          runId: turnId,
           extraSystemPrompt,
           promptMode: "none",
           disableTools,
@@ -242,11 +269,32 @@ export async function runCSAgentReply(params: {
     const result = fallbackResult.result;
     const rawReply = result.payloads?.[0]?.text?.trim();
 
+    // Real model + token usage for the reasoning trace (P4 reasoning step1).
+    // - model: `fallbackResult.provider/model` is the model that actually
+    //   answered, reflecting any fallback (authoritative over agentMeta).
+    // - tokens: last-turn usage from the embedded agent meta (input/output/total);
+    //   absent when the underlying runner did not report usage.
+    // 真实模型 + token 用量（推理依据）：
+    //   模型取 fallbackResult.provider/model（含 fallback 后的真实选择，权威）；
+    //   token 取嵌入 agent meta 的最后一轮用量，底层未上报时为 undefined。
+    const modelUsed = `${fallbackResult.provider}/${fallbackResult.model}`;
+    const usage = result.meta.agentMeta?.usage;
+    const tokensUsed = usage
+      ? {
+          prompt: usage.input ?? 0,
+          completion: usage.output ?? 0,
+          total: usage.total ?? (usage.input ?? 0) + (usage.output ?? 0),
+        }
+      : undefined;
+
     if (!rawReply) {
       log.warn(`cs agent returned empty reply for session ${sessionId}`);
       return {
         reply: "抱歉，我暂时无法回答这个问题。我会通知负责人为您跟进。",
         sourceChunks,
+        modelUsed,
+        tokensUsed,
+        turnId,
       };
     }
 
@@ -260,7 +308,7 @@ export async function runCSAgentReply(params: {
       .replace(/\s*>\s*Skills\s*used\s*:[^\n]*$/i, "")
       .trimEnd();
 
-    return { reply: replyText, sourceChunks };
+    return { reply: replyText, sourceChunks, modelUsed, tokensUsed, turnId };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error(`cs agent failed for session ${sessionId}: ${message}`);

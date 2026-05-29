@@ -20,7 +20,20 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("../../customer-service/rag/cs-agent-runner.js", () => ({
   runCSAgentReply: vi.fn().mockResolvedValue({
     reply: "test reply [confidence:0.85]",
-    sourceChunks: [],
+    sourceChunks: [
+      {
+        path: "kb/hours.md",
+        startLine: 1,
+        endLine: 4,
+        score: 0.92,
+        snippet: "Our business hours are 9am to 6pm, Monday to Friday.",
+        source: "memory",
+        sourceLabel: "企业知识库 / hours",
+      },
+    ],
+    modelUsed: "openai-compatible/gpt-test",
+    tokensUsed: { prompt: 120, completion: 40, total: 160 },
+    turnId: "cs-run-1700000000000",
   }),
 }));
 
@@ -353,16 +366,31 @@ describe("POST /{appId}/messages", () => {
     const chunkData = chunkEvents[0].data as { text?: string };
     expect(chunkData.text).toBe("test reply");
 
-    // done has confidence 0.85 (extracted from mock reply) + placeholder fields
+    // done carries confidence (extracted from mock reply) + enriched reasoning
+    // fields threaded through from runCSAgentReply: turnId, real model, real
+    // tokens, and a KB-hits summary derived from sourceChunks.
+    // done 事件携带 confidence + 透传的推理信息：turnId / 真实模型 / 真实 token /
+    // 知识库命中摘要（由 sourceChunks 派生）。
     const done = events.find((e) => e.event === "done");
     const doneData = done?.data as {
       confidence?: number;
       modelActuallyUsed?: string;
       finishReason?: string;
+      turnId?: string;
+      tokensUsed?: { prompt?: number; completion?: number; total?: number };
+      knowledgeHits?: Array<{ source?: string; score?: number; snippet?: string }>;
     };
     expect(doneData?.confidence).toBeCloseTo(0.85);
-    expect(doneData?.modelActuallyUsed).toBe("unknown");
     expect(doneData?.finishReason).toBe("stop");
+    expect(doneData?.modelActuallyUsed).toBe("openai-compatible/gpt-test");
+    expect(doneData?.turnId).toBe("cs-run-1700000000000");
+    expect(doneData?.tokensUsed).toEqual({ prompt: 120, completion: 40, total: 160 });
+    expect(doneData?.knowledgeHits).toHaveLength(1);
+    expect(doneData?.knowledgeHits?.[0]).toEqual({
+      source: "企业知识库 / hours",
+      score: 0.92,
+      snippet: "Our business hours are 9am to 6pm, Monday to Friday.",
+    });
   });
 
   it("passes the bound agentId from auth into runCSAgentReply (P4 agentId wiring)", async () => {

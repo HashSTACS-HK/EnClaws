@@ -15,7 +15,9 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { Value } from "@sinclair/typebox/value";
 import { tryAppSecretAuth } from "../../auth/app-secret.js";
 import { loadTenantConfig } from "../../config/tenant-config.js";
+import type { CSAgentReplyResult } from "../../customer-service/rag/cs-agent-runner.js";
 import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
+import { summarizeKnowledgeHits } from "../../customer-service/rag/cs-knowledge-summary.js";
 import { dbStateToCsApi } from "../../customer-service/state-mapping.js";
 import { getCsApiObjectById } from "../../db/models/cs-api-object.js";
 import {
@@ -37,6 +39,12 @@ import { readJsonBody, sendError, sendJson } from "./http-helpers.js";
 import { endSse, startSse, writeSseEvent } from "./sse.js";
 
 const log = createSubsystemLogger("cs-api-runtime");
+
+// Max knowledge-base hits surfaced in the SSE done event's reasoning summary.
+// Mirrors the runner's CS_KNOWLEDGE_MAX_RESULTS cap; an explicit guard so the
+// done payload stays bounded even if sourceChunks grows upstream.
+// done 事件推理摘要中最多回传的知识库命中数（与 runner 的检索上限对齐，独立兜底）。
+const DONE_EVENT_MAX_KB_HITS = 5;
 
 // ── Handler: POST /{appId}/messages ─────────────────────────────────────────
 
@@ -119,8 +127,9 @@ export async function handleMessages(
   // Jiumi is a backend relay to WeCom — true streaming has no UX value here.
   // runCSAgentReply 内部处理 RAG 和 CS prompt，返回完整回复后再发送 SSE 事件。
   let reply: string;
+  let agentResult: CSAgentReplyResult;
   try {
-    const result = await runCSAgentReply({
+    agentResult = await runCSAgentReply({
       tenantId,
       sessionId: session.id,
       customerMessage: input.content,
@@ -130,7 +139,7 @@ export async function handleMessages(
       // 使用绑定到该 cs-api 对象的 agent（从鉴权解析，租户作用域），而非全局默认。
       agentId,
     });
-    reply = result.reply;
+    reply = agentResult.reply;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log.error(`cs-api messages agent error: appId=${appId} sessionId=${session.id} err=${msg}`);
@@ -157,13 +166,21 @@ export async function handleMessages(
   // 9. Emit single chunk event with full stripped reply
   writeSseEvent(res, "chunk", { text: stripped });
 
-  // 10. Emit done event
-  // TODO: extend runCSAgentReply return type to expose model + usage (S3+ backlog)
+  // 10. Emit done event — enriched reasoning trace for the upper app (P4 step1):
+  // real turnId + model (incl. fallback) + token usage + KB-hits summary.
+  // `confidence` and `finishReason` are preserved. Fields the runner could not
+  // resolve degrade gracefully (model "unknown", zeroed tokens) rather than fake.
+  // 10. 发送 done 事件 — 给上层应用的推理依据（P4 step1）：真实 turnId / 模型
+  // （含 fallback）/ token 用量 / 知识库命中摘要。confidence 与 finishReason 保留。
+  // runner 无法解析的字段优雅降级（model "unknown"、token 归零），不伪造。
+  const knowledgeHits = summarizeKnowledgeHits(agentResult.sourceChunks, DONE_EVENT_MAX_KB_HITS);
   writeSseEvent(res, "done", {
     confidence,
-    modelActuallyUsed: "unknown",
+    turnId: agentResult.turnId,
+    modelActuallyUsed: agentResult.modelUsed ?? "unknown",
     finishReason: "stop",
-    tokensUsed: { prompt: 0, completion: 0, total: 0 },
+    tokensUsed: agentResult.tokensUsed ?? { prompt: 0, completion: 0, total: 0 },
+    knowledgeHits,
   });
   endSse(res);
 }
