@@ -519,7 +519,18 @@ export async function appendCsApiMessage(params: {
 export async function setSessionState(params: {
   tenantId: string;
   sessionId: string;
-  state: CsApiSessionState;
+  /**
+   * Raw state literal written to the DB column verbatim. Typed as `string`
+   * (not `CsApiSessionState`) so the cs-api endpoint layer can write the
+   * v1.2 §F.2 four-value enum (`ai-handling` | `notifying` | `human-handling`
+   * | `closed`) while legacy S1 widget paths still write `ai_active` /
+   * `human_active`. Reads stay unchanged; cs-api responses normalize the
+   * value via `dbStateToCsApi` (state-mapping.ts) at the endpoint boundary.
+   *
+   * state 字段以字面量写入，类型为 string 以容纳新四值枚举与旧 legacy 值；
+   * cs-api 响应在端点层经 dbStateToCsApi 归一化。
+   */
+  state: string;
   activeResponder: CsApiActiveResponder | null;
 }): Promise<CsApiSession | null> {
   const { tenantId, sessionId, state, activeResponder } = params;

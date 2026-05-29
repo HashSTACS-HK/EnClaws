@@ -20,6 +20,7 @@ import {
   handleMessages,
   handleHandoff,
   handleRelease,
+  handleMarkNotifying,
   handleObserver,
 } from "./cs-api/runtime.js";
 import {
@@ -101,6 +102,13 @@ export async function handleCsApiRequest(
   const releaseMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/release-to-ai$/);
   if (releaseMatch && req.method === "POST") {
     await handleRelease(req, res, releaseMatch[1], releaseMatch[2]);
+    return true;
+  }
+
+  // POST /api/cs-api/{appId}/sessions/{sessionId}/mark-notifying
+  const notifyingMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/mark-notifying$/);
+  if (notifyingMatch && req.method === "POST") {
+    await handleMarkNotifying(req, res, notifyingMatch[1], notifyingMatch[2]);
     return true;
   }
 

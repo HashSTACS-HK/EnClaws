@@ -50,6 +50,27 @@ export const ReleaseInput = Type.Object(
   { additionalProperties: false },
 );
 
+/**
+ * Body for POST /{appId}/sessions/{sessionId}/mark-notifying.
+ * Both fields are optional — caller may supply matter context and a reason
+ * code for observability/audit. Unknown fields are rejected.
+ *
+ * mark-notifying 端点入参，所有字段均可选；额外字段被拒绝。
+ */
+export const MarkNotifyingInput = Type.Object(
+  {
+    matterId: Type.Optional(NonEmptyString),
+    reason: Type.Optional(
+      Type.Union([
+        Type.Literal("low-confidence"),
+        Type.Literal("explicit-customer-request"),
+        Type.Literal("other"),
+      ]),
+    ),
+  },
+  { additionalProperties: false },
+);
+
 export const ObserverInput = Type.Object(
   {
     role: Type.Union([Type.Literal("human-staff"), Type.Literal("customer")]),

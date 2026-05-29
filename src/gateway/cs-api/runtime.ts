@@ -23,11 +23,13 @@ import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
   HandoffInput,
+  MarkNotifyingInput,
   ObserverInput,
   ReleaseInput,
   SendMessageInput,
 } from "../protocol/schema/cs-api.js";
 import { Value } from "@sinclair/typebox/value";
+import { dbStateToCsApi } from "../../customer-service/state-mapping.js";
 import { readJsonBody, sendError, sendJson } from "./http-helpers.js";
 import { endSse, startSse, writeSseEvent } from "./sse.js";
 import { extractConfidence } from "./confidence.js";
@@ -238,6 +240,66 @@ export async function handleRelease(
   }
 
   sendJson(res, 200, { session });
+}
+
+// ── Handler: POST /{appId}/sessions/{sessionId}/mark-notifying ───────────────
+
+/**
+ * Transition a session to the `notifying` state (v1.2 §F.2 4-value enum):
+ * AI paused, awaiting human takeover. Response state is normalized via
+ * `dbStateToCsApi` so jiumi always receives one of the cs-api 4 values.
+ *
+ * 将会话切到 notifying 状态（AI 暂停等待人工接管）。响应经 dbStateToCsApi
+ * 归一化，对外永远是 cs-api 四值之一。
+ */
+export async function handleMarkNotifying(
+  req: IncomingMessage,
+  res: ServerResponse,
+  appId: string,
+  sessionId: string,
+): Promise<void> {
+  const authResult = await tryAppSecretAuth(req, appId);
+  if (!authResult.ok) {
+    sendError(res, 401, authResult.code, authResult.message);
+    return;
+  }
+  const { tenantId } = authResult.tenant;
+
+  let body: unknown;
+  try {
+    body = await readJsonBody(req);
+  } catch {
+    sendError(res, 400, "INVALID_BODY", "Failed to parse request body");
+    return;
+  }
+  if (!Value.Check(MarkNotifyingInput, body)) {
+    sendError(res, 400, "INVALID_INPUT", "Request body failed schema validation");
+    return;
+  }
+
+  // notifying = AI paused, no human responder yet → activeResponder stays null.
+  // notifying 状态尚无具体接管方，activeResponder 保持 null。
+  const session = await setSessionState({
+    tenantId,
+    sessionId,
+    state: "notifying",
+    activeResponder: null,
+  });
+
+  if (!session) {
+    sendError(res, 404, "SESSION_NOT_FOUND", `Session not found: ${sessionId}`);
+    return;
+  }
+
+  // Option B mapping at the endpoint boundary — normalize raw DB state to cs-api enum.
+  // 端点边界做映射：把 DB 原值规范化为 cs-api 四值枚举。
+  const apiState = dbStateToCsApi(session.state);
+  if (!apiState) {
+    sendError(res, 500, "INVALID_DB_STATE", `Unknown session state: ${session.state}`);
+    return;
+  }
+
+  sendJson(res, 200, { session: { ...session, state: apiState } });
 }
 
 // ── Handler: POST /{appId}/sessions/{sessionId}/messages/observer ────────────
