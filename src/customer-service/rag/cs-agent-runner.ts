@@ -18,25 +18,29 @@ import {
   resolveDefaultAgentId,
   resolveAgentEffectiveModelPrimary,
 } from "../../agents/agent-scope.js";
+import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../../agents/defaults.js";
+import { runWithModelFallback } from "../../agents/model-fallback.js";
+import { parseModelRef } from "../../agents/model-selection.js";
+import { runEmbeddedPiAgent } from "../../agents/pi-embedded.js";
+import type { OpenClawConfig } from "../../config/config.js";
 import {
   resolveTenantDir,
   resolveTenantAgentDir,
+  resolveTenantAgentKnowledgeDir,
+  resolveTenantAgentMemoryIndexPath,
+  resolveTenantMemoryIndexPath,
 } from "../../config/sessions/tenant-paths.js";
-import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../../agents/defaults.js";
-import { parseModelRef } from "../../agents/model-selection.js";
-import { runEmbeddedPiAgent } from "../../agents/pi-embedded.js";
-import { runWithModelFallback } from "../../agents/model-fallback.js";
-import type { OpenClawConfig } from "../../config/config.js";
-import { getMemorySearchManager } from "../../memory/search-manager.js";
-import type { MemorySearchResult } from "../../memory/types.js";
 import { getTenantById } from "../../db/models/tenant.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
+import { getMemorySearchManager } from "../../memory/search-manager.js";
+import type { MemorySearchResult } from "../../memory/types.js";
+import { mergeCascadeResults } from "./cs-knowledge-cascade.js";
+import { loadAgentPersona, selectBasePrompt } from "./cs-persona.js";
 import {
   buildCSSystemPrompt,
   renderCSBasePrompt,
   type CSRestrictions,
 } from "./cs-system-prompt.js";
-import { loadAgentPersona, selectBasePrompt } from "./cs-persona.js";
 
 const log = createSubsystemLogger("cs-agent-runner");
 
@@ -91,11 +95,13 @@ export async function runCSAgentReply(params: {
   const disableTools = params.restrictions?.disableSkills ?? false;
 
   const agentId = params.agentId ?? resolveDefaultAgentId(cfg);
-  // CS knowledge base is a shared tenant-level resource — NOT user-scoped workspace.
-  // Path: ~/.enclaws/tenants/{tenantId}/customer-service/
-  // getMemorySearchManager will look for memory/**/*.md under this dir.
-  // 客服知识库是租户共享资源，走租户独立路径，不挂载在任何用户 workspace 下。
-  const csWorkspaceDir = params.workspaceDir ?? path.join(resolveTenantDir(tenantId), "customer-service");
+  // Runtime workspace for the embedded agent run (NOT the RAG source — see Step 1).
+  // The CS RAG now cascades over the agent KB + enterprise KB; this dir only scopes
+  // the agent's own tool/file workspace during the reply run.
+  // 客服 agent 运行时工作区（不再作为 RAG 检索源，见步骤 1）。RAG 现在级联
+  // agent 知识库 + 企业知识库；此目录仅作为本次回复运行的 agent 工具/文件工作区。
+  const csWorkspaceDir =
+    params.workspaceDir ?? path.join(resolveTenantDir(tenantId), "customer-service");
   const agentDir = resolveTenantAgentDir(tenantId, agentId);
 
   // Resolve company name from tenant record for {companyName} substitution.
@@ -103,7 +109,9 @@ export async function runCSAgentReply(params: {
   let companyName = "EC";
   try {
     const tenant = await getTenantById(tenantId);
-    if (tenant?.name) {companyName = tenant.name;}
+    if (tenant?.name) {
+      companyName = tenant.name;
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.warn(`failed to resolve tenant name for ${tenantId}: ${message}`);
@@ -122,21 +130,57 @@ export async function runCSAgentReply(params: {
     companyName,
   );
 
-  // Step 1: Search knowledge base
-  // 步骤 1：检索知识库
-  let sourceChunks: MemorySearchResult[] = [];
+  // Step 1: Cascade RAG over two knowledge bases (A+B, "依次"):
+  //   B = agent KB (the bound agent's own knowledge, per-agent, embedding-indexed)
+  //   A = enterprise KB (tenant-wide "企业知识库")
+  // Search each independently (one failing must not kill the other), then merge:
+  // agent hits rank first (priority), enterprise hits fill the remaining quota up
+  // to CS_KNOWLEDGE_MAX_RESULTS, duplicates deduped (agent-ranked wins).
+  // 步骤 1：双知识库级联检索（A+B「依次」）：
+  //   B = agent 知识库（绑定 agent 自身知识，按 agent 维度，embedding 索引）
+  //   A = 企业知识库（租户级共享「企业知识库」）
+  // 两库独立检索（互不影响，一边失败不拖垮另一边），再合并：agent 命中优先，
+  // 企业命中填补剩余配额至 CS_KNOWLEDGE_MAX_RESULTS，重复片段去重（agent 优先保留）。
+  const searchOpts = {
+    maxResults: CS_KNOWLEDGE_MAX_RESULTS,
+    minScore: CS_KNOWLEDGE_MIN_SCORE,
+  };
+
+  // B: agent KB — mirror src/gateway/server-methods/memory.ts.
+  let agentHits: MemorySearchResult[] = [];
   try {
-    const { manager } = await getMemorySearchManager({ cfg, agentId, workspaceDir: csWorkspaceDir });
+    const { manager } = await getMemorySearchManager({
+      cfg,
+      agentId,
+      workspaceDir: resolveTenantAgentKnowledgeDir(tenantId, agentId),
+      defaultStorePath: resolveTenantAgentMemoryIndexPath(tenantId, agentId),
+    });
     if (manager) {
-      sourceChunks = await manager.search(customerMessage, {
-        maxResults: CS_KNOWLEDGE_MAX_RESULTS,
-        minScore: CS_KNOWLEDGE_MIN_SCORE,
-      });
+      agentHits = await manager.search(customerMessage, searchOpts);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    log.warn(`knowledge search failed: ${message}`);
+    log.warn(`agent KB search failed: ${message}`);
   }
+
+  // A: enterprise KB — mirror src/gateway/server-methods/tenant-settings-api.ts.
+  let enterpriseHits: MemorySearchResult[] = [];
+  try {
+    const { manager } = await getMemorySearchManager({
+      cfg,
+      agentId,
+      workspaceDir: resolveTenantDir(tenantId),
+      defaultStorePath: resolveTenantMemoryIndexPath(tenantId),
+    });
+    if (manager) {
+      enterpriseHits = await manager.search(customerMessage, searchOpts);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.warn(`enterprise KB search failed: ${message}`);
+  }
+
+  const sourceChunks = mergeCascadeResults(agentHits, enterpriseHits, CS_KNOWLEDGE_MAX_RESULTS);
 
   // Step 2: Build CS system prompt with knowledge
   // 步骤 2：用知识片段构建客服系统提示词
