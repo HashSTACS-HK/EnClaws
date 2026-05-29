@@ -30,8 +30,13 @@ vi.mock("../../config/tenant-config.js", () => ({
   loadTenantConfig: vi.fn().mockResolvedValue({}),
 }));
 import type { ServerResponse } from "node:http";
+import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
 import { extractConfidence } from "./confidence.js";
 import { startSse, writeSseEvent, endSse } from "./sse.js";
+
+// Typed handle to the module-level mock for argument assertions.
+// モックされた runCSAgentReply の型付きハンドル（引数検証用）。
+const runCSAgentReplyMock = vi.mocked(runCSAgentReply);
 
 // ── Unit tests: confidence.ts ─────────────────────────────────────────────────
 
@@ -358,6 +363,32 @@ describe("POST /{appId}/messages", () => {
     expect(doneData?.confidence).toBeCloseTo(0.85);
     expect(doneData?.modelActuallyUsed).toBe("unknown");
     expect(doneData?.finishReason).toBe("stop");
+  });
+
+  it("passes the bound agentId from auth into runCSAgentReply (P4 agentId wiring)", async () => {
+    // The cs-api object under test is bound to agentId "cs-test-agent" (see beforeAll).
+    // T1 fix: handleMessages must forward that bound agentId so the runner honors the
+    // tenant's configured CS agent instead of always running as the global default.
+    // T1 修复：handleMessages 必须把绑定的 agentId 透传给 runner，
+    // 否则租户绑定的客服 agent 永远跑成全局默认 agent。
+    runCSAgentReplyMock.mockClear();
+
+    const { handleMessages } = await import("./runtime.js");
+    const req = makeRequest({
+      authorization: `Bearer ${plainSecret}`,
+      body: {
+        customerId: "cust-agentid-001",
+        content: "Which agent answers me?",
+      },
+    });
+    const { res } = makeSseResponse();
+
+    await handleMessages(req, res, appId);
+
+    expect(runCSAgentReplyMock).toHaveBeenCalledTimes(1);
+    expect(runCSAgentReplyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ agentId: "cs-test-agent" }),
+    );
   });
 });
 

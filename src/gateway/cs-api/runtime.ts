@@ -125,6 +125,10 @@ export async function handleMessages(
       sessionId: session.id,
       customerMessage: input.content,
       cfg,
+      // Honor the agent bound to this cs-api object (resolved from auth, tenant-scoped)
+      // instead of falling back to the global default agent.
+      // 使用绑定到该 cs-api 对象的 agent（从鉴权解析，租户作用域），而非全局默认。
+      agentId,
     });
     reply = result.reply;
   } catch (err) {

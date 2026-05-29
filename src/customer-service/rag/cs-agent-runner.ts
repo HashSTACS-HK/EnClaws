@@ -73,13 +73,18 @@ export async function runCSAgentReply(params: {
    * 行为限制项，全部默认 true（受限/安全模式）。
    */
   restrictions?: CSRestrictions;
+  /**
+   * Bound agent id from the cs-api object / widget; falls back to the
+   * tenant/global default agent when omitted. 绑定 agent；缺省回退默认。
+   */
+  agentId?: string;
 }): Promise<CSAgentReplyResult> {
   const { tenantId, sessionId, customerMessage, visitorName, cfg } = params;
   // disableSkills defaults to true (restricted mode). Code-level enforcement.
   // disableSkills 默认 true（受限模式），代码层强制，不依赖 LLM 遵从。
   const disableTools = params.restrictions?.disableSkills ?? true;
 
-  const agentId = resolveDefaultAgentId(cfg);
+  const agentId = params.agentId ?? resolveDefaultAgentId(cfg);
   // CS knowledge base is a shared tenant-level resource — NOT user-scoped workspace.
   // Path: ~/.enclaws/tenants/{tenantId}/customer-service/
   // getMemorySearchManager will look for memory/**/*.md under this dir.
