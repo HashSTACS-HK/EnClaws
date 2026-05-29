@@ -969,6 +969,9 @@ export const pt_BR: TranslationMap = {
     memorySaved: "Memoria da empresa salva",
     memorySaveFailed: "Falha ao salvar memoria da empresa",
     memoryHint: "Este conteudo e mantido automaticamente pelos assistentes de IA e pode ser editado manualmente.",
+    tenantIdLabel: "ID do tenant:",
+    tenantIdCopy: "Copiar",
+    tenantIdCopied: "Copiado",
   },
   captcha: {
     label: "Captcha",

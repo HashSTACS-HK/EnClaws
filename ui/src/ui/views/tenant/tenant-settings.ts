@@ -5,6 +5,7 @@
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import { t, I18nController } from "../../../i18n/index.ts";
+import { loadAuth } from "../../auth-store.ts";
 import { tenantRpc } from "./rpc.ts";
 import { caretFix } from "../../shared-styles.ts";
 
@@ -89,6 +90,27 @@ export class TenantSettingsView extends LitElement {
     }
     .loading { text-align: center; padding: 2rem; color: var(--muted); }
     .actions { margin-top: 1rem; }
+    .form-field.readonly { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .form-field.readonly label { margin-bottom: 0; white-space: nowrap; }
+    .tenant-id-value {
+      font-family: var(--font-mono, monospace);
+      font-size: 0.85rem;
+      color: var(--text);
+      flex: 1;
+      word-break: break-all;
+    }
+    .btn-copy {
+      padding: 0.3rem 0.65rem;
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      background: var(--input-bg);
+      color: var(--text-2);
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .btn-copy:hover { opacity: 0.8; }
   `];
 
   @property({ type: String }) gatewayUrl = "";
@@ -103,10 +125,28 @@ export class TenantSettingsView extends LitElement {
   @state() private memoryContent = "";
   @state() private memorySaving = false;
   @state() private memorySuccess = "";
+  @state() private _copiedTenantId = false;
+  private _copyTimer?: ReturnType<typeof setTimeout>;
 
   connectedCallback() {
     super.connectedCallback();
     this.loadSettings();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._copyTimer);
+  }
+
+  private async _copyTenantId(id: string) {
+    try {
+      await navigator.clipboard.writeText(id);
+      this._copiedTenantId = true;
+      clearTimeout(this._copyTimer);
+      this._copyTimer = setTimeout(() => { this._copiedTenantId = false; }, 2000);
+    } catch {
+      // Clipboard not available in non-secure context — ignore.
+    }
   }
 
   private rpc(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
@@ -222,6 +262,16 @@ export class TenantSettingsView extends LitElement {
             ></textarea>
             <div class="hint">${t("tenantSettings.identityPromptHint")}</div>
           </div>
+          ${(() => { const tenantId = loadAuth()?.tenant?.id; return tenantId ? html`
+          <div class="form-field readonly">
+            <label>${t("tenantSettings.tenantIdLabel")}</label>
+            <span class="tenant-id-value">${tenantId}</span>
+            <button class="btn-copy" type="button"
+              @click=${() => this._copyTenantId(tenantId)}>
+              ${this._copiedTenantId ? t("tenantSettings.tenantIdCopied") : t("tenantSettings.tenantIdCopy")}
+            </button>
+          </div>
+          ` : nothing; })()}
         </div>
         <div class="actions">
           <button class="btn btn-primary" type="submit" ?disabled=${this.saving}>

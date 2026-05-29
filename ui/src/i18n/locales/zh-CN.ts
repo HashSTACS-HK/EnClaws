@@ -1393,6 +1393,9 @@ export const zh_CN: TranslationMap = {
     memorySaved: "企业记忆已保存",
     memorySaveFailed: "保存企业记忆失败",
     memoryHint: "该内容由 AI 助手自动维护，也可手动编辑。将作为企业上下文注入到所有 AI 对话中。",
+    tenantIdLabel: "租户 ID：",
+    tenantIdCopy: "复制",
+    tenantIdCopied: "已复制",
   },
   captcha: {
     label: "图形验证码",
