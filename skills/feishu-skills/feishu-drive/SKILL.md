@@ -7,6 +7,7 @@ inline: true
 ---
 
 # feishu-drive
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -15,13 +16,13 @@ inline: true
 
 `list` / `get_meta` 返回结果中的文件按类型分流到不同技能：
 
-| 文件类型（type/扩展名） | 下游技能 |
-|---|---|
-| `docx` / `doc`（飞书在线云文档） | **feishu-fetch-doc**（用 `token` 作为 `--doc-id`） |
-| `sheet`（飞书在线电子表格） | **feishu-sheet** |
-| `bitable`（飞书多维表格） | **feishu-bitable** |
+| 文件类型（type/扩展名）                                        | 下游技能                                                   |
+| -------------------------------------------------------------- | ---------------------------------------------------------- |
+| `docx` / `doc`（飞书在线云文档）                               | **feishu-fetch-doc**（用 `token` 作为 `--doc-id`）         |
+| `sheet`（飞书在线电子表格）                                    | **feishu-sheet**                                           |
+| `bitable`（飞书多维表格）                                      | **feishu-bitable**                                         |
 | `file` 且扩展名为 `.docx`/`.doc`/`.pdf`/`.pptx`/`.xlsx` 等附件 | **feishu-docx-download**（用 `token` 作为 `--file-token`） |
-| `folder` | 继续 `list` 进入子目录 |
+| `folder`                                                       | 继续 `list` 进入子目录                                     |
 
 > 💡 当用户说「云盘里的 Word 文档」「我那个 PDF」时，先用 `list` / `search` 找到文件，再根据 `type` 决定下游技能。**Word/PDF/Excel 等附件文件 → feishu-docx-download**，**飞书在线 docx 文档 → feishu-fetch-doc**。
 
@@ -138,4 +139,3 @@ node ./drive.js --open-id "SENDER_OPEN_ID" --action delete --file-token "文件T
 - **delete**：删除文件（异步），`type` 通过 query 参数传递，返回 `task_id` 表示删除任务已提交。
 
 后续可在保持 CLI 兼容的前提下继续扩展更多云盘操作。
-

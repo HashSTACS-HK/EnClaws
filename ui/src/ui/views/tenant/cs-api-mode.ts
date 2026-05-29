@@ -17,12 +17,12 @@
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import { I18nController, t } from "../../../i18n/index.ts";
-import { tenantRpc } from "./rpc.ts";
-import { loadSettings } from "../../storage.ts";
 import { getAccessToken } from "../../auth-store.ts";
-import { caretFix } from "../../shared-styles.ts";
 import { showConfirm } from "../../components/confirm-dialog.ts";
 import { showSecretReveal } from "../../components/secret-reveal-dialog.ts";
+import { caretFix } from "../../shared-styles.ts";
+import { loadSettings } from "../../storage.ts";
+import { tenantRpc } from "./rpc.ts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -84,14 +84,22 @@ export class CsApiModeView extends LitElement {
   static styles = [
     caretFix,
     css`
-      :host { display: block; }
+      :host {
+        display: block;
+      }
 
-      h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+      h2 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 600;
+      }
 
       /* Error banner at the top of the view */
       .error-banner {
-        display: flex; align-items: flex-start; gap: 8px;
-        background: rgba(127,29,29,0.15);
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        background: rgba(127, 29, 29, 0.15);
         border: 1px solid var(--color-danger, #cf222e);
         border-radius: 8px;
         padding: 10px 14px;
@@ -103,8 +111,12 @@ export class CsApiModeView extends LitElement {
 
       /* Section header row */
       .header-row {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        gap: 12px;
+        flex-wrap: wrap;
       }
 
       /* Create form */
@@ -117,24 +129,38 @@ export class CsApiModeView extends LitElement {
       }
 
       .form-title {
-        font-size: 14px; font-weight: 600; margin: 0 0 14px;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 14px;
         color: var(--color-text, #1c1c1e);
       }
 
-      .form-group { margin-bottom: 14px; }
+      .form-group {
+        margin-bottom: 14px;
+      }
       .form-group label {
-        display: block; font-size: 13px; font-weight: 600;
-        margin-bottom: 5px; color: var(--color-text, #1c1c1e);
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--color-text, #1c1c1e);
       }
 
-      .required-mark { color: var(--color-danger, #cf222e); margin-left: 2px; }
+      .required-mark {
+        color: var(--color-danger, #cf222e);
+        margin-left: 2px;
+      }
 
-      input[type="text"], textarea, select {
-        width: 100%; max-width: 480px;
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        max-width: 480px;
         padding: 8px 10px;
         border: 1px solid var(--color-border, #e1e4e8);
         border-radius: 6px;
-        font-size: 13px; font-family: inherit;
+        font-size: 13px;
+        font-family: inherit;
         outline: none;
         background: var(--color-bg, #fff);
         color: var(--color-text, #1c1c1e);
@@ -142,27 +168,42 @@ export class CsApiModeView extends LitElement {
       }
       input[type="text"]:focus,
       textarea:focus,
-      select:focus { border-color: var(--color-accent, #0969da); }
+      select:focus {
+        border-color: var(--color-accent, #0969da);
+      }
 
-      textarea { resize: vertical; min-height: 70px; }
+      textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
 
-      .form-actions { display: flex; gap: 8px; margin-top: 4px; }
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
 
       /* Table */
       .table-wrap {
         border: 1px solid var(--color-border, #e1e4e8);
-        border-radius: 8px; overflow: hidden;
+        border-radius: 8px;
+        overflow: hidden;
       }
 
       table {
-        width: 100%; border-collapse: collapse;
+        width: 100%;
+        border-collapse: collapse;
         font-size: 13px;
       }
 
-      thead { background: var(--color-bg-secondary, #f6f8fa); }
+      thead {
+        background: var(--color-bg-secondary, #f6f8fa);
+      }
       th {
-        text-align: left; padding: 9px 14px;
-        font-weight: 600; font-size: 12px;
+        text-align: left;
+        padding: 9px 14px;
+        font-weight: 600;
+        font-size: 12px;
         color: var(--color-text-secondary, #6a737d);
         border-bottom: 1px solid var(--color-border, #e1e4e8);
       }
@@ -172,28 +213,48 @@ export class CsApiModeView extends LitElement {
         color: var(--color-text, #1c1c1e);
         vertical-align: middle;
       }
-      tr:last-child td { border-bottom: none; }
-      tr:hover td { background: var(--color-bg-secondary, #f6f8fa); }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--color-bg-secondary, #f6f8fa);
+      }
 
       .cell-mono {
-        font-family: monospace; font-size: 12px;
+        font-family: monospace;
+        font-size: 12px;
         color: var(--color-text-secondary, #6a737d);
       }
 
-      .cell-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+      .cell-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
 
       /* Buttons */
       .btn {
-        padding: 6px 14px; border-radius: 6px; font-size: 13px;
-        cursor: pointer; border: 1px solid transparent;
-        font-weight: 500; white-space: nowrap; font-family: inherit;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        font-weight: 500;
+        white-space: nowrap;
+        font-family: inherit;
       }
-      .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-      .btn:hover:not(:disabled) { opacity: 0.85; }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn:hover:not(:disabled) {
+        opacity: 0.85;
+      }
 
       .btn-primary {
         background: var(--color-accent, #0969da);
-        color: #fff; border-color: var(--color-accent, #0969da);
+        color: #fff;
+        border-color: var(--color-accent, #0969da);
       }
       .btn-ghost {
         background: var(--color-bg-secondary, #f6f8fa);
@@ -208,14 +269,16 @@ export class CsApiModeView extends LitElement {
 
       /* Empty state */
       .empty {
-        padding: 40px; text-align: center;
+        padding: 40px;
+        text-align: center;
         color: var(--color-text-secondary, #6a737d);
         font-size: 13px;
       }
 
       /* Loading */
       .loading {
-        padding: 32px; text-align: center;
+        padding: 32px;
+        text-align: center;
         color: var(--color-text-secondary, #6a737d);
         font-size: 13px;
       }
@@ -263,16 +326,16 @@ export class CsApiModeView extends LitElement {
   private async _fetchObjects() {
     const res = await apiFetch("/api/cs-api/objects");
     if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { message?: string };
+      const body = (await res.json().catch(() => ({}))) as { message?: string };
       throw new Error(body.message ?? `HTTP ${res.status}`);
     }
-    const data = await res.json() as { objects: ApiObject[] };
+    const data = (await res.json()) as { objects: ApiObject[] };
     this._objects = data.objects ?? [];
   }
 
   private async _fetchAgents() {
     try {
-      const result = await tenantRpc("tenant.agents.list", {}, this.gatewayUrl || undefined) as {
+      const result = (await tenantRpc("tenant.agents.list", {}, this.gatewayUrl || undefined)) as {
         agents: TenantAgent[];
       };
       this._agents = result.agents ?? [];
@@ -294,8 +357,12 @@ export class CsApiModeView extends LitElement {
     this._error = "";
     try {
       const body: Record<string, unknown> = { name: this._createName.trim() };
-      if (this._createDescription.trim()) { body.description = this._createDescription.trim(); }
-      if (this._createAgentId) { body.agentId = this._createAgentId; }
+      if (this._createDescription.trim()) {
+        body.description = this._createDescription.trim();
+      }
+      if (this._createAgentId) {
+        body.agentId = this._createAgentId;
+      }
 
       const res = await apiFetch("/api/cs-api/objects", {
         method: "POST",
@@ -303,11 +370,11 @@ export class CsApiModeView extends LitElement {
       });
 
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({})) as { message?: string };
+        const errBody = (await res.json().catch(() => ({}))) as { message?: string };
         throw new Error(errBody.message ?? `HTTP ${res.status}`);
       }
 
-      const created = await res.json() as {
+      const created = (await res.json()) as {
         id: string;
         appId: string;
         appSecret: string;
@@ -347,26 +414,33 @@ export class CsApiModeView extends LitElement {
   // ── Regenerate secret ───────────────────────────────────────────────────────
 
   private async _handleRegenerate(obj: ApiObject) {
-    if (this._busyId !== null) { return; }
+    if (this._busyId !== null) {
+      return;
+    }
     const confirmed = await showConfirm({
       title: t("cs.apiMode.regenerate.confirmTitle"),
       message: t("cs.apiMode.regenerate.confirmMessage"),
       confirmText: t("cs.apiMode.regenerate.confirmBtn"),
       danger: true,
     });
-    if (!confirmed) { return; }
+    if (!confirmed) {
+      return;
+    }
 
     this._busyId = obj.id;
     this._error = "";
     try {
-      const res = await apiFetch(`/api/cs-api/objects/${encodeURIComponent(obj.id)}/regenerate-secret`, {
-        method: "POST",
-      });
+      const res = await apiFetch(
+        `/api/cs-api/objects/${encodeURIComponent(obj.id)}/regenerate-secret`,
+        {
+          method: "POST",
+        },
+      );
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({})) as { message?: string };
+        const errBody = (await res.json().catch(() => ({}))) as { message?: string };
         throw new Error(errBody.message ?? `HTTP ${res.status}`);
       }
-      const data = await res.json() as { appSecret: string };
+      const data = (await res.json()) as { appSecret: string };
 
       // Derive endpoint URL same way as backend does
       const base = resolveHttpBase();
@@ -389,14 +463,18 @@ export class CsApiModeView extends LitElement {
   // ── Delete ──────────────────────────────────────────────────────────────────
 
   private async _handleDelete(obj: ApiObject) {
-    if (this._busyId !== null) { return; }
+    if (this._busyId !== null) {
+      return;
+    }
     const confirmed = await showConfirm({
       title: t("cs.apiMode.delete.confirmTitle"),
       message: t("cs.apiMode.delete.confirmMessage", { name: obj.name }),
       confirmText: t("cs.apiMode.delete.confirmBtn"),
       danger: true,
     });
-    if (!confirmed) { return; }
+    if (!confirmed) {
+      return;
+    }
 
     this._busyId = obj.id;
     this._error = "";
@@ -409,7 +487,7 @@ export class CsApiModeView extends LitElement {
         return;
       }
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({})) as { message?: string };
+        const errBody = (await res.json().catch(() => ({}))) as { message?: string };
         throw new Error(errBody.message ?? `HTTP ${res.status}`);
       }
       await this._fetchObjects();
@@ -425,7 +503,9 @@ export class CsApiModeView extends LitElement {
   // ── Render helpers ──────────────────────────────────────────────────────────
 
   private _renderError() {
-    if (!this._error) { return nothing; }
+    if (!this._error) {
+      return nothing;
+    }
     return html`
       <div class="error-banner">
         <span>⚠ ${this._error}</span>
@@ -434,7 +514,9 @@ export class CsApiModeView extends LitElement {
   }
 
   private _renderCreateForm() {
-    if (!this._showCreate) { return nothing; }
+    if (!this._showCreate) {
+      return nothing;
+    }
     return html`
       <div class="create-form">
         <div class="form-title">${t("cs.apiMode.create.title")}</div>
@@ -445,7 +527,9 @@ export class CsApiModeView extends LitElement {
             type="text"
             placeholder=${t("cs.apiMode.create.namePlaceholder")}
             .value=${this._createName}
-            @input=${(e: Event) => { this._createName = (e.target as HTMLInputElement).value; }}
+            @input=${(e: Event) => {
+              this._createName = (e.target as HTMLInputElement).value;
+            }}
           />
         </div>
 
@@ -454,7 +538,9 @@ export class CsApiModeView extends LitElement {
           <textarea
             placeholder=${t("cs.apiMode.create.descPlaceholder")}
             .value=${this._createDescription}
-            @input=${(e: Event) => { this._createDescription = (e.target as HTMLTextAreaElement).value; }}
+            @input=${(e: Event) => {
+              this._createDescription = (e.target as HTMLTextAreaElement).value;
+            }}
           ></textarea>
         </div>
 
@@ -462,12 +548,16 @@ export class CsApiModeView extends LitElement {
           <label>${t("cs.apiMode.create.agentLabel")}</label>
           <select
             .value=${this._createAgentId}
-            @change=${(e: Event) => { this._createAgentId = (e.target as HTMLSelectElement).value; }}
+            @change=${(e: Event) => {
+              this._createAgentId = (e.target as HTMLSelectElement).value;
+            }}
           >
             <option value="">${t("cs.apiMode.create.agentNone")}</option>
-            ${this._agents.map((a) => html`
+            ${this._agents.map(
+              (a) => html`
               <option value=${a.agentId}>${a.name ?? a.agentId}</option>
-            `)}
+            `,
+            )}
           </select>
         </div>
 
@@ -488,7 +578,9 @@ export class CsApiModeView extends LitElement {
   }
 
   private _formatDate(iso: string | null): string {
-    if (!iso) { return "—"; }
+    if (!iso) {
+      return "—";
+    }
     try {
       return new Date(iso).toLocaleString();
     } catch {
@@ -497,7 +589,9 @@ export class CsApiModeView extends LitElement {
   }
 
   private _agentName(agentId: string | null): string {
-    if (!agentId) { return "—"; }
+    if (!agentId) {
+      return "—";
+    }
     const agent = this._agents.find((a) => a.agentId === agentId);
     return agent?.name ?? agentId;
   }
@@ -524,7 +618,8 @@ export class CsApiModeView extends LitElement {
             </tr>
           </thead>
           <tbody>
-            ${this._objects.map((obj) => html`
+            ${this._objects.map(
+              (obj) => html`
               <tr>
                 <td>${obj.name}</td>
                 <td>${this._agentName(obj.agentId)}</td>
@@ -545,7 +640,8 @@ export class CsApiModeView extends LitElement {
                   </div>
                 </td>
               </tr>
-            `)}
+            `,
+            )}
           </tbody>
         </table>
       </div>
@@ -564,7 +660,10 @@ export class CsApiModeView extends LitElement {
         <h2>${t("cs.apiMode.title")}</h2>
         <button
           class="btn btn-primary"
-          @click=${() => { this._showCreate = !this._showCreate; this._error = ""; }}
+          @click=${() => {
+            this._showCreate = !this._showCreate;
+            this._error = "";
+          }}
         >${t("cs.apiMode.newBtn")}</button>
       </div>
 

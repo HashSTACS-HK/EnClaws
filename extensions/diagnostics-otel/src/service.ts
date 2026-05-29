@@ -235,15 +235,16 @@ export function createDiagnosticsOtelService(): OpenClawPluginService {
 
       let accumulatedCacheRead = 0;
       let accumulatedInputTokens = 0;
-      meter.createObservableGauge("openclaw.cache.hit_rate", {
-        unit: "1",
-        description: "Cache hit rate (cacheRead / input tokens)",
-      }).addCallback((result) => {
-        const rate = accumulatedInputTokens > 0
-          ? accumulatedCacheRead / accumulatedInputTokens
-          : 0;
-        result.observe(rate);
-      });
+      meter
+        .createObservableGauge("openclaw.cache.hit_rate", {
+          unit: "1",
+          description: "Cache hit rate (cacheRead / input tokens)",
+        })
+        .addCallback((result) => {
+          const rate =
+            accumulatedInputTokens > 0 ? accumulatedCacheRead / accumulatedInputTokens : 0;
+          result.observe(rate);
+        });
 
       const memorySearchCounter = meter.createCounter("openclaw.memory_search.count", {
         unit: "1",

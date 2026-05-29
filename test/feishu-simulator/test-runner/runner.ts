@@ -1,13 +1,21 @@
 import { FeishuTestClient } from "../feishu-client.js";
-import { loadTestFiles } from "./file-loader.js";
-import { CsvWriter } from "./csv-writer.js";
+import type {
+  RunnerOptions,
+  ResultRow,
+  TestFile,
+  TestCaseWithJudge,
+  LlmJudgeConfig,
+} from "../types.js";
 import { formatAssert, checkAssertions } from "./asserter.js";
+import { CsvWriter } from "./csv-writer.js";
+import { loadTestFiles } from "./file-loader.js";
 import { evaluateReply } from "./llm-judge.js";
-import type { RunnerOptions, ResultRow, TestFile, TestCaseWithJudge, LlmJudgeConfig } from "../types.js";
 
 type FileResult = { results: ResultRow[]; errors: string[] };
 
-export async function runTestFiles(opts: RunnerOptions & { llmJudge?: LlmJudgeConfig }): Promise<{ results: ResultRow[]; errors: string[] }> {
+export async function runTestFiles(
+  opts: RunnerOptions & { llmJudge?: LlmJudgeConfig },
+): Promise<{ results: ResultRow[]; errors: string[] }> {
   const testFiles = loadTestFiles(opts.dataDir);
 
   if (testFiles.length === 0) {
@@ -69,12 +77,14 @@ export type { LlmJudgeConfig };
  * Layer 3 wrapper — delegates to runTestFiles with LLM judge enabled.
  * Accepts flat llm* options (layer3 test entry style) and converts to llmJudge config.
  */
-export async function runLayer3TestFiles(opts: RunnerOptions & {
-  llmApiKey: string;
-  llmProvider?: string;
-  llmModel?: string;
-  llmBaseUrl?: string;
-}): Promise<{ results: ResultRow[]; errors: string[] }> {
+export async function runLayer3TestFiles(
+  opts: RunnerOptions & {
+    llmApiKey: string;
+    llmProvider?: string;
+    llmModel?: string;
+    llmBaseUrl?: string;
+  },
+): Promise<{ results: ResultRow[]; errors: string[] }> {
   const { llmApiKey, llmProvider, llmModel, llmBaseUrl, ...runnerOpts } = opts;
   return runTestFiles({
     ...runnerOpts,
@@ -93,21 +103,31 @@ export async function runLayer3TestFiles(opts: RunnerOptions & {
  */
 function resolveCredential(jsonValue: string | undefined, envVar: string): string | undefined {
   const isPlaceholder = (v?: string): boolean => {
-    if (!v) {return true;}
+    if (!v) {
+      return true;
+    }
     const trimmed = v.trim();
-    if (!trimmed) {return true;}
-    return trimmed === "xxx"
-      || trimmed === "cli_xxx"
-      || trimmed === "ou_xxx"
-      || trimmed === "oc_xxx"
-      || trimmed.startsWith("oc_xxxxxxxx")
-      || /^x+$/i.test(trimmed);
+    if (!trimmed) {
+      return true;
+    }
+    return (
+      trimmed === "xxx" ||
+      trimmed === "cli_xxx" ||
+      trimmed === "ou_xxx" ||
+      trimmed === "oc_xxx" ||
+      trimmed.startsWith("oc_xxxxxxxx") ||
+      /^x+$/i.test(trimmed)
+    );
   };
   // Env var always wins if it's set
   const envValue = process.env[envVar];
-  if (envValue && !isPlaceholder(envValue)) {return envValue;}
+  if (envValue && !isPlaceholder(envValue)) {
+    return envValue;
+  }
   // Otherwise, fall back to JSON value if it's not a placeholder
-  if (!isPlaceholder(jsonValue)) {return jsonValue;}
+  if (!isPlaceholder(jsonValue)) {
+    return jsonValue;
+  }
   return undefined;
 }
 
@@ -125,7 +145,9 @@ async function runSingleFile(
   function record(row: ResultRow, error?: string) {
     results.push(row);
     csv.append(row);
-    if (error) {errors.push(error);}
+    if (error) {
+      errors.push(error);
+    }
   }
 
   // Resolve credentials: env vars take precedence, JSON values are fallback.
@@ -140,16 +162,26 @@ async function runSingleFile(
       !appId && "appId (TEST_FEISHU_APP_ID)",
       !appSecret && "appSecret (TEST_FEISHU_APP_SECRET)",
       !userOpenId && "userOpenId (TEST_FEISHU_USER_OPEN_ID)",
-    ].filter(Boolean).join(", ");
+    ]
+      .filter(Boolean)
+      .join(", ");
     const errMsg = `Missing credentials: ${missing}. Set in JSON file or via env vars.`;
     console.log(`  ${errMsg}`);
     for (const tc of data.cases) {
       const label = tc.name ?? tc.message.slice(0, 30);
-      record({
-        file: fileName, name: label, message: tc.message,
-        expected: formatAssert(tc.assert), actual: "", failures: `ERROR: ${errMsg}`,
-        passed: false, duration: "-",
-      }, `[${fileName}] "${label}": ${errMsg}`);
+      record(
+        {
+          file: fileName,
+          name: label,
+          message: tc.message,
+          expected: formatAssert(tc.assert),
+          actual: "",
+          failures: `ERROR: ${errMsg}`,
+          passed: false,
+          duration: "-",
+        },
+        `[${fileName}] "${label}": ${errMsg}`,
+      );
     }
     return { results, errors };
   }
@@ -174,11 +206,19 @@ async function runSingleFile(
     console.log(`  ${errMsg}`);
     for (const tc of data.cases) {
       const label = tc.name ?? tc.message.slice(0, 30);
-      record({
-        file: fileName, name: label, message: tc.message,
-        expected: formatAssert(tc.assert), actual: "", failures: `ERROR: ${errMsg}`,
-        passed: false, duration: "-",
-      }, `[${fileName}] "${label}": ${errMsg}`);
+      record(
+        {
+          file: fileName,
+          name: label,
+          message: tc.message,
+          expected: formatAssert(tc.assert),
+          actual: "",
+          failures: `ERROR: ${errMsg}`,
+          passed: false,
+          duration: "-",
+        },
+        `[${fileName}] "${label}": ${errMsg}`,
+      );
     }
     return { results, errors };
   }
@@ -194,12 +234,22 @@ async function runSingleFile(
       console.log(`  [${i + 1}/${data.cases.length}] FAIL ❌ ${label}`);
       console.log(`    Message: ${tc.message}`);
       console.log(`    Error: ${(e as Error).message}`);
-      record({
-        file: fileName, name: label, message: tc.message,
-        expected: formatAssert(tc.assert), actual: "", failures: `ERROR: ${(e as Error).message}`,
-        passed: false, duration: "-",
-      }, `[${fileName}] "${label}": ${(e as Error).message}`);
-      if (!opts.continueOnFailure) {break;}
+      record(
+        {
+          file: fileName,
+          name: label,
+          message: tc.message,
+          expected: formatAssert(tc.assert),
+          actual: "",
+          failures: `ERROR: ${(e as Error).message}`,
+          passed: false,
+          duration: "-",
+        },
+        `[${fileName}] "${label}": ${(e as Error).message}`,
+      );
+      if (!opts.continueOnFailure) {
+        break;
+      }
       continue;
     }
 
@@ -210,14 +260,21 @@ async function runSingleFile(
     let judgeInfo = "";
     if (tcWithJudge.llmJudge && opts.llmJudge) {
       try {
-        const judgeResult = await evaluateReply(opts.llmJudge, tc.message, reply.text, tcWithJudge.llmJudge);
+        const judgeResult = await evaluateReply(
+          opts.llmJudge,
+          tc.message,
+          reply.text,
+          tcWithJudge.llmJudge,
+        );
         const judgeDetails = judgeResult.criteriaResults
           .map((c) => `${c.passed ? "✅" : "❌"} ${c.criterion}: ${c.reason}`)
           .join("\n      ");
         judgeInfo = `\n    [LLM Judge] score=${(judgeResult.score * 100).toFixed(0)}% ${judgeResult.passed ? "PASS" : "FAIL"}\n      ${judgeDetails}`;
 
         if (!judgeResult.passed) {
-          failures.push(`LLM Judge: score ${(judgeResult.score * 100).toFixed(0)}% < threshold ${((tcWithJudge.llmJudge.passThreshold ?? 0.75) * 100).toFixed(0)}%`);
+          failures.push(
+            `LLM Judge: score ${(judgeResult.score * 100).toFixed(0)}% < threshold ${((tcWithJudge.llmJudge.passThreshold ?? 0.75) * 100).toFixed(0)}%`,
+          );
         }
       } catch (e) {
         console.log(`    [LLM Judge] Error: ${(e as Error).message}`);
@@ -236,16 +293,23 @@ async function runSingleFile(
       console.log(`    Reply: ${reply.text}${judgeInfo}`);
     }
 
-    record({
-      file: fileName, name: label, message: tc.message,
-      expected: formatAssert(tc.assert),
-      actual: reply.text,
-      failures: failures.length > 0 ? failures.join("; ") : "",
-      passed: failures.length === 0,
-      duration: `${reply.durationMs}ms`,
-    }, failures.length > 0 ? `[${fileName}] "${label}": ${failures.join("; ")}` : undefined);
+    record(
+      {
+        file: fileName,
+        name: label,
+        message: tc.message,
+        expected: formatAssert(tc.assert),
+        actual: reply.text,
+        failures: failures.length > 0 ? failures.join("; ") : "",
+        passed: failures.length === 0,
+        duration: `${reply.durationMs}ms`,
+      },
+      failures.length > 0 ? `[${fileName}] "${label}": ${failures.join("; ")}` : undefined,
+    );
 
-    if (caseFailed && !opts.continueOnFailure) {break;}
+    if (caseFailed && !opts.continueOnFailure) {
+      break;
+    }
   }
 
   return { results, errors };

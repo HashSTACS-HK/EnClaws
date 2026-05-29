@@ -141,7 +141,7 @@ export function parseMessageContent(body: MessageBody): ParsedMessageContent {
   let quoteContent: string | undefined;
 
   // 处理模板卡片事件回调
-  
+
   if (body.msgtype === "event") {
     const eventText = buildTemplateCardEventText(body);
     if (eventText) {

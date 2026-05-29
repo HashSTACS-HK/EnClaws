@@ -9,7 +9,7 @@
  * business logic — the actual flush work is provided via a callback.
  */
 
-import { THROTTLE_CONSTANTS } from './reply-dispatcher-types';
+import { THROTTLE_CONSTANTS } from "./reply-dispatcher-types";
 
 // ---------------------------------------------------------------------------
 // FlushController

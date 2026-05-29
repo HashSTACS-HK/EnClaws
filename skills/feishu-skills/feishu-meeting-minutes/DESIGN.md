@@ -60,6 +60,7 @@ feishu-meeting-minutes/
 minutes.py 只负责 **下载 + 转写**，不做 LLM 总结。
 
 原因：
+
 - Skill 职责单一，只做一件事
 - LLM 总结由 OpenClaw agent 完成，prompt 和格式更灵活
 - 完全复用现有的 feishu-create-doc 和 send-card 能力

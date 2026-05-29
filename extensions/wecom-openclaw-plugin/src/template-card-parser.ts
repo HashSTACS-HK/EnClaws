@@ -50,10 +50,10 @@ function coerceToBool(value: unknown): boolean | undefined {
 const MODE_ALIASES: Record<string, number> = {
   single: 0,
   radio: 0,
-  "单选": 0,
+  单选: 0,
   multi: 1,
   multiple: 1,
-  "多选": 1,
+  多选: 1,
 };
 
 /**
@@ -135,7 +135,9 @@ function normalizeTemplateCardFields(
         if (opt && typeof opt === "object" && "is_checked" in opt) {
           const fixed = coerceToBool(opt.is_checked);
           if (fixed !== undefined && opt.is_checked !== fixed) {
-            fixes.push(`checkbox.option_list.is_checked: ${JSON.stringify(opt.is_checked)} → ${fixed}`);
+            fixes.push(
+              `checkbox.option_list.is_checked: ${JSON.stringify(opt.is_checked)} → ${fixed}`,
+            );
             opt.is_checked = fixed;
           }
         }
@@ -246,7 +248,9 @@ function normalizeTemplateCardFields(
   }
 
   if (fixes.length > 0) {
-    log?.(`[template-card-parser] normalizeTemplateCardFields: ${fixes.length} fix(es) applied: ${fixes.join("; ")}`);
+    log?.(
+      `[template-card-parser] normalizeTemplateCardFields: ${fixes.length} fix(es) applied: ${fixes.join("; ")}`,
+    );
   }
 
   return card;
@@ -294,14 +298,17 @@ function validateAndFixRequiredFields(
   // ── task_id（所有卡片：始终确保唯一性） ─────────────────────────────
   // LLM 可能编造时间戳导致重复，因此无论是否提供了 task_id，
   // 都提取语义前缀 + 代码追加真实时间戳和随机后缀来保证唯一。
-  const rawTid = (typeof card.task_id === "string" && card.task_id.trim()) ? card.task_id.trim() : "";
+  const rawTid = typeof card.task_id === "string" && card.task_id.trim() ? card.task_id.trim() : "";
   const rand = Math.random().toString(36).slice(2, 6);
   const ts = Date.now();
 
   let finalTid: string;
   if (rawTid) {
     // 提取 LLM 的语义前缀：去掉尾部的数字串（LLM 编造的假时间戳）
-    const prefix = rawTid.replace(/_\d{8,}$/, "").replace(/[^a-zA-Z0-9_\-@]/g, "_").slice(0, 80);
+    const prefix = rawTid
+      .replace(/_\d{8,}$/, "")
+      .replace(/[^a-zA-Z0-9_\-@]/g, "_")
+      .slice(0, 80);
     finalTid = prefix ? `${prefix}_${ts}_${rand}` : `task_${cardType}_${ts}_${rand}`;
   } else {
     finalTid = `task_${cardType}_${ts}_${rand}`;
@@ -314,9 +321,13 @@ function validateAndFixRequiredFields(
 
   // ── main_title ────────────────────────────────────────────────────────
   const mainTitle = card.main_title as Record<string, unknown> | undefined;
-  const hasMainTitle = mainTitle && typeof mainTitle === "object" &&
-    (typeof mainTitle.title === "string" && mainTitle.title.trim());
-  const hasSubTitleText = typeof card.sub_title_text === "string" && (card.sub_title_text as string).trim();
+  const hasMainTitle =
+    mainTitle &&
+    typeof mainTitle === "object" &&
+    typeof mainTitle.title === "string" &&
+    mainTitle.title.trim();
+  const hasSubTitleText =
+    typeof card.sub_title_text === "string" && (card.sub_title_text as string).trim();
 
   switch (cardType) {
     case "text_notice":
@@ -378,10 +389,14 @@ function validateAndFixRequiredFields(
   }
 
   if (fixes.length > 0) {
-    log?.(`[template-card-parser] validateAndFixRequiredFields: ${fixes.length} fix(es): ${fixes.join("; ")}`);
+    log?.(
+      `[template-card-parser] validateAndFixRequiredFields: ${fixes.length} fix(es): ${fixes.join("; ")}`,
+    );
   }
   if (warnings.length > 0) {
-    log?.(`[template-card-parser] validateAndFixRequiredFields: ${warnings.length} warning(s): ${warnings.join("; ")}`);
+    log?.(
+      `[template-card-parser] validateAndFixRequiredFields: ${warnings.length} warning(s): ${warnings.join("; ")}`,
+    );
   }
 
   return card;
@@ -419,19 +434,29 @@ function transformVoteInteraction(
 ): Record<string, unknown> {
   // 防御性：如果已经是合法 API 格式，跳过
   const existingCheckbox = card.checkbox as Record<string, unknown> | undefined;
-  if (existingCheckbox && typeof existingCheckbox === "object" && Array.isArray(existingCheckbox.option_list)) {
-    log?.(`[template-card-parser] transformVoteInteraction: already has checkbox.option_list, skipping transform`);
+  if (
+    existingCheckbox &&
+    typeof existingCheckbox === "object" &&
+    Array.isArray(existingCheckbox.option_list)
+  ) {
+    log?.(
+      `[template-card-parser] transformVoteInteraction: already has checkbox.option_list, skipping transform`,
+    );
     return card;
   }
 
   // 提取 options（简化格式的核心字段）
   const options = card.options as Array<Record<string, unknown>> | undefined;
   if (!Array.isArray(options) || options.length === 0) {
-    log?.(`[template-card-parser] transformVoteInteraction: no "options" array found, skipping transform`);
+    log?.(
+      `[template-card-parser] transformVoteInteraction: no "options" array found, skipping transform`,
+    );
     return card;
   }
 
-  log?.(`[template-card-parser] transformVoteInteraction: transforming simplified format → API format`);
+  log?.(
+    `[template-card-parser] transformVoteInteraction: transforming simplified format → API format`,
+  );
   log?.(`[template-card-parser] transformVoteInteraction: input=${JSON.stringify(card)}`);
 
   // ── 构建 main_title ──
@@ -451,7 +476,9 @@ function transformVoteInteraction(
   const questionKey = generateKey("vote");
   const clampedOptions = options.slice(0, 20);
   if (options.length > 20) {
-    log?.(`[template-card-parser] transformVoteInteraction: options count ${options.length} exceeds max 20, clamped to 20`);
+    log?.(
+      `[template-card-parser] transformVoteInteraction: options count ${options.length} exceeds max 20, clamped to 20`,
+    );
   }
   card.checkbox = {
     question_key: questionKey,
@@ -506,18 +533,24 @@ function transformMultipleInteraction(
     existingSelectList.length > 0 &&
     Array.isArray(existingSelectList[0]?.option_list)
   ) {
-    log?.(`[template-card-parser] transformMultipleInteraction: already has select_list[].option_list, skipping transform`);
+    log?.(
+      `[template-card-parser] transformMultipleInteraction: already has select_list[].option_list, skipping transform`,
+    );
     return card;
   }
 
   // 提取 selectors（简化格式的核心字段）
   const selectors = card.selectors as Array<Record<string, unknown>> | undefined;
   if (!Array.isArray(selectors) || selectors.length === 0) {
-    log?.(`[template-card-parser] transformMultipleInteraction: no "selectors" array found, skipping transform`);
+    log?.(
+      `[template-card-parser] transformMultipleInteraction: no "selectors" array found, skipping transform`,
+    );
     return card;
   }
 
-  log?.(`[template-card-parser] transformMultipleInteraction: transforming simplified format → API format`);
+  log?.(
+    `[template-card-parser] transformMultipleInteraction: transforming simplified format → API format`,
+  );
   log?.(`[template-card-parser] transformMultipleInteraction: input=${JSON.stringify(card)}`);
 
   // ── 构建 main_title ──
@@ -535,7 +568,9 @@ function transformMultipleInteraction(
   // ── 构建 select_list（最多 3 个选择器，每个最多 10 个选项） ──
   const clampedSelectors = selectors.slice(0, 3);
   if (selectors.length > 3) {
-    log?.(`[template-card-parser] transformMultipleInteraction: selectors count ${selectors.length} exceeds max 3, clamped to 3`);
+    log?.(
+      `[template-card-parser] transformMultipleInteraction: selectors count ${selectors.length} exceeds max 3, clamped to 3`,
+    );
   }
   card.select_list = clampedSelectors.map((sel, idx) => {
     const selectorOptions = ((sel.options as Array<Record<string, unknown>>) ?? []).slice(0, 10);
@@ -611,7 +646,10 @@ const UNCLOSED_BLOCK_RE = /```(?:json)?\s*\n[\s\S]*$/;
  * @param text - LLM 回复的完整文本
  * @returns 提取结果，包含卡片列表和剩余文本
  */
-export function extractTemplateCards(text: string, log?: (...args: any[]) => void): TemplateCardExtractionResult {
+export function extractTemplateCards(
+  text: string,
+  log?: (...args: any[]) => void,
+): TemplateCardExtractionResult {
   const cards: ExtractedTemplateCard[] = [];
   /** 需要从原文中移除的代码块（记录完整匹配内容） */
   const blocksToRemove: string[] = [];
@@ -628,7 +666,9 @@ export function extractTemplateCards(text: string, log?: (...args: any[]) => voi
     const jsonContent = match[1].trim();
     blockIndex++;
 
-    log?.(`[template-card-parser] Found code block #${blockIndex}, length=${fullMatch.length}, preview=${jsonContent.slice(0, 1000)}...`);
+    log?.(
+      `[template-card-parser] Found code block #${blockIndex}, length=${fullMatch.length}, preview=${jsonContent.slice(0, 1000)}...`,
+    );
 
     // 尝试解析 JSON
     let parsed: Record<string, unknown>;
@@ -644,11 +684,15 @@ export function extractTemplateCards(text: string, log?: (...args: any[]) => voi
     const cardType = parsed.card_type;
     if (typeof cardType !== "string" || !VALID_CARD_TYPES.includes(cardType)) {
       // card_type 不合法，保留在原文中
-      log?.(`[template-card-parser] Code block #${blockIndex} has invalid card_type="${String(cardType)}", skipping`);
+      log?.(
+        `[template-card-parser] Code block #${blockIndex} has invalid card_type="${String(cardType)}", skipping`,
+      );
       continue;
     }
 
-    log?.(`[template-card-parser] Code block #${blockIndex} is valid template card, card_type="${cardType}"`);
+    log?.(
+      `[template-card-parser] Code block #${blockIndex} is valid template card, card_type="${cardType}"`,
+    );
 
     // vote_interaction / multiple_interaction：简化格式 → API 格式转换
     transformSimplifiedCard(parsed, log);
@@ -675,7 +719,9 @@ export function extractTemplateCards(text: string, log?: (...args: any[]) => voi
   // 清理多余空行（连续 3 个以上换行合并为 2 个）
   remainingText = remainingText.replace(/\n{3,}/g, "\n\n").trim();
 
-  log?.(`[template-card-parser] Extraction done: ${cards.length} card(s) found, remainingTextLength=${remainingText.length}`);
+  log?.(
+    `[template-card-parser] Extraction done: ${cards.length} card(s) found, remainingTextLength=${remainingText.length}`,
+  );
 
   return { cards, remainingText };
 }

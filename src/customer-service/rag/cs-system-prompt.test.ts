@@ -5,13 +5,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { buildCSSystemPrompt } from "./cs-system-prompt.js";
 import type { MemorySearchResult } from "../../memory/types.js";
+import { buildCSSystemPrompt } from "./cs-system-prompt.js";
 
 // Sample base prompt — buildCSSystemPrompt now requires a pre-rendered basePrompt
 // (persona or default template, company name already substituted upstream).
 // 已替换企业名的基础 prompt 样例；buildCSSystemPrompt 现在要求显式传入 basePrompt。
-const BASE = "## 角色与身份\n\n你是 ACME 的 AI 客服助手。基于知识库为客户解答问题。\n\n## 行为规则\n\n1. 优先基于知识库回答。";
+const BASE =
+  "## 角色与身份\n\n你是 ACME 的 AI 客服助手。基于知识库为客户解答问题。\n\n## 行为规则\n\n1. 优先基于知识库回答。";
 
 // Clause fragments asserted in tests (kept in sync with cs-system-prompt.ts).
 // 与 cs-system-prompt.ts 中的子句保持同步的片段。
@@ -50,7 +51,11 @@ describe("buildCSSystemPrompt", () => {
   });
 
   it("includes visitor name when provided", () => {
-    const prompt = buildCSSystemPrompt({ basePrompt: BASE, knowledgeChunks: [], visitorName: "张三" });
+    const prompt = buildCSSystemPrompt({
+      basePrompt: BASE,
+      knowledgeChunks: [],
+      visitorName: "张三",
+    });
     expect(prompt).toContain("张三");
   });
 

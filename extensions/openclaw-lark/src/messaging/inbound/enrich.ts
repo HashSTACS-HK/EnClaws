@@ -22,14 +22,14 @@
  * messages are still expanded here via {@link resolveQuotedContent}.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { FeishuMediaInfo, MessageContext } from '../types';
-import type { LarkAccount } from '../../core/types';
-import { getMessageFeishu } from '../outbound/fetch';
-import type { PermissionError } from './permission';
-import { PERMISSION_ERROR_COOLDOWN_MS, permissionErrorNotifiedAt } from './permission';
-import { batchResolveUserNames, getUserNameCache, resolveUserName  } from './user-name-cache';
-import { buildFeishuMediaPayload, downloadResources } from './media-resolver';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { LarkAccount } from "../../core/types";
+import { getMessageFeishu } from "../outbound/fetch";
+import type { FeishuMediaInfo, MessageContext } from "../types";
+import { buildFeishuMediaPayload, downloadResources } from "./media-resolver";
+import type { PermissionError } from "./permission";
+import { PERMISSION_ERROR_COOLDOWN_MS, permissionErrorNotifiedAt } from "./permission";
+import { batchResolveUserNames, getUserNameCache, resolveUserName } from "./user-name-cache";
 
 // ---------------------------------------------------------------------------
 // Phase 1: Sender info (lightweight, before gate)
@@ -51,7 +51,7 @@ export async function resolveSenderInfo(params: {
 
   // Only resolve display name for real users — the contact API
   // does not return results for app/bot accounts.
-  if (ctx.rawSender?.sender_type !== 'user') {
+  if (ctx.rawSender?.sender_type !== "user") {
     log(`sender_type is "${ctx.rawSender?.sender_type}", skipping name resolution`);
     return { ctx };
   }
@@ -72,7 +72,7 @@ export async function resolveSenderInfo(params: {
   // Track permission errors (with cooldown)
   let permissionError: PermissionError | undefined;
   if (senderResult.permissionError) {
-    const appKey = account.appId ?? 'default';
+    const appKey = account.appId ?? "default";
     const now = Date.now();
     const lastNotified = permissionErrorNotifiedAt.get(appKey) ?? 0;
 
@@ -163,19 +163,19 @@ export async function resolveMedia(params: {
   const tenantId = (account.config as Record<string, unknown>)?.tenantId as string | undefined;
   if (tenantId && ctx.senderId) {
     try {
-      const { LarkClient: LC } = await import('../../core/lark-client');
+      const { LarkClient: LC } = await import("../../core/lark-client");
       const unionId = ctx.rawSender?.sender_id?.union_id;
       const userId = unionId || ctx.senderId;
       const userDir = LC.runtime?.channel?.session?.resolveTenantUserDir?.(tenantId, userId);
       if (userDir) {
-        const path = await import('path');
+        const path = await import("path");
         // Write inbound media into the user's workspace (not a sibling `media/` dir),
         // so skills running under the sandbox — which restricts reads to the workspace
         // root via assertSandboxPath(workspaceOnly: true) — can actually open the file.
         // Previously files landed in `<userDir>/media/inbound/` which is outside the
         // workspace root, and the agent would refuse to read them citing "security
         // restrictions". See src/agents/sandbox-media-paths.ts.
-        mediaBaseDir = path.join(userDir, 'workspace');
+        mediaBaseDir = path.join(userDir, "workspace");
       }
     } catch {
       // Fall back to default media dir
@@ -222,27 +222,27 @@ export function substituteMediaPaths(content: string, mediaList: FeishuMediaInfo
   for (const media of mediaList) {
     const { fileKey, path, resourceType } = media;
     switch (resourceType) {
-      case 'image':
+      case "image":
         // ![image](img_v3_xxx) → local path (SDK detects image extensions)
         result = result.replace(`![image](${fileKey})`, path);
         break;
-      case 'sticker':
+      case "sticker":
         // <sticker key="xxx"/> → local path (treated like image)
         result = result.replace(`<sticker key="${fileKey}"/>`, path);
         break;
-      case 'audio': {
+      case "audio": {
         // <audio key="xxx" .../> → [Audio: /path/to/audio.opus ...]
         const audioRe = new RegExp(`<audio key="${escapeRegExp(fileKey)}"[^/]*/>`);
         result = result.replace(audioRe, `[Audio: ${path}]`);
         break;
       }
-      case 'file': {
+      case "file": {
         // <file key="xxx" .../> → [File: /path/to/doc.pdf]
         const fileRe = new RegExp(`<file key="${escapeRegExp(fileKey)}"[^/]*/>`);
         result = result.replace(fileRe, `[File: ${path}]`);
         break;
       }
-      case 'video': {
+      case "video": {
         // <video key="xxx" .../> → [Video: /path/to/video.mp4]
         const videoRe = new RegExp(`<video key="${escapeRegExp(fileKey)}"[^/]*/>`);
         result = result.replace(videoRe, `[Video: ${path}]`);
@@ -254,7 +254,7 @@ export function substituteMediaPaths(content: string, mediaList: FeishuMediaInfo
 }
 
 function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +290,9 @@ export async function resolveQuotedContent(params: {
     });
     if (!quotedMsg) return undefined;
 
-    log(`feishu[${account.accountId}]: fetched quoted message: ${quotedMsg.content?.slice(0, 100)}`);
+    log(
+      `feishu[${account.accountId}]: fetched quoted message: ${quotedMsg.content?.slice(0, 100)}`,
+    );
 
     // Build quoted text with message_id prefix so AI can correlate
     // file_key / image_key with the source message for resource download.

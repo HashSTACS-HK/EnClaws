@@ -9,7 +9,10 @@
  */
 export class UserQuotaExceededError extends Error {
   readonly resource = "users" as const;
-  constructor(public readonly current: number, public readonly max: number) {
+  constructor(
+    public readonly current: number,
+    public readonly max: number,
+  ) {
     super(`User quota reached (${current}/${max})`);
     this.name = "UserQuotaExceededError";
   }

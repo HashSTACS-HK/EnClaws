@@ -7,7 +7,7 @@
 
 /** Escape a string for safe use inside a RegExp. */
 export function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -45,10 +45,10 @@ export function millisToDatetime(ms: string | number): string {
   const d = new Date(num + utc8Offset);
 
   const year = d.getUTCFullYear();
-  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  const hour = String(d.getUTCHours()).padStart(2, '0');
-  const minute = String(d.getUTCMinutes()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const hour = String(d.getUTCHours()).padStart(2, "0");
+  const minute = String(d.getUTCMinutes()).padStart(2, "0");
 
   return `${year}-${month}-${day} ${hour}:${minute}`;
 }

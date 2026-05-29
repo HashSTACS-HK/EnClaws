@@ -16,13 +16,15 @@
  */
 
 import { isDbInitialized, query, getDbType, DB_SQLITE } from "../db/index.js";
+import { createAuditLog } from "../db/models/audit-log.js";
+import { revokeAllUserTokens } from "./jwt.js";
 import { generateTempPassword } from "./password-policy.js";
 import { hashPassword } from "./password.js";
-import { revokeAllUserTokens } from "./jwt.js";
-import { createAuditLog } from "../db/models/audit-log.js";
 
 export async function maybeRunAdminResetTrigger(): Promise<void> {
-  if (process.env.ENCLAWS_ADMIN_RESET !== "1") {return;}
+  if (process.env.ENCLAWS_ADMIN_RESET !== "1") {
+    return;
+  }
   if (!isDbInitialized()) {
     console.error("[admin-reset] ENCLAWS_ADMIN_RESET=1 but database is not configured; skipping.");
     return;
@@ -62,15 +64,15 @@ export async function maybeRunAdminResetTrigger(): Promise<void> {
     // Stdout — printed exactly once at boot, never persisted.
     process.stdout.write(
       `\n` +
-      `===========================================================\n` +
-      ` ENCLAWS ADMIN RESCUE — temporary password generated\n` +
-      `===========================================================\n` +
-      `   email:    ${email}\n` +
-      `   password: ${tempPassword}\n` +
-      `   note:     you must change this password on first login.\n` +
-      `   Unset ENCLAWS_ADMIN_RESET before the next start to avoid\n` +
-      `   regenerating the password again.\n` +
-      `===========================================================\n\n`,
+        `===========================================================\n` +
+        ` ENCLAWS ADMIN RESCUE — temporary password generated\n` +
+        `===========================================================\n` +
+        `   email:    ${email}\n` +
+        `   password: ${tempPassword}\n` +
+        `   note:     you must change this password on first login.\n` +
+        `   Unset ENCLAWS_ADMIN_RESET before the next start to avoid\n` +
+        `   regenerating the password again.\n` +
+        `===========================================================\n\n`,
     );
   }
 }

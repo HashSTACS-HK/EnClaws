@@ -7,10 +7,10 @@
  *   ENCLAWS_JWT_REFRESH_EXPIRES   - Refresh token TTL (default: "7d")
  */
 
-import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
-import type { JwtPayload, JwtTokenPair } from "../db/types.js";
+import jwt from "jsonwebtoken";
 import { query, getDbType, DB_SQLITE } from "../db/index.js";
+import type { JwtPayload, JwtTokenPair } from "../db/types.js";
 
 /**
  * Per-boot ephemeral secret: generated once on startup so that all
@@ -26,7 +26,9 @@ function getSecret(): string {
   }
   if (!ephemeralSecret) {
     ephemeralSecret = crypto.randomBytes(64).toString("hex");
-    console.log("[auth] No ENCLAWS_JWT_SECRET set — using ephemeral secret (JWTs invalidated on restart)");
+    console.log(
+      "[auth] No ENCLAWS_JWT_SECRET set — using ephemeral secret (JWTs invalidated on restart)",
+    );
     // Revoke all refresh tokens so that old sessions cannot silently re-authenticate
     void revokeAllRefreshTokensOnBoot();
   }
@@ -35,9 +37,7 @@ function getSecret(): string {
 
 async function revokeAllRefreshTokensOnBoot(): Promise<void> {
   try {
-    const result = await query(
-      "UPDATE refresh_tokens SET revoked = true WHERE revoked = false",
-    );
+    const result = await query("UPDATE refresh_tokens SET revoked = true WHERE revoked = false");
     const count = result.rowCount ?? 0;
     if (count > 0) {
       console.log(`[auth] Revoked ${count} refresh token(s) on boot (ephemeral secret mode)`);
@@ -57,15 +57,22 @@ function getRefreshExpires(): string {
 
 function parseExpiresIn(expr: string): number {
   const match = expr.match(/^(\d+)(s|m|h|d)$/);
-  if (!match) {return 900;} // default 15 minutes
+  if (!match) {
+    return 900;
+  } // default 15 minutes
   const num = parseInt(match[1], 10);
   const unit = match[2];
   switch (unit) {
-    case "s": return num;
-    case "m": return num * 60;
-    case "h": return num * 3600;
-    case "d": return num * 86400;
-    default: return 900;
+    case "s":
+      return num;
+    case "m":
+      return num * 60;
+    case "h":
+      return num * 3600;
+    case "d":
+      return num * 86400;
+    default:
+      return 900;
   }
 }
 
@@ -93,10 +100,7 @@ export async function generateTokenPair(
 
   // Refresh token is an opaque random string stored in DB
   const refreshToken = crypto.randomBytes(48).toString("base64url");
-  const refreshTokenHash = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
+  const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
   const refreshExpiresInSeconds = parseExpiresIn(refreshExpiresExpr);
   const expiresAt = new Date(Date.now() + refreshExpiresInSeconds * 1000);
@@ -142,13 +146,8 @@ export function verifyAccessToken(token: string): JwtPayload {
  * Verify a refresh token and return the associated user ID.
  * Consumes the refresh token (one-time use rotation).
  */
-export async function verifyRefreshToken(
-  refreshToken: string,
-): Promise<{ userId: string } | null> {
-  const tokenHash = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
+export async function verifyRefreshToken(refreshToken: string): Promise<{ userId: string } | null> {
+  const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
   const now = getDbType() === DB_SQLITE ? "datetime('now')" : "NOW()";
   const result = await query(
@@ -159,7 +158,9 @@ export async function verifyRefreshToken(
     [tokenHash],
   );
 
-  if (result.rows.length === 0) {return null;}
+  if (result.rows.length === 0) {
+    return null;
+  }
   return { userId: result.rows[0].user_id as string };
 }
 
@@ -167,10 +168,9 @@ export async function verifyRefreshToken(
  * Revoke all refresh tokens for a user (e.g., on password change or logout-all).
  */
 export async function revokeAllUserTokens(userId: string): Promise<void> {
-  await query(
-    "UPDATE refresh_tokens SET revoked = true WHERE user_id = $1 AND revoked = false",
-    [userId],
-  );
+  await query("UPDATE refresh_tokens SET revoked = true WHERE user_id = $1 AND revoked = false", [
+    userId,
+  ]);
 }
 
 /**

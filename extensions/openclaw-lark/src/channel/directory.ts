@@ -8,14 +8,14 @@
  * lookups so the outbound subsystem and UI can resolve targets.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { getLarkAccount } from '../core/accounts';
-import { LarkClient } from '../core/lark-client';
-import { normalizeFeishuTarget } from '../core/targets';
-import type { FeishuDirectoryGroup, FeishuDirectoryPeer } from './types';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { getLarkAccount } from "../core/accounts";
+import { LarkClient } from "../core/lark-client";
+import { normalizeFeishuTarget } from "../core/targets";
+import type { FeishuDirectoryGroup, FeishuDirectoryPeer } from "./types";
 
 // Re-export types for backward compatibility
-export type { FeishuDirectoryPeer, FeishuDirectoryGroup } from './types';
+export type { FeishuDirectoryPeer, FeishuDirectoryGroup } from "./types";
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -50,13 +50,13 @@ export async function listFeishuDirectoryPeers(params: {
 }): Promise<FeishuDirectoryPeer[]> {
   const account = getLarkAccount(params.cfg, params.accountId);
   const feishuCfg = account.config;
-  const q = params.query?.trim().toLowerCase() || '';
+  const q = params.query?.trim().toLowerCase() || "";
   const ids = new Set<string>();
 
   // Collect from allowFrom entries.
   for (const entry of feishuCfg?.allowFrom ?? []) {
     const trimmed = String(entry).trim();
-    if (trimmed && trimmed !== '*') {
+    if (trimmed && trimmed !== "*") {
       ids.add(trimmed);
     }
   }
@@ -74,7 +74,7 @@ export async function listFeishuDirectoryPeers(params: {
     .filter(Boolean)
     .map((raw) => normalizeFeishuTarget(raw) ?? raw)
     .filter((id) => matchesQuery(id, undefined, q))
-    .map((id) => ({ kind: 'user' as const, id }));
+    .map((id) => ({ kind: "user" as const, id }));
 
   return applyLimitSlice(peers, params.limit);
 }
@@ -90,13 +90,13 @@ export async function listFeishuDirectoryGroups(params: {
 }): Promise<FeishuDirectoryGroup[]> {
   const account = getLarkAccount(params.cfg, params.accountId);
   const feishuCfg = account.config;
-  const q = params.query?.trim().toLowerCase() || '';
+  const q = params.query?.trim().toLowerCase() || "";
   const ids = new Set<string>();
 
   // Collect from per-group config keys.
   for (const groupId of Object.keys(feishuCfg?.groups ?? {})) {
     const trimmed = groupId.trim();
-    if (trimmed && trimmed !== '*') {
+    if (trimmed && trimmed !== "*") {
       ids.add(trimmed);
     }
   }
@@ -104,7 +104,7 @@ export async function listFeishuDirectoryGroups(params: {
   // Collect from groupAllowFrom entries.
   for (const entry of feishuCfg?.groupAllowFrom ?? []) {
     const trimmed = String(entry).trim();
-    if (trimmed && trimmed !== '*') {
+    if (trimmed && trimmed !== "*") {
       ids.add(trimmed);
     }
   }
@@ -113,7 +113,7 @@ export async function listFeishuDirectoryGroups(params: {
     .map((raw) => raw.trim())
     .filter(Boolean)
     .filter((id) => matchesQuery(id, undefined, q))
-    .map((id) => ({ kind: 'group' as const, id }));
+    .map((id) => ({ kind: "group" as const, id }));
 
   return applyLimitSlice(groups, params.limit);
 }
@@ -144,7 +144,7 @@ export async function listFeishuDirectoryPeersLive(params: {
     const peers: FeishuDirectoryPeer[] = [];
     const limit = params.limit ?? 50;
     if (limit <= 0) return [];
-    const q = params.query?.trim().toLowerCase() || '';
+    const q = params.query?.trim().toLowerCase() || "";
     let pageToken: string | undefined;
 
     do {
@@ -161,7 +161,7 @@ export async function listFeishuDirectoryPeersLive(params: {
       for (const user of response.data.items) {
         if (user.open_id && matchesQuery(user.open_id, user.name, q)) {
           peers.push({
-            kind: 'user',
+            kind: "user",
             id: user.open_id,
             name: user.name || undefined,
           });
@@ -201,7 +201,7 @@ export async function listFeishuDirectoryGroupsLive(params: {
     const groups: FeishuDirectoryGroup[] = [];
     const limit = params.limit ?? 50;
     if (limit <= 0) return [];
-    const q = params.query?.trim().toLowerCase() || '';
+    const q = params.query?.trim().toLowerCase() || "";
     let pageToken: string | undefined;
 
     do {
@@ -218,7 +218,7 @@ export async function listFeishuDirectoryGroupsLive(params: {
       for (const chat of response.data.items) {
         if (chat.chat_id && matchesQuery(chat.chat_id, chat.name, q)) {
           groups.push({
-            kind: 'group',
+            kind: "group",
             id: chat.chat_id,
             name: chat.name || undefined,
           });

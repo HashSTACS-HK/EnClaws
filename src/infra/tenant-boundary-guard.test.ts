@@ -78,14 +78,18 @@ describe("assertPolicyBoundary", () => {
   });
 
   it("allows READ through a symlink whose canonical target is a read-permitted file", async () => {
-    if (!symlinkFileSupported) {return;}
+    if (!symlinkFileSupported) {
+      return;
+    }
     // link-to-tools → TOOLS.md (READ_ONLY rule). Reading is fine.
     const v = await assertPolicyBoundary({ policy, absolutePath: linkToRoFile, op: "read" });
     expect(v).toBeNull();
   });
 
   it("blocks WRITE through a symlink whose canonical target is read-only (permission elevation)", async () => {
-    if (!symlinkFileSupported) {return;}
+    if (!symlinkFileSupported) {
+      return;
+    }
     // link-to-tools lives under RW workspace, but canonical TOOLS.md is READ_ONLY.
     // A naive lexical check would allow write; the alias guard catches it.
     const v = await assertPolicyBoundary({ policy, absolutePath: linkToRoFile, op: "write" });
@@ -95,7 +99,9 @@ describe("assertPolicyBoundary", () => {
   });
 
   it("blocks access through a junction that escapes all permitted rules", async () => {
-    if (!junctionSupported) {return;}
+    if (!junctionSupported) {
+      return;
+    }
     const v = await assertPolicyBoundary({ policy, absolutePath: viaLinkDirSecret, op: "read" });
     expect(v).toBeTypeOf("string");
     expect(v).toContain("[SECURITY]");

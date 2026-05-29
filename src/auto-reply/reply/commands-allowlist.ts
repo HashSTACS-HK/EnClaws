@@ -392,7 +392,9 @@ export const handleAllowlistCommand: CommandHandler = async (params, allowTextCo
     const pairingChannels = listPairingChannels();
     const supportsStore = pairingChannels.includes(channelId);
     const storeAllowFrom = supportsStore
-      ? await readChannelAllowFromStore(channelId, process.env, accountId, tenantCtx).catch(() => [])
+      ? await readChannelAllowFromStore(channelId, process.env, accountId, tenantCtx).catch(
+          () => [],
+        )
       : [];
 
     let dmAllowFrom: string[] = [];
@@ -698,9 +700,17 @@ export const handleAllowlistCommand: CommandHandler = async (params, allowTextCo
 
     if (shouldTouchStore) {
       if (parsed.action === "add") {
-        await addChannelAllowFromStoreEntry({ channel: channelId, entry: parsed.entry, tenantContext: tenantCtx });
+        await addChannelAllowFromStoreEntry({
+          channel: channelId,
+          entry: parsed.entry,
+          tenantContext: tenantCtx,
+        });
       } else if (parsed.action === "remove") {
-        await removeChannelAllowFromStoreEntry({ channel: channelId, entry: parsed.entry, tenantContext: tenantCtx });
+        await removeChannelAllowFromStoreEntry({
+          channel: channelId,
+          entry: parsed.entry,
+          tenantContext: tenantCtx,
+        });
       }
     }
 
@@ -730,9 +740,17 @@ export const handleAllowlistCommand: CommandHandler = async (params, allowTextCo
   }
 
   if (parsed.action === "add") {
-    await addChannelAllowFromStoreEntry({ channel: channelId, entry: parsed.entry, tenantContext: tenantCtx });
+    await addChannelAllowFromStoreEntry({
+      channel: channelId,
+      entry: parsed.entry,
+      tenantContext: tenantCtx,
+    });
   } else if (parsed.action === "remove") {
-    await removeChannelAllowFromStoreEntry({ channel: channelId, entry: parsed.entry, tenantContext: tenantCtx });
+    await removeChannelAllowFromStoreEntry({
+      channel: channelId,
+      entry: parsed.entry,
+      tenantContext: tenantCtx,
+    });
   }
 
   const actionLabel = parsed.action === "add" ? "added" : "removed";

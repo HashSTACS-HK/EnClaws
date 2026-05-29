@@ -8,7 +8,7 @@
  * in the card footer (e.g. elapsed time, model name).
  */
 
-import type { FeishuFooterConfig } from './types';
+import type { FeishuFooterConfig } from "./types";
 
 // ---------------------------------------------------------------------------
 // Defaults

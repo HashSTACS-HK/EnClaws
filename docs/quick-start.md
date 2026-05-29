@@ -77,13 +77,13 @@ Or use the onboarding wizard in the Control UI to configure providers interactiv
 
 EnClaws supports 41+ messaging channels. Common options:
 
-| Channel | Setup |
-|---------|-------|
-| **WebChat** | Built-in — open Control UI and start chatting |
+| Channel         | Setup                                                         |
+| --------------- | ------------------------------------------------------------- |
+| **WebChat**     | Built-in — open Control UI and start chatting                 |
 | **Feishu/Lark** | Install the `openclaw-lark` plugin, configure App ID & Secret |
-| **Telegram** | Set `TELEGRAM_BOT_TOKEN` env var |
-| **Discord** | Set `DISCORD_BOT_TOKEN` env var |
-| **Slack** | Set `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN` env vars |
+| **Telegram**    | Set `TELEGRAM_BOT_TOKEN` env var                              |
+| **Discord**     | Set `DISCORD_BOT_TOKEN` env var                               |
+| **Slack**       | Set `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN` env vars            |
 
 ### 4. Start Chatting
 
@@ -118,14 +118,14 @@ open http://localhost:18789
 
 ## Key Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ENCLAWS_GATEWAY_PORT` | `18789` | Gateway HTTP/WebSocket port |
-| `ENCLAWS_GATEWAY_PASSWORD` | — | Authentication password |
-| `ENCLAWS_DB_URL` | SQLite | Database connection string |
-| `ENCLAWS_JWT_SECRET` | — | JWT signing secret (required for multi-tenant) |
-| `OPENAI_API_KEY` | — | OpenAI API key |
-| `ANTHROPIC_API_KEY` | — | Anthropic API key |
+| Variable                   | Default | Description                                    |
+| -------------------------- | ------- | ---------------------------------------------- |
+| `ENCLAWS_GATEWAY_PORT`     | `18789` | Gateway HTTP/WebSocket port                    |
+| `ENCLAWS_GATEWAY_PASSWORD` | —       | Authentication password                        |
+| `ENCLAWS_DB_URL`           | SQLite  | Database connection string                     |
+| `ENCLAWS_JWT_SECRET`       | —       | JWT signing secret (required for multi-tenant) |
+| `OPENAI_API_KEY`           | —       | OpenAI API key                                 |
+| `ANTHROPIC_API_KEY`        | —       | Anthropic API key                              |
 
 See `.env.example` for the full list.
 

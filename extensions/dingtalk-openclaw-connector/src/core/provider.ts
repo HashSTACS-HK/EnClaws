@@ -12,8 +12,8 @@
  * - 并行启动多个账号的消息流连接
  */
 import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
-import * as monitorState from "./state";
 import { createLogger } from "../utils/logger";
+import * as monitorState from "./state";
 
 // 只解构 monitorState 的导出
 const {
@@ -55,7 +55,7 @@ export async function monitorDingtalkProvider(opts: MonitorDingtalkOpts = {}): P
     import("./message-handler"),
     import("./connection"),
   ]);
-  
+
   const { resolveDingtalkAccount, listEnabledDingtalkAccounts } = accountsModule;
   const { handleDingTalkMessage } = monitorAccountModule;
   const { monitorSingleAccount, resolveReactionSyntheticEvent } = monitorSingleModule;

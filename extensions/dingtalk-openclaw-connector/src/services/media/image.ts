@@ -12,11 +12,8 @@ interface Logger {
   [key: string]: any;
 }
 
-import {
-  LOCAL_IMAGE_RE,
-  BARE_IMAGE_PATH_RE,
-} from './common.ts';
-import {uploadMediaToDingTalk} from '../media.ts'
+import { uploadMediaToDingTalk } from "../media.ts";
+import { LOCAL_IMAGE_RE, BARE_IMAGE_PATH_RE } from "./common.ts";
 /**
  * 扫描内容中的本地图片路径，上传到钉钉并替换为标准 Markdown 图片语法
  *
@@ -41,8 +38,14 @@ export async function processLocalImages(
     log?.info?.(`[DingTalk][Media] 检测到 ${mdMatches.length} 个 markdown 图片，开始上传...`);
     for (const match of mdMatches) {
       const [fullMatch, alt, rawPath] = match;
-      const cleanPath = rawPath.replace(/\\ /g, ' ');
-      const {mediaId} = await uploadMediaToDingTalk(cleanPath, 'image', oapiToken, 20 * 1024 * 1024, log);
+      const cleanPath = rawPath.replace(/\\ /g, " ");
+      const { mediaId } = await uploadMediaToDingTalk(
+        cleanPath,
+        "image",
+        oapiToken,
+        20 * 1024 * 1024,
+        log,
+      );
       if (mediaId) {
         // 使用标准 Markdown 图片语法：![文案](mediaId)
         const replacement = `![${alt}](${mediaId})`;

@@ -110,9 +110,15 @@ export function ensureMemoryIndexSchema(params: {
       updated_at INTEGER NOT NULL
     );
   `);
-  params.db.exec(`CREATE INDEX IF NOT EXISTS idx_progressive_sections_path ON progressive_sections(path, source);`);
-  params.db.exec(`CREATE INDEX IF NOT EXISTS idx_progressive_blocks_path ON progressive_blocks(path, source);`);
-  params.db.exec(`CREATE INDEX IF NOT EXISTS idx_progressive_blocks_section ON progressive_blocks(section_id, path, source);`);
+  params.db.exec(
+    `CREATE INDEX IF NOT EXISTS idx_progressive_sections_path ON progressive_sections(path, source);`,
+  );
+  params.db.exec(
+    `CREATE INDEX IF NOT EXISTS idx_progressive_blocks_path ON progressive_blocks(path, source);`,
+  );
+  params.db.exec(
+    `CREATE INDEX IF NOT EXISTS idx_progressive_blocks_section ON progressive_blocks(section_id, path, source);`,
+  );
 
   return { ftsAvailable, ...(ftsError ? { ftsError } : {}) };
 }

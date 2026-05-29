@@ -83,7 +83,9 @@ export async function consumeVerifyEmailToken(token: string): Promise<string | n
       LIMIT 1`,
     [tokenHash],
   );
-  if (found.rows.length === 0) {return null;}
+  if (found.rows.length === 0) {
+    return null;
+  }
   const id = String(found.rows[0].id);
   const userId = String(found.rows[0].user_id);
   const nowExpr = isSqlite ? "datetime('now')" : "NOW()";
@@ -103,12 +105,16 @@ const lastSent = new Map<string, number>();
 
 export function shouldThrottleResend(email: string): boolean {
   const key = email.trim().toLowerCase();
-  if (!key) {return false;}
+  if (!key) {
+    return false;
+  }
   const last = lastSent.get(key) ?? 0;
   return Date.now() - last < RESEND_THROTTLE_MS;
 }
 
 export function noteResendIssued(email: string): void {
   const key = email.trim().toLowerCase();
-  if (key) {lastSent.set(key, Date.now());}
+  if (key) {
+    lastSent.set(key, Date.now());
+  }
 }

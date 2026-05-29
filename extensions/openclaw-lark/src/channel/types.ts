@@ -5,13 +5,13 @@
  * Channel type definitions for the Lark/Feishu channel plugin.
  */
 
-import type { ClawdbotConfig, RuntimeEnv } from 'openclaw/plugin-sdk';
-import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
-import type { LarkClient } from '../core/lark-client';
-import type { MessageDedup } from '../messaging/inbound/dedup';
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import type { HistoryEntry } from "openclaw/plugin-sdk/reply-history";
+import type { LarkClient } from "../core/lark-client";
+import type { MessageDedup } from "../messaging/inbound/dedup";
 
 // Re-export from core for backward compatibility
-export type { FeishuProbeResult } from '../core/types';
+export type { FeishuProbeResult } from "../core/types";
 
 // ---------------------------------------------------------------------------
 // Monitor types
@@ -30,13 +30,13 @@ export interface MonitorFeishuOpts {
 // ---------------------------------------------------------------------------
 
 export interface FeishuDirectoryPeer {
-  kind: 'user';
+  kind: "user";
   id: string;
   name?: string;
 }
 
 export interface FeishuDirectoryGroup {
-  kind: 'group';
+  kind: "group";
   id: string;
   name?: string;
 }

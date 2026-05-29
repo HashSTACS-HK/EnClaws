@@ -18,16 +18,16 @@ description: |
 
 ## 📋 快速索引：意图 → 工具 → 必填参数
 
-| 用户意图 | 工具 | action | 必填参数 | 强烈建议 | 常用可选 |
-|---------|------|--------|---------|---------|---------|
-| 创建会议 | feishu_calendar_event | create | summary, start_time, end_time | user_open_id | attendees, description, location |
-| 查某时间段日程 | feishu_calendar_event | list | start_time, end_time | - | - |
-| 改日程时间 | feishu_calendar_event | patch | event_id, start_time/end_time | - | summary, description |
-| 搜关键词找会 | feishu_calendar_event | search | query | - | - |
-| 回复邀请 | feishu_calendar_event | reply | event_id, rsvp_status | - | - |
-| 查重复日程实例 | feishu_calendar_event | instances | event_id, start_time, end_time | - | - |
-| 查忙闲 | feishu_calendar_freebusy | list | time_min, time_max, user_ids[] | - | - |
-| 邀请参会人 | feishu_calendar_event_attendee | create | calendar_id, event_id, attendees[] | - | - |
+| 用户意图       | 工具                           | action    | 必填参数                           | 强烈建议     | 常用可选                         |
+| -------------- | ------------------------------ | --------- | ---------------------------------- | ------------ | -------------------------------- |
+| 创建会议       | feishu_calendar_event          | create    | summary, start_time, end_time      | user_open_id | attendees, description, location |
+| 查某时间段日程 | feishu_calendar_event          | list      | start_time, end_time               | -            | -                                |
+| 改日程时间     | feishu_calendar_event          | patch     | event_id, start_time/end_time      | -            | summary, description             |
+| 搜关键词找会   | feishu_calendar_event          | search    | query                              | -            | -                                |
+| 回复邀请       | feishu_calendar_event          | reply     | event_id, rsvp_status              | -            | -                                |
+| 查重复日程实例 | feishu_calendar_event          | instances | event_id, start_time, end_time     | -            | -                                |
+| 查忙闲         | feishu_calendar_freebusy       | list      | time_min, time_max, user_ids[]     | -            | -                                |
+| 邀请参会人     | feishu_calendar_event_attendee | create    | calendar_id, event_id, attendees[] | -            | -                                |
 
 ---
 
@@ -38,12 +38,14 @@ description: |
 **工具使用用户身份**：日程创建在用户主日历上，用户本人能看到。
 
 **但为什么还要传 user_open_id**：将发起人也添加为**参会人**，确保：
+
 - ✅ 发起人会收到日程通知
 - ✅ 发起人可以回复 RSVP 状态（接受/拒绝/待定）
 - ✅ 发起人出现在参会人列表中
 - ✅ 其他参会人能看到发起人
 
 **如果不传**：
+
 - ⚠️ 用户能看到日程，但不会作为参会人
 - ⚠️ 如果只有其他参会人，发起人不在列表中（不符合常规逻辑）
 
@@ -51,25 +53,27 @@ description: |
 
 工具已默认设置 `attendee_ability: "can_modify_event"`，参会人可以编辑日程和管理参与者。
 
-| 权限值 | 能力 |
-|--------|------|
-| `none` | 无权限 |
-| `can_see_others` | 可查看参与人列表 |
-| `can_invite_others` | 可邀请他人 |
-| `can_modify_event` | 可编辑日程（推荐） |
+| 权限值              | 能力               |
+| ------------------- | ------------------ |
+| `none`              | 无权限             |
+| `can_see_others`    | 可查看参与人列表   |
+| `can_invite_others` | 可邀请他人         |
+| `can_modify_event`  | 可编辑日程（推荐） |
 
-### 3. 统一使用 open_id（ou_...格式）
+### 3. 统一使用 open*id（ou*...格式）
 
 - ✅ 创建日程：`user_open_id = SenderId`
 - ✅ 邀请参会人：`attendees[].id = "ou_xxx"`
 
 ⚠️ **ID 格式区分**：
+
 - `ou_xxx`：用户的 open_id（**你应该使用的**）
 - `user_xxx`：日程内部的 attendee_id（list 接口返回，仅用于内部记录）
 
 ### 4. 会议室预约是异步流程
 
 添加会议室类型参会人后，会议室进入异步预约流程：
+
 1. API 返回成功 → `rsvp_status: "needs_action"`（预约中）
 2. 后台异步处理
 3. 最终状态：`accept`（成功）或 `decline`（失败）
@@ -79,10 +83,12 @@ description: |
 ### 5. instances action 仅对重复日程有效
 
 **⚠️ 重要**：`instances` action **仅对重复日程有效**，必须满足：
+
 1. event_id 必须是重复日程的 ID（该日程具有 `recurrence` 字段）
 2. 如果对普通日程调用，会返回错误
 
 **如何判断**：
+
 1. 先用 `get` action 获取日程详情
 2. 检查返回值中是否有 `recurrence` 字段且不为空
 3. 如果有，则可以调用 `instances` 获取实例列表
@@ -102,9 +108,9 @@ description: |
   "end_time": "2026-02-25 15:30:00",
   "user_open_id": "ou_aaa",
   "attendees": [
-    {"type": "user", "id": "ou_bbb"},
-    {"type": "user", "id": "ou_ccc"},
-    {"type": "resource", "id": "omm_xxx"}
+    { "type": "user", "id": "ou_bbb" },
+    { "type": "user", "id": "ou_ccc" },
+    { "type": "resource", "id": "omm_xxx" }
   ]
 }
 ```
@@ -166,14 +172,14 @@ description: |
 
 ## 🔍 常见错误与排查
 
-| 错误现象 | 根本原因 | 解决方案 |
-|---------|---------|---------|
-| **发起人不在参会人列表中** | 未传 `user_open_id` | 强烈建议传 `user_open_id = SenderId` |
-| **参会人看不到其他参会人** | `attendee_ability` 权限不足 | 工具已默认设置 `can_modify_event` |
-| **时间不对** | 使用了 Unix 时间戳 | 改用 ISO 8601 格式（带时区）：`2024-01-01T00:00:00+08:00` |
-| **会议室显示"预约中"** | 会议室预约是异步的 | 等待几秒后用 `list` 查询 `rsvp_status` |
-| **修改日程报权限错误** | 当前用户不是组织者，且日程未设置可编辑权限 | 确保日程创建时设置了 `attendee_ability: "can_modify_event"` |
-| **无法查看参会人列表** | 当前用户无查看权限 | 确保是组织者或日程设置了 `can_see_others` 以上权限 |
+| 错误现象                   | 根本原因                                   | 解决方案                                                    |
+| -------------------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| **发起人不在参会人列表中** | 未传 `user_open_id`                        | 强烈建议传 `user_open_id = SenderId`                        |
+| **参会人看不到其他参会人** | `attendee_ability` 权限不足                | 工具已默认设置 `can_modify_event`                           |
+| **时间不对**               | 使用了 Unix 时间戳                         | 改用 ISO 8601 格式（带时区）：`2024-01-01T00:00:00+08:00`   |
+| **会议室显示"预约中"**     | 会议室预约是异步的                         | 等待几秒后用 `list` 查询 `rsvp_status`                      |
+| **修改日程报权限错误**     | 当前用户不是组织者，且日程未设置可编辑权限 | 确保日程创建时设置了 `attendee_ability: "can_modify_event"` |
+| **无法查看参会人列表**     | 当前用户无查看权限                         | 确保是组织者或日程设置了 `can_see_others` 以上权限          |
 
 ---
 
@@ -182,6 +188,7 @@ description: |
 ### A. 日历架构模型
 
 飞书日历采用 **三层架构**：
+
 ```
 日历（Calendar）
   └── 日程（Event）
@@ -189,6 +196,7 @@ description: |
 ```
 
 **关键理解**：
+
 1. **用户主日历**：日程创建在发起用户的主日历上，用户本人能看到
 2. **参会人机制**：通过添加参会人（attendee），让其他人的日历中也显示此日程
 3. **权限模型**：日程的 `attendee_ability` 参数控制参会人能否编辑日程、邀请他人、查看参与人列表
@@ -210,24 +218,23 @@ description: |
 
 ### D. 日历类型说明
 
-| 类型 | 说明 | 能否删除 | 能否修改 |
-|------|------|---------|---------|
-| `primary` | 主日历（每个用户/应用一个） | ❌ 否 | ✅ 是 |
-| `shared` | 共享日历（用户创建并共享） | ✅ 是 | ✅ 是 |
-| `resource` | 会议室日历 | ❌ 否 | ❌ 否 |
-| `google` | 绑定的 Google 日历 | ❌ 否 | ❌ 否 |
-| `exchange` | 绑定的 Exchange 日历 | ❌ 否 | ❌ 否 |
+| 类型       | 说明                        | 能否删除 | 能否修改 |
+| ---------- | --------------------------- | -------- | -------- |
+| `primary`  | 主日历（每个用户/应用一个） | ❌ 否    | ✅ 是    |
+| `shared`   | 共享日历（用户创建并共享）  | ✅ 是    | ✅ 是    |
+| `resource` | 会议室日历                  | ❌ 否    | ❌ 否    |
+| `google`   | 绑定的 Google 日历          | ❌ 否    | ❌ 否    |
+| `exchange` | 绑定的 Exchange 日历        | ❌ 否    | ❌ 否    |
 
 ### E. 回复状态（rsvp_status）说明
 
-| 状态 | 含义（用户） | 含义（会议室） |
-|------|------------|---------------|
-| `needs_action` | 未回复 | 预约中 |
-| `accept` | 已接受 | 预约成功 |
-| `tentative` | 待定 | - |
-| `decline` | 拒绝 | 预约失败 |
-| `removed` | 已被移除 | 已被移除 |
-
+| 状态           | 含义（用户） | 含义（会议室） |
+| -------------- | ------------ | -------------- |
+| `needs_action` | 未回复       | 预约中         |
+| `accept`       | 已接受       | 预约成功       |
+| `tentative`    | 待定         | -              |
+| `decline`      | 拒绝         | 预约失败       |
+| `removed`      | 已被移除     | 已被移除       |
 
 ### F. 使用限制（来自飞书 OAPI 文档）
 

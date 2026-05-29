@@ -13,9 +13,9 @@
  *   log.info("created entity", { cardId, sequence });
  */
 
-import type { RuntimeLogger } from 'openclaw/plugin-sdk';
-import { getTicket } from './lark-ticket';
-import { tryGetLarkRuntime } from './runtime-store';
+import type { RuntimeLogger } from "openclaw/plugin-sdk";
+import { getTicket } from "./lark-ticket";
+import { tryGetLarkRuntime } from "./runtime-store";
 
 // ---------------------------------------------------------------------------
 // Public interface
@@ -35,11 +35,11 @@ export interface LarkLogger {
 // ---------------------------------------------------------------------------
 
 // ANSI escape codes for colored console output
-const CYAN = '\x1b[36m';
-const YELLOW = '\x1b[33m';
-const RED = '\x1b[31m';
-const GRAY = '\x1b[90m';
-const RESET = '\x1b[0m';
+const CYAN = "\x1b[36m";
+const YELLOW = "\x1b[33m";
+const RED = "\x1b[31m";
+const GRAY = "\x1b[90m";
+const RESET = "\x1b[0m";
 
 function consoleFallback(subsystem: string): RuntimeLogger {
   const tag = `feishu/${subsystem}`;
@@ -103,7 +103,7 @@ function enrichMeta(meta: Record<string, unknown> | undefined): Record<string, u
  */
 function buildTracePrefix(): string {
   const ctx = getTicket();
-  if (!ctx) return 'feishu:';
+  if (!ctx) return "feishu:";
   return `feishu[${ctx.accountId}][msg:${ctx.messageId}]:`;
 }
 
@@ -125,11 +125,11 @@ function formatMessage(message: string, meta: Record<string, unknown> | undefine
   const parts = Object.entries(meta)
     .map(([k, v]) => {
       if (v === undefined || v == null) return null;
-      if (typeof v === 'object') return `${k}=${JSON.stringify(v)}`;
+      if (typeof v === "object") return `${k}=${JSON.stringify(v)}`;
       return `${k}=${v}`;
     })
     .filter(Boolean);
-  return parts.length > 0 ? `${prefix} ${message} (${parts.join(', ')})` : `${prefix} ${message}`;
+  return parts.length > 0 ? `${prefix} ${message} (${parts.join(", ")})` : `${prefix} ${message}`;
 }
 
 // ---------------------------------------------------------------------------

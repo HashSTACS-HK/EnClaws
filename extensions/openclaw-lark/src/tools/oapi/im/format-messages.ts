@@ -10,19 +10,19 @@
  * 所有 API 调用均通过 UAT（用户身份）进行。
  */
 
-import type { LarkAccount } from '../../../core/types';
-import type { ToolClient } from '../../../core/tool-client';
-import type { ApiMessageItem, ConvertContext } from '../../../messaging/converters/types';
-import { larkLogger } from '../../../core/lark-logger';
+import { larkLogger } from "../../../core/lark-logger";
+import type { ToolClient } from "../../../core/tool-client";
+import type { LarkAccount } from "../../../core/types";
 import {
   buildConvertContextFromItem,
   convertMessageContent,
   extractMentionOpenId,
-} from '../../../messaging/converters/content-converter';
-import { batchResolveUserNamesAsUser, getUATUserName, setUATUserNames } from './user-name-uat';
-import { millisStringToDateTime } from './time-utils';
+} from "../../../messaging/converters/content-converter";
+import type { ApiMessageItem, ConvertContext } from "../../../messaging/converters/types";
+import { millisStringToDateTime } from "./time-utils";
+import { batchResolveUserNamesAsUser, getUATUserName, setUATUserNames } from "./user-name-uat";
 
-const log = larkLogger('oapi/im/format-messages');
+const log = larkLogger("oapi/im/format-messages");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,10 +53,10 @@ function createUATFetchSubMessages(client: ToolClient) {
       code?: number;
       msg?: string;
       data?: { items?: ApiMessageItem[] };
-    }>('feishu_im_user_get_messages.default', `/open-apis/im/v1/messages/${messageId}`, {
-      method: 'GET',
-      query: { user_id_type: 'open_id', card_msg_content_type: 'raw_card_content' },
-      as: 'user',
+    }>("feishu_im_user_get_messages.default", `/open-apis/im/v1/messages/${messageId}`, {
+      method: "GET",
+      query: { user_id_type: "open_id", card_msg_content_type: "raw_card_content" },
+      as: "user",
     });
     if (res.code !== 0) {
       throw new Error(`API error: code=${res.code} msg=${res.msg}`);
@@ -81,13 +81,13 @@ export async function formatMessageItem(
   nameResolver: (openId: string) => string | undefined,
   ctxOverrides?: Partial<ConvertContext>,
 ): Promise<FormattedMessage> {
-  const messageId: string = item.message_id ?? '';
-  const msgType: string = item.msg_type ?? 'unknown';
+  const messageId: string = item.message_id ?? "";
+  const msgType: string = item.msg_type ?? "unknown";
 
   // 使用 converter 处理消息内容
-  let content = '';
+  let content = "";
   try {
-    const rawContent: string = item.body?.content ?? '';
+    const rawContent: string = item.body?.content ?? "";
     if (rawContent) {
       const ctx = {
         ...buildConvertContextFromItem(item, messageId, accountId),
@@ -97,23 +97,23 @@ export async function formatMessageItem(
       content = result.content;
     }
   } catch (err) {
-    log.warn('converter failed, falling back to raw content', {
+    log.warn("converter failed, falling back to raw content", {
       messageId,
       msgType,
       error: err instanceof Error ? err.message : String(err),
     });
-    content = item.body?.content ?? '';
+    content = item.body?.content ?? "";
   }
 
   // 构建 sender（从 UAT 缓存中读取名字）
-  const senderId: string = item.sender?.id ?? '';
-  const senderType: string = item.sender?.sender_type ?? 'unknown';
+  const senderId: string = item.sender?.id ?? "";
+  const senderType: string = item.sender?.sender_type ?? "unknown";
   let senderName: string | undefined;
-  if (senderId && senderType === 'user') {
+  if (senderId && senderType === "user") {
     senderName = nameResolver(senderId);
   }
 
-  const sender: FormattedMessage['sender'] = {
+  const sender: FormattedMessage["sender"] = {
     id: senderId,
     sender_type: senderType,
   };
@@ -122,17 +122,17 @@ export async function formatMessageItem(
   }
 
   // 构建 mentions（简化格式）
-  let mentions: FormattedMessage['mentions'];
+  let mentions: FormattedMessage["mentions"];
   if (item.mentions && item.mentions.length > 0) {
     mentions = item.mentions.map((m) => ({
-      key: m.key ?? '',
+      key: m.key ?? "",
       id: extractMentionOpenId(m.id),
-      name: m.name ?? '',
+      name: m.name ?? "",
     }));
   }
 
   // 转换 create_time（飞书 API 返回毫秒时间戳字符串 → ISO 8601 +08:00）
-  const createTime = item.create_time ? millisStringToDateTime(item.create_time) : '';
+  const createTime = item.create_time ? millisStringToDateTime(item.create_time) : "";
 
   const formatted: FormattedMessage = {
     message_id: messageId,
@@ -194,7 +194,7 @@ export async function formatMessageList(
   const senderIds = [
     ...new Set(
       items
-        .map((item) => (item.sender?.sender_type === 'user' ? item.sender.id : undefined))
+        .map((item) => (item.sender?.sender_type === "user" ? item.sender.id : undefined))
         .filter((id): id is string => !!id),
     ),
   ];
@@ -220,5 +220,7 @@ export async function formatMessageList(
   };
 
   // 5. 逐条格式化
-  return Promise.all(items.map((item) => formatMessageItem(item, accountId, nameResolver, ctxOverrides)));
+  return Promise.all(
+    items.map((item) => formatMessageItem(item, accountId, nameResolver, ctxOverrides)),
+  );
 }

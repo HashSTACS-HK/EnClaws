@@ -10,9 +10,9 @@
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { I18nController } from "../../../i18n/index.ts";
-import { tenantRpc } from "./rpc.ts";
 import { loadAuth } from "../../auth-store.ts";
 import { caretFix } from "../../shared-styles.ts";
+import { tenantRpc } from "./rpc.ts";
 
 interface CSMessage {
   id: string;
@@ -55,7 +55,9 @@ export class CSSessionsView extends LitElement {
   static styles = [
     caretFix,
     css`
-      :host { display: block; }
+      :host {
+        display: block;
+      }
 
       .toolbar {
         display: flex;
@@ -82,7 +84,9 @@ export class CSSessionsView extends LitElement {
         white-space: nowrap;
       }
 
-      .btn:hover { background: var(--color-bg-hover, #eaeef2); }
+      .btn:hover {
+        background: var(--color-bg-hover, #eaeef2);
+      }
 
       .session-table {
         width: 100%;
@@ -107,11 +111,20 @@ export class CSSessionsView extends LitElement {
         vertical-align: top;
       }
 
-      .session-row { cursor: pointer; transition: background 0.1s; }
-      .session-row:hover td { background: var(--color-bg-secondary, #f6f8fa); }
-      .session-row.expanded td { background: var(--color-bg-secondary, #f6f8fa); }
+      .session-row {
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .session-row:hover td {
+        background: var(--color-bg-secondary, #f6f8fa);
+      }
+      .session-row.expanded td {
+        background: var(--color-bg-secondary, #f6f8fa);
+      }
 
-      .visitor-name { font-weight: 500; }
+      .visitor-name {
+        font-weight: 500;
+      }
       .visitor-id {
         font-size: 11px;
         font-family: monospace;
@@ -140,7 +153,10 @@ export class CSSessionsView extends LitElement {
         transition: transform 0.15s;
       }
 
-      .expand-icon.open { transform: rotate(90deg); display: inline-block; }
+      .expand-icon.open {
+        transform: rotate(90deg);
+        display: inline-block;
+      }
 
       /* Message thread panel */
       .thread-row td {
@@ -237,16 +253,21 @@ export class CSSessionsView extends LitElement {
 
   private async _loadSessions(reset = false) {
     const tenantId = this.tenantId;
-    if (!tenantId) {return;}
-    if (reset) { this.offset = 0; this.sessions = []; }
+    if (!tenantId) {
+      return;
+    }
+    if (reset) {
+      this.offset = 0;
+      this.sessions = [];
+    }
     this.loading = true;
     this.error = null;
     try {
-      const result = await tenantRpc("cs.sessions.list", {
+      const result = (await tenantRpc("cs.sessions.list", {
         tenantId,
         limit: this.PAGE_SIZE,
         offset: this.offset,
-      }) as { sessions: CSSession[] };
+      })) as { sessions: CSSession[] };
       const newSessions = result.sessions ?? [];
       this.sessions = reset ? newSessions : [...this.sessions, ...newSessions];
       this.hasMore = newSessions.length === this.PAGE_SIZE;
@@ -272,7 +293,9 @@ export class CSSessionsView extends LitElement {
   private async _loadMessages(sessionId: string) {
     this.messagesLoading = sessionId;
     try {
-      const result = await tenantRpc("cs.session.messages", { sessionId, limit: 100 }) as { messages: CSMessage[] };
+      const result = (await tenantRpc("cs.session.messages", { sessionId, limit: 100 })) as {
+        messages: CSMessage[];
+      };
       this.messages = { ...this.messages, [sessionId]: result.messages ?? [] };
     } catch (err) {
       this.messages = { ...this.messages, [sessionId]: [] };
@@ -295,10 +318,14 @@ export class CSSessionsView extends LitElement {
       <tr class="thread-row">
         <td colspan="6">
           <div class="thread-panel">
-            ${this.messagesLoading === session.id
-              ? html`<p class="msg-loading">加载消息中…</p>`
-              : msgs?.length
-                ? msgs.map((m) => html`
+            ${
+              this.messagesLoading === session.id
+                ? html`
+                    <p class="msg-loading">加载消息中…</p>
+                  `
+                : msgs?.length
+                  ? msgs.map(
+                      (m) => html`
                     <div class="msg ${m.role}">
                       <div class="msg-header">
                         ${ROLE_LABEL[m.role] ?? m.role}
@@ -306,8 +333,11 @@ export class CSSessionsView extends LitElement {
                       </div>
                       <div class="msg-content">${m.content}</div>
                     </div>
-                  `)
-                : html`<p class="msg-loading">暂无消息记录</p>`
+                  `,
+                    )
+                  : html`
+                      <p class="msg-loading">暂无消息记录</p>
+                    `
             }
           </div>
         </td>
@@ -324,11 +354,17 @@ export class CSSessionsView extends LitElement {
 
       ${this.error ? html`<p class="error-msg">${this.error}</p>` : nothing}
 
-      ${this.loading && this.sessions.length === 0
-        ? html`<div class="loading">加载中…</div>`
-        : !this.error && this.sessions.length === 0
-          ? html`<div class="empty-state">暂无客服会话记录</div>`
-          : this.sessions.length > 0 ? html`
+      ${
+        this.loading && this.sessions.length === 0
+          ? html`
+              <div class="loading">加载中…</div>
+            `
+          : !this.error && this.sessions.length === 0
+            ? html`
+                <div class="empty-state">暂无客服会话记录</div>
+              `
+            : this.sessions.length > 0
+              ? html`
             <table class="session-table">
               <thead>
                 <tr>
@@ -361,40 +397,60 @@ export class CSSessionsView extends LitElement {
                         class="state-badge"
                         style="color: ${STATE_COLOR[s.state] ?? "#555"}"
                       >${STATE_LABEL[s.state] ?? s.state}</span>
-                      ${s.closedAt ? html`<br><span style="font-size:11px;color:#6a737d">已关闭</span>` : nothing}
+                      ${
+                        s.closedAt
+                          ? html`
+                              <br /><span style="font-size: 11px; color: #6a737d">已关闭</span>
+                            `
+                          : nothing
+                      }
                     </td>
                     <td>
-                      ${s.lastMessage ? html`
+                      ${
+                        s.lastMessage
+                          ? html`
                         <div style="display:flex;align-items:center;gap:6px">
-                          ${needsAttention
-                            ? html`<span style="color:#cf222e;font-size:11px;font-weight:600">● 待回复</span>`
-                            : html`<span style="color:#6a737d;font-size:11px">● 已回复</span>`
+                          ${
+                            needsAttention
+                              ? html`
+                                  <span style="color: #cf222e; font-size: 11px; font-weight: 600">● 待回复</span>
+                                `
+                              : html`
+                                  <span style="color: #6a737d; font-size: 11px">● 已回复</span>
+                                `
                           }
                           <span style="font-size:12px;color:#6a737d;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                             ${s.lastMessage.content.slice(0, 40)}${s.lastMessage.content.length > 40 ? "…" : ""}
                           </span>
                         </div>
-                      ` : html`<span style="font-size:11px;color:#aaa">—</span>`}
+                      `
+                          : html`
+                              <span style="font-size: 11px; color: #aaa">—</span>
+                            `
+                      }
                     </td>
                     <td class="date-cell">${this._formatDate(s.createdAt)}</td>
                     <td class="date-cell">${this._formatDate(s.updatedAt)}</td>
                   </tr>
                   ${this.expandedId === s.id ? this._renderThread(s) : nothing}
-                `;})}
+                `;
+                })}
 
               </tbody>
             </table>
 
-            ${this.hasMore
-              ? html`
+            ${
+              this.hasMore
+                ? html`
                 <div class="load-more">
                   <button class="btn" ?disabled=${this.loading} @click=${() => this._loadSessions(false)}>
                     ${this.loading ? "加载中…" : "加载更多"}
                   </button>
                 </div>`
-              : nothing
+                : nothing
             }
-          ` : nothing
+          `
+              : nothing
       }
     `;
   }

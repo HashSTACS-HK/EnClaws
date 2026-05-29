@@ -3,9 +3,9 @@ import { repeat } from "lit/directives/repeat.js";
 import { t } from "../i18n/index.ts";
 import { refreshChat } from "./app-chat.ts";
 import { syncUrlWithSessionKey } from "./app-settings.ts";
-import { isAuthenticated } from "./auth-store.ts";
 import type { AppViewState } from "./app-view-state.ts";
 import { EnClawsApp } from "./app.ts";
+import { isAuthenticated } from "./auth-store.ts";
 import { ChatState, loadChatHistory } from "./controllers/chat.ts";
 import { icons } from "./icons.ts";
 import { iconForTab, pathForTab, titleForTab, type Tab } from "./navigation.ts";
@@ -234,22 +234,25 @@ export function renderChatControls(state: AppViewState, tenantAgents?: TenantAge
 
   return html`
     <div class="chat-controls">
-      ${tenantAgents && tenantAgents.length > 0
-        ? html`<label class="field chat-controls__session">
+      ${
+        tenantAgents && tenantAgents.length > 0
+          ? html`<label class="field chat-controls__session">
             <select
               .value=${effectiveAgentId}
               ?disabled=${!state.connected}
               @change=${(e: Event) => {
                 const agentId = (e.target as HTMLSelectElement).value;
-                if (!agentId) {return;}
+                if (!agentId) {
+                  return;
+                }
                 // Find the most recent channel session for this agent, fall back to chat
                 const agentPrefix = `agent:${agentId}:`;
                 const agentSessions = sessionOptions.filter(
-                  (s: { key: string }) => s.key.startsWith(agentPrefix) && s.key !== `agent:${agentId}:chat`,
+                  (s: { key: string }) =>
+                    s.key.startsWith(agentPrefix) && s.key !== `agent:${agentId}:chat`,
                 );
-                const bestSession = agentSessions.length > 0
-                  ? agentSessions[0].key
-                  : `agent:${agentId}:chat`;
+                const bestSession =
+                  agentSessions.length > 0 ? agentSessions[0].key : `agent:${agentId}:chat`;
                 applySessionKeyChange(bestSession);
               }}
             >
@@ -261,7 +264,7 @@ export function renderChatControls(state: AppViewState, tenantAgents?: TenantAge
               )}
             </select>
           </label>`
-        : html`<label class="field chat-controls__session">
+          : html`<label class="field chat-controls__session">
             <select
               .value=${state.sessionKey}
               ?disabled=${!state.connected}

@@ -11,15 +11,15 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Value } from "@sinclair/typebox/value";
-import { ListSessionsQuery, TranscriptQuery } from "../protocol/schema/cs-api.js";
 import { tryAppSecretAuth } from "../../auth/app-secret.js";
-import { sendJson, sendError } from "./http-helpers.js";
 import {
   listCsApiSessions,
   getCsApiSessionMetadata,
   listCsApiTranscript,
 } from "../../db/models/cs-session.js";
+import { ListSessionsQuery, TranscriptQuery } from "../protocol/schema/cs-api.js";
 import { ErrorCodes } from "../protocol/schema/error-codes.js";
+import { sendJson, sendError } from "./http-helpers.js";
 
 // ── Handler: GET /{appId}/sessions ────────────────────────────────────────────
 
@@ -35,7 +35,10 @@ export async function handleListSessions(
   appId: string,
 ): Promise<void> {
   const auth = await tryAppSecretAuth(req, appId);
-  if (!auth.ok) { sendError(res, 401, auth.code, auth.message); return; }
+  if (!auth.ok) {
+    sendError(res, 401, auth.code, auth.message);
+    return;
+  }
 
   const url = new URL(req.url ?? "", "http://_");
   const params = Object.fromEntries(url.searchParams.entries());
@@ -51,9 +54,7 @@ export async function handleListSessions(
   };
 
   // Strip undefined keys so TypeBox optional checks work correctly
-  const clean = Object.fromEntries(
-    Object.entries(parsed).filter(([, v]) => v !== undefined),
-  );
+  const clean = Object.fromEntries(Object.entries(parsed).filter(([, v]) => v !== undefined));
 
   if (!Value.Check(ListSessionsQuery, clean)) {
     sendError(res, 400, ErrorCodes.INVALID_REQUEST, "Invalid query parameters");
@@ -87,7 +88,10 @@ export async function handleGetSession(
   sessionId: string,
 ): Promise<void> {
   const auth = await tryAppSecretAuth(req, appId);
-  if (!auth.ok) { sendError(res, 401, auth.code, auth.message); return; }
+  if (!auth.ok) {
+    sendError(res, 401, auth.code, auth.message);
+    return;
+  }
 
   const session = await getCsApiSessionMetadata({
     tenantId: auth.tenant.tenantId,
@@ -119,7 +123,10 @@ export async function handleTranscript(
   sessionId: string,
 ): Promise<void> {
   const auth = await tryAppSecretAuth(req, appId);
-  if (!auth.ok) { sendError(res, 401, auth.code, auth.message); return; }
+  if (!auth.ok) {
+    sendError(res, 401, auth.code, auth.message);
+    return;
+  }
 
   const url = new URL(req.url ?? "", "http://_");
   const params = Object.fromEntries(url.searchParams.entries());
@@ -131,9 +138,7 @@ export async function handleTranscript(
     direction: (params.direction as "before" | "after" | undefined) ?? "before",
   };
 
-  const clean = Object.fromEntries(
-    Object.entries(parsed).filter(([, v]) => v !== undefined),
-  );
+  const clean = Object.fromEntries(Object.entries(parsed).filter(([, v]) => v !== undefined));
 
   if (!Value.Check(TranscriptQuery, clean)) {
     sendError(res, 400, ErrorCodes.INVALID_REQUEST, "Invalid query parameters");

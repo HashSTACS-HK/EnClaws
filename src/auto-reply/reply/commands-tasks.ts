@@ -1,6 +1,6 @@
 import { logVerbose } from "../../globals.js";
-import { formatTaskOverview, getAgentTaskOverview } from "./task-overview.js";
 import type { CommandHandler } from "./commands-types.js";
+import { formatTaskOverview, getAgentTaskOverview } from "./task-overview.js";
 
 export const handleTasksCommand: CommandHandler = async (params, allowTextCommands) => {
   if (!allowTextCommands) {

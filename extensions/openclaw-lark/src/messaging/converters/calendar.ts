@@ -8,8 +8,8 @@
  * - general_calendar
  */
 
-import type { ContentConverterFn } from './types';
-import { millisToDatetime, safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { millisToDatetime, safeParse } from "./utils";
 
 interface CalendarBody {
   summary?: string;
@@ -18,22 +18,22 @@ interface CalendarBody {
 }
 
 function formatCalendarContent(parsed: CalendarBody | undefined): string {
-  const summary = parsed?.summary ?? '';
+  const summary = parsed?.summary ?? "";
   const parts: string[] = [];
 
   if (summary) {
     parts.push(`📅 ${summary}`);
   }
 
-  const start = parsed?.start_time ? millisToDatetime(parsed.start_time) : '';
-  const end = parsed?.end_time ? millisToDatetime(parsed.end_time) : '';
+  const start = parsed?.start_time ? millisToDatetime(parsed.start_time) : "";
+  const end = parsed?.end_time ? millisToDatetime(parsed.end_time) : "";
   if (start && end) {
     parts.push(`🕙 ${start} ~ ${end}`);
   } else if (start) {
     parts.push(`🕙 ${start}`);
   }
 
-  return parts.join('\n') || '[calendar event]';
+  return parts.join("\n") || "[calendar event]";
 }
 
 export const convertShareCalendarEvent: ContentConverterFn = (raw) => {

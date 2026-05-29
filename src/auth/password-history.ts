@@ -26,22 +26,22 @@ const PASSWORD_HISTORY_RETAIN = 20;
  * Record the CURRENT password hash into history before it gets overwritten.
  * Call this BEFORE updating the user's password_hash.
  */
-export async function archivePasswordHash(
-  userId: string,
-  currentHash: string,
-): Promise<void> {
-  if (!currentHash) {return;}
+export async function archivePasswordHash(userId: string, currentHash: string): Promise<void> {
+  if (!currentHash) {
+    return;
+  }
   if (getDbType() === DB_SQLITE) {
     const id = crypto.randomUUID();
-    await query(
-      `INSERT INTO password_history (id, user_id, password_hash) VALUES ($1, $2, $3)`,
-      [id, userId, currentHash],
-    );
+    await query(`INSERT INTO password_history (id, user_id, password_hash) VALUES ($1, $2, $3)`, [
+      id,
+      userId,
+      currentHash,
+    ]);
   } else {
-    await query(
-      `INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)`,
-      [userId, currentHash],
-    );
+    await query(`INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)`, [
+      userId,
+      currentHash,
+    ]);
   }
   await pruneHistory(userId);
 }
@@ -52,10 +52,7 @@ export async function archivePasswordHash(
  *
  * Returns true if the password has been used recently (→ reject).
  */
-export async function isPasswordInHistory(
-  userId: string,
-  newPassword: string,
-): Promise<boolean> {
+export async function isPasswordInHistory(userId: string, newPassword: string): Promise<boolean> {
   const result = await query<{ password_hash: string }>(
     `SELECT password_hash FROM password_history
       WHERE user_id = $1

@@ -6,34 +6,34 @@
 
 ```json
 {
-    "name": "smartpage_get_export_result",
-    "description": "查询智能主页导出任务进度。传入 task_id 轮询，当 task_done 为 true 时返回导出内容的本地文件路径 content_filepath，可通过读取该文件获取 Markdown 内容。",
-    "inputSchema": {
-        "properties": {
-            "task_id": {
-                "description": "导出任务 ID，由 smartpage_export_task 返回",
-                "title": "Task ID",
-                "type": "string"
-            }
-        },
-        "required": ["task_id"],
-        "title": "smartpage_get_export_resultArguments",
-        "type": "object"
-    }
+  "name": "smartpage_get_export_result",
+  "description": "查询智能主页导出任务进度。传入 task_id 轮询，当 task_done 为 true 时返回导出内容的本地文件路径 content_filepath，可通过读取该文件获取 Markdown 内容。",
+  "inputSchema": {
+    "properties": {
+      "task_id": {
+        "description": "导出任务 ID，由 smartpage_export_task 返回",
+        "title": "Task ID",
+        "type": "string"
+      }
+    },
+    "required": ["task_id"],
+    "title": "smartpage_get_export_resultArguments",
+    "type": "object"
+  }
 }
 ```
 
 ## 参数说明
 
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| task_id | string | 是 | 导出任务 ID，由 `smartpage_export_task` 返回 |
+| 参数    | 类型   | 必填 | 说明                                         |
+| ------- | ------ | ---- | -------------------------------------------- |
+| task_id | string | 是   | 导出任务 ID，由 `smartpage_export_task` 返回 |
 
 ## 请求示例
 
 ```json
 {
-    "task_id": "TASK_ID"
+  "task_id": "TASK_ID"
 }
 ```
 
@@ -43,9 +43,9 @@
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok",
-    "task_done": false
+  "errcode": 0,
+  "errmsg": "ok",
+  "task_done": false
 }
 ```
 
@@ -53,10 +53,10 @@
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok",
-    "task_done": true,
-    "content_filepath": "/path/to/exported-content.md"
+  "errcode": 0,
+  "errmsg": "ok",
+  "task_done": true,
+  "content_filepath": "/path/to/exported-content.md"
 }
 ```
 

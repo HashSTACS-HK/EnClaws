@@ -21,11 +21,7 @@ export const isNixMode = resolveIsNixMode();
 const LEGACY_STATE_DIRNAMES = [".clawdbot", ".moldbot", ".moltbot"] as const;
 const NEW_STATE_DIRNAME = ".enclaws";
 const CONFIG_FILENAME = "enclaws.json";
-const LEGACY_CONFIG_FILENAMES = [
-  "clawdbot.json",
-  "moldbot.json",
-  "moltbot.json",
-] as const;
+const LEGACY_CONFIG_FILENAMES = ["clawdbot.json", "moldbot.json", "moltbot.json"] as const;
 
 function resolveDefaultHomeDir(): string {
   return resolveRequiredHomeDir(process.env, os.homedir);

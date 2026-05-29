@@ -12,17 +12,16 @@
  *   - create: POST /open-apis/wiki/v2/spaces
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import {
   assertLarkOk,
   createToolContext,
   handleInvokeErrorWithAutoAuth,
   json,
   registerTool,
-} from '../helpers';
-import type { PaginatedData } from '../sdk-types';
+} from "../helpers";
+import type { PaginatedData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -31,40 +30,40 @@ import type { PaginatedData } from '../sdk-types';
 const FeishuWikiSpaceSchema = Type.Union([
   // LIST SPACES
   Type.Object({
-    action: Type.Literal('list'),
+    action: Type.Literal("list"),
     page_size: Type.Optional(
       Type.Integer({
-        description: '分页大小（默认 10，最大 50）',
+        description: "分页大小（默认 10，最大 50）",
         minimum: 1,
         maximum: 50,
       }),
     ),
     page_token: Type.Optional(
       Type.String({
-        description: '分页标记。首次请求无需填写',
+        description: "分页标记。首次请求无需填写",
       }),
     ),
   }),
 
   // GET SPACE
   Type.Object({
-    action: Type.Literal('get'),
+    action: Type.Literal("get"),
     space_id: Type.String({
-      description: '知识空间 ID（必填）',
+      description: "知识空间 ID（必填）",
     }),
   }),
 
   // CREATE SPACE
   Type.Object({
-    action: Type.Literal('create'),
+    action: Type.Literal("create"),
     name: Type.Optional(
       Type.String({
-        description: '知识空间名称',
+        description: "知识空间名称",
       }),
     ),
     description: Type.Optional(
       Type.String({
-        description: '知识空间描述',
+        description: "知识空间描述",
       }),
     ),
   }),
@@ -76,16 +75,16 @@ const FeishuWikiSpaceSchema = Type.Union([
 
 type FeishuWikiSpaceParams =
   | {
-      action: 'list';
+      action: "list";
       page_size?: number;
       page_token?: string;
     }
   | {
-      action: 'get';
+      action: "get";
       space_id: string;
     }
   | {
-      action: 'create';
+      action: "create";
       name?: string;
       description?: string;
     };
@@ -98,17 +97,17 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
   if (!api.config) return false;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_wiki_space');
+  const { toolClient, log } = createToolContext(api, "feishu_wiki_space");
 
   return registerTool(
     api,
     {
-      name: 'feishu_wiki_space',
-      label: 'Feishu Wiki Spaces',
+      name: "feishu_wiki_space",
+      label: "Feishu Wiki Spaces",
       description:
-        '飞书知识空间管理工具。当用户要求查看知识库列表、获取知识库信息、创建知识库时使用。Actions: list（列出知识空间）, get（获取知识空间信息）, create（创建知识空间）。' +
-        '【重要】space_id 可以从浏览器 URL 中获取，或通过 list 接口获取。' +
-        '【重要】知识空间（Space）是知识库的基本组成单位，包含多个具有层级关系的文档节点。',
+        "飞书知识空间管理工具。当用户要求查看知识库列表、获取知识库信息、创建知识库时使用。Actions: list（列出知识空间）, get（获取知识空间信息）, create（创建知识空间）。" +
+        "【重要】space_id 可以从浏览器 URL 中获取，或通过 list 接口获取。" +
+        "【重要】知识空间（Space）是知识库的基本组成单位，包含多个具有层级关系的文档节点。",
       parameters: FeishuWikiSpaceSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as FeishuWikiSpaceParams;
@@ -119,11 +118,11 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // LIST SPACES
             // -----------------------------------------------------------------
-            case 'list': {
+            case "list": {
               log.info(`list: page_size=${p.page_size ?? 10}`);
 
               const res = await client.invoke(
-                'feishu_wiki_space.list',
+                "feishu_wiki_space.list",
                 (sdk, opts) =>
                   sdk.wiki.space.list(
                     {
@@ -135,7 +134,7 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -152,11 +151,11 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // GET SPACE
             // -----------------------------------------------------------------
-            case 'get': {
+            case "get": {
               log.info(`get: space_id=${p.space_id}`);
 
               const res = await client.invoke(
-                'feishu_wiki_space.get',
+                "feishu_wiki_space.get",
                 (sdk, opts) =>
                   sdk.wiki.space.get(
                     {
@@ -164,7 +163,7 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -178,11 +177,13 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // CREATE SPACE
             // -----------------------------------------------------------------
-            case 'create': {
-              log.info(`create: name=${p.name ?? '(empty)'}, description=${p.description ?? '(empty)'}`);
+            case "create": {
+              log.info(
+                `create: name=${p.name ?? "(empty)"}, description=${p.description ?? "(empty)"}`,
+              );
 
               const res = await client.invoke(
-                'feishu_wiki_space.create',
+                "feishu_wiki_space.create",
                 (sdk, opts) =>
                   sdk.wiki.space.create(
                     {
@@ -193,7 +194,7 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -210,6 +211,6 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
         }
       },
     },
-    { name: 'feishu_wiki_space' },
+    { name: "feishu_wiki_space" },
   );
 }

@@ -4,7 +4,7 @@ description: |
   更新飞书云文档。支持 7 种更新模式：追加、覆盖、定位替换、全文替换、前/后插入、删除。
 ---
 
-# feishu__update_doc
+# feishu\_\_update_doc
 
 更新飞书云文档内容，支持 7 种更新模式。优先使用局部更新（replace_range/append/insert_before/insert_after），慎用 overwrite（会清空文档重写，可能丢失图片、评论等）。
 
@@ -27,6 +27,7 @@ description: |
 **转义说明**：如果要匹配的内容本身包含 `...`，使用 `\.\.\.` 表示字面量的三个点。
 
 示例：
+
 - `你好...世界` → 匹配从"你好"到"世界"之间的任意内容
 - `你好\.\.\.世界` → 匹配字面量 "你好...世界"
 
@@ -39,6 +40,7 @@ description: |
 自动定位整个章节（从该标题到下一个同级或更高级标题之前）。
 
 **示例**：
+
 - `## 功能说明` → 定位二级标题"功能说明"及其下所有内容
 - `功能说明` → 定位任意级别的"功能说明"标题及其内容
 
@@ -49,11 +51,11 @@ description: |
 更新文档标题。如果提供此参数，将在更新文档内容后同步更新文档标题。
 
 **特性**：
+
 - 仅支持纯文本，不支持富文本格式
 - 长度限制：1-800 字符
 - 可以与任何 mode 配合使用
 - 标题更新在内容更新之后执行
-
 
 # 返回值
 
@@ -108,6 +110,7 @@ description: |
 ## replace_range - 定位替换
 
 使用 `selection_with_ellipsis`：
+
 ```json
 {
   "doc_id": "文档ID或URL",
@@ -118,6 +121,7 @@ description: |
 ```
 
 使用 `selection_by_title`（替换整个章节）：
+
 ```json
 {
   "doc_id": "文档ID或URL",
@@ -130,6 +134,7 @@ description: |
 ## replace_all - 全文替换
 
 与 replace_range 类似，但支持多处同时替换（replace_range 要求匹配唯一）：
+
 ```json
 {
   "doc_id": "文档ID或URL",
@@ -140,6 +145,7 @@ description: |
 ```
 
 **返回值**包含 `replace_count` 字段，表示替换的次数：
+
 ```json
 {
   "success": true,
@@ -149,6 +155,7 @@ description: |
 ```
 
 **注意**：
+
 - 与 `replace_range` 不同，`replace_all` 允许多个匹配
 - 如果没有找到匹配内容，会返回错误
 - `markdown` 可以为空字符串，表示删除所有匹配内容
@@ -166,18 +173,19 @@ description: |
 
 ## insert_after - 后插入
 
-```json
+````json
 {
   "doc_id": "文档ID或URL",
   "mode": "insert_after",
   "selection_with_ellipsis": "```python...```",
   "markdown": "**输出示例**：\n```\nresult = 42\n```"
 }
-```
+````
 
 ## delete_range - 删除内容
 
 使用 `selection_with_ellipsis`：
+
 ```json
 {
   "doc_id": "文档ID或URL",
@@ -187,6 +195,7 @@ description: |
 ```
 
 使用 `selection_by_title`（删除整个章节）：
+
 ```json
 {
   "doc_id": "文档ID或URL",
@@ -240,21 +249,23 @@ description: |
 修改文档内容时，**定位范围越小越安全**。尤其是表格、分栏等嵌套块，应精确定位到需要修改的文本，避免影响其他内容。
 
 **示例**：表格单元格中有图片和文字，只需修改文字
+
 - ❌ 替换整个表格或整行 → 可能破坏图片引用
 - ✅ 只定位需要修改的文本 → 图片等其他内容不受影响
-
 
 ## 保护不可重建的内容
 
 图片、画板、电子表格、多维表格、任务等内容以 token 形式存储，**无法读出后原样写入**。
 
 **保护策略**：
+
 - 替换时避开包含这些内容的区域
 - 精确定位到纯文本部分进行修改
 
 ## 分步更新优于整体覆盖
 
 修改多处内容时：
+
 - ✅ 多次小范围替换，逐步修改
 - ⚠️ 谨慎使用 `overwrite` 重写整个文档, 除非你认为风险完全可控
 
@@ -265,6 +276,7 @@ description: |
 使用 `insert_before` 或 `insert_after` 时，如果目标内容重复出现，需要扩大 `selection_with_ellipsis` 范围来唯一定位。
 
 **关键**：插入位置基于匹配范围的**边界**：
+
 - `insert_after` → 插入在匹配范围的**结尾**之后
 - `insert_before` → 插入在匹配范围的**开头**之前
 
@@ -273,6 +285,7 @@ description: |
 ## 修复画板语法错误
 
 当 create-doc 或 update-doc 返回画板写入失败的 warning 时：
+
 1. warning 中包含 whiteboard 标签（如 `<whiteboard token="xxx"/>`）
 2. 分析错误信息，修正 Mermaid/PlantUML 语法
 3. 用 `replace_range` 替换：`selection_with_ellipsis` 使用 warning 中的 whiteboard 标签，`markdown` 提供修正后的代码块

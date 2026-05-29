@@ -129,7 +129,7 @@ export function resolveGatewayOptions(opts?: GatewayCallOptions) {
         target: validatedOverride.target,
         explicitToken,
       })
-    : explicitToken ??
+    : (explicitToken ??
       // When no explicit token/URL override, resolve from config with config-first
       // precedence to match the gateway server's auth resolution (resolveGatewayAuth
       // uses config-first). Without this, env-first default can cause token_mismatch
@@ -139,7 +139,7 @@ export function resolveGatewayOptions(opts?: GatewayCallOptions) {
         env: process.env,
         modeOverride: "local",
         localTokenPrecedence: "config-first",
-      }).token;
+      }).token);
   const timeoutMs =
     typeof opts?.timeoutMs === "number" && Number.isFinite(opts.timeoutMs)
       ? Math.max(1, Math.floor(opts.timeoutMs))

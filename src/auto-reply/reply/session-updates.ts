@@ -161,9 +161,13 @@ export async function ensureSkillSnapshot(params: {
   const versionStale =
     snapshotVersion > 0 && (nextEntry?.skillsSnapshot?.version ?? 0) < snapshotVersion;
   const cachedSkillFilter = nextEntry?.skillsSnapshot?.skillFilter;
-  const skillFilterChanged = skillFilter !== undefined && JSON.stringify(cachedSkillFilter ?? null) !== JSON.stringify(skillFilter);
+  const skillFilterChanged =
+    skillFilter !== undefined &&
+    JSON.stringify(cachedSkillFilter ?? null) !== JSON.stringify(skillFilter);
   const shouldRefreshSnapshot = versionStale || skillFilterChanged;
-  skillsLog.info(`[skills-chain] ensureSkillSnapshot: isFirstTurn=${isFirstTurnInSession}, versionStale=${versionStale}, skillFilterChanged=${skillFilterChanged}, shouldRefresh=${shouldRefreshSnapshot}, skillFilter=${JSON.stringify(skillFilter ?? null)}, cachedFilter=${JSON.stringify(cachedSkillFilter ?? null)}, cachedSkillsCount=${nextEntry?.skillsSnapshot?.skills?.length ?? 0}`);
+  skillsLog.info(
+    `[skills-chain] ensureSkillSnapshot: isFirstTurn=${isFirstTurnInSession}, versionStale=${versionStale}, skillFilterChanged=${skillFilterChanged}, shouldRefresh=${shouldRefreshSnapshot}, skillFilter=${JSON.stringify(skillFilter ?? null)}, cachedFilter=${JSON.stringify(cachedSkillFilter ?? null)}, cachedSkillsCount=${nextEntry?.skillsSnapshot?.skills?.length ?? 0}`,
+  );
 
   if (isFirstTurnInSession && sessionStore && sessionKey) {
     const current = nextEntry ??

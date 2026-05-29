@@ -5,19 +5,19 @@
  * Shared helper functions for Feishu content converters.
  */
 
-import type { MentionInfo } from '../types';
-import { getUserNameCache } from '../inbound/user-name-cache';
-import { escapeRegExp } from './utils';
-import type { ApiMessageItem, ConvertContext } from './types';
+import { getUserNameCache } from "../inbound/user-name-cache";
+import type { MentionInfo } from "../types";
+import type { ApiMessageItem, ConvertContext } from "./types";
+import { escapeRegExp } from "./utils";
 
 /** 从 mention 的 id 字段提取 open_id（兼容事件推送的对象格式和 API 响应的字符串格式） */
 export function extractMentionOpenId(id: unknown): string {
-  if (typeof id === 'string') return id;
-  if (id != null && typeof id === 'object' && 'open_id' in id) {
+  if (typeof id === "string") return id;
+  if (id != null && typeof id === "object" && "open_id" in id) {
     const openId = (id as Record<string, unknown>).open_id;
-    return typeof openId === 'string' ? openId : '';
+    return typeof openId === "string" ? openId : "";
   }
-  return '';
+  return "";
 }
 
 /**
@@ -42,7 +42,7 @@ export function buildConvertContextFromItem(
     const info: MentionInfo = {
       key: m.key,
       openId,
-      name: m.name ?? '',
+      name: m.name ?? "",
       isBot: false,
     };
     mentions.set(m.key, info);
@@ -71,10 +71,10 @@ export function resolveMentions(text: string, ctx: ConvertContext): string {
   let result = text;
   for (const [key, info] of ctx.mentions) {
     if (info.isBot && ctx.stripBotMentions) {
-      result = result.replace(new RegExp(`@${escapeRegExp(info.name)}\\s*`, 'g'), '').trim();
-      result = result.replace(new RegExp(escapeRegExp(key) + '\\s*', 'g'), '').trim();
+      result = result.replace(new RegExp(`@${escapeRegExp(info.name)}\\s*`, "g"), "").trim();
+      result = result.replace(new RegExp(escapeRegExp(key) + "\\s*", "g"), "").trim();
     } else {
-      result = result.replace(new RegExp(escapeRegExp(key), 'g'), `@${info.name}`);
+      result = result.replace(new RegExp(escapeRegExp(key), "g"), `@${info.name}`);
     }
   }
   return result;

@@ -350,8 +350,7 @@ export function buildAgentSystemPrompt(params: {
     process: "Manage background exec sessions",
     memory_route:
       "Route a question through large knowledge documents to find relevant sections before reading exact lines.",
-    memory_outline:
-      "Inspect knowledge document outlines and line ranges before focused reads.",
+    memory_outline: "Inspect knowledge document outlines and line ranges before focused reads.",
     memory_get: "Read focused lines from enterprise or agent knowledge files.",
     memory_search:
       "Search enterprise and agent knowledge files for compact snippets when route/get is not needed.",

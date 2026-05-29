@@ -5,14 +5,18 @@
  * Message sending for the Lark/Feishu channel plugin.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { FeishuSendResult, MentionInfo  } from '../types';
-import { createAccountScopedConfig } from '../../core/accounts';
-import { LarkClient } from '../../core/lark-client';
-import { normalizeFeishuTarget, normalizeMessageId, resolveReceiveIdType } from '../../core/targets';
-import { runWithMessageUnavailableGuard } from '../../core/message-unavailable';
-import { optimizeMarkdownStyle } from '../../card/markdown-style';
-import { buildMentionedCardContent, buildMentionedMessage } from '../inbound/mention';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { optimizeMarkdownStyle } from "../../card/markdown-style";
+import { createAccountScopedConfig } from "../../core/accounts";
+import { LarkClient } from "../../core/lark-client";
+import { runWithMessageUnavailableGuard } from "../../core/message-unavailable";
+import {
+  normalizeFeishuTarget,
+  normalizeMessageId,
+  resolveReceiveIdType,
+} from "../../core/targets";
+import { buildMentionedCardContent, buildMentionedMessage } from "../inbound/mention";
+import type { FeishuSendResult, MentionInfo } from "../types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,14 +77,21 @@ export interface SendFeishuCardParams {
  * @param accountId - Optional account identifier for multi-account setups
  * @returns Converted text, or the original text when runtime helpers are unavailable
  */
-function convertMarkdownTablesForFeishu(cfg: ClawdbotConfig, text: string, accountId?: string): string {
+function convertMarkdownTablesForFeishu(
+  cfg: ClawdbotConfig,
+  text: string,
+  accountId?: string,
+): string {
   try {
     const accountScopedCfg = createAccountScopedConfig(cfg, accountId);
     const runtime = LarkClient.runtime;
-    if (runtime?.channel?.text?.convertMarkdownTables && runtime.channel.text.resolveMarkdownTableMode) {
+    if (
+      runtime?.channel?.text?.convertMarkdownTables &&
+      runtime.channel.text.resolveMarkdownTableMode
+    ) {
       const tableMode = runtime.channel.text.resolveMarkdownTableMode({
         cfg: accountScopedCfg,
-        channel: 'feishu',
+        channel: "feishu",
       });
       return runtime.channel.text.convertMarkdownTables(text, tableMode);
     }
@@ -106,7 +117,9 @@ function convertMarkdownTablesForFeishu(cfg: ClawdbotConfig, text: string, accou
  * @param params - See {@link SendFeishuMessageParams}.
  * @returns The send result containing the new message ID.
  */
-export async function sendMessageFeishu(params: SendFeishuMessageParams): Promise<FeishuSendResult> {
+export async function sendMessageFeishu(
+  params: SendFeishuMessageParams,
+): Promise<FeishuSendResult> {
   const { cfg, to, text, replyToMessageId, mentions, accountId, replyInThread, i18nTexts } = params;
 
   const client = LarkClient.fromCfg(cfg, accountId).sdk;
@@ -132,7 +145,7 @@ export async function sendMessageFeishu(params: SendFeishuMessageParams): Promis
       processed = optimizeMarkdownStyle(processed, 1);
 
       postBody[locale] = {
-        content: [[{ tag: 'md', text: processed }]],
+        content: [[{ tag: "md", text: processed }]],
       };
     }
     contentPayload = JSON.stringify(postBody);
@@ -153,7 +166,7 @@ export async function sendMessageFeishu(params: SendFeishuMessageParams): Promis
 
     contentPayload = JSON.stringify({
       zh_cn: {
-        content: [[{ tag: 'md', text: messageText }]],
+        content: [[{ tag: "md", text: messageText }]],
       },
     });
   }
@@ -164,7 +177,7 @@ export async function sendMessageFeishu(params: SendFeishuMessageParams): Promis
     const normalizedId = normalizeMessageId(replyToMessageId);
     const response = await runWithMessageUnavailableGuard({
       messageId: normalizedId,
-      operation: 'im.message.reply(post)',
+      operation: "im.message.reply(post)",
       fn: () =>
         client.im.message.reply({
           path: {
@@ -172,15 +185,15 @@ export async function sendMessageFeishu(params: SendFeishuMessageParams): Promis
           },
           data: {
             content: contentPayload,
-            msg_type: 'post',
+            msg_type: "post",
             reply_in_thread: replyInThread,
           },
         }),
     });
 
     return {
-      messageId: response?.data?.message_id ?? '',
-      chatId: response?.data?.chat_id ?? '',
+      messageId: response?.data?.message_id ?? "",
+      chatId: response?.data?.chat_id ?? "",
     };
   }
 
@@ -199,14 +212,14 @@ export async function sendMessageFeishu(params: SendFeishuMessageParams): Promis
     },
     data: {
       receive_id: target,
-      msg_type: 'post',
+      msg_type: "post",
       content: contentPayload,
     },
   });
 
   return {
-    messageId: response?.data?.message_id ?? '',
-    chatId: response?.data?.chat_id ?? '',
+    messageId: response?.data?.message_id ?? "",
+    chatId: response?.data?.chat_id ?? "",
   };
 }
 
@@ -232,7 +245,7 @@ export async function sendCardFeishu(params: SendFeishuCardParams): Promise<Feis
     const normalizedId = normalizeMessageId(replyToMessageId);
     const response = await runWithMessageUnavailableGuard({
       messageId: normalizedId,
-      operation: 'im.message.reply(interactive)',
+      operation: "im.message.reply(interactive)",
       fn: () =>
         client.im.message.reply({
           path: {
@@ -240,15 +253,15 @@ export async function sendCardFeishu(params: SendFeishuCardParams): Promise<Feis
           },
           data: {
             content: contentPayload,
-            msg_type: 'interactive',
+            msg_type: "interactive",
             reply_in_thread: replyInThread,
           },
         }),
     });
 
     return {
-      messageId: response?.data?.message_id ?? '',
-      chatId: response?.data?.chat_id ?? '',
+      messageId: response?.data?.message_id ?? "",
+      chatId: response?.data?.chat_id ?? "",
     };
   }
 
@@ -266,14 +279,14 @@ export async function sendCardFeishu(params: SendFeishuCardParams): Promise<Feis
     },
     data: {
       receive_id: target,
-      msg_type: 'interactive',
+      msg_type: "interactive",
       content: contentPayload,
     },
   });
 
   return {
-    messageId: response?.data?.message_id ?? '',
-    chatId: response?.data?.chat_id ?? '',
+    messageId: response?.data?.message_id ?? "",
+    chatId: response?.data?.chat_id ?? "",
   };
 }
 
@@ -305,7 +318,7 @@ export async function updateCardFeishu(params: {
 
   await runWithMessageUnavailableGuard({
     messageId,
-    operation: 'im.message.patch(interactive)',
+    operation: "im.message.patch(interactive)",
     fn: () =>
       client.im.message.patch({
         path: {
@@ -336,14 +349,14 @@ export function buildMarkdownCard(text: string): Record<string, unknown> {
   const optimizedText = optimizeMarkdownStyle(text);
 
   return {
-    schema: '2.0',
+    schema: "2.0",
     config: {
       wide_screen_mode: true,
     },
     body: {
       elements: [
         {
-          tag: 'markdown',
+          tag: "markdown",
           content: optimizedText,
         },
       ],
@@ -365,7 +378,7 @@ export function buildI18nMarkdownCard(i18nTexts: Record<string, string>): Record
   const locales = Object.keys(i18nTexts);
 
   // Determine fallback content (prefer en_us, then first available locale).
-  const fallbackLocale = locales.includes('en_us') ? 'en_us' : locales[0]!;
+  const fallbackLocale = locales.includes("en_us") ? "en_us" : locales[0]!;
   const fallbackText = optimizeMarkdownStyle(i18nTexts[fallbackLocale]!);
 
   // Build i18n_content with optimized text for each locale.
@@ -375,14 +388,14 @@ export function buildI18nMarkdownCard(i18nTexts: Record<string, string>): Record
   }
 
   return {
-    schema: '2.0',
+    schema: "2.0",
     config: {
       wide_screen_mode: true,
     },
     body: {
       elements: [
         {
-          tag: 'markdown',
+          tag: "markdown",
           content: fallbackText,
           i18n_content: i18nContent,
         },
@@ -468,13 +481,13 @@ export async function editMessageFeishu(params: {
 
   const contentPayload = JSON.stringify({
     zh_cn: {
-      content: [[{ tag: 'md', text: optimizedText }]],
+      content: [[{ tag: "md", text: optimizedText }]],
     },
   });
 
   await runWithMessageUnavailableGuard({
     messageId,
-    operation: 'im.message.update(post)',
+    operation: "im.message.update(post)",
     fn: () =>
       client.im.message.update({
         path: {
@@ -482,7 +495,7 @@ export async function editMessageFeishu(params: {
         },
         data: {
           content: contentPayload,
-          msg_type: 'post',
+          msg_type: "post",
         },
       }),
   });

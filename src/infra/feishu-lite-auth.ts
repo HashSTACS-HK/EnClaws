@@ -52,7 +52,8 @@ const LITE_SCOPE = "offline_access";
 const DEVICE_AUTH_URL = "https://accounts.feishu.cn/oauth/v1/device_authorization";
 const TOKEN_URL = "https://open.feishu.cn/open-apis/authen/v2/oauth/token";
 const USER_INFO_URL = "https://open.feishu.cn/open-apis/authen/v1/user_info";
-const IM_MESSAGE_CREATE_URL = "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id";
+const IM_MESSAGE_CREATE_URL =
+  "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id";
 
 // ---------------------------------------------------------------------------
 // Step 1: device authorization request
@@ -89,7 +90,9 @@ async function requestDeviceAuthorization(
     try {
       data = JSON.parse(text) as Record<string, unknown>;
     } catch {
-      log.warn(`device authorization response not JSON: status=${res.status} body=${text.slice(0, 200)}`);
+      log.warn(
+        `device authorization response not JSON: status=${res.status} body=${text.slice(0, 200)}`,
+      );
       return null;
     }
 
@@ -259,7 +262,11 @@ async function sendInteractiveDm(
         content: JSON.stringify(card),
       }),
     });
-    const data = (await res.json()) as { code?: number; msg?: string; data?: { message_id?: string } };
+    const data = (await res.json()) as {
+      code?: number;
+      msg?: string;
+      data?: { message_id?: string };
+    };
     if (data.code !== 0) {
       return { ok: false, reason: `feishu code=${data.code} msg=${data.msg ?? ""}` };
     }
@@ -354,7 +361,11 @@ export const feishuLiteAuthDriver: AuthGateDriver = {
 
     // 1. Look up the appId / appSecret for this account.
     const accountId = (ctx as Record<string, unknown>).AccountId as string | undefined;
-    const creds = extractFeishuCredentials(cfg as unknown as Record<string, unknown>, "feishu", accountId);
+    const creds = extractFeishuCredentials(
+      cfg as unknown as Record<string, unknown>,
+      "feishu",
+      accountId,
+    );
     if (!creds) {
       return { delivered: false, reason: "no-credentials" };
     }
@@ -413,7 +424,11 @@ export const feishuLiteAuthDriver: AuthGateDriver = {
           const freshTenantToken = await getTenantAccessToken(creds.appId, creds.appSecret);
           if (freshTenantToken) {
             const successCard = buildLiteAuthSuccessCard(name);
-            const patchResult = await patchInteractiveCard(freshTenantToken, originalCardMessageId, successCard);
+            const patchResult = await patchInteractiveCard(
+              freshTenantToken,
+              originalCardMessageId,
+              successCard,
+            );
             if (patchResult.ok) {
               log.info(`lite-auth card patched to "授权完成" for ${senderId}`);
             } else {

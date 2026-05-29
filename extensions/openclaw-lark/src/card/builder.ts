@@ -8,8 +8,8 @@
  * different agent response states (thinking, streaming, complete, confirm).
  */
 
-import { optimizeMarkdownStyle } from './markdown-style';
-import type { FooterSessionMetrics } from './reply-dispatcher-types';
+import { optimizeMarkdownStyle } from "./markdown-style";
+import type { FooterSessionMetrics } from "./reply-dispatcher-types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -20,8 +20,8 @@ import type { FooterSessionMetrics } from './reply-dispatcher-types';
  * `cardElement.content()` API targets this element for typewriter-effect
  * streaming updates.
  */
-export const STREAMING_ELEMENT_ID = 'streaming_content';
-export const REASONING_ELEMENT_ID = 'reasoning_content';
+export const STREAMING_ELEMENT_ID = "streaming_content";
+export const REASONING_ELEMENT_ID = "reasoning_content";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,7 +29,7 @@ export const REASONING_ELEMENT_ID = 'reasoning_content';
 
 export interface ToolCallInfo {
   name: string;
-  status: 'running' | 'complete' | 'error';
+  status: "running" | "complete" | "error";
   args?: Record<string, unknown>;
   result?: string;
 }
@@ -47,13 +47,13 @@ export interface FeishuCard {
     summary?: { content: string };
   };
   header?: {
-    title: { tag: 'plain_text'; content: string; i18n_content?: Record<string, string> };
+    title: { tag: "plain_text"; content: string; i18n_content?: Record<string, string> };
     template: string;
   };
   elements: CardElement[];
 }
 
-export type CardState = 'thinking' | 'streaming' | 'complete' | 'confirm';
+export type CardState = "thinking" | "streaming" | "complete" | "confirm";
 
 export interface ConfirmData {
   operationDescription: string;
@@ -71,7 +71,7 @@ export interface ConfirmData {
 // Those are not exported from the public plugin-sdk entry, so we replicate
 // the same detection/splitting logic here.
 
-const REASONING_PREFIX = 'Reasoning:\n';
+const REASONING_PREFIX = "Reasoning:\n";
 
 /**
  * Split a payload text into optional `reasoningText` and `answerText`.
@@ -86,7 +86,7 @@ export function splitReasoningText(text?: string): {
   reasoningText?: string;
   answerText?: string;
 } {
-  if (typeof text !== 'string' || !text.trim()) return {};
+  if (typeof text !== "string" || !text.trim()) return {};
 
   const trimmed = text.trim();
 
@@ -112,9 +112,9 @@ export function splitReasoningText(text?: string): {
  * Handles both closed and unclosed (streaming) tags.
  */
 function extractThinkingContent(text: string): string {
-  if (!text) return '';
+  if (!text) return "";
   const scanRe = /<\s*(\/?)\s*(?:think(?:ing)?|thought|antthinking)\s*>/gi;
-  let result = '';
+  let result = "";
   let lastIndex = 0;
   let inThinking = false;
   for (const match of text.matchAll(scanRe)) {
@@ -122,7 +122,7 @@ function extractThinkingContent(text: string): string {
     if (inThinking) {
       result += text.slice(lastIndex, idx);
     }
-    inThinking = match[1] !== '/';
+    inThinking = match[1] !== "/";
     lastIndex = idx + match[0].length;
   }
   // Handle unclosed tag (still streaming)
@@ -140,12 +140,12 @@ export function stripReasoningTags(text: string): string {
   // Strip complete XML blocks
   let result = text.replace(
     /<\s*(?:think(?:ing)?|thought|antthinking)\s*>[\s\S]*?<\s*\/\s*(?:think(?:ing)?|thought|antthinking)\s*>/gi,
-    '',
+    "",
   );
   // Strip unclosed tag at end (streaming)
-  result = result.replace(/<\s*(?:think(?:ing)?|thought|antthinking)\s*>[\s\S]*$/gi, '');
+  result = result.replace(/<\s*(?:think(?:ing)?|thought|antthinking)\s*>[\s\S]*$/gi, "");
   // Strip orphaned closing tags
-  result = result.replace(/<\s*\/\s*(?:think(?:ing)?|thought|antthinking)\s*>/gi, '');
+  result = result.replace(/<\s*\/\s*(?:think(?:ing)?|thought|antthinking)\s*>/gi, "");
   return result.trim();
 }
 
@@ -154,11 +154,11 @@ export function stripReasoningTags(text: string): string {
  * Strips the prefix and per-line italic markdown wrappers.
  */
 function cleanReasoningPrefix(text: string): string {
-  let cleaned = text.replace(/^Reasoning:\s*/i, '');
+  let cleaned = text.replace(/^Reasoning:\s*/i, "");
   cleaned = cleaned
-    .split('\n')
-    .map((line) => line.replace(/^_(.+)_$/, '$1'))
-    .join('\n');
+    .split("\n")
+    .map((line) => line.replace(/^_(.+)_$/, "$1"))
+    .join("\n");
   return cleaned.trim();
 }
 
@@ -176,7 +176,9 @@ export function formatReasoningDuration(ms: number): { zh: string; en: string } 
  */
 export function formatElapsed(ms: number): string {
   const seconds = ms / 1000;
-  return seconds < 60 ? `${seconds.toFixed(1)}s` : `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+  return seconds < 60
+    ? `${seconds.toFixed(1)}s`
+    : `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 }
 
 /**
@@ -188,10 +190,10 @@ function buildFooter(zhText: string, enText: string, isError?: boolean): CardEle
   const enContent = isError ? `<font color='red'>${enText}</font>` : enText;
   return [
     {
-      tag: 'markdown',
+      tag: "markdown",
       content: enContent,
       i18n_content: { zh_cn: zhContent, en_us: enContent },
-      text_size: 'notation',
+      text_size: "notation",
     },
   ];
 }
@@ -229,14 +231,14 @@ export function formatFooterRuntimeSegments(params: {
 
   if (footer?.status) {
     if (isError) {
-      zhParts.push('出错');
-      enParts.push('Error');
+      zhParts.push("出错");
+      enParts.push("Error");
     } else if (isAborted) {
-      zhParts.push('已停止');
-      enParts.push('Stopped');
+      zhParts.push("已停止");
+      enParts.push("Stopped");
     } else {
-      zhParts.push('已完成');
-      enParts.push('Completed');
+      zhParts.push("已完成");
+      enParts.push("Completed");
     }
   }
 
@@ -247,8 +249,10 @@ export function formatFooterRuntimeSegments(params: {
   }
 
   if (footer?.tokens && metrics) {
-    const inTokens = typeof metrics.inputTokens === 'number' ? Math.max(0, metrics.inputTokens) : undefined;
-    const outTokens = typeof metrics.outputTokens === 'number' ? Math.max(0, metrics.outputTokens) : undefined;
+    const inTokens =
+      typeof metrics.inputTokens === "number" ? Math.max(0, metrics.inputTokens) : undefined;
+    const outTokens =
+      typeof metrics.outputTokens === "number" ? Math.max(0, metrics.outputTokens) : undefined;
     if (inTokens != null && outTokens != null) {
       const inLabel = compactNumber(inTokens);
       const outLabel = compactNumber(outTokens);
@@ -258,9 +262,11 @@ export function formatFooterRuntimeSegments(params: {
   }
 
   if (footer?.cache && metrics) {
-    const read = typeof metrics.cacheRead === 'number' ? Math.max(0, metrics.cacheRead) : undefined;
-    const write = typeof metrics.cacheWrite === 'number' ? Math.max(0, metrics.cacheWrite) : undefined;
-    const inputVal = typeof metrics.inputTokens === 'number' ? Math.max(0, metrics.inputTokens) : undefined;
+    const read = typeof metrics.cacheRead === "number" ? Math.max(0, metrics.cacheRead) : undefined;
+    const write =
+      typeof metrics.cacheWrite === "number" ? Math.max(0, metrics.cacheWrite) : undefined;
+    const inputVal =
+      typeof metrics.inputTokens === "number" ? Math.max(0, metrics.inputTokens) : undefined;
     if (read != null && write != null && inputVal != null) {
       const total = read + write + inputVal;
       const hit = total > 0 ? Math.round((read / total) * 100) : 0;
@@ -273,8 +279,9 @@ export function formatFooterRuntimeSegments(params: {
 
   if (footer?.context && metrics) {
     const freshTotal = metrics.totalTokensFresh === false ? undefined : metrics.totalTokens;
-    const total = typeof freshTotal === 'number' ? Math.max(0, freshTotal) : undefined;
-    const ctx = typeof metrics.contextTokens === 'number' ? Math.max(0, metrics.contextTokens) : undefined;
+    const total = typeof freshTotal === "number" ? Math.max(0, freshTotal) : undefined;
+    const ctx =
+      typeof metrics.contextTokens === "number" ? Math.max(0, metrics.contextTokens) : undefined;
     if (total != null && ctx != null) {
       const totalLabel = compactNumber(total);
       const ctxLabel = compactNumber(ctx);
@@ -327,13 +334,13 @@ export function buildCardContent(
   } = {},
 ): FeishuCard {
   switch (state) {
-    case 'thinking':
+    case "thinking":
       return buildThinkingCard();
-    case 'streaming':
-      return buildStreamingCard(data.text ?? '', data.toolCalls ?? [], data.reasoningText);
-    case 'complete':
+    case "streaming":
+      return buildStreamingCard(data.text ?? "", data.toolCalls ?? [], data.reasoningText);
+    case "complete":
       return buildCompleteCard({
-        text: data.text ?? '',
+        text: data.text ?? "",
         toolCalls: data.toolCalls ?? [],
         elapsedMs: data.elapsedMs,
         isError: data.isError,
@@ -343,7 +350,7 @@ export function buildCardContent(
         footer: data.footer,
         footerMetrics: data.footerMetrics,
       });
-    case 'confirm':
+    case "confirm":
       return buildConfirmCard(data.confirmData!);
     default:
       throw new Error(`Unknown card state: ${state}`);
@@ -356,35 +363,39 @@ export function buildCardContent(
 
 function buildThinkingCard(): FeishuCard {
   return {
-    config: { wide_screen_mode: true, update_multi: true, locales: ['zh_cn', 'en_us'] },
+    config: { wide_screen_mode: true, update_multi: true, locales: ["zh_cn", "en_us"] },
     elements: [
       {
-        tag: 'markdown',
-        content: 'Thinking...',
-        i18n_content: { zh_cn: '思考中...', en_us: 'Thinking...' },
+        tag: "markdown",
+        content: "Thinking...",
+        i18n_content: { zh_cn: "思考中...", en_us: "Thinking..." },
       },
     ],
   };
 }
 
-function buildStreamingCard(partialText: string, toolCalls: ToolCallInfo[], reasoningText?: string): FeishuCard {
+function buildStreamingCard(
+  partialText: string,
+  toolCalls: ToolCallInfo[],
+  reasoningText?: string,
+): FeishuCard {
   const elements: CardElement[] = [];
 
   if (!partialText && reasoningText) {
     // Reasoning phase: show reasoning content in notation style
     elements.push({
-      tag: 'markdown',
+      tag: "markdown",
       content: `💭 **Thinking...**\n\n${reasoningText}`,
       i18n_content: {
         zh_cn: `💭 **思考中...**\n\n${reasoningText}`,
         en_us: `💭 **Thinking...**\n\n${reasoningText}`,
       },
-      text_size: 'notation',
+      text_size: "notation",
     });
   } else if (partialText) {
     // Answer phase: show answer content only
     elements.push({
-      tag: 'markdown',
+      tag: "markdown",
       content: optimizeMarkdownStyle(partialText),
     });
   }
@@ -392,18 +403,19 @@ function buildStreamingCard(partialText: string, toolCalls: ToolCallInfo[], reas
   // Tool calls in progress
   if (toolCalls.length > 0) {
     const toolLines = toolCalls.map((tc) => {
-      const statusIcon = tc.status === 'running' ? '\ud83d\udd04' : tc.status === 'complete' ? '\u2705' : '\u274c';
+      const statusIcon =
+        tc.status === "running" ? "\ud83d\udd04" : tc.status === "complete" ? "\u2705" : "\u274c";
       return `${statusIcon} ${tc.name} - ${tc.status}`;
     });
     elements.push({
-      tag: 'markdown',
-      content: toolLines.join('\n'),
-      text_size: 'notation',
+      tag: "markdown",
+      content: toolLines.join("\n"),
+      text_size: "notation",
     });
   }
 
   return {
-    config: { wide_screen_mode: true, update_multi: true, locales: ['zh_cn', 'en_us'] },
+    config: { wide_screen_mode: true, update_multi: true, locales: ["zh_cn", "en_us"] },
     elements,
   };
 }
@@ -426,44 +438,53 @@ function buildCompleteCard(params: {
   };
   footerMetrics?: FooterSessionMetrics;
 }): FeishuCard {
-  const { text, toolCalls, elapsedMs, isError, reasoningText, reasoningElapsedMs, isAborted, footer, footerMetrics } =
-    params;
+  const {
+    text,
+    toolCalls,
+    elapsedMs,
+    isError,
+    reasoningText,
+    reasoningElapsedMs,
+    isAborted,
+    footer,
+    footerMetrics,
+  } = params;
   const elements: CardElement[] = [];
 
   // Collapsible reasoning panel (before main content)
   if (reasoningText) {
     const dur = reasoningElapsedMs ? formatReasoningDuration(reasoningElapsedMs) : null;
-    const zhLabel = dur ? dur.zh : '思考';
-    const enLabel = dur ? dur.en : 'Thought';
+    const zhLabel = dur ? dur.zh : "思考";
+    const enLabel = dur ? dur.en : "Thought";
     elements.push({
-      tag: 'collapsible_panel',
+      tag: "collapsible_panel",
       expanded: false,
       header: {
         title: {
-          tag: 'markdown',
+          tag: "markdown",
           content: `💭 ${enLabel}`,
           i18n_content: {
             zh_cn: `💭 ${zhLabel}`,
             en_us: `💭 ${enLabel}`,
           },
         },
-        vertical_align: 'center',
+        vertical_align: "center",
         icon: {
-          tag: 'standard_icon',
-          token: 'down-small-ccm_outlined',
-          size: '16px 16px',
+          tag: "standard_icon",
+          token: "down-small-ccm_outlined",
+          size: "16px 16px",
         },
-        icon_position: 'follow_text',
+        icon_position: "follow_text",
         icon_expanded_angle: -180,
       },
-      border: { color: 'grey', corner_radius: '5px' },
-      vertical_spacing: '8px',
-      padding: '8px 8px 8px 8px',
+      border: { color: "grey", corner_radius: "5px" },
+      vertical_spacing: "8px",
+      padding: "8px 8px 8px 8px",
       elements: [
         {
-          tag: 'markdown',
+          tag: "markdown",
           content: reasoningText,
-          text_size: 'notation',
+          text_size: "notation",
         },
       ],
     });
@@ -471,21 +492,21 @@ function buildCompleteCard(params: {
 
   // Full text content
   elements.push({
-    tag: 'markdown',
+    tag: "markdown",
     content: optimizeMarkdownStyle(text),
   });
 
   // Tool calls summary
   if (toolCalls.length > 0) {
     const toolSummaryLines = toolCalls.map((tc) => {
-      const statusIcon = tc.status === 'complete' ? '\u2705' : '\u274c';
+      const statusIcon = tc.status === "complete" ? "\u2705" : "\u274c";
       return `${statusIcon} **${tc.name}** - ${tc.status}`;
     });
 
     elements.push({
-      tag: 'markdown',
-      content: toolSummaryLines.join('\n'),
-      text_size: 'notation',
+      tag: "markdown",
+      content: toolSummaryLines.join("\n"),
+      text_size: "notation",
     });
   }
 
@@ -500,16 +521,16 @@ function buildCompleteCard(params: {
   });
 
   if (footerParts.zh.length > 0) {
-    elements.push(...buildFooter(footerParts.zh.join(' · '), footerParts.en.join(' · '), isError));
+    elements.push(...buildFooter(footerParts.zh.join(" · "), footerParts.en.join(" · "), isError));
   }
 
   // Use the answer text (not reasoning) as the feed preview summary.
   // Strip markdown syntax so the preview reads as plain text.
-  const summaryText = text.replace(/[*_`#>[\]()~]/g, '').trim();
+  const summaryText = text.replace(/[*_`#>[\]()~]/g, "").trim();
   const summary = summaryText ? { content: summaryText.slice(0, 120) } : undefined;
 
   return {
-    config: { wide_screen_mode: true, update_multi: true, locales: ['zh_cn', 'en_us'], summary },
+    config: { wide_screen_mode: true, update_multi: true, locales: ["zh_cn", "en_us"], summary },
     elements,
   };
 }
@@ -519,45 +540,45 @@ function buildConfirmCard(confirmData: ConfirmData): FeishuCard {
 
   // Operation description
   elements.push({
-    tag: 'div',
+    tag: "div",
     text: {
-      tag: 'lark_md',
+      tag: "lark_md",
       content: confirmData.operationDescription,
     },
   });
 
   // Preview (if available)
   if (confirmData.preview) {
-    elements.push({ tag: 'hr' });
+    elements.push({ tag: "hr" });
     elements.push({
-      tag: 'div',
+      tag: "div",
       text: {
-        tag: 'lark_md',
+        tag: "lark_md",
         content: `**Preview:**\n${confirmData.preview}`,
       },
     });
   }
 
   // Confirm / Reject / Preview buttons
-  elements.push({ tag: 'hr' });
+  elements.push({ tag: "hr" });
   elements.push({
-    tag: 'action',
+    tag: "action",
     actions: [
       {
-        tag: 'button',
-        text: { tag: 'plain_text', content: 'Confirm' },
-        type: 'primary',
+        tag: "button",
+        text: { tag: "plain_text", content: "Confirm" },
+        type: "primary",
         value: {
-          action: 'confirm_write',
+          action: "confirm_write",
           operation_id: confirmData.pendingOperationId,
         },
       },
       {
-        tag: 'button',
-        text: { tag: 'plain_text', content: 'Reject' },
-        type: 'danger',
+        tag: "button",
+        text: { tag: "plain_text", content: "Reject" },
+        type: "danger",
         value: {
-          action: 'reject_write',
+          action: "reject_write",
           operation_id: confirmData.pendingOperationId,
         },
       },
@@ -565,14 +586,14 @@ function buildConfirmCard(confirmData: ConfirmData): FeishuCard {
         ? []
         : [
             {
-              tag: 'button' as const,
+              tag: "button" as const,
               text: {
-                tag: 'plain_text' as const,
-                content: 'Preview',
+                tag: "plain_text" as const,
+                content: "Preview",
               },
-              type: 'default' as const,
+              type: "default" as const,
               value: {
-                action: 'preview_write',
+                action: "preview_write",
                 operation_id: confirmData.pendingOperationId,
               },
             },
@@ -584,10 +605,10 @@ function buildConfirmCard(confirmData: ConfirmData): FeishuCard {
     config: { wide_screen_mode: true, update_multi: true },
     header: {
       title: {
-        tag: 'plain_text',
-        content: '\ud83d\udd12 Confirmation Required',
+        tag: "plain_text",
+        content: "\ud83d\udd12 Confirmation Required",
       },
-      template: 'orange',
+      template: "orange",
     },
     elements,
   };
@@ -603,7 +624,7 @@ function buildConfirmCard(confirmData: ConfirmData): FeishuCard {
  */
 export function toCardKit2(card: FeishuCard): Record<string, unknown> {
   const result: Record<string, unknown> = {
-    schema: '2.0',
+    schema: "2.0",
     config: card.config,
     body: { elements: card.elements },
   };

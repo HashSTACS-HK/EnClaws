@@ -1,3 +1,4 @@
+import { authorizeTenantMethod, type TenantContext } from "../auth/middleware.js";
 import { formatControlPlaneActor, resolveControlPlaneActor } from "./control-plane-audit.js";
 import { consumeControlPlaneWriteBudget } from "./control-plane-rate-limit.js";
 import { ADMIN_SCOPE, authorizeOperatorScopesForMethod } from "./method-scopes.js";
@@ -6,58 +7,63 @@ import { isRoleAuthorizedForMethod, parseGatewayRole } from "./role-policy.js";
 import { agentHandlers } from "./server-methods/agent.js";
 import { agentsHandlers } from "./server-methods/agents.js";
 import { authHandlers } from "./server-methods/auth-api.js";
-import { captchaHandlers } from "./server-methods/captcha-api.js";
-import { memoryHandlers } from "./server-methods/memory.js";
 import { browserHandlers } from "./server-methods/browser.js";
+import { captchaHandlers } from "./server-methods/captcha-api.js";
 import { channelsHandlers } from "./server-methods/channels.js";
 import { chatHandlers } from "./server-methods/chat.js";
 import { configHandlers } from "./server-methods/config.js";
 import { connectHandlers } from "./server-methods/connect.js";
 import { cronHandlers } from "./server-methods/cron.js";
+import { csAdminHandlers } from "./server-methods/cs-admin.js";
+import { csWidgetHandlers } from "./server-methods/cs-widget.js";
 import { deviceHandlers } from "./server-methods/devices.js";
 import { doctorHandlers } from "./server-methods/doctor.js";
 import { execApprovalsHandlers } from "./server-methods/exec-approvals.js";
+import { feishuRegisterHandlers } from "./server-methods/feishu-register-api.js";
 import { healthHandlers } from "./server-methods/health.js";
 import { logsHandlers } from "./server-methods/logs.js";
+import { memoryHandlers } from "./server-methods/memory.js";
 import { modelsHandlers } from "./server-methods/models.js";
 import { nodeHandlers } from "./server-methods/nodes.js";
+import { platformModelsHandlers } from "./server-methods/platform-models-api.js";
+import { platformOverviewHandlers } from "./server-methods/platform-overview-api.js";
+import { platformTenantsHandlers } from "./server-methods/platform-tenants-api.js";
 import { pushHandlers } from "./server-methods/push.js";
 import { sendHandlers } from "./server-methods/send.js";
 import { sessionsHandlers } from "./server-methods/sessions.js";
 import { skillsHandlers } from "./server-methods/skills.js";
+import { sysToolsHandlers } from "./server-methods/sys-tools-api.js";
 import { systemHandlers } from "./server-methods/system.js";
 import { talkHandlers } from "./server-methods/talk.js";
 import { taskPlanHandlers } from "./server-methods/task-plan.js";
-import { toolsCatalogHandlers } from "./server-methods/tools-catalog.js";
-import { sysToolsHandlers } from "./server-methods/sys-tools-api.js";
-import { tenantHandlers } from "./server-methods/tenant-api.js";
 import { tenantAgentsHandlers } from "./server-methods/tenant-agents-api.js";
+import { tenantHandlers } from "./server-methods/tenant-api.js";
 import { tenantChannelsHandlers } from "./server-methods/tenant-channels-api.js";
-import { feishuRegisterHandlers } from "./server-methods/feishu-register-api.js";
-import { wecomRegisterHandlers } from "./server-methods/wecom-register-api.js";
-import { tenantSessionsHandlers } from "./server-methods/tenant-sessions-api.js";
 import { tenantModelsHandlers } from "./server-methods/tenant-models-api.js";
+import { tenantOnboardingHandlers } from "./server-methods/tenant-onboarding-api.js";
+import { tenantOverviewHandlers } from "./server-methods/tenant-overview-api.js";
+import { tenantSessionsHandlers } from "./server-methods/tenant-sessions-api.js";
 import { tenantSettingsHandlers } from "./server-methods/tenant-settings-api.js";
 import { tenantTracesHandlers } from "./server-methods/tenant-traces-api.js";
 import { tenantUsageHandlers } from "./server-methods/tenant-usage-api.js";
-import { platformOverviewHandlers } from "./server-methods/platform-overview-api.js";
-import { platformModelsHandlers } from "./server-methods/platform-models-api.js";
-import { platformTenantsHandlers } from "./server-methods/platform-tenants-api.js";
-import { tenantOverviewHandlers } from "./server-methods/tenant-overview-api.js";
-import { tenantOnboardingHandlers } from "./server-methods/tenant-onboarding-api.js";
-import { csWidgetHandlers } from "./server-methods/cs-widget.js";
-import { csAdminHandlers } from "./server-methods/cs-admin.js";
+import { toolsCatalogHandlers } from "./server-methods/tools-catalog.js";
 import { ttsHandlers } from "./server-methods/tts.js";
 import type { GatewayRequestHandlers, GatewayRequestOptions } from "./server-methods/types.js";
-import { authorizeTenantMethod, type TenantContext } from "../auth/middleware.js";
 import { updateHandlers } from "./server-methods/update.js";
 import { usageHandlers } from "./server-methods/usage.js";
 import { voicewakeHandlers } from "./server-methods/voicewake.js";
 import { webHandlers } from "./server-methods/web.js";
+import { wecomRegisterHandlers } from "./server-methods/wecom-register-api.js";
 import { wizardHandlers } from "./server-methods/wizard.js";
 
 /** Auth methods that don't require JWT authentication. */
-const AUTH_BYPASS_METHODS = new Set(["auth.register", "auth.login", "auth.refresh", "health", "captcha.challenge"]);
+const AUTH_BYPASS_METHODS = new Set([
+  "auth.register",
+  "auth.login",
+  "auth.refresh",
+  "health",
+  "captcha.challenge",
+]);
 
 const CONTROL_PLANE_WRITE_METHODS = new Set(["config.apply", "config.patch", "update.run"]);
 function authorizeGatewayMethod(method: string, client: GatewayRequestOptions["client"]) {

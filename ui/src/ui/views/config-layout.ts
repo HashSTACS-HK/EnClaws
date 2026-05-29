@@ -45,7 +45,9 @@ export class ConfigLayout extends LitElement {
   }
 
   render() {
-    if (!this.props) {return nothing;}
+    if (!this.props) {
+      return nothing;
+    }
 
     return html`
       <div class="config-layout">

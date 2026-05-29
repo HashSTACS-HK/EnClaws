@@ -12,12 +12,10 @@
  * - 详细的消息接收日志（三阶段：接收、解析、处理）
  * - 连接统计和监控（每分钟输出）
  */
-import * as fs from 'fs';
+import * as fs from "fs";
 import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
 import type { ResolvedDingtalkAccount } from "../types/index.ts";
-import {
-  checkAndMarkDingtalkMessage,
-} from "../utils/utils-legacy.ts";
+import { checkAndMarkDingtalkMessage } from "../utils/utils-legacy.ts";
 
 // ============ 类型定义 ============
 
@@ -66,18 +64,16 @@ const MAX_BACKOFF_DELAY = 30 * 1000; // 30 秒
 
 // ============ 监控账号 ============
 
-export async function monitorSingleAccount(
-  opts: MonitorDingtalkAccountOpts,
-): Promise<void> {
+export async function monitorSingleAccount(opts: MonitorDingtalkAccountOpts): Promise<void> {
   const { cfg, account, runtime, abortSignal, messageHandler, onStatusChange } = opts;
   const { accountId } = account;
 
   // 保存 cfg 以便传递给 messageHandler
   const clawdbotConfig = cfg;
   const log = runtime?.log;
-  
+
   // 创建 debug logger（仅在 debug 模式下输出 info/debug 日志）
-  const { createLoggerFromConfig } = await import('../utils/logger');
+  const { createLoggerFromConfig } = await import("../utils/logger");
   const logger = createLoggerFromConfig(account.config, `DingTalk:${accountId}`);
 
   // 验证凭据是否存在
@@ -109,15 +105,17 @@ export async function monitorSingleAccount(
   // 通过打开 /dev/null 来确保 fd 0/1/2 有效，避免 socket 创建时使用无效的 fd。
   //
   // 参考：OpenClaw issue #8021 (spawn EBADF on macOS with Node.js 22+)
-  if (process.platform === 'darwin') {
+  if (process.platform === "darwin") {
     for (const stdioFd of [0, 1, 2]) {
       try {
         fs.fstatSync(stdioFd);
       } catch (fdError: any) {
-        if (fdError.code === 'EBADF') {
-          logger.warn(`[LaunchAgent] 检测到 fd ${stdioFd} 无效（EBADF），重定向到 /dev/null 以防止 TCP socket 创建失败`);
+        if (fdError.code === "EBADF") {
+          logger.warn(
+            `[LaunchAgent] 检测到 fd ${stdioFd} 无效（EBADF），重定向到 /dev/null 以防止 TCP socket 创建失败`,
+          );
           try {
-            fs.openSync('/dev/null', stdioFd === 0 ? 'r' : 'w');
+            fs.openSync("/dev/null", stdioFd === 0 ? "r" : "w");
           } catch (openError: any) {
             logger.warn(`[LaunchAgent] 无法修复 fd ${stdioFd}: ${openError.message}`);
           }
@@ -158,12 +156,12 @@ export async function monitorSingleAccount(
   let reconnectAttempts = 0;
   let keepAliveTimer: NodeJS.Timeout | null = null;
   let isStopped = false;
-  
+
   // ============ 消息处理活跃标记 ============
   // 用于在消息处理期间防止心跳超时触发重连
   let activeMessageProcessing = false;
   let messageProcessingKeepAliveTimer: NodeJS.Timeout | null = null;
-  
+
   /**
    * 标记消息处理开始，启动定期更新机制
    * 在消息处理期间，每 30 秒更新一次 lastSocketAvailableTime
@@ -172,12 +170,12 @@ export async function monitorSingleAccount(
   function markMessageProcessingStart() {
     activeMessageProcessing = true;
     lastSocketAvailableTime = Date.now();
-    
+
     // 清理旧的定时器（如果存在）
     if (messageProcessingKeepAliveTimer) {
       clearInterval(messageProcessingKeepAliveTimer);
     }
-    
+
     // 每 30 秒更新一次，确保不会触发 90 秒超时
     messageProcessingKeepAliveTimer = setInterval(() => {
       if (activeMessageProcessing) {
@@ -185,21 +183,21 @@ export async function monitorSingleAccount(
         logger.debug(`📝 消息处理中，更新 socket 可用时间`);
       }
     }, 30 * 1000); // 30 秒间隔
-    
+
     logger.debug(`📝 消息处理开始，启动活跃标记定时器`);
   }
-  
+
   /**
    * 标记消息处理结束，停止定期更新机制
    */
   function markMessageProcessingEnd() {
     activeMessageProcessing = false;
-    
+
     if (messageProcessingKeepAliveTimer) {
       clearInterval(messageProcessingKeepAliveTimer);
       messageProcessingKeepAliveTimer = null;
     }
-    
+
     // 最后更新一次时间
     lastSocketAvailableTime = Date.now();
     logger.debug(`✅ 消息处理结束，清理活跃标记定时器`);
@@ -226,9 +224,7 @@ export async function monitorSingleAccount(
     // 应用指数退避（非立即重连时）
     if (!immediate && reconnectAttempts > 0) {
       const delay = calculateBackoffDelay(reconnectAttempts);
-      logger.info(
-        `⏳ 等待 ${Math.round(delay / 1000)} 秒后重连 (尝试 ${reconnectAttempts + 1})`,
-      );
+      logger.info(`⏳ 等待 ${Math.round(delay / 1000)} 秒后重连 (尝试 ${reconnectAttempts + 1})`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
 
@@ -258,21 +254,21 @@ export async function monitorSingleAccount(
         // 否则监听 open 事件
         const onOpen = () => {
           clearTimeout(timeout);
-          client.socket?.removeListener('open', onOpen);
-          client.socket?.removeListener('error', onError);
+          client.socket?.removeListener("open", onOpen);
+          client.socket?.removeListener("error", onError);
           resolve(true);
         };
 
         const onError = (err: any) => {
           clearTimeout(timeout);
-          client.socket?.removeListener('open', onOpen);
-          client.socket?.removeListener('error', onError);
+          client.socket?.removeListener("open", onOpen);
+          client.socket?.removeListener("error", onError);
           logger.warn(`连接建立失败: ${err.message}`);
           resolve(false);
         };
 
-        client.socket?.once('open', onOpen);
-        client.socket?.once('error', onError);
+        client.socket?.once("open", onOpen);
+        client.socket?.once("error", onError);
       });
 
       if (!connectionEstablished) {
@@ -290,9 +286,7 @@ export async function monitorSingleAccount(
       logger.info(`✅ 重连成功 (socket 状态=${client.socket?.readyState})`);
     } catch (err: any) {
       reconnectAttempts++;
-      logger.error(
-        `重连失败：${err.message} (尝试 ${reconnectAttempts})`,
-      );
+      logger.error(`重连失败：${err.message} (尝试 ${reconnectAttempts})`);
       throw err;
     } finally {
       isReconnecting = false;
@@ -358,9 +352,7 @@ export async function monitorSingleAccount(
    * - 指数退避重连：避免雪崩效应
    */
   function startKeepAlive(): () => void {
-    logger.debug(
-      `🚀 启动 keepAlive 定时器，间隔=${HEARTBEAT_INTERVAL / 1000}秒`,
-    );
+    logger.debug(`🚀 启动 keepAlive 定时器，间隔=${HEARTBEAT_INTERVAL / 1000}秒`);
 
     keepAliveTimer = setInterval(async () => {
       if (isStopped) {
@@ -395,10 +387,8 @@ export async function monitorSingleAccount(
             );
             return;
           }
-          
-          logger.info(
-            `⚠️ 心跳检测：socket 状态=${socketState}，触发重连...`,
-          );
+
+          logger.info(`⚠️ 心跳检测：socket 状态=${socketState}，触发重连...`);
           await doReconnect(true); // 立即重连，不退避
           return;
         }
@@ -519,7 +509,9 @@ export async function monitorSingleAccount(
       // 此处仅做协议层的快速预检，避免不必要的 JSON 解析
       if (messageId && checkAndMarkDingtalkMessage(accountId, messageId, undefined)) {
         processedCount++;
-        logger.warn(`⚠️ 检测到重复消息（协议层），跳过处理：messageId=${messageId} (${processedCount}/${receivedCount})`);
+        logger.warn(
+          `⚠️ 检测到重复消息（协议层），跳过处理：messageId=${messageId} (${processedCount}/${receivedCount})`,
+        );
         logger.info(`========== 消息处理结束（重复） ==========\n`);
         return;
       }
@@ -527,24 +519,25 @@ export async function monitorSingleAccount(
       // 异步处理消息
       // ✅ 标记消息处理开始，防止长时间处理触发心跳超时
       markMessageProcessingStart();
-      
+
       try {
         // 解析消息数据
         let data;
         try {
           data = JSON.parse(res.data);
         } catch (parseError: any) {
-          logger.error('Failed to parse response data as JSON:', {
+          logger.error("Failed to parse response data as JSON:", {
             error: parseError instanceof Error ? parseError.message : String(parseError),
-            rawData: typeof res.data === 'string' 
-              ? res.data.substring(0, 500) // 只记录前 500 字符
-              : res.data,
+            rawData:
+              typeof res.data === "string"
+                ? res.data.substring(0, 500) // 只记录前 500 字符
+                : res.data,
             dataType: typeof res.data,
           });
           throw new Error(
             `Invalid JSON response from DingTalk API. ` +
-            `Error: ${parseError instanceof Error ? parseError.message : String(parseError)}. ` +
-            `Raw data (first 100 chars): ${String(res.data).substring(0, 100)}`
+              `Error: ${parseError instanceof Error ? parseError.message : String(parseError)}. ` +
+              `Raw data (first 100 chars): ${String(res.data).substring(0, 100)}`,
           );
         }
 
@@ -559,12 +552,8 @@ export async function monitorSingleAccount(
         );
         logger.info(`会话 ID: ${data.conversationId || "N/A"}`);
         logger.info(`消息 ID: ${data.msgId || "N/A"}`);
-        logger.info(
-          `SessionWebhook: ${data.sessionWebhook ? "已提供" : "未提供"}`,
-        );
-        logger.info(
-          `RobotCode: ${data.robotCode || account.config?.clientId || "N/A"}`,
-        );
+        logger.info(`SessionWebhook: ${data.sessionWebhook ? "已提供" : "未提供"}`);
+        logger.info(`RobotCode: ${data.robotCode || account.config?.clientId || "N/A"}`);
 
         // ===== 业务层去重：补充 data.msgId，防止钉钉服务端重发穿透 =====
         // 协议层已标记了 headers.messageId，此处再补充标记 data.msgId。
@@ -580,8 +569,7 @@ export async function monitorSingleAccount(
               ? data.text.content.substring(0, 100) + "..."
               : data.text.content;
         } else if (data.content) {
-          contentPreview =
-            JSON.stringify(data.content).substring(0, 100) + "...";
+          contentPreview = JSON.stringify(data.content).substring(0, 100) + "...";
         }
         logger.info(`消息内容预览：${contentPreview}`);
         logger.info(`完整数据字段：${Object.keys(data).join(", ")}`);
@@ -607,11 +595,11 @@ export async function monitorSingleAccount(
         processedCount++;
         const errorMsg = `❌ 处理消息异常 (${processedCount}/${receivedCount}): ${error?.message || "未知错误"}`;
         const errorStack = error?.stack || "无堆栈信息";
-        
+
         // 使用 logger 记录错误信息
         logger.error(errorMsg);
         logger.error(`错误堆栈:\n${errorStack}`);
-        
+
         logger.info(`========== 消息处理结束（失败） ==========\n`);
       } finally {
         // ✅ 无论成功或失败，都要标记消息处理结束
@@ -630,9 +618,7 @@ export async function monitorSingleAccount(
       await client.connect();
       logger.info(`Connected to DingTalk Stream successfully`);
       logger.info(`PID: ${process.pid}`);
-      logger.info(
-        `✅ 自定义 keepAlive: true (10 秒心跳，90 秒超时), 指数退避重连`,
-      );
+      logger.info(`✅ 自定义 keepAlive: true (10 秒心跳，90 秒超时), 指数退避重连`);
 
       // 初次连接成功，向框架报告 connected: true
       onStatusChange?.({ connected: true, lastConnectedAt: Date.now() });
@@ -660,42 +646,52 @@ export async function monitorSingleAccount(
       logger.info(`  - error.response?.status: ${error.response?.status}`);
       logger.info(`  - error.response?.data: ${JSON.stringify(error.response?.data || {})}`);
       logger.info(`  - error.code: ${error.code}`);
-      logger.info(`  - error.stack: ${error.stack?.split('\n').slice(0, 3).join('\n')}`);
+      logger.info(`  - error.stack: ${error.stack?.split("\n").slice(0, 3).join("\n")}`);
 
       // 处理 400 错误（请求参数错误）
-      if (error.response?.status === 400 || error.message?.includes("status code 400") || error.message?.includes("400")) {
-        reject(new Error(
-          `[DingTalk][${accountId}] Bad Request (400):\n` +
-            `  - clientId or clientSecret format is invalid\n` +
-            `  - clientId: ${clientIdStr} (type: ${typeof account.clientId}, length: ${clientIdStr.length})\n` +
-            `  - clientSecret: ****** (type: ${typeof account.clientSecret}, length: ${clientSecretStr.length})\n` +
-            `  - Common issues:\n` +
-            `    1. clientId/clientSecret must be strings, not numbers\n` +
-            `    2. Remove any quotes or special characters\n` +
-            `    3. Ensure credentials are from the correct DingTalk app\n` +
-            `    4. Check if clientId starts with 'ding' prefix\n` +
-            `  - Error details: ${error.message}\n` +
-            `  - Response data: ${JSON.stringify(error.response?.data || {})}`,
-        ));
+      if (
+        error.response?.status === 400 ||
+        error.message?.includes("status code 400") ||
+        error.message?.includes("400")
+      ) {
+        reject(
+          new Error(
+            `[DingTalk][${accountId}] Bad Request (400):\n` +
+              `  - clientId or clientSecret format is invalid\n` +
+              `  - clientId: ${clientIdStr} (type: ${typeof account.clientId}, length: ${clientIdStr.length})\n` +
+              `  - clientSecret: ****** (type: ${typeof account.clientSecret}, length: ${clientSecretStr.length})\n` +
+              `  - Common issues:\n` +
+              `    1. clientId/clientSecret must be strings, not numbers\n` +
+              `    2. Remove any quotes or special characters\n` +
+              `    3. Ensure credentials are from the correct DingTalk app\n` +
+              `    4. Check if clientId starts with 'ding' prefix\n` +
+              `  - Error details: ${error.message}\n` +
+              `  - Response data: ${JSON.stringify(error.response?.data || {})}`,
+          ),
+        );
         return;
       }
 
       // 处理 401 认证错误
       if (error.response?.status === 401 || error.message?.includes("401")) {
-        reject(new Error(
-          `[DingTalk][${accountId}] Authentication failed (401 Unauthorized):\n` +
-            `  - Your clientId or clientSecret is invalid, expired, or revoked\n` +
-            `  - clientId: ${clientIdStr.substring(0, 8)}...\n` +
-            `  - Please verify your credentials at DingTalk Developer Console\n` +
-            `  - Error details: ${error.message}`,
-        ));
+        reject(
+          new Error(
+            `[DingTalk][${accountId}] Authentication failed (401 Unauthorized):\n` +
+              `  - Your clientId or clientSecret is invalid, expired, or revoked\n` +
+              `  - clientId: ${clientIdStr.substring(0, 8)}...\n` +
+              `  - Please verify your credentials at DingTalk Developer Console\n` +
+              `  - Error details: ${error.message}`,
+          ),
+        );
         return;
       }
 
       // 处理其他连接错误
-      reject(new Error(
-        `[DingTalk][${accountId}] Failed to connect to DingTalk Stream: ${error.message}`,
-      ));
+      reject(
+        new Error(
+          `[DingTalk][${accountId}] Failed to connect to DingTalk Stream: ${error.message}`,
+        ),
+      );
       return;
     }
 
@@ -717,9 +713,7 @@ export async function monitorSingleAccount(
   });
 }
 
-export function resolveReactionSyntheticEvent(
-  event: any,
-): DingtalkReactionCreatedEvent | null {
+export function resolveReactionSyntheticEvent(event: any): DingtalkReactionCreatedEvent | null {
   void event;
   return null;
 }

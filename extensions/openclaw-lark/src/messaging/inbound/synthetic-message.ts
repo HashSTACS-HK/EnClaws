@@ -8,10 +8,10 @@
  * card actions or OAuth flows complete.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { enqueueFeishuChatTask } from '../../channel/chat-queue';
-import { withTicket } from '../../core/lark-ticket';
-import { getInboundHandler } from './handler-registry';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { enqueueFeishuChatTask } from "../../channel/chat-queue";
+import { withTicket } from "../../core/lark-ticket";
+import { getInboundHandler } from "./handler-registry";
 
 export async function dispatchSyntheticTextMessage(params: {
   cfg: ClawdbotConfig;
@@ -21,7 +21,7 @@ export async function dispatchSyntheticTextMessage(params: {
   text: string;
   syntheticMessageId: string;
   replyToMessageId: string;
-  chatType?: 'p2p' | 'group';
+  chatType?: "p2p" | "group";
   threadId?: string;
   runtime?: {
     log?: (msg: string) => void;
@@ -51,8 +51,8 @@ export async function dispatchSyntheticTextMessage(params: {
     message: {
       message_id: syntheticMessageId,
       chat_id: chatId,
-      chat_type: chatType ?? ('p2p' as const),
-      message_type: 'text',
+      chat_type: chatType ?? ("p2p" as const),
+      message_type: "text",
       content: JSON.stringify({ text }),
       thread_id: threadId,
     },

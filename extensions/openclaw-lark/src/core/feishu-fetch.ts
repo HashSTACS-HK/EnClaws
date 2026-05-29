@@ -8,7 +8,7 @@
  * the User-Agent header.
  */
 
-import { getUserAgent } from './version';
+import { getUserAgent } from "./version";
 
 /**
  * Drop-in replacement for `fetch()` that automatically injects
@@ -21,7 +21,7 @@ import { getUserAgent } from './version';
 export function feishuFetch(url: string | URL | Request, init?: RequestInit): Promise<Response> {
   const headers = {
     ...init?.headers,
-    'User-Agent': getUserAgent(),
+    "User-Agent": getUserAgent(),
   };
 
   return fetch(url, { ...init, headers });

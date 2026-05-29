@@ -419,8 +419,8 @@ export async function acquireSessionWriteLock(params: {
   const sessionFile = path.resolve(params.sessionFile);
   const sessionDir = path.dirname(sessionFile);
   // In multi-tenant mode, skip creating root-level agents dir.
-  const normalizedSessionDir = sessionDir.replace(/\\/g, '/');
-  if (normalizedSessionDir.includes('/agents/') && !normalizedSessionDir.includes('/tenants/')) {
+  const normalizedSessionDir = sessionDir.replace(/\\/g, "/");
+  if (normalizedSessionDir.includes("/agents/") && !normalizedSessionDir.includes("/tenants/")) {
     const { isMultiTenantMode } = await import("../config/multi-tenant.js");
     if (isMultiTenantMode()) {
       // Do not create root agents directory; let the caller handle the missing dir gracefully.

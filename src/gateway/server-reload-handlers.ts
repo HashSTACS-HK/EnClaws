@@ -4,6 +4,7 @@ import type { CliDeps } from "../cli/deps.js";
 import { resolveAgentMaxConcurrent, resolveSubagentMaxConcurrent } from "../config/agent-limits.js";
 import { isRestartEnabled } from "../config/commands.js";
 import type { loadConfig } from "../config/config.js";
+import { isMultiTenantMode } from "../config/multi-tenant.js";
 import { startGmailWatcherWithLogs } from "../hooks/gmail-watcher-lifecycle.js";
 import { stopGmailWatcher } from "../hooks/gmail-watcher.js";
 import { isTruthyEnvValue } from "../infra/env.js";
@@ -19,7 +20,6 @@ import { CommandLane } from "../process/lanes.js";
 import type { ChannelKind, GatewayReloadPlan } from "./config-reload.js";
 import { resolveHooksConfig } from "./hooks.js";
 import { startBrowserControlServerIfEnabled } from "./server-browser.js";
-import { isMultiTenantMode } from "../config/multi-tenant.js";
 import { buildGatewayCronService, type GatewayCronState } from "./server-cron.js";
 
 type GatewayHotReloadState = {

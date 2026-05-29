@@ -8,12 +8,12 @@
  * 不维护独立缓存，完全依赖 app-scope-checker 的 30s 缓存。
  */
 
-import type * as Lark from '@larksuiteoapi/node-sdk';
-import type { ConfiguredLarkAccount } from './types';
-import { getAppInfo } from './app-scope-checker';
-import { larkLogger } from './lark-logger';
+import type * as Lark from "@larksuiteoapi/node-sdk";
+import { getAppInfo } from "./app-scope-checker";
+import { larkLogger } from "./lark-logger";
+import type { ConfiguredLarkAccount } from "./types";
 
-const log = larkLogger('core/app-owner-fallback');
+const log = larkLogger("core/app-owner-fallback");
 
 // ---------------------------------------------------------------------------
 // Public API

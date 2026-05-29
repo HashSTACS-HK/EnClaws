@@ -13,7 +13,9 @@ const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 let cleanupTimer: NodeJS.Timeout | null = null;
 
 export function startLoginAttemptsCleanup(): void {
-  if (cleanupTimer) {return;}
+  if (cleanupTimer) {
+    return;
+  }
 
   // Run once at startup (don't await — fire-and-forget).
   void cleanupOldLoginAttempts().then((n) => {
@@ -30,7 +32,9 @@ export function startLoginAttemptsCleanup(): void {
     });
   }, CLEANUP_INTERVAL_MS);
 
-  if (cleanupTimer.unref) {cleanupTimer.unref();}
+  if (cleanupTimer.unref) {
+    cleanupTimer.unref();
+  }
 }
 
 export function stopLoginAttemptsCleanup(): void {

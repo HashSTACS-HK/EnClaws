@@ -30,7 +30,7 @@ export interface FeishuMessageEvent {
     update_time?: string;
     chat_id: string;
     thread_id?: string;
-    chat_type: 'p2p' | 'group';
+    chat_type: "p2p" | "group";
     message_type: string;
     content: string;
     mentions?: Array<{
@@ -50,7 +50,7 @@ export interface FeishuMessageEvent {
 export interface FeishuReactionCreatedEvent {
   message_id: string;
   chat_id?: string;
-  chat_type?: 'p2p' | 'group' | 'private';
+  chat_type?: "p2p" | "group" | "private";
   reaction_type?: { emoji_type?: string };
   operator_type?: string;
   user_id?: {
@@ -84,7 +84,7 @@ export interface FeishuBotAddedEvent {
 
 /** Metadata describing a media resource in a message (no binary data). */
 export interface ResourceDescriptor {
-  type: 'image' | 'file' | 'audio' | 'video' | 'sticker';
+  type: "image" | "file" | "audio" | "video" | "sticker";
   /** image_key or file_key from the raw message content. */
   fileKey: string;
   /** Original file name (file/video messages). */
@@ -128,7 +128,7 @@ export interface RawMessage {
   update_time?: string;
   chat_id: string;
   thread_id?: string;
-  chat_type: 'p2p' | 'group';
+  chat_type: "p2p" | "group";
   message_type: string;
   content: string;
   mentions?: Array<{
@@ -158,7 +158,7 @@ export interface MessageContext {
   messageId: string;
   senderId: string;
   senderName?: string;
-  chatType: 'p2p' | 'group';
+  chatType: "p2p" | "group";
 
   // Message content
   content: string;
@@ -199,7 +199,7 @@ export interface FeishuMediaInfo {
   /** Original Feishu file_key / image_key that was downloaded. */
   fileKey: string;
   /** Resource type from the original descriptor. */
-  resourceType: ResourceDescriptor['type'];
+  resourceType: ResourceDescriptor["type"];
 }
 
 // ---------------------------------------------------------------------------

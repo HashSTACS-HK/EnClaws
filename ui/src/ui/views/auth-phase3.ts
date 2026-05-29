@@ -45,22 +45,88 @@ const cardStyles = css`
     padding: 2rem;
     box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.3));
   }
-  h1 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.5rem; }
-  h2 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
-  .subtitle { font-size: 0.85rem; color: var(--text-muted, #737373); margin: 0 0 1.25rem; }
-  label { display: block; font-size: 0.8rem; font-weight: 500; margin: 0.75rem 0 0.35rem; color: var(--text-secondary, #a3a3a3); }
-  input { width: 100%; padding: 0.55rem 0.75rem; background: var(--bg, #0a0a0a); border: 1px solid var(--border, #262626); border-radius: var(--radius-md, 6px); color: var(--text, #e5e5e5); font-size: 0.9rem; outline: none; box-sizing: border-box; }
-  input:focus { border-color: var(--accent, #3b82f6); }
-  button.primary { margin-top: 1rem; width: 100%; padding: 0.6rem; background: var(--accent, #3b82f6); color: white; border: none; border-radius: var(--radius-md, 6px); font-size: 0.9rem; font-weight: 500; cursor: pointer; }
-  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .error { margin-top: 0.75rem; font-size: 0.78rem; color: var(--text-destructive, #ef4444); }
-  .ok { margin-top: 0.75rem; font-size: 0.85rem; color: var(--text, #e5e5e5); }
-  .link { color: var(--accent, #3b82f6); cursor: pointer; text-decoration: none; font-size: 0.8rem; }
-  .footer { margin-top: 1rem; text-align: center; }
-  .hint { font-size: 0.72rem; color: var(--text-hint, #8a8a8a); margin-top: 0.25rem; }
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+  h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1.25rem 0 0.5rem;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted, #737373);
+    margin: 0 0 1.25rem;
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin: 0.75rem 0 0.35rem;
+    color: var(--text-secondary, #a3a3a3);
+  }
+  input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    background: var(--bg, #0a0a0a);
+    border: 1px solid var(--border, #262626);
+    border-radius: var(--radius-md, 6px);
+    color: var(--text, #e5e5e5);
+    font-size: 0.9rem;
+    outline: none;
+    box-sizing: border-box;
+  }
+  input:focus {
+    border-color: var(--accent, #3b82f6);
+  }
+  button.primary {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.6rem;
+    background: var(--accent, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md, 6px);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button.primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .error {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--text-destructive, #ef4444);
+  }
+  .ok {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text, #e5e5e5);
+  }
+  .link {
+    color: var(--accent, #3b82f6);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.8rem;
+  }
+  .footer {
+    margin-top: 1rem;
+    text-align: center;
+  }
+  .hint {
+    font-size: 0.72rem;
+    color: var(--text-hint, #8a8a8a);
+    margin-top: 0.25rem;
+  }
 `;
 
-function goToLogin() { window.location.hash = ""; }
+function goToLogin() {
+  window.location.hash = "";
+}
 function backToLoginLink() {
   return html`<div class="footer"><a class="link" @click=${goToLogin}>${t("auth.common.backToLogin")}</a></div>`;
 }
@@ -140,7 +206,9 @@ export class EnClawsSessionsList extends LitElement {
 
   private async revokeAllOthers() {
     const auth = loadAuth();
-    if (!auth?.refreshToken) {return;}
+    if (!auth?.refreshToken) {
+      return;
+    }
     try {
       await callAuthRpc("auth.revokeAllOtherSessions", { currentRefreshToken: auth.refreshToken });
       this.sessions = this.sessions.filter((s) => s.isCurrent);
@@ -149,19 +217,25 @@ export class EnClawsSessionsList extends LitElement {
     }
   }
 
-  private goBack() { window.location.hash = ""; }
+  private goBack() {
+    window.location.hash = "";
+  }
 
   render() {
     void this.i18nCtrl;
-    if (this.loading) {return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;}
+    if (this.loading) {
+      return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;
+    }
     return html`
       <div class="card">
         <h1>${t("auth.sessions.title")}</h1>
         <p class="subtitle">${t("auth.sessions.subtitle")}</p>
         ${this.error ? html`<div class="error">${this.error}</div>` : nothing}
-        ${this.sessions.length === 0
-          ? html`<p class="ok">${t("auth.sessions.noSessions")}</p>`
-          : this.sessions.map((s) => html`
+        ${
+          this.sessions.length === 0
+            ? html`<p class="ok">${t("auth.sessions.noSessions")}</p>`
+            : this.sessions.map(
+                (s) => html`
               <div class="session-item">
                 <div class="session-label">
                   <div>${s.label}${s.isCurrent ? html`<span class="session-current">${t("auth.sessions.currentDevice")}</span>` : nothing}</div>
@@ -169,10 +243,14 @@ export class EnClawsSessionsList extends LitElement {
                 </div>
                 ${!s.isCurrent ? html`<button class="revoke-btn" @click=${() => this.revoke(s.id)}>${t("auth.sessions.revoke")}</button>` : nothing}
               </div>
-            `)}
-        ${this.sessions.length > 1
-          ? html`<button class="revoke-all-btn" @click=${this.revokeAllOthers}>${t("auth.sessions.revokeAllOthers")}</button>`
-          : nothing}
+            `,
+              )
+        }
+        ${
+          this.sessions.length > 1
+            ? html`<button class="revoke-all-btn" @click=${this.revokeAllOthers}>${t("auth.sessions.revokeAllOthers")}</button>`
+            : nothing
+        }
         <div class="footer"><a class="link" @click=${this.goBack}>${t("auth.common.backHome")}</a></div>
       </div>
     `;
@@ -195,7 +273,9 @@ export class EnClawsPendingVerification extends LitElement {
   @state() private error = "";
 
   private async resend() {
-    if (!this.email) {return;}
+    if (!this.email) {
+      return;
+    }
     this.resending = true;
     this.error = "";
     try {
@@ -215,11 +295,13 @@ export class EnClawsPendingVerification extends LitElement {
         <h1>${t("auth.verify.pendingTitle")}</h1>
         <p class="subtitle">${t("auth.verify.pendingBody")}</p>
         <p class="ok">${this.email}</p>
-        ${this.resent
-          ? html`<p class="ok">${t("auth.verify.resent")}</p>`
-          : html`<button class="primary" ?disabled=${this.resending} @click=${this.resend}>
+        ${
+          this.resent
+            ? html`<p class="ok">${t("auth.verify.resent")}</p>`
+            : html`<button class="primary" ?disabled=${this.resending} @click=${this.resend}>
               ${this.resending ? t("auth.common.submitting") : t("auth.verify.resendBtn")}
-            </button>`}
+            </button>`
+        }
         ${this.error ? html`<div class="error">${this.error}</div>` : nothing}
         ${backToLoginLink()}
       </div>
@@ -234,7 +316,9 @@ export class EnClawsPendingVerification extends LitElement {
 function readHashParam(name: string): string {
   const hash = window.location.hash || "";
   const q = hash.indexOf("?");
-  if (q < 0) {return "";}
+  if (q < 0) {
+    return "";
+  }
   return new URLSearchParams(hash.slice(q + 1)).get(name) ?? "";
 }
 
@@ -251,10 +335,18 @@ export class EnClawsVerifyEmail extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     const token = readHashParam("token");
-    if (!token) { this.error = t("auth.verify.invalidLink"); this.loading = false; return; }
+    if (!token) {
+      this.error = t("auth.verify.invalidLink");
+      this.loading = false;
+      return;
+    }
     try {
       const r = await callPublicRpc(this.gatewayUrl, "auth.verifyEmail", { token });
-      if (r.ok) { this.ok = true; } else { this.error = r.errorMessage ?? "Verification failed"; }
+      if (r.ok) {
+        this.ok = true;
+      } else {
+        this.error = r.errorMessage ?? "Verification failed";
+      }
     } catch (err) {
       this.error = err instanceof Error ? err.message : "Verification failed";
     } finally {
@@ -264,7 +356,9 @@ export class EnClawsVerifyEmail extends LitElement {
 
   render() {
     void this.i18nCtrl;
-    if (this.loading) {return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;}
+    if (this.loading) {
+      return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;
+    }
     if (this.ok) {
       return html`
         <div class="card">
@@ -312,7 +406,8 @@ export class EnClawsMfaSetup extends LitElement {
     super.connectedCallback();
     try {
       const r = await callAuthRpc<{ secret: string; otpauthUri: string; backupCodes: string[] }>(
-        "auth.mfa.setup.begin", {},
+        "auth.mfa.setup.begin",
+        {},
       );
       this.secret = r.secret;
       this.otpauthUri = r.otpauthUri;
@@ -346,11 +441,15 @@ export class EnClawsMfaSetup extends LitElement {
     }
   }
 
-  private goBack() { window.location.hash = ""; }
+  private goBack() {
+    window.location.hash = "";
+  }
 
   render() {
     void this.i18nCtrl;
-    if (this.loading) {return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;}
+    if (this.loading) {
+      return html`<div class="card"><div class="ok">${t("auth.common.submitting")}</div></div>`;
+    }
 
     if (this.step === "done") {
       return html`
@@ -383,7 +482,9 @@ export class EnClawsMfaSetup extends LitElement {
           <label>${t("auth.mfa.codeLabel")}</label>
           <input type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
             .value=${this.code}
-            @input=${(e: InputEvent) => { this.code = (e.target as HTMLInputElement).value; }}
+            @input=${(e: InputEvent) => {
+              this.code = (e.target as HTMLInputElement).value;
+            }}
             placeholder="000000" required />
           ${this.error ? html`<div class="error">${this.error}</div>` : nothing}
           <button class="primary" type="submit" ?disabled=${this.submitting}>
@@ -415,12 +516,26 @@ export class EnClawsMfaChallenge extends LitElement {
     e.preventDefault();
     this.error = "";
     const cleaned = this.code.replace(/\s/g, "");
-    if (!cleaned) { this.error = t("auth.mfa.invalidCode"); return; }
+    if (!cleaned) {
+      this.error = t("auth.mfa.invalidCode");
+      return;
+    }
     this.submitting = true;
     try {
       const r = await callPublicRpc<{
-        user: { id: string; email: string; role: string; displayName: string | null; tenantId: string; forceChangePassword: boolean; mfaEnabled: boolean };
-        accessToken: string; refreshToken: string; expiresIn: number; pwExp?: number;
+        user: {
+          id: string;
+          email: string;
+          role: string;
+          displayName: string | null;
+          tenantId: string;
+          forceChangePassword: boolean;
+          mfaEnabled: boolean;
+        };
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+        pwExp?: number;
       }>(this.gatewayUrl, "auth.mfa.verify", {
         challengeToken: this.challengeToken,
         code: cleaned,
@@ -455,7 +570,10 @@ export class EnClawsMfaChallenge extends LitElement {
     }
   }
 
-  private logout() { clearAuth(); window.location.href = "/login"; }
+  private logout() {
+    clearAuth();
+    window.location.href = "/login";
+  }
 
   render() {
     void this.i18nCtrl;
@@ -467,7 +585,9 @@ export class EnClawsMfaChallenge extends LitElement {
           <label>${t("auth.mfa.codeLabel")}</label>
           <input type="text" inputmode="numeric" maxlength="8" autocomplete="one-time-code"
             .value=${this.code}
-            @input=${(e: InputEvent) => { this.code = (e.target as HTMLInputElement).value; }}
+            @input=${(e: InputEvent) => {
+              this.code = (e.target as HTMLInputElement).value;
+            }}
             placeholder="000000" required />
           <p class="hint">${t("auth.mfa.backupCodeHint")}</p>
           ${this.error ? html`<div class="error">${this.error}</div>` : nothing}

@@ -14,13 +14,16 @@
  * the message and is working on a reply.
  */
 
-import type { OpenClawConfig } from 'openclaw/plugin-sdk';
-import { LarkClient } from '../../core/lark-client';
-import { normalizeMessageId } from '../../core/targets';
-import { isMessageUnavailableError, runWithMessageUnavailableGuard } from '../../core/message-unavailable';
-import { larkLogger } from '../../core/lark-logger';
+import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import {
+  isMessageUnavailableError,
+  runWithMessageUnavailableGuard,
+} from "../../core/message-unavailable";
+import { normalizeMessageId } from "../../core/targets";
 
-const log = larkLogger('outbound/typing');
+const log = larkLogger("outbound/typing");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,7 +50,7 @@ export interface TypingIndicatorState {
  * "Typing" is a built-in Feishu emoji that shows a pencil / keyboard
  * animation, making it a natural choice for a typing cue.
  */
-const TYPING_EMOJI_TYPE = 'Typing';
+const TYPING_EMOJI_TYPE = "Typing";
 
 // ---------------------------------------------------------------------------
 // addTypingIndicator
@@ -86,7 +89,7 @@ export async function addTypingIndicator(params: {
 
     const response = await runWithMessageUnavailableGuard({
       messageId: normalizedId,
-      operation: 'im.messageReaction.create(typing)',
+      operation: "im.messageReaction.create(typing)",
       fn: () =>
         client.im.messageReaction.create({
           path: {
@@ -151,7 +154,7 @@ export async function removeTypingIndicator(params: {
 
     await runWithMessageUnavailableGuard({
       messageId: state.messageId,
-      operation: 'im.messageReaction.delete(typing)',
+      operation: "im.messageReaction.delete(typing)",
       fn: () =>
         client.im.messageReaction.delete({
           path: {
@@ -162,7 +165,9 @@ export async function removeTypingIndicator(params: {
     });
   } catch (error) {
     if (isMessageUnavailableError(error)) {
-      log.debug(`Skip remove typing indicator for unavailable message`, { messageId: state.messageId });
+      log.debug(`Skip remove typing indicator for unavailable message`, {
+        messageId: state.messageId,
+      });
       return;
     }
     // Silently swallow the error. A leftover reaction is acceptable;

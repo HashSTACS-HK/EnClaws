@@ -1,6 +1,6 @@
 import type { WebSocket } from "ws";
-import type { ConnectParams } from "../protocol/index.js";
 import type { TenantContext } from "../../auth/middleware.js";
+import type { ConnectParams } from "../protocol/index.js";
 
 export type GatewayWsClient = {
   socket: WebSocket;

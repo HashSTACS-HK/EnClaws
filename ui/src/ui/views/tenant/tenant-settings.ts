@@ -6,112 +6,147 @@ import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import { t, I18nController } from "../../../i18n/index.ts";
 import { loadAuth } from "../../auth-store.ts";
-import { tenantRpc } from "./rpc.ts";
 import { caretFix } from "../../shared-styles.ts";
+import { tenantRpc } from "./rpc.ts";
 
 @customElement("tenant-settings-view")
 export class TenantSettingsView extends LitElement {
   private i18nCtrl = new I18nController(this);
 
-  static styles = [caretFix, css`
-    :host {
-      display: block;
-      padding: 1.5rem;
-      color: var(--text);
-      font-family: var(--font-sans, system-ui, sans-serif);
-    }
-    h2 { margin: 0 0 1.5rem; font-size: 1.1rem; font-weight: 600; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    .form-field {
-      margin-bottom: 1rem;
-    }
-    .form-field label {
-      display: block;
-      font-size: 0.8rem;
-      margin-bottom: 0.3rem;
-      color: var(--text-2);
-    }
-    .form-field input, .form-field textarea {
-      width: 100%;
-      padding: 0.45rem 0.65rem;
-      background: var(--input-bg);
-      border: 1px solid var(--input-border);
-      border-radius: var(--radius-md);
-      color: var(--text);
-      font-size: 0.85rem;
-      outline: none;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-    .form-field input:focus, .form-field textarea:focus { border-color: var(--accent); }
-    .form-field textarea {
-      min-height: 120px;
-      resize: vertical;
-    }
-    .form-field .hint {
-      font-size: 0.75rem;
-      color: var(--text-3);
-      margin-top: 0.25rem;
-    }
-    .btn {
-      padding: 0.45rem 0.9rem;
-      border: none;
-      border-radius: var(--radius-md);
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: var(--accent-foreground); }
-    .error-msg {
-      background: var(--danger-subtle);
-      border: 1px solid var(--danger);
-      border-radius: var(--radius-md);
-      color: var(--danger);
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
-      margin-bottom: 1rem;
-    }
-    .success-msg {
-      background: var(--ok-subtle);
-      border: 1px solid var(--ok);
-      border-radius: var(--radius-md);
-      color: var(--ok);
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
-      margin-bottom: 1rem;
-    }
-    .loading { text-align: center; padding: 2rem; color: var(--muted); }
-    .actions { margin-top: 1rem; }
-    .form-field.readonly { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-    .form-field.readonly label { margin-bottom: 0; white-space: nowrap; }
-    .tenant-id-value {
-      font-family: var(--font-mono, monospace);
-      font-size: 0.85rem;
-      color: var(--text);
-      flex: 1;
-      word-break: break-all;
-    }
-    .btn-copy {
-      padding: 0.3rem 0.65rem;
-      border: 1px solid var(--input-border);
-      border-radius: var(--radius-md);
-      background: var(--input-bg);
-      color: var(--text-2);
-      font-size: 0.8rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity 0.15s;
-    }
-    .btn-copy:hover { opacity: 0.8; }
-  `];
+  static styles = [
+    caretFix,
+    css`
+      :host {
+        display: block;
+        padding: 1.5rem;
+        color: var(--text);
+        font-family: var(--font-sans, system-ui, sans-serif);
+      }
+      h2 {
+        margin: 0 0 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+      .form-field {
+        margin-bottom: 1rem;
+      }
+      .form-field label {
+        display: block;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+        color: var(--text-2);
+      }
+      .form-field input,
+      .form-field textarea {
+        width: 100%;
+        padding: 0.45rem 0.65rem;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: var(--radius-md);
+        color: var(--text);
+        font-size: 0.85rem;
+        outline: none;
+        box-sizing: border-box;
+        font-family: inherit;
+      }
+      .form-field input:focus,
+      .form-field textarea:focus {
+        border-color: var(--accent);
+      }
+      .form-field textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      .form-field .hint {
+        font-size: 0.75rem;
+        color: var(--text-3);
+        margin-top: 0.25rem;
+      }
+      .btn {
+        padding: 0.45rem 0.9rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .btn:hover {
+        opacity: 0.85;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+      .error-msg {
+        background: var(--danger-subtle);
+        border: 1px solid var(--danger);
+        border-radius: var(--radius-md);
+        color: var(--danger);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .success-msg {
+        background: var(--ok-subtle);
+        border: 1px solid var(--ok);
+        border-radius: var(--radius-md);
+        color: var(--ok);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+      }
+      .actions {
+        margin-top: 1rem;
+      }
+      .form-field.readonly {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .form-field.readonly label {
+        margin-bottom: 0;
+        white-space: nowrap;
+      }
+      .tenant-id-value {
+        font-family: var(--font-mono, monospace);
+        font-size: 0.85rem;
+        color: var(--text);
+        flex: 1;
+        word-break: break-all;
+      }
+      .btn-copy {
+        padding: 0.3rem 0.65rem;
+        border: 1px solid var(--input-border);
+        border-radius: var(--radius-md);
+        background: var(--input-bg);
+        color: var(--text-2);
+        font-size: 0.8rem;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.15s;
+      }
+      .btn-copy:hover {
+        opacity: 0.8;
+      }
+    `,
+  ];
 
   @property({ type: String }) gatewayUrl = "";
   @state() private loading = false;
@@ -143,7 +178,9 @@ export class TenantSettingsView extends LitElement {
       await navigator.clipboard.writeText(id);
       this._copiedTenantId = true;
       clearTimeout(this._copyTimer);
-      this._copyTimer = setTimeout(() => { this._copiedTenantId = false; }, 2000);
+      this._copyTimer = setTimeout(() => {
+        this._copiedTenantId = false;
+      }, 2000);
     } catch {
       // Clipboard not available in non-secure context — ignore.
     }
@@ -156,14 +193,18 @@ export class TenantSettingsView extends LitElement {
   private showError(key: string) {
     this.errorKey = key;
     this.successKey = "";
-    if (this.msgTimer) {clearTimeout(this.msgTimer);}
+    if (this.msgTimer) {
+      clearTimeout(this.msgTimer);
+    }
     this.msgTimer = setTimeout(() => (this.errorKey = ""), 5000);
   }
 
   private showSuccess(key: string) {
     this.successKey = key;
     this.errorKey = "";
-    if (this.msgTimer) {clearTimeout(this.msgTimer);}
+    if (this.msgTimer) {
+      clearTimeout(this.msgTimer);
+    }
     this.msgTimer = setTimeout(() => (this.successKey = ""), 5000);
   }
 
@@ -177,7 +218,7 @@ export class TenantSettingsView extends LitElement {
     this.loading = true;
     this.errorKey = "";
     try {
-      const result = await this.rpc("tenant.settings.get") as {
+      const result = (await this.rpc("tenant.settings.get")) as {
         name: string;
         identityPrompt: string;
       };
@@ -185,7 +226,7 @@ export class TenantSettingsView extends LitElement {
       this.identityPrompt = result.identityPrompt ?? "";
       // Load memory content
       try {
-        const memResult = await this.rpc("tenant.memory.get") as { content: string };
+        const memResult = (await this.rpc("tenant.memory.get")) as { content: string };
         this.memoryContent = memResult.content ?? "";
       } catch {
         // Memory may not be available yet
@@ -262,7 +303,10 @@ export class TenantSettingsView extends LitElement {
             ></textarea>
             <div class="hint">${t("tenantSettings.identityPromptHint")}</div>
           </div>
-          ${(() => { const tenantId = loadAuth()?.tenant?.id; return tenantId ? html`
+          ${(() => {
+            const tenantId = loadAuth()?.tenant?.id;
+            return tenantId
+              ? html`
           <div class="form-field readonly">
             <label>${t("tenantSettings.tenantIdLabel")}</label>
             <span class="tenant-id-value">${tenantId}</span>
@@ -271,7 +315,9 @@ export class TenantSettingsView extends LitElement {
               ${this._copiedTenantId ? t("tenantSettings.tenantIdCopied") : t("tenantSettings.tenantIdCopy")}
             </button>
           </div>
-          ` : nothing; })()}
+          `
+              : nothing;
+          })()}
         </div>
         <div class="actions">
           <button class="btn btn-primary" type="submit" ?disabled=${this.saving}>
@@ -280,7 +326,9 @@ export class TenantSettingsView extends LitElement {
         </div>
       </form>
 
-      ${/* 企业记忆配置入口暂时隐藏，后端功能保留 */ false ? html`
+      ${
+        /* 企业记忆配置入口暂时隐藏，后端功能保留 */ false
+          ? html`
       <h2>${t("tenantSettings.memory")}</h2>
       ${this.memorySuccess ? html`<div class="success-msg">${this.memorySuccess}</div>` : nothing}
       <div class="card">
@@ -300,7 +348,9 @@ export class TenantSettingsView extends LitElement {
           </button>
         </div>
       </div>
-      ` : nothing}
+      `
+          : nothing
+      }
     `;
   }
 }

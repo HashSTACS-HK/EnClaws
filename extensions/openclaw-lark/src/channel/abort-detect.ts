@@ -14,55 +14,55 @@
  * authoritative handling.
  */
 
-import type { FeishuMessageEvent } from '../messaging/types';
+import type { FeishuMessageEvent } from "../messaging/types";
 
 // ---------------------------------------------------------------------------
 // Trigger word list (synced with OpenClaw core abort.ts)
 // ---------------------------------------------------------------------------
 
 const ABORT_TRIGGERS = new Set([
-  'stop',
-  'esc',
-  'abort',
-  'wait',
-  'exit',
-  'interrupt',
-  'detente',
-  'deten',
-  'detén',
-  'arrete',
-  'arrête',
-  '停止',
-  'やめて',
-  '止めて',
-  'रुको',
-  'توقف',
-  'стоп',
-  'остановись',
-  'останови',
-  'остановить',
-  'прекрати',
-  'halt',
-  'anhalten',
-  'aufhören',
-  'hoer auf',
-  'stopp',
-  'pare',
-  'stop openclaw',
-  'openclaw stop',
-  'stop action',
-  'stop current action',
-  'stop run',
-  'stop current run',
-  'stop agent',
-  'stop the agent',
+  "stop",
+  "esc",
+  "abort",
+  "wait",
+  "exit",
+  "interrupt",
+  "detente",
+  "deten",
+  "detén",
+  "arrete",
+  "arrête",
+  "停止",
+  "やめて",
+  "止めて",
+  "रुको",
+  "توقف",
+  "стоп",
+  "остановись",
+  "останови",
+  "остановить",
+  "прекрати",
+  "halt",
+  "anhalten",
+  "aufhören",
+  "hoer auf",
+  "stopp",
+  "pare",
+  "stop openclaw",
+  "openclaw stop",
+  "stop action",
+  "stop current action",
+  "stop run",
+  "stop current run",
+  "stop agent",
+  "stop the agent",
   "stop don't do anything",
-  'stop dont do anything',
-  'stop do not do anything',
-  'stop doing anything',
-  'do not do that',
-  'please stop',
-  'stop please',
+  "stop dont do anything",
+  "stop do not do anything",
+  "stop doing anything",
+  "do not do that",
+  "please stop",
+  "stop please",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -76,8 +76,8 @@ function normalizeAbortTriggerText(text: string): string {
     .trim()
     .toLowerCase()
     .replace(/['`]/g, "'")
-    .replace(/\s+/g, ' ')
-    .replace(TRAILING_ABORT_PUNCTUATION_RE, '')
+    .replace(/\s+/g, " ")
+    .replace(TRAILING_ABORT_PUNCTUATION_RE, "")
     .trim();
 }
 
@@ -99,7 +99,7 @@ export function isAbortTrigger(text: string): boolean {
 export function isLikelyAbortText(text: string): boolean {
   if (!text) return false;
   const trimmed = text.trim().toLowerCase();
-  if (trimmed === '/stop') return true;
+  if (trimmed === "/stop") return true;
   return isAbortTrigger(trimmed);
 }
 
@@ -114,17 +114,17 @@ export function isLikelyAbortText(text: string): boolean {
  * a message like `@Bot stop` is detected as `stop`.
  */
 export function extractRawTextFromEvent(event: FeishuMessageEvent): string | undefined {
-  if (!event.message || event.message.message_type !== 'text') {
+  if (!event.message || event.message.message_type !== "text") {
     return undefined;
   }
 
   try {
     const parsed = JSON.parse(event.message.content);
     let text: string | undefined = parsed?.text;
-    if (typeof text !== 'string') return undefined;
+    if (typeof text !== "string") return undefined;
 
     // Strip bot mention placeholders (@_user_1, @_user_2, etc.)
-    text = text.replace(/@_user_\d+/g, '').trim();
+    text = text.replace(/@_user_\d+/g, "").trim();
 
     return text || undefined;
   } catch {

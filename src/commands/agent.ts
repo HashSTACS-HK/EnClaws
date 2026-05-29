@@ -13,10 +13,6 @@ import {
   resolveAgentWorkspaceDir,
 } from "../agents/agent-scope.js";
 import { ensureAuthProfileStore } from "../agents/auth-profiles.js";
-import {
-  resolveTenantAgentDir,
-  resolveTenantAgentWorkspaceDir,
-} from "../config/sessions/tenant-paths.js";
 import { clearSessionAuthProfileOverride } from "../agents/auth-profiles/session-override.js";
 import { runCliAgent } from "../agents/cli-runner.js";
 import { getCliSessionId, setCliSessionId } from "../agents/cli-session.js";
@@ -65,6 +61,10 @@ import {
   type SessionEntry,
   updateSessionStore,
 } from "../config/sessions.js";
+import {
+  resolveTenantAgentDir,
+  resolveTenantAgentWorkspaceDir,
+} from "../config/sessions/tenant-paths.js";
 import {
   clearAgentRunContext,
   emitAgentEvent,

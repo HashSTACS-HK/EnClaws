@@ -7,7 +7,7 @@
  * Re-exports jsonResult from the SDK directly.
  */
 
-export { jsonResult } from 'openclaw/plugin-sdk/agent-runtime';
+export { jsonResult } from "openclaw/plugin-sdk/agent-runtime";
 
 /**
  * Extract reaction parameters from raw action params.
@@ -18,7 +18,7 @@ export function readReactionParams(
   opts?: { removeErrorMessage?: string },
 ): { emoji: string; remove: boolean; isEmpty: boolean } {
   const raw = params.emoji ?? params.reaction ?? params.type;
-  const emoji = typeof raw === 'string' ? raw.trim() : '';
+  const emoji = typeof raw === "string" ? raw.trim() : "";
   const remove = Boolean(params.remove ?? params.unreact);
   const isEmpty = !emoji && !remove;
 

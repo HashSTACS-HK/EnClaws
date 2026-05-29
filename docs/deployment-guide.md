@@ -6,14 +6,14 @@ Production deployment options for EnClaws — from single-machine dev setups to 
 
 ## Deployment Options Overview
 
-| Method | Best For | Database | Complexity |
-|--------|----------|----------|------------|
-| [CLI (Local)](#1-cli-local) | Development, personal use | SQLite | Low |
-| [Docker Compose](#2-docker-compose) | Small teams, staging | PostgreSQL | Medium |
-| [Windows Installer](#3-windows-installer) | Windows users, offline | SQLite | Low |
-| [macOS Installer](#4-macos-installer) | macOS users | SQLite | Low |
-| [VPS / Cloud Server](#5-vps--cloud-server) | Production, always-on | PostgreSQL | Medium |
-| [Multi-Instance HA](#6-multi-instance-ha) | Enterprise, high availability | PostgreSQL | High |
+| Method                                     | Best For                      | Database   | Complexity |
+| ------------------------------------------ | ----------------------------- | ---------- | ---------- |
+| [CLI (Local)](#1-cli-local)                | Development, personal use     | SQLite     | Low        |
+| [Docker Compose](#2-docker-compose)        | Small teams, staging          | PostgreSQL | Medium     |
+| [Windows Installer](#3-windows-installer)  | Windows users, offline        | SQLite     | Low        |
+| [macOS Installer](#4-macos-installer)      | macOS users                   | SQLite     | Low        |
+| [VPS / Cloud Server](#5-vps--cloud-server) | Production, always-on         | PostgreSQL | Medium     |
+| [Multi-Instance HA](#6-multi-instance-ha)  | Enterprise, high availability | PostgreSQL | High       |
 
 ---
 
@@ -45,16 +45,16 @@ enclaws gateway --port 18789 --bind loopback --auth password
 
 ### CLI Options
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--port <n>` | 18789 | Gateway port |
-| `--bind <mode>` | loopback | `loopback` / `lan` / `tailnet` / `auto` |
-| `--auth <mode>` | token | `none` / `token` / `password` / `trusted-proxy` |
-| `--token <t>` | — | WebSocket auth token |
-| `--password <p>` | — | Password auth |
-| `--dev` | false | Development mode |
-| `--verbose` | false | Verbose logging |
-| `--allow-unconfigured` | false | Skip config validation |
+| Flag                   | Default  | Description                                     |
+| ---------------------- | -------- | ----------------------------------------------- |
+| `--port <n>`           | 18789    | Gateway port                                    |
+| `--bind <mode>`        | loopback | `loopback` / `lan` / `tailnet` / `auto`         |
+| `--auth <mode>`        | token    | `none` / `token` / `password` / `trusted-proxy` |
+| `--token <t>`          | —        | WebSocket auth token                            |
+| `--password <p>`       | —        | Password auth                                   |
+| `--dev`                | false    | Development mode                                |
+| `--verbose`            | false    | Verbose logging                                 |
+| `--allow-unconfigured` | false    | Skip config validation                          |
 
 ### Data Location
 
@@ -132,18 +132,18 @@ docker-compose exec cli node --import tsx src/db/migrate.ts --status
 
 ### Docker Compose Services
 
-| Service | Port | Description |
-|---------|------|-------------|
-| `openclaw-db` | 5432 | PostgreSQL 16 Alpine |
-| `gateway` | 18789, 18790 | EnClaws Gateway |
-| `cli` | — | CLI tools (shared network with gateway) |
+| Service       | Port         | Description                             |
+| ------------- | ------------ | --------------------------------------- |
+| `openclaw-db` | 5432         | PostgreSQL 16 Alpine                    |
+| `gateway`     | 18789, 18790 | EnClaws Gateway                         |
+| `cli`         | —            | CLI tools (shared network with gateway) |
 
 ### Volumes
 
-| Volume | Purpose |
-|--------|---------|
+| Volume            | Purpose                       |
+| ----------------- | ----------------------------- |
 | `openclaw-pgdata` | PostgreSQL persistent storage |
-| `./data/enclaws` | Gateway state directory |
+| `./data/enclaws`  | Gateway state directory       |
 
 ### Updating
 
@@ -432,66 +432,66 @@ server {
 
 ### Core
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ENCLAWS_GATEWAY_PORT` | `18789` | Gateway port |
-| `ENCLAWS_GATEWAY_BIND` | `loopback` | Bind mode: `loopback` / `lan` / `tailnet` / `auto` |
-| `ENCLAWS_GATEWAY_PASSWORD` | — | Authentication password |
-| `ENCLAWS_STATE_DIR` | `~/.enclaws` | State directory path |
-| `ENCLAWS_HOME` | `~` | Home directory |
+| Variable                   | Default      | Description                                        |
+| -------------------------- | ------------ | -------------------------------------------------- |
+| `ENCLAWS_GATEWAY_PORT`     | `18789`      | Gateway port                                       |
+| `ENCLAWS_GATEWAY_BIND`     | `loopback`   | Bind mode: `loopback` / `lan` / `tailnet` / `auto` |
+| `ENCLAWS_GATEWAY_PASSWORD` | —            | Authentication password                            |
+| `ENCLAWS_STATE_DIR`        | `~/.enclaws` | State directory path                               |
+| `ENCLAWS_HOME`             | `~`          | Home directory                                     |
 
 ### Database
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ENCLAWS_DB_URL` | `sqlite://...` | Full connection URL |
-| `ENCLAWS_DB_HOST` | `localhost` | PostgreSQL host |
-| `ENCLAWS_DB_PORT` | `5432` | PostgreSQL port |
-| `ENCLAWS_DB_NAME` | `enclaws` | Database name |
-| `ENCLAWS_DB_USER` | `enclaws` | Database user |
-| `ENCLAWS_DB_PASSWORD` | — | Database password |
-| `ENCLAWS_DB_SSL` | `false` | Enable SSL |
-| `ENCLAWS_DB_POOL_MAX` | `20` | Connection pool size |
+| Variable              | Default        | Description          |
+| --------------------- | -------------- | -------------------- |
+| `ENCLAWS_DB_URL`      | `sqlite://...` | Full connection URL  |
+| `ENCLAWS_DB_HOST`     | `localhost`    | PostgreSQL host      |
+| `ENCLAWS_DB_PORT`     | `5432`         | PostgreSQL port      |
+| `ENCLAWS_DB_NAME`     | `enclaws`      | Database name        |
+| `ENCLAWS_DB_USER`     | `enclaws`      | Database user        |
+| `ENCLAWS_DB_PASSWORD` | —              | Database password    |
+| `ENCLAWS_DB_SSL`      | `false`        | Enable SSL           |
+| `ENCLAWS_DB_POOL_MAX` | `20`           | Connection pool size |
 
 ### Authentication
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ENCLAWS_JWT_SECRET` | — | JWT signing secret (required for multi-tenant) |
-| `ENCLAWS_JWT_ACCESS_EXPIRES` | `30m` | Access token TTL |
-| `ENCLAWS_JWT_REFRESH_EXPIRES` | `7d` | Refresh token TTL |
-| `ENCLAWS_CONTROL_UI_DISABLE_DEVICE_AUTH` | `false` | Disable device auth in UI |
-| `ENCLAWS_CONTROL_UI_ALLOWED_ORIGINS` | — | CORS origins for Control UI |
+| Variable                                 | Default | Description                                    |
+| ---------------------------------------- | ------- | ---------------------------------------------- |
+| `ENCLAWS_JWT_SECRET`                     | —       | JWT signing secret (required for multi-tenant) |
+| `ENCLAWS_JWT_ACCESS_EXPIRES`             | `30m`   | Access token TTL                               |
+| `ENCLAWS_JWT_REFRESH_EXPIRES`            | `7d`    | Refresh token TTL                              |
+| `ENCLAWS_CONTROL_UI_DISABLE_DEVICE_AUTH` | `false` | Disable device auth in UI                      |
+| `ENCLAWS_CONTROL_UI_ALLOWED_ORIGINS`     | —       | CORS origins for Control UI                    |
 
 ### LLM Providers
 
-| Variable | Description |
-|----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key |
-| `OPENAI_API_KEYS` | Multiple keys (comma-separated) |
-| `ANTHROPIC_API_KEY` | Anthropic API key |
-| `GEMINI_API_KEY` | Google Gemini API key |
-| `OPENROUTER_API_KEY` | OpenRouter API key |
-| `DEEPSEEK_API_KEY` | DeepSeek API key |
+| Variable             | Description                     |
+| -------------------- | ------------------------------- |
+| `OPENAI_API_KEY`     | OpenAI API key                  |
+| `OPENAI_API_KEYS`    | Multiple keys (comma-separated) |
+| `ANTHROPIC_API_KEY`  | Anthropic API key               |
+| `GEMINI_API_KEY`     | Google Gemini API key           |
+| `OPENROUTER_API_KEY` | OpenRouter API key              |
+| `DEEPSEEK_API_KEY`   | DeepSeek API key                |
 
 ### Channels
 
-| Variable | Description |
-|----------|-------------|
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
-| `DISCORD_BOT_TOKEN` | Discord bot token |
-| `SLACK_BOT_TOKEN` | Slack bot token |
-| `SLACK_APP_TOKEN` | Slack app-level token |
-| `MATTERMOST_BOT_TOKEN` | Mattermost bot token |
-| `ZALO_BOT_TOKEN` | Zalo bot token |
+| Variable               | Description           |
+| ---------------------- | --------------------- |
+| `TELEGRAM_BOT_TOKEN`   | Telegram bot token    |
+| `DISCORD_BOT_TOKEN`    | Discord bot token     |
+| `SLACK_BOT_TOKEN`      | Slack bot token       |
+| `SLACK_APP_TOKEN`      | Slack app-level token |
+| `MATTERMOST_BOT_TOKEN` | Mattermost bot token  |
+| `ZALO_BOT_TOKEN`       | Zalo bot token        |
 
 ### Skill Packs
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SKILL_PACK_AUTO_INSTALL` | `false` | Auto-install skill packs |
-| `SKILL_PACK_LOCAL_DIR` | — | Local skill pack directory |
-| `SKILL_PACK_GIT_URL` | — | Git URL for skill pack |
+| Variable                  | Default | Description                |
+| ------------------------- | ------- | -------------------------- |
+| `SKILL_PACK_AUTO_INSTALL` | `false` | Auto-install skill packs   |
+| `SKILL_PACK_LOCAL_DIR`    | —       | Local skill pack directory |
+| `SKILL_PACK_GIT_URL`      | —       | Git URL for skill pack     |
 
 ---
 

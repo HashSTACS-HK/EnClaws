@@ -8,16 +8,16 @@
  * and permission-error notifications via the streaming card flow.
  */
 
-import type { LarkClient } from '../../core/lark-client';
-import { larkLogger } from '../../core/lark-logger';
-import { ticketElapsed } from '../../core/lark-ticket';
-import { createFeishuReplyDispatcher } from '../../card/reply-dispatcher';
-import { sendMessageFeishu } from '../outbound/send';
-import type { PermissionError } from './permission';
-import type { DispatchContext } from './dispatch-context';
-import { buildInboundPayload } from './dispatch-builders';
+import { createFeishuReplyDispatcher } from "../../card/reply-dispatcher";
+import type { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import { ticketElapsed } from "../../core/lark-ticket";
+import { sendMessageFeishu } from "../outbound/send";
+import { buildInboundPayload } from "./dispatch-builders";
+import type { DispatchContext } from "./dispatch-context";
+import type { PermissionError } from "./permission";
 
-const log = larkLogger('inbound/dispatch-commands');
+const log = larkLogger("inbound/dispatch-commands");
 
 // ---------------------------------------------------------------------------
 // Permission error notification
@@ -32,11 +32,11 @@ export async function dispatchPermissionNotification(
   permissionError: PermissionError,
   replyToMessageId?: string,
 ): Promise<void> {
-  const grantUrl = permissionError.grantUrl ?? '';
+  const grantUrl = permissionError.grantUrl ?? "";
   const permissionNotifyBody = `[System: The bot encountered a Feishu API permission error. Please inform the user about this issue and provide the permission grant URL for the admin to authorize. Permission grant URL: ${grantUrl}]`;
 
   const permBody = dc.core.channel.reply.formatAgentEnvelope({
-    channel: 'Feishu',
+    channel: "Feishu",
     from: dc.envelopeFrom,
     timestamp: new Date(),
     envelope: dc.envelopeOptions,
@@ -48,8 +48,8 @@ export async function dispatchPermissionNotification(
     bodyForAgent: permissionNotifyBody,
     rawBody: permissionNotifyBody,
     commandBody: permissionNotifyBody,
-    senderName: 'system',
-    senderId: 'system',
+    senderName: "system",
+    senderId: "system",
     messageSid: `${dc.ctx.messageId}:permission-error`,
     wasMentioned: false,
   });
@@ -106,9 +106,11 @@ export async function dispatchSystemCommand(
   let delivered = false;
 
   dc.log(
-    `feishu[${dc.account.accountId}]: detected system command, using plain-text dispatch${suppressReply ? ' (reply suppressed)' : ''}`,
+    `feishu[${dc.account.accountId}]: detected system command, using plain-text dispatch${suppressReply ? " (reply suppressed)" : ""}`,
   );
-  log.info(`system command detected, plain-text dispatch${suppressReply ? ', reply suppressed' : ''}`);
+  log.info(
+    `system command detected, plain-text dispatch${suppressReply ? ", reply suppressed" : ""}`,
+  );
 
   await dc.core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
     ctx: ctxPayload,
@@ -116,7 +118,7 @@ export async function dispatchSystemCommand(
     dispatcherOptions: {
       deliver: async (payload) => {
         if (suppressReply) return;
-        const text = payload.text?.trim() ?? '';
+        const text = payload.text?.trim() ?? "";
         if (!text) return;
         await sendMessageFeishu({
           cfg: dc.accountScopedCfg,
@@ -129,12 +131,14 @@ export async function dispatchSystemCommand(
         delivered = true;
       },
       onSkip: (_payload, info) => {
-        if (info.reason !== 'silent') {
+        if (info.reason !== "silent") {
           dc.log(`feishu[${dc.account.accountId}]: command reply skipped (reason=${info.reason})`);
         }
       },
       onError: (err, info) => {
-        dc.error(`feishu[${dc.account.accountId}]: command ${info.kind} reply failed: ${String(err)}`);
+        dc.error(
+          `feishu[${dc.account.accountId}]: command ${info.kind} reply failed: ${String(err)}`,
+        );
       },
     },
     replyOptions: {},

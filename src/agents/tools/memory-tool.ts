@@ -233,10 +233,7 @@ async function outlineScopedMemory(params: {
     return clampOutlineResult({
       files: result.files.map((file) => ({
         ...file,
-        path:
-          shouldPrefix && !file.path.startsWith(prefix)
-            ? `${prefix}${file.path}`
-            : file.path,
+        path: shouldPrefix && !file.path.startsWith(prefix) ? `${prefix}${file.path}` : file.path,
         scope: scoped.scope,
         sourceLabel: scoped.scope === "tenant" ? "Enterprise Memory" : "Agent Knowledge",
       })),
@@ -255,10 +252,7 @@ async function outlineScopedMemory(params: {
     files.push(
       ...result.files.map((file) => ({
         ...file,
-        path:
-          shouldPrefix && !file.path.startsWith(prefix)
-            ? `${prefix}${file.path}`
-            : file.path,
+        path: shouldPrefix && !file.path.startsWith(prefix) ? `${prefix}${file.path}` : file.path,
         scope: entry.scope,
         sourceLabel: entry.scope === "tenant" ? "Enterprise Memory" : "Agent Knowledge",
       })),
@@ -313,10 +307,7 @@ async function routeScopedMemory(params: {
     return clampRouteResult({
       files: result.files.map((file) => ({
         ...file,
-        path:
-          shouldPrefix && !file.path.startsWith(prefix)
-            ? `${prefix}${file.path}`
-            : file.path,
+        path: shouldPrefix && !file.path.startsWith(prefix) ? `${prefix}${file.path}` : file.path,
         scope: scoped.scope,
         sourceLabel: scoped.scope === "tenant" ? "Enterprise Memory" : "Agent Knowledge",
       })),
@@ -340,10 +331,7 @@ async function routeScopedMemory(params: {
     files.push(
       ...result.files.map((file) => ({
         ...file,
-        path:
-          shouldPrefix && !file.path.startsWith(prefix)
-            ? `${prefix}${file.path}`
-            : file.path,
+        path: shouldPrefix && !file.path.startsWith(prefix) ? `${prefix}${file.path}` : file.path,
         scope: entry.scope,
         sourceLabel: entry.scope === "tenant" ? "Enterprise Memory" : "Agent Knowledge",
       })),
@@ -770,7 +758,9 @@ type ScopedRouteFile = MemoryRouteFile & {
   sourceLabel?: string;
 };
 
-function clampOutlineResult(result: { files: ScopedOutlineFile[] }): { files: ScopedOutlineFile[] } {
+function clampOutlineResult(result: { files: ScopedOutlineFile[] }): {
+  files: ScopedOutlineFile[];
+} {
   return {
     files: result.files.slice(0, MEMORY_SCOPED_FILE_HARD_MAX).map((file) => ({
       ...file,

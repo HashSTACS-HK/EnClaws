@@ -8,30 +8,30 @@
  * 复用 oauth.ts 的 executeAuthorize() 函数。
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-import { getAppGrantedScopes } from '../core/app-scope-checker';
-import { AppScopeCheckFailedError } from '../core/tool-client';
-import { getStoredToken } from '../core/token-store';
-import { getLarkAccount } from '../core/accounts';
-import { getTicket } from '../core/lark-ticket';
-import { LarkClient } from '../core/lark-client';
-import { formatLarkError } from '../core/api-error';
-import { filterSensitiveScopes } from '../core/tool-scopes';
-import { openPlatformDomain } from '../core/domains';
-import { larkLogger } from '../core/lark-logger';
-import { json, registerTool } from './oapi/helpers';
-import { executeAuthorize } from './oauth';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { getLarkAccount } from "../core/accounts";
+import { formatLarkError } from "../core/api-error";
+import { getAppGrantedScopes } from "../core/app-scope-checker";
+import { openPlatformDomain } from "../core/domains";
+import { LarkClient } from "../core/lark-client";
+import { larkLogger } from "../core/lark-logger";
+import { getTicket } from "../core/lark-ticket";
+import { getStoredToken } from "../core/token-store";
+import { AppScopeCheckFailedError } from "../core/tool-client";
+import { filterSensitiveScopes } from "../core/tool-scopes";
+import { json, registerTool } from "./oapi/helpers";
+import { executeAuthorize } from "./oauth";
 
-const log = larkLogger('tools/oauth-batch-auth');
+const log = larkLogger("tools/oauth-batch-auth");
 
 const FeishuOAuthBatchAuthSchema = Type.Object(
   {},
   {
     description:
-      '飞书批量授权工具。一次性授权应用已开通的所有用户权限（User Access Token scope）。' +
+      "飞书批量授权工具。一次性授权应用已开通的所有用户权限（User Access Token scope）。" +
       "【使用场景】用户明确要求'授权所有权限'、'一次性授权完成'时使用。" +
-      '【重要】禁止主动推荐此工具，仅在用户明确要求时使用。',
+      "【重要】禁止主动推荐此工具，仅在用户明确要求时使用。",
   },
 );
 
@@ -43,10 +43,10 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
   registerTool(
     api,
     {
-      name: 'feishu_oauth_batch_auth',
-      label: 'Feishu: OAuth Batch Authorization',
+      name: "feishu_oauth_batch_auth",
+      label: "Feishu: OAuth Batch Authorization",
       description:
-        '飞书批量授权工具，一次性授权应用已开通的所有用户权限。' +
+        "飞书批量授权工具，一次性授权应用已开通的所有用户权限。" +
         "仅在用户明确要求'授权所有权限'、'一次性授权'时使用。",
       parameters: FeishuOAuthBatchAuthSchema,
 
@@ -56,7 +56,7 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
           const senderOpenId = ticket?.senderOpenId;
           if (!senderOpenId) {
             return json({
-              error: '无法获取当前用户身份（senderOpenId），请在飞书对话中使用此工具。',
+              error: "无法获取当前用户身份（senderOpenId），请在飞书对话中使用此工具。",
             });
           }
 
@@ -73,11 +73,11 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
           const sdk = LarkClient.fromAccount(account).sdk;
           let appScopes: string[];
           try {
-            appScopes = await getAppGrantedScopes(sdk, appId, 'user');
+            appScopes = await getAppGrantedScopes(sdk, appId, "user");
           } catch (err) {
             if (err instanceof AppScopeCheckFailedError) {
               return json({
-                error: 'app_scope_check_failed',
+                error: "app_scope_check_failed",
                 message:
                   `应用缺少核心权限 application:application:self_manage，无法查询可授权 scope 列表。\n\n` +
                   `请管理员在飞书开放平台开通此权限后重试。`,
@@ -93,9 +93,9 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
             return json({
               success: false,
               message:
-                '当前应用未开通任何用户级权限（User Access Token scope），' +
-                '无法使用用户身份调用 API。\n\n' +
-                '如需使用用户级功能，请联系管理员在开放平台开通相关权限。',
+                "当前应用未开通任何用户级权限（User Access Token scope），" +
+                "无法使用用户身份调用 API。\n\n" +
+                "如需使用用户级功能，请联系管理员在开放平台开通相关权限。",
               total_app_scopes: 0,
               app_id: appId,
             });
@@ -124,7 +124,7 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
           // 7. 飞书限制：单次最多请求 100 个 scope
           const MAX_SCOPES_PER_BATCH = 100;
           let scopesToAuthorize = missingScopes;
-          let batchInfo = '';
+          let batchInfo = "";
 
           if (missingScopes.length > MAX_SCOPES_PER_BATCH) {
             // 分批授权：取前 50 个
@@ -141,7 +141,7 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
           log.info(
             `scope check: total=${appScopes.length}, granted=${alreadyGrantedScopes.length}, missing=${missingScopes.length}`,
           );
-          const scope = scopesToAuthorize.join(' ');
+          const scope = scopesToAuthorize.join(" ");
           const result = await executeAuthorize({
             account,
             senderOpenId,
@@ -170,8 +170,8 @@ export function registerFeishuOAuthBatchAuthTool(api: OpenClawPluginApi): void {
         }
       },
     },
-    { name: 'feishu_oauth_batch_auth' },
+    { name: "feishu_oauth_batch_auth" },
   );
 
-  api.logger.debug?.('feishu_oauth_batch_auth: Registered feishu_oauth_batch_auth tool');
+  api.logger.debug?.("feishu_oauth_batch_auth: Registered feishu_oauth_batch_auth tool");
 }

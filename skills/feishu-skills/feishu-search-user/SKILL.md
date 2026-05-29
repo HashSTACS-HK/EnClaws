@@ -2,11 +2,12 @@
 name: feishu-search-user
 description: |
   查询飞书用户信息。支持三种模式：按关键词模糊搜索、获取当前用户自己的信息、按 user_id 精确查询指定用户。
-overrides: feishu_search_user, feishu_get_user, feishu_pre_auth  
+overrides: feishu_search_user, feishu_get_user, feishu_pre_auth
 inline: true
 ---
 
 # feishu-search-user
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -32,19 +33,20 @@ node ./search-user.js --open-id "ou_xxx" --action get --user-id "ou_yyy"
 node ./search-user.js --open-id "ou_xxx" --action get --user-id "uid_yyy" --user-id-type user_id
 ```
 
-| 参数 | 必填 | 说明 |
-|---|---|---|
-| `--open-id` | 是 | 当前用户 open_id |
-| `--action` | 否 | `search`（默认）/ `get_me` / `get` |
-| `--query` | search 时必填 | 搜索关键词（匹配姓名、手机号、邮箱） |
-| `--user-id` | get 时必填 | 目标用户 ID |
-| `--user-id-type` | 否 | `open_id`（默认）/ `union_id` / `user_id` |
-| `--page-size` | 否 | search 每页数量，1-200，默认 20 |
-| `--page-token` | 否 | search 翻页 token |
+| 参数             | 必填          | 说明                                      |
+| ---------------- | ------------- | ----------------------------------------- |
+| `--open-id`      | 是            | 当前用户 open_id                          |
+| `--action`       | 否            | `search`（默认）/ `get_me` / `get`        |
+| `--query`        | search 时必填 | 搜索关键词（匹配姓名、手机号、邮箱）      |
+| `--user-id`      | get 时必填    | 目标用户 ID                               |
+| `--user-id-type` | 否            | `open_id`（默认）/ `union_id` / `user_id` |
+| `--page-size`    | 否            | search 每页数量，1-200，默认 20           |
+| `--page-token`   | 否            | search 翻页 token                         |
 
 ## 返回格式
 
 **search：**
+
 ```json
 {
   "users": [{ "open_id": "ou_xxx", "name": "张三", "en_name": "San Zhang", "department": [...], "avatar": "url" }],
@@ -55,9 +57,17 @@ node ./search-user.js --open-id "ou_xxx" --action get --user-id "uid_yyy" --user
 ```
 
 **get_me / get：**
+
 ```json
 {
-  "user": { "open_id": "ou_xxx", "name": "张三", "en_name": "San Zhang", "email": "...", "mobile": "...", "avatar": "url" },
+  "user": {
+    "open_id": "ou_xxx",
+    "name": "张三",
+    "en_name": "San Zhang",
+    "email": "...",
+    "mobile": "...",
+    "avatar": "url"
+  },
   "reply": "用户信息：张三（ou_xxx）"
 }
 ```

@@ -87,7 +87,10 @@ async function extractDocxText(absPath: string): Promise<KnowledgeTextProjection
   const headingStyles = await readDocxHeadingStyles(zip);
   const blocks: KnowledgeDocumentBlock[] = [];
   if (!xml) {
-    return emptyProjection(absPath, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    return emptyProjection(
+      absPath,
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
   }
   const body = xml.match(/<w:body[\s\S]*?<\/w:body>/)?.[0] ?? xml;
   const markdownParts: string[] = [];
@@ -100,7 +103,10 @@ async function extractDocxText(absPath: string): Promise<KnowledgeTextProjection
         continue;
       }
       tableIndex += 1;
-      const markdown = [`### Table ${tableIndex}`, ...rows.map((row) => `| ${row.join(" | ")} |`)].join("\n");
+      const markdown = [
+        `### Table ${tableIndex}`,
+        ...rows.map((row) => `| ${row.join(" | ")} |`),
+      ].join("\n");
       blocks.push({
         id: `table${tableIndex}`,
         type: "table",
@@ -268,7 +274,10 @@ async function readDocxHeadingStyles(zip: JSZip): Promise<Map<string, number>> {
   return headings;
 }
 
-function resolveDocxHeadingLevel(paragraphXml: string, headingStyles: Map<string, number>): number | undefined {
+function resolveDocxHeadingLevel(
+  paragraphXml: string,
+  headingStyles: Map<string, number>,
+): number | undefined {
   const pPr = paragraphXml.match(/<w:pPr\b[\s\S]*?<\/w:pPr>/)?.[0] ?? "";
   const styleMatch = pPr.match(/<w:pStyle\b[^>]*w:val="([^"]+)"/);
   const styleId = styleMatch?.[1] ? decodeXml(styleMatch[1]) : undefined;
@@ -298,9 +307,13 @@ async function readSharedStrings(zip: JSZip): Promise<string[]> {
     return [];
   }
   const items = xml.match(/<si[\s\S]*?<\/si>/g) ?? [];
-  return items.map((item) => decodeXml((item.match(/<t[^>]*>[\s\S]*?<\/t>/g) ?? [])
-    .map((text) => text.replace(/<[^>]+>/g, ""))
-    .join("")));
+  return items.map((item) =>
+    decodeXml(
+      (item.match(/<t[^>]*>[\s\S]*?<\/t>/g) ?? [])
+        .map((text) => text.replace(/<[^>]+>/g, ""))
+        .join(""),
+    ),
+  );
 }
 
 async function readWorkbookRels(zip: JSZip): Promise<Map<string, string>> {
@@ -339,7 +352,10 @@ function parseSheetRows(
   sheetXml: string,
   sharedStrings: string[],
 ): Array<{ rowNumber: number; cells: Array<{ ref: string; column: string; value: string }> }> {
-  const rows: Array<{ rowNumber: number; cells: Array<{ ref: string; column: string; value: string }> }> = [];
+  const rows: Array<{
+    rowNumber: number;
+    cells: Array<{ ref: string; column: string; value: string }>;
+  }> = [];
   for (const rowXml of sheetXml.match(/<row\b[\s\S]*?<\/row>/g) ?? []) {
     const rowNumber = Number(readXmlAttr(rowXml, "r")) || rows.length + 1;
     const cells: Array<{ ref: string; column: string; value: string }> = [];

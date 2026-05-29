@@ -11,16 +11,16 @@
  * 超过 50 个时自动分批处理，每批授权完成后自动发起下一批（链式触发）。
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { getLarkAccount } from '../core/accounts';
-import { LarkClient } from '../core/lark-client';
-import { getAppGrantedScopes } from '../core/app-scope-checker';
-import { getAppOwnerFallback } from '../core/app-owner-fallback';
-import { larkLogger } from '../core/lark-logger';
-import { filterSensitiveScopes } from '../core/tool-scopes';
-import { executeAuthorize } from './oauth';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { getLarkAccount } from "../core/accounts";
+import { getAppOwnerFallback } from "../core/app-owner-fallback";
+import { getAppGrantedScopes } from "../core/app-scope-checker";
+import { LarkClient } from "../core/lark-client";
+import { larkLogger } from "../core/lark-logger";
+import { filterSensitiveScopes } from "../core/tool-scopes";
+import { executeAuthorize } from "./oauth";
 
-const log = larkLogger('tools/onboarding-auth');
+const log = larkLogger("tools/onboarding-auth");
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -73,7 +73,7 @@ export async function triggerOnboarding(params: {
   // 3. 动态获取应用已开通的 user scope 列表
   let allUserScopes: string[];
   try {
-    allUserScopes = await getAppGrantedScopes(sdk, appId, 'user');
+    allUserScopes = await getAppGrantedScopes(sdk, appId, "user");
   } catch (err) {
     log.warn(`failed to get app granted scopes: ${err}`);
     return;
@@ -83,7 +83,7 @@ export async function triggerOnboarding(params: {
   allUserScopes = filterSensitiveScopes(allUserScopes);
 
   if (allUserScopes.length === 0) {
-    log.info('no user scopes configured, skipping');
+    log.info("no user scopes configured, skipping");
     return;
   }
 
@@ -98,14 +98,14 @@ export async function triggerOnboarding(params: {
   // 5. 链式发起授权（第一批同步发起，后续批次由 onAuthComplete 回调触发）
   const startBatch = async (batchIndex: number): Promise<void> => {
     if (batchIndex >= batches.length) {
-      log.info('all batches completed');
+      log.info("all batches completed");
       return;
     }
 
     const batch = batches[batchIndex];
-    const scope = batch.join(' ');
+    const scope = batch.join(" ");
 
-    let batchInfo = '';
+    let batchInfo = "";
     if (batches.length > 1) {
       batchInfo =
         `\n\n📋 授权进度：第 ${batchIndex + 1}/${batches.length} 批` +
@@ -123,7 +123,7 @@ export async function triggerOnboarding(params: {
       accountId,
       startTime: Date.now(),
       senderOpenId: userOpenId,
-      chatType: 'p2p' as const,
+      chatType: "p2p" as const,
     };
 
     log.info(`starting batch ${batchIndex + 1}/${batches.length}, scopes=${batch.length}`);

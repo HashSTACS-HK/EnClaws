@@ -64,7 +64,8 @@ describe("cs-api-object model", () => {
   });
 
   it("fetches by appId without leaking other tenants", async () => {
-    const { createCsApiObject, getCsApiObjectByAppId, listCsApiObjects } = await import("./cs-api-object.js");
+    const { createCsApiObject, getCsApiObjectByAppId, listCsApiObjects } =
+      await import("./cs-api-object.js");
     const o1 = await createCsApiObject({
       tenantId: tenant1Id,
       name: "A",

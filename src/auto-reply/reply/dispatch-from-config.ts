@@ -2,14 +2,15 @@ import { resolveSessionAgentId } from "../../agents/agent-scope.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import { loadSessionStore, resolveStorePath, type SessionEntry } from "../../config/sessions.js";
 import { logVerbose } from "../../globals.js";
-import { getLogger } from "../../logging/logger.js";
 import { createInternalHookEvent, triggerInternalHook } from "../../hooks/internal-hooks.js";
+import { coreAuthGate } from "../../infra/auth-gate.js";
 import { isDiagnosticsEnabled } from "../../infra/diagnostic-events.js";
 import {
   logMessageProcessed,
   logMessageQueued,
   logSessionStateChange,
 } from "../../logging/diagnostic.js";
+import { getLogger } from "../../logging/logger.js";
 import { getGlobalHookRunner } from "../../plugins/hook-runner-global.js";
 import { resolveSendPolicy } from "../../sessions/send-policy.js";
 import { maybeApplyTtsToPayload, normalizeTtsAutoMode, resolveTtsConfig } from "../../tts/tts.js";
@@ -20,13 +21,12 @@ import type { GetReplyOptions, ReplyPayload } from "../types.js";
 import { formatAbortReplyText, tryFastAbortFromMessage } from "./abort.js";
 import { shouldBypassAcpDispatchForCommand, tryDispatchAcpReply } from "./dispatch-acp.js";
 import { shouldSkipDuplicateInbound } from "./inbound-dedupe.js";
+import { checkInputFilter } from "./input-filter.js";
 import type { ReplyDispatcher, ReplyDispatchKind } from "./reply-dispatcher.js";
 import { shouldSuppressReasoningPayload } from "./reply-payloads.js";
 import { isRoutableChannel, routeReply } from "./route-reply.js";
-import { resolveRunTypingPolicy } from "./typing-policy.js";
 import { enrichTenantContext } from "./tenant-enrich.js";
-import { checkInputFilter } from "./input-filter.js";
-import { coreAuthGate } from "../../infra/auth-gate.js";
+import { resolveRunTypingPolicy } from "./typing-policy.js";
 // Side-effect import: registers feishu driver into the auth-gate registry.
 // Future IM drivers (wecom, dingtalk, ...) should be imported here too.
 import "../../infra/feishu-lite-auth.js";
@@ -39,7 +39,9 @@ function resolveEffectiveSessionKey(
   sessionKey: string | undefined,
   ctx: { TenantUserId?: string; ChatType?: string },
 ): string {
-  if (!sessionKey) {return "unknown";}
+  if (!sessionKey) {
+    return "unknown";
+  }
   const key = sessionKey.toLowerCase();
   const tenantUser = ctx.TenantUserId?.trim();
   if (tenantUser && !key.includes(":group:") && !key.includes(":channel:")) {
@@ -195,12 +197,16 @@ export async function dispatchReplyFromConfig(params: {
     let checkTenantId = ctx.TenantId;
     if (!checkTenantId) {
       const provider = (ctx.Provider ?? ctx.Surface ?? "").toLowerCase();
-      const channelCfg = (cfg.channels as Record<string, Record<string, unknown> | undefined>)?.[provider];
+      const channelCfg = (cfg.channels as Record<string, Record<string, unknown> | undefined>)?.[
+        provider
+      ];
       checkTenantId = channelCfg?.tenantId as string | undefined;
       if (!checkTenantId) {
         const accountId = (ctx as Record<string, unknown>).AccountId as string | undefined;
         if (accountId) {
-          const accounts = channelCfg?.accounts as Record<string, Record<string, unknown> | undefined> | undefined;
+          const accounts = channelCfg?.accounts as
+            | Record<string, Record<string, unknown> | undefined>
+            | undefined;
           checkTenantId = accounts?.[accountId]?.tenantId as string | undefined;
         }
       }
@@ -445,12 +451,15 @@ export async function dispatchReplyFromConfig(params: {
   // while the model and tools are still loading.
   // Calling onReasoningStream triggers ensureCardCreated() in the streaming
   // controller; the acknowledgment text is shown as a thinking indicator.
-  const processingAckText = process.env.ENCLAWS_PROCESSING_ACK_TEXT?.trim() ?? "🫡 任务已接收，处理中";
+  const processingAckText =
+    process.env.ENCLAWS_PROCESSING_ACK_TEXT?.trim() ?? "🫡 任务已接收，处理中";
   if (params.replyOptions?.onReasoningStream && processingAckText) {
     try {
       await params.replyOptions.onReasoningStream({ text: processingAckText });
     } catch (err) {
-      logVerbose(`dispatch-from-config: early card creation failed: ${err instanceof Error ? err.message : String(err)}`);
+      logVerbose(
+        `dispatch-from-config: early card creation failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 

@@ -214,13 +214,17 @@ export function buildBootstrapContextFiles(
         const fileMaxChars = Math.max(1, Math.min(maxChars, remainingTotalChars));
         const trimmed = trimBootstrapContent(file.content, file.name, fileMaxChars);
         const contentWithinBudget = clampToBudget(trimmed.content, remainingTotalChars);
-        if (!contentWithinBudget) { break; }
+        if (!contentWithinBudget) {
+          break;
+        }
         remainingTotalChars = Math.max(0, remainingTotalChars - contentWithinBudget.length);
         result.push({ path: pathValue, content: contentWithinBudget });
       } else {
         const missingText = `[MISSING] Expected at: ${pathValue}`;
         const cappedMissingText = clampToBudget(missingText, remainingTotalChars);
-        if (!cappedMissingText) { break; }
+        if (!cappedMissingText) {
+          break;
+        }
         remainingTotalChars = Math.max(0, remainingTotalChars - cappedMissingText.length);
         result.push({ path: pathValue, content: cappedMissingText });
       }

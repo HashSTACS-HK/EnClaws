@@ -15,9 +15,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import {
   StringEnum,
   assertLarkOk,
@@ -25,8 +24,8 @@ import {
   handleInvokeErrorWithAutoAuth,
   json,
   registerTool,
-} from '../helpers';
-import type { PaginatedData } from '../sdk-types';
+} from "../helpers";
+import type { PaginatedData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -35,110 +34,108 @@ import type { PaginatedData } from '../sdk-types';
 const FeishuWikiSpaceNodeSchema = Type.Union([
   // LIST NODES
   Type.Object({
-    action: Type.Literal('list'),
+    action: Type.Literal("list"),
     space_id: Type.String({
-      description: 'space_id',
+      description: "space_id",
     }),
     parent_node_token: Type.Optional(
       Type.String({
-        description: 'parent_node_token',
+        description: "parent_node_token",
       }),
     ),
     page_size: Type.Optional(
       Type.Integer({
-        description: 'page_size',
+        description: "page_size",
         minimum: 1,
       }),
     ),
     page_token: Type.Optional(
       Type.String({
-        description: 'page_token',
+        description: "page_token",
       }),
     ),
   }),
 
   // GET NODE
   Type.Object({
-    action: Type.Literal('get'),
+    action: Type.Literal("get"),
     token: Type.String({
-      description: 'node token',
+      description: "node token",
     }),
     obj_type: Type.Optional(
-      StringEnum(
-        ['doc', 'sheet', 'mindnote', 'bitable', 'file', 'docx', 'slides', 'wiki'],
-        { description: 'obj_type' },
-      ),
+      StringEnum(["doc", "sheet", "mindnote", "bitable", "file", "docx", "slides", "wiki"], {
+        description: "obj_type",
+      }),
     ),
   }),
 
   // CREATE NODE
   Type.Object({
-    action: Type.Literal('create'),
+    action: Type.Literal("create"),
     space_id: Type.String({
-      description: 'space_id',
+      description: "space_id",
     }),
-    obj_type: StringEnum(
-      ['sheet', 'mindnote', 'bitable', 'file', 'docx', 'slides'],
-      { description: 'obj_type' },
-    ),
+    obj_type: StringEnum(["sheet", "mindnote", "bitable", "file", "docx", "slides"], {
+      description: "obj_type",
+    }),
     parent_node_token: Type.Optional(
       Type.String({
-        description: 'parent_node_token',
+        description: "parent_node_token",
       }),
     ),
-    node_type: StringEnum(['origin', 'shortcut'], {
-      description: 'node_type',
+    node_type: StringEnum(["origin", "shortcut"], {
+      description: "node_type",
     }),
     origin_node_token: Type.Optional(
       Type.String({
-        description: 'origin_node_token',
+        description: "origin_node_token",
       }),
     ),
     title: Type.Optional(
       Type.String({
-        description: 'title',
+        description: "title",
       }),
     ),
   }),
 
   // MOVE NODE
   Type.Object({
-    action: Type.Literal('move'),
+    action: Type.Literal("move"),
     space_id: Type.String({
-      description: 'space_id',
+      description: "space_id",
     }),
     node_token: Type.String({
-      description: 'node_token',
+      description: "node_token",
     }),
     target_parent_token: Type.Optional(
       Type.String({
-        description: 'target_parent_token',
+        description: "target_parent_token",
       }),
     ),
   }),
 
   // COPY NODE
   Type.Object({
-    action: Type.Literal('copy'),
+    action: Type.Literal("copy"),
     space_id: Type.String({
-      description: 'space_id',
+      description: "space_id",
     }),
     node_token: Type.String({
-      description: 'node_token',
+      description: "node_token",
     }),
     target_space_id: Type.Optional(
       Type.String({
-        description: 'target_space_id',
+        description: "target_space_id",
       }),
     ),
     target_parent_token: Type.Optional(
       Type.String({
-        description: 'target_parent_token',
+        description: "target_parent_token",
       }),
     ),
     title: Type.Optional(
       Type.String({
-        description: 'title',
+        description: "title",
       }),
     ),
   }),
@@ -150,34 +147,34 @@ const FeishuWikiSpaceNodeSchema = Type.Union([
 
 type FeishuWikiSpaceNodeParams =
   | {
-      action: 'list';
+      action: "list";
       space_id: string;
       parent_node_token?: string;
       page_size?: number;
       page_token?: string;
     }
   | {
-      action: 'get';
+      action: "get";
       token: string;
       obj_type?: string;
     }
   | {
-      action: 'create';
+      action: "create";
       space_id: string;
       obj_type: string;
       parent_node_token?: string;
-      node_type: 'origin' | 'shortcut';
+      node_type: "origin" | "shortcut";
       origin_node_token?: string;
       title?: string;
     }
   | {
-      action: 'move';
+      action: "move";
       space_id: string;
       node_token: string;
       target_parent_token?: string;
     }
   | {
-      action: 'copy';
+      action: "copy";
       space_id: string;
       node_token: string;
       target_space_id?: string;
@@ -193,17 +190,17 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
   if (!api.config) return false;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_wiki_space_node');
+  const { toolClient, log } = createToolContext(api, "feishu_wiki_space_node");
 
   return registerTool(
     api,
     {
-      name: 'feishu_wiki_space_node',
-      label: 'Feishu Wiki Space Nodes',
+      name: "feishu_wiki_space_node",
+      label: "Feishu Wiki Space Nodes",
       description:
-        '飞书知识库节点管理工具。操作：list（列表）、get（获取）、create（创建）、move（移动）、copy（复制）。' +
-        '节点是知识库中的文档，包括 doc、bitable(多维表表格)、sheet(电子表格) 等类型。' +
-        'node_token 是节点的唯一标识符，obj_token 是实际文档的 token。可通过 get 操作将 wiki 类型的 node_token 转换为实际文档的 obj_token。',
+        "飞书知识库节点管理工具。操作：list（列表）、get（获取）、create（创建）、move（移动）、copy（复制）。" +
+        "节点是知识库中的文档，包括 doc、bitable(多维表表格)、sheet(电子表格) 等类型。" +
+        "node_token 是节点的唯一标识符，obj_token 是实际文档的 token。可通过 get 操作将 wiki 类型的 node_token 转换为实际文档的 obj_token。",
       parameters: FeishuWikiSpaceNodeSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as FeishuWikiSpaceNodeParams;
@@ -214,13 +211,13 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
             // -----------------------------------------------------------------
             // LIST NODES
             // -----------------------------------------------------------------
-            case 'list': {
+            case "list": {
               log.info(
-                `list: space_id=${p.space_id}, parent=${p.parent_node_token ?? '(root)'}, page_size=${p.page_size ?? 50}`,
+                `list: space_id=${p.space_id}, parent=${p.parent_node_token ?? "(root)"}, page_size=${p.page_size ?? 50}`,
               );
 
               const res = await client.invoke(
-                'feishu_wiki_space_node.list',
+                "feishu_wiki_space_node.list",
                 (sdk, opts) =>
                   sdk.wiki.spaceNode.list(
                     {
@@ -233,7 +230,7 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -250,22 +247,22 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
             // -----------------------------------------------------------------
             // GET NODE
             // -----------------------------------------------------------------
-            case 'get': {
-              log.info(`get: token=${p.token}, obj_type=${p.obj_type ?? 'wiki'}`);
+            case "get": {
+              log.info(`get: token=${p.token}, obj_type=${p.obj_type ?? "wiki"}`);
 
               const res = await client.invoke(
-                'feishu_wiki_space_node.get',
+                "feishu_wiki_space_node.get",
                 (sdk, opts) =>
                   sdk.wiki.space.getNode(
                     {
                       params: {
                         token: p.token,
-                        obj_type: (p.obj_type || 'wiki') as any,
+                        obj_type: (p.obj_type || "wiki") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -279,13 +276,13 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
             // -----------------------------------------------------------------
             // CREATE NODE
             // -----------------------------------------------------------------
-            case 'create': {
+            case "create": {
               log.info(
-                `create: space_id=${p.space_id}, obj_type=${p.obj_type}, parent=${p.parent_node_token ?? '(root)'}, title=${p.title ?? '(empty)'}, node_type=${p.node_type}, original_node_token=${p.origin_node_token ?? '(empty)'}`,
+                `create: space_id=${p.space_id}, obj_type=${p.obj_type}, parent=${p.parent_node_token ?? "(root)"}, title=${p.title ?? "(empty)"}, node_type=${p.node_type}, original_node_token=${p.origin_node_token ?? "(empty)"}`,
               );
 
               const res = await client.invoke(
-                'feishu_wiki_space_node.create',
+                "feishu_wiki_space_node.create",
                 (sdk, opts) =>
                   sdk.wiki.spaceNode.create(
                     {
@@ -300,7 +297,7 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -314,13 +311,13 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
             // -----------------------------------------------------------------
             // MOVE NODE
             // -----------------------------------------------------------------
-            case 'move': {
+            case "move": {
               log.info(
-                `move: space_id=${p.space_id}, node_token=${p.node_token}, target_parent=${p.target_parent_token ?? '(root)'}`,
+                `move: space_id=${p.space_id}, node_token=${p.node_token}, target_parent=${p.target_parent_token ?? "(root)"}`,
               );
 
               const res = await client.invoke(
-                'feishu_wiki_space_node.move',
+                "feishu_wiki_space_node.move",
                 (sdk, opts) =>
                   sdk.wiki.spaceNode.move(
                     {
@@ -334,7 +331,7 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -348,13 +345,13 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
             // -----------------------------------------------------------------
             // COPY NODE
             // -----------------------------------------------------------------
-            case 'copy': {
+            case "copy": {
               log.info(
-                `copy: space_id=${p.space_id}, node_token=${p.node_token}, target_space=${p.target_space_id ?? '(same)'}, target_parent=${p.target_parent_token ?? '(root)'}`,
+                `copy: space_id=${p.space_id}, node_token=${p.node_token}, target_space=${p.target_space_id ?? "(same)"}, target_parent=${p.target_parent_token ?? "(root)"}`,
               );
 
               const res = await client.invoke(
-                'feishu_wiki_space_node.copy',
+                "feishu_wiki_space_node.copy",
                 (sdk, opts) =>
                   sdk.wiki.spaceNode.copy(
                     {
@@ -370,7 +367,7 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -386,6 +383,6 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
         }
       },
     },
-    { name: 'feishu_wiki_space_node' },
+    { name: "feishu_wiki_space_node" },
   );
 }

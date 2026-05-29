@@ -9,12 +9,12 @@
  * tool.ts 的 handleCall 无需任何改动。
  */
 
+import type { SendJsonRpcOptions } from "../transport.js";
 import { bizErrorInterceptor } from "./biz-error.js";
 import { mediaInterceptor } from "./msg-media.js";
 import { smartpageCreateInterceptor } from "./smartpage-create.js";
 import { smartpageExportInterceptor } from "./smartpage-export.js";
 import type { CallContext, CallInterceptor, BeforeCallOptions } from "./types.js";
-import type { SendJsonRpcOptions } from "../transport.js";
 
 export type { CallContext, CallInterceptor, BeforeCallOptions } from "./types.js";
 
@@ -23,10 +23,10 @@ export type { CallContext, CallInterceptor, BeforeCallOptions } from "./types.js
 // ============================================================================
 
 const interceptors: CallInterceptor[] = [
-  bizErrorInterceptor,         // 业务错误码检查（所有 call 生效）
-  mediaInterceptor,            // get_msg_media base64 拦截
-  smartpageCreateInterceptor,  // smartpage_create 本地文件读取
-  smartpageExportInterceptor,  // smartpage_get_export_result content → 本地文件
+  bizErrorInterceptor, // 业务错误码检查（所有 call 生效）
+  mediaInterceptor, // get_msg_media base64 拦截
+  smartpageCreateInterceptor, // smartpage_create 本地文件读取
+  smartpageExportInterceptor, // smartpage_get_export_result content → 本地文件
 ];
 
 // ============================================================================
@@ -57,9 +57,8 @@ export async function resolveBeforeCall(ctx: CallContext): Promise<ResolvedBefor
 
     const opts = await interceptor.beforeCall(ctx);
     if (opts?.timeoutMs !== undefined) {
-      mergedTimeoutMs = mergedTimeoutMs === undefined
-        ? opts.timeoutMs
-        : Math.max(mergedTimeoutMs, opts.timeoutMs);
+      mergedTimeoutMs =
+        mergedTimeoutMs === undefined ? opts.timeoutMs : Math.max(mergedTimeoutMs, opts.timeoutMs);
     }
     if (opts?.args !== undefined) {
       mergedArgs = opts.args;

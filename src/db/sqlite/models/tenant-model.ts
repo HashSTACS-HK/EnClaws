@@ -2,8 +2,8 @@
  * Tenant Model CRUD — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type { TenantModel, TenantModelDefinition, ModelVisibility } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 
 function rowToModel(row: Record<string, unknown>): TenantModel {
   return {
@@ -17,13 +17,13 @@ function rowToModel(row: Record<string, unknown>): TenantModel {
     apiKeyEncrypted: (row.api_key_encrypted as string) ?? null,
     extraHeaders: (typeof row.extra_headers === "string"
       ? JSON.parse(row.extra_headers)
-      : row.extra_headers ?? {}) as Record<string, string>,
+      : (row.extra_headers ?? {})) as Record<string, string>,
     extraConfig: (typeof row.extra_config === "string"
       ? JSON.parse(row.extra_config)
-      : row.extra_config ?? {}) as Record<string, unknown>,
+      : (row.extra_config ?? {})) as Record<string, unknown>,
     models: (typeof row.models === "string"
       ? JSON.parse(row.models)
-      : row.models ?? []) as TenantModelDefinition[],
+      : (row.models ?? [])) as TenantModelDefinition[],
     visibility: (row.visibility as TenantModel["visibility"]) ?? "private",
     isActive: Boolean(row.is_active),
     createdBy: (row.created_by as string) ?? null,
@@ -73,10 +73,10 @@ export async function createTenantModel(params: {
 }
 
 export async function getTenantModel(tenantId: string, id: string): Promise<TenantModel | null> {
-  const result = sqliteQuery(
-    "SELECT * FROM tenant_models WHERE tenant_id = ? AND id = ?",
-    [tenantId, id],
-  );
+  const result = sqliteQuery("SELECT * FROM tenant_models WHERE tenant_id = ? AND id = ?", [
+    tenantId,
+    id,
+  ]);
   return result.rows.length > 0 ? rowToModel(result.rows[0]) : null;
 }
 
@@ -87,9 +87,10 @@ export async function listTenantModels(
   const values: unknown[] = [tenantId];
   const activeFilter = opts?.activeOnly !== false ? " AND is_active = 1" : "";
 
-  const where = opts?.includeShared !== false
-    ? `(tenant_id = ?${activeFilter}) OR (visibility = 'shared'${activeFilter})`
-    : `tenant_id = ?${activeFilter}`;
+  const where =
+    opts?.includeShared !== false
+      ? `(tenant_id = ?${activeFilter}) OR (visibility = 'shared'${activeFilter})`
+      : `tenant_id = ?${activeFilter}`;
 
   const result = sqliteQuery(
     `SELECT * FROM tenant_models WHERE ${where} ORDER BY visibility DESC, created_at ASC`,
@@ -101,7 +102,21 @@ export async function listTenantModels(
 export async function updateTenantModel(
   tenantId: string,
   id: string,
-  updates: Partial<Pick<TenantModel, "providerName" | "baseUrl" | "apiProtocol" | "authMode" | "apiKeyEncrypted" | "extraHeaders" | "extraConfig" | "models" | "visibility" | "isActive">>,
+  updates: Partial<
+    Pick<
+      TenantModel,
+      | "providerName"
+      | "baseUrl"
+      | "apiProtocol"
+      | "authMode"
+      | "apiKeyEncrypted"
+      | "extraHeaders"
+      | "extraConfig"
+      | "models"
+      | "visibility"
+      | "isActive"
+    >
+  >,
 ): Promise<TenantModel | null> {
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -147,20 +162,19 @@ export async function updateTenantModel(
     values.push(updates.isActive ? 1 : 0);
   }
 
-  if (sets.length === 0) {return getTenantModel(tenantId, id);}
+  if (sets.length === 0) {
+    return getTenantModel(tenantId, id);
+  }
 
   values.push(tenantId, id);
-  sqliteQuery(
-    `UPDATE tenant_models SET ${sets.join(", ")} WHERE tenant_id = ? AND id = ?`,
-    values,
-  );
+  sqliteQuery(`UPDATE tenant_models SET ${sets.join(", ")} WHERE tenant_id = ? AND id = ?`, values);
   return getTenantModel(tenantId, id);
 }
 
 export async function deleteTenantModel(tenantId: string, id: string): Promise<boolean> {
-  const result = sqliteQuery(
-    "DELETE FROM tenant_models WHERE tenant_id = ? AND id = ?",
-    [tenantId, id],
-  );
+  const result = sqliteQuery("DELETE FROM tenant_models WHERE tenant_id = ? AND id = ?", [
+    tenantId,
+    id,
+  ]);
   return result.rowCount > 0;
 }

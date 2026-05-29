@@ -5,8 +5,8 @@
  * Converter for "folder" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertFolder: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as
@@ -18,11 +18,11 @@ export const convertFolder: ContentConverterFn = (raw) => {
 
   const fileKey = parsed?.file_key;
   if (!fileKey) {
-    return { content: '[folder]', resources: [] };
+    return { content: "[folder]", resources: [] };
   }
 
-  const fileName = parsed?.file_name ?? '';
-  const nameAttr = fileName ? ` name="${fileName}"` : '';
+  const fileName = parsed?.file_name ?? "";
+  const nameAttr = fileName ? ` name="${fileName}"` : "";
 
   return {
     content: `<folder key="${fileKey}"${nameAttr}/>`,

@@ -9,17 +9,13 @@
 
 import type { WeComMediaType, WSClient, WsFrameHeaders } from "@wecom/aibot-node-sdk";
 import {
-  loadOutboundMediaFromUrl,
-  detectMime,
-  type WebMediaResult,
-} from "./openclaw-compat.js";
-import {
   IMAGE_MAX_BYTES,
   VIDEO_MAX_BYTES,
   VOICE_MAX_BYTES,
   FILE_MAX_BYTES,
   ABSOLUTE_MAX_BYTES,
 } from "./const.js";
+import { loadOutboundMediaFromUrl, detectMime, type WebMediaResult } from "./openclaw-compat.js";
 
 // ============================================================================
 // 类型定义
@@ -117,10 +113,7 @@ export async function resolveMediaFile(
   let contentType = result.contentType || "application/octet-stream";
 
   // 如果没有返回准确的 contentType，尝试通过 buffer 魔术字节检测
-  if (
-    contentType === "application/octet-stream" ||
-    contentType === "text/plain"
-  ) {
+  if (contentType === "application/octet-stream" || contentType === "text/plain") {
     const detected = await detectMime(result.buffer);
     if (detected) {
       contentType = detected;
@@ -295,11 +288,9 @@ function mimeToExtension(mime: string): string {
     "application/pdf": ".pdf",
     "application/zip": ".zip",
     "application/msword": ".doc",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-      ".docx",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
     "application/vnd.ms-excel": ".xls",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-      ".xlsx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
     "text/plain": ".txt",
   };
   return map[mime] || ".bin";

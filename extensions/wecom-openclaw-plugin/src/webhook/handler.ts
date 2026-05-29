@@ -11,20 +11,18 @@
 
 import crypto from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { getRegisteredTargets, getWebhookTargetsMap, parseWebhookPath } from "./target.js";
-import type { WecomWebhookTarget, WebhookInboundMessage } from "./types.js";
+import { WecomCrypto } from "@wecom/aibot-node-sdk";
 import { resolveWecomEgressProxyUrl } from "../utils.js";
+import { resolveWecomSenderUserId } from "./helpers.js";
 import {
   handleInboundMessage,
   handleStreamRefresh,
   handleEnterChat,
   handleTemplateCardEvent,
 } from "./monitor.js";
+import { getRegisteredTargets, getWebhookTargetsMap, parseWebhookPath } from "./target.js";
 import { hasActiveTargets } from "./target.js";
-import {
-  resolveWecomSenderUserId,
-} from "./helpers.js";
-import { WecomCrypto } from "@wecom/aibot-node-sdk";
+import type { WecomWebhookTarget, WebhookInboundMessage } from "./types.js";
 
 // ============================================================================
 // 辅助函数
@@ -52,7 +50,6 @@ function resolveSignatureParam(query: Record<string, string>): string {
   return query.msg_signature ?? query.msgsignature ?? query.signature ?? "";
 }
 
-
 /**
  * 判断入站消息是否应该被处理（对齐原版 shouldProcessBotInboundMessage）
  *
@@ -61,9 +58,12 @@ function resolveSignatureParam(query: Record<string, string>): string {
  * - 发送者是 sys → 丢弃（避免系统回调触发 AI 自动回复）
  * - 群消息缺失 chatid → 丢弃（避免 group:unknown 串群）
  */
-function shouldProcessBotInboundMessage(
-  msg: WebhookInboundMessage,
-): { shouldProcess: boolean; reason: string; senderUserId?: string; chatId?: string } {
+function shouldProcessBotInboundMessage(msg: WebhookInboundMessage): {
+  shouldProcess: boolean;
+  reason: string;
+  senderUserId?: string;
+  chatId?: string;
+} {
   const senderUserId = resolveWecomSenderUserId(msg)?.trim();
 
   if (!senderUserId) {
@@ -74,7 +74,9 @@ function shouldProcessBotInboundMessage(
   }
 
   // 企微 Bot 回调中 chattype 是扁平字段（非嵌套在 chat_info 内）
-  const chatType = String(msg.chattype ?? "").trim().toLowerCase();
+  const chatType = String(msg.chattype ?? "")
+    .trim()
+    .toLowerCase();
   if (chatType === "group") {
     const chatId = msg.chatid?.trim();
     if (!chatId) {
@@ -155,9 +157,13 @@ function encryptResponse(
   nonce: string,
 ): { encrypt: string; msgsignature: string; timestamp: string; nonce: string } {
   const plaintext = JSON.stringify(responseData);
-  const wc = new WecomCrypto(target.account.token, target.account.encodingAESKey, target.account.receiveId);
+  const wc = new WecomCrypto(
+    target.account.token,
+    target.account.encodingAESKey,
+    target.account.receiveId,
+  );
   const { encrypt, signature } = wc.encrypt(plaintext, timestamp, nonce);
- 
+
   return { encrypt, msgsignature: signature, timestamp, nonce };
 }
 
@@ -248,39 +254,31 @@ function findMatchingTarget(
 
   // 如果路径中有 accountId，优先精确匹配
   if (pathAccountId && pathTargets) {
-    const byAccountId = pathTargets.find(
-      (t) => t.account.accountId === pathAccountId,
-    );
+    const byAccountId = pathTargets.find((t) => t.account.accountId === pathAccountId);
     if (byAccountId?.account?.token) {
-      const wc = new WecomCrypto(byAccountId.account.token, byAccountId.account.encodingAESKey, byAccountId.account.receiveId);
-      const ok = wc.verifySignature(
-        signature,
-        timestamp,
-        nonce,
-        encrypt,
-        );
+      const wc = new WecomCrypto(
+        byAccountId.account.token,
+        byAccountId.account.encodingAESKey,
+        byAccountId.account.receiveId,
+      );
+      const ok = wc.verifySignature(signature, timestamp, nonce, encrypt);
       if (ok) return { status: "matched", target: byAccountId };
     }
   }
 
   // 收集候选列表（路径匹配优先，否则全局遍历）
-  const candidates = (pathTargets && pathTargets.length > 0)
-    ? pathTargets
-    : getRegisteredTargets();
+  const candidates = pathTargets && pathTargets.length > 0 ? pathTargets : getRegisteredTargets();
 
   // filter 语义：收集所有签名匹配的 Target
-  const signatureMatches = candidates.filter(
-    (target) => {
-      if (!target?.account?.token) return false;
-      const wc = new WecomCrypto(target.account.token, target.account.encodingAESKey, target.account.receiveId);
-      return wc.verifySignature(
-        signature,
-        timestamp,
-        nonce,
-        encrypt,
-      );
-    }
-  );
+  const signatureMatches = candidates.filter((target) => {
+    if (!target?.account?.token) return false;
+    const wc = new WecomCrypto(
+      target.account.token,
+      target.account.encodingAESKey,
+      target.account.receiveId,
+    );
+    return wc.verifySignature(signature, timestamp, nonce, encrypt);
+  });
 
   // 按 accountId 去重（同一 account 注册多条路径时，不应被误判为冲突）
   const uniqueMatches = deduplicateByAccountId(signatureMatches);
@@ -289,8 +287,9 @@ function findMatchingTarget(
     return { status: "matched", target: uniqueMatches[0]! };
   }
 
-  const candidateAccountIds = (uniqueMatches.length > 0 ? uniqueMatches : candidates)
-    .map((t) => t.account.accountId);
+  const candidateAccountIds = (uniqueMatches.length > 0 ? uniqueMatches : candidates).map(
+    (t) => t.account.accountId,
+  );
 
   if (uniqueMatches.length === 0) {
     return { status: "not_found", candidateAccountIds };
@@ -347,7 +346,14 @@ export async function handleWecomWebhookRequest(
       return true;
     }
 
-    const matchResult = findMatchingTarget(url, msgSignature, timestamp, nonce, echostr, pathAccountId);
+    const matchResult = findMatchingTarget(
+      url,
+      msgSignature,
+      timestamp,
+      nonce,
+      echostr,
+      pathAccountId,
+    );
     if (matchResult.status !== "matched") {
       console.log(
         `[wecom] inbound(http): reqId=${reqId} GET route_failure reason=${matchResult.status} candidates=[${matchResult.candidateAccountIds.join(",")}]`,
@@ -360,11 +366,17 @@ export async function handleWecomWebhookRequest(
     target.runtime.log?.(`[webhook] GET URL 验证成功 (account=${target.account.accountId})`);
 
     try {
-      const wc = new WecomCrypto(target.account.token, target.account.encodingAESKey, target.account.receiveId);
+      const wc = new WecomCrypto(
+        target.account.token,
+        target.account.encodingAESKey,
+        target.account.receiveId,
+      );
       const plaintext = wc.decrypt(echostr);
       sendText(res, 200, plaintext);
     } catch (err) {
-      target.runtime.log?.(`[webhook] echostr 解密失败: ${err instanceof Error ? err.message : String(err)}`);
+      target.runtime.log?.(
+        `[webhook] echostr 解密失败: ${err instanceof Error ? err.message : String(err)}`,
+      );
       sendText(res, 403, "decryption failed");
     }
     return true;
@@ -408,14 +420,21 @@ export async function handleWecomWebhookRequest(
     }
 
     // 多账号签名匹配
-    const matchResult = findMatchingTarget(url, msgSignature, timestamp, nonce, encrypt, pathAccountId);
+    const matchResult = findMatchingTarget(
+      url,
+      msgSignature,
+      timestamp,
+      nonce,
+      encrypt,
+      pathAccountId,
+    );
     if (matchResult.status !== "matched") {
-      const reason = matchResult.status === "conflict"
-        ? "wecom_account_conflict"
-        : "wecom_account_not_found";
-      const detail = matchResult.status === "conflict"
-        ? "Bot callback account conflict: multiple accounts matched signature."
-        : "Bot callback account not found: signature verification failed.";
+      const reason =
+        matchResult.status === "conflict" ? "wecom_account_conflict" : "wecom_account_not_found";
+      const detail =
+        matchResult.status === "conflict"
+          ? "Bot callback account conflict: multiple accounts matched signature."
+          : "Bot callback account not found: signature verification failed.";
       console.log(
         `[wecom] inbound(bot): reqId=${reqId} route_failure reason=${reason} path=${url.split("?")[0]} candidates=[${matchResult.candidateAccountIds.join(",")}]`,
       );
@@ -424,9 +443,7 @@ export async function handleWecomWebhookRequest(
     }
     const target = matchResult.target;
 
-    target.runtime.log?.(
-      `[webhook] POST 签名验证成功 (account=${target.account.accountId})`,
-    );
+    target.runtime.log?.(`[webhook] POST 签名验证成功 (account=${target.account.accountId})`);
 
     // 更新状态：最后接收消息时间
     target.statusSink?.({ lastInboundAt: Date.now() });
@@ -434,7 +451,11 @@ export async function handleWecomWebhookRequest(
     // 消息解密
     let message: WebhookInboundMessage;
     try {
-      const wc = new WecomCrypto(target.account.token, target.account.encodingAESKey, target.account.receiveId);
+      const wc = new WecomCrypto(
+        target.account.token,
+        target.account.encodingAESKey,
+        target.account.receiveId,
+      );
       const plaintext = wc.decrypt(encrypt);
       message = JSON.parse(plaintext) as WebhookInboundMessage;
     } catch (err) {

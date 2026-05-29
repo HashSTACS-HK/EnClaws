@@ -8,16 +8,13 @@
  * - 从 LLM 回复中检测并处理模板卡片
  */
 
-import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import type { WSClient, WsFrame, TemplateCard } from "@wecom/aibot-node-sdk";
-import type { MessageBody } from "./message-parser.js";
-import type { ResolvedWeComAccount } from "./utils.js";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
+import { TEMPLATE_CARD_CACHE_TTL_MS, TEMPLATE_CARD_CACHE_MAX_SIZE } from "./const.js";
 import type { MessageState, ExtractedTemplateCard } from "./interface.js";
+import type { MessageBody } from "./message-parser.js";
 import { extractTemplateCards } from "./template-card-parser.js";
-import {
-  TEMPLATE_CARD_CACHE_TTL_MS,
-  TEMPLATE_CARD_CACHE_MAX_SIZE,
-} from "./const.js";
+import type { ResolvedWeComAccount } from "./utils.js";
 
 // ============================================================================
 // 模板卡片缓存
@@ -79,7 +76,10 @@ export function saveTemplateCardToCache(params: {
   pruneTemplateCardCache();
 }
 
-export function getTemplateCardFromCache(accountId: string, taskId: string): TemplateCard | undefined {
+export function getTemplateCardFromCache(
+  accountId: string,
+  taskId: string,
+): TemplateCard | undefined {
   pruneTemplateCardCache();
   const cached = sentTemplateCardByTaskId.get(getTemplateCardCacheKey(accountId, taskId));
   if (!cached) {
@@ -92,9 +92,13 @@ export function getTemplateCardFromCache(accountId: string, taskId: string): Tem
 // 模板卡片事件更新
 // ============================================================================
 
-type TemplateCardEventPayload = NonNullable<NonNullable<MessageBody["event"]>["template_card_event"]>;
+type TemplateCardEventPayload = NonNullable<
+  NonNullable<MessageBody["event"]>["template_card_event"]
+>;
 
-function buildSelectedOptionMap(templateCardEvent?: TemplateCardEventPayload): Map<string, string[]> {
+function buildSelectedOptionMap(
+  templateCardEvent?: TemplateCardEventPayload,
+): Map<string, string[]> {
   const selectedMap = new Map<string, string[]>();
   const selectedItems = templateCardEvent?.selected_items?.selected_item ?? [];
 
@@ -180,7 +184,9 @@ export async function updateTemplateCardOnEvent(params: {
 
   const cachedCard = getTemplateCardFromCache(accountId, taskId);
   if (!cachedCard) {
-    runtime.log?.(`[${accountId}] [template-card-update] Skip update: task_id=${taskId} not found in cache (cache is in-memory only, may have been cleared after restart)`);
+    runtime.log?.(
+      `[${accountId}] [template-card-update] Skip update: task_id=${taskId} not found in cache (cache is in-memory only, may have been cleared after restart)`,
+    );
     return;
   }
 
@@ -224,7 +230,9 @@ export async function sendTemplateCards(params: {
 
   for (const card of cards) {
     try {
-      runtime.log?.(`[wecom][template-card] Sending card_type=${card.cardType} to chatId=${chatId}`);
+      runtime.log?.(
+        `[wecom][template-card] Sending card_type=${card.cardType} to chatId=${chatId}`,
+      );
 
       const rawTemplateCard = card.cardJson as Record<string, unknown>;
       if (typeof rawTemplateCard.card_type !== "string") {
@@ -245,7 +253,9 @@ export async function sendTemplateCards(params: {
       });
       runtime.log?.(`[wecom][template-card] Card sent successfully: card_type=${card.cardType}`);
     } catch (err) {
-      runtime.error?.(`[wecom][template-card] Failed to send card: card_type=${card.cardType}, error=${JSON.stringify(err)}`);
+      runtime.error?.(
+        `[wecom][template-card] Failed to send card: card_type=${card.cardType}, error=${JSON.stringify(err)}`,
+      );
     }
   }
 }
@@ -276,19 +286,25 @@ export async function processTemplateCardsIfNeeded(params: {
     return null;
   }
 
-  runtime.log?.(`[wecom][template-card] processTemplateCardsIfNeeded: visibleText exists, length=${visibleText.length}, running extractTemplateCards...`);
+  runtime.log?.(
+    `[wecom][template-card] processTemplateCardsIfNeeded: visibleText exists, length=${visibleText.length}, running extractTemplateCards...`,
+  );
   const logFn = (...args: any[]): void => {
     runtime.log?.(...args);
   };
   const { cards, remainingText } = extractTemplateCards(state.accumulatedText, logFn);
 
-  runtime.log?.(`[wecom][template-card] processTemplateCardsIfNeeded: extractTemplateCards result — cards=${cards.length}, remainingTextLength=${remainingText.length}`);
+  runtime.log?.(
+    `[wecom][template-card] processTemplateCardsIfNeeded: extractTemplateCards result — cards=${cards.length}, remainingTextLength=${remainingText.length}`,
+  );
 
   if (cards.length === 0) {
     return null;
   }
 
-  runtime.log?.(`[wecom][template-card] processTemplateCardsIfNeeded: ${cards.length} card(s) detected, card_types=[${cards.map(c => c.cardType).join(", ")}]`);
+  runtime.log?.(
+    `[wecom][template-card] processTemplateCardsIfNeeded: ${cards.length} card(s) detected, card_types=[${cards.map((c) => c.cardType).join(", ")}]`,
+  );
   await sendTemplateCards({ ...params, cards });
 
   return { remainingText, cardsDetected: true };

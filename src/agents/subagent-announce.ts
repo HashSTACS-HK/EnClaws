@@ -1,4 +1,3 @@
-import { isOptEnabled } from "../config/token-optimization.js";
 import { resolveQueueSettings } from "../auto-reply/reply/queue.js";
 import { isSilentReplyText, SILENT_REPLY_TOKEN } from "../auto-reply/tokens.js";
 import { DEFAULT_SUBAGENT_MAX_SPAWN_DEPTH } from "../config/agent-limits.js";
@@ -9,6 +8,7 @@ import {
   resolveMainSessionKey,
   resolveStorePath,
 } from "../config/sessions.js";
+import { isOptEnabled } from "../config/token-optimization.js";
 import { callGateway } from "../gateway/call.js";
 import { createBoundDeliveryRouter } from "../infra/outbound/bound-delivery-router.js";
 import type { ConversationRef } from "../infra/outbound/session-binding-service.js";
@@ -1104,7 +1104,10 @@ function buildCompactSubagentOverlay(params: {
     "</task_result>",
   ];
   if (params.acpEnabled !== false) {
-    lines.push("", "Sub-agent spawning: Use sessions_spawn tool. Route to ACP only for IM delivery.");
+    lines.push(
+      "",
+      "Sub-agent spawning: Use sessions_spawn tool. Route to ACP only for IM delivery.",
+    );
   }
   if (params.maxSpawnDepth && params.childDepth) {
     lines.push(`Depth: ${params.childDepth}/${params.maxSpawnDepth}. Do not exceed max depth.`);

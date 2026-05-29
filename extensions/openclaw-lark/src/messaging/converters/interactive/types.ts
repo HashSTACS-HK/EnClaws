@@ -25,21 +25,21 @@ export interface TextStyle {
 }
 
 export const EMOJI_MAP: Record<string, string> = {
-  OK: '👌',
-  THUMBSUP: '👍',
-  SMILE: '😊',
-  HEART: '❤️',
-  CLAP: '👏',
-  FIRE: '🔥',
-  PARTY: '🎉',
-  THINK: '🤔',
+  OK: "👌",
+  THUMBSUP: "👍",
+  SMILE: "😊",
+  HEART: "❤️",
+  CLAP: "👏",
+  FIRE: "🔥",
+  PARTY: "🎉",
+  THINK: "🤔",
 };
 
 export const CHART_TYPE_NAMES: Record<string, string> = {
-  bar: '柱状图',
-  line: '折线图',
-  pie: '饼图',
-  area: '面积图',
-  radar: '雷达图',
-  scatter: '散点图',
+  bar: "柱状图",
+  line: "折线图",
+  pie: "饼图",
+  area: "面积图",
+  radar: "雷达图",
+  scatter: "散点图",
 };

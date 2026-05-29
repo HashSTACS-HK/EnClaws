@@ -12,12 +12,12 @@
  * `force_change_password = 1`, so the next login forces an immediate change.
  */
 
-import { loadDotEnv } from "../infra/dotenv.js";
 import { initDb, closeDb, isDbInitialized, query, getDbType, DB_SQLITE } from "../db/index.js";
+import { createAuditLog } from "../db/models/audit-log.js";
+import { loadDotEnv } from "../infra/dotenv.js";
+import { revokeAllUserTokens } from "./jwt.js";
 import { generateTempPassword } from "./password-policy.js";
 import { hashPassword } from "./password.js";
-import { revokeAllUserTokens } from "./jwt.js";
-import { createAuditLog } from "../db/models/audit-log.js";
 
 loadDotEnv({ quiet: true });
 
@@ -31,9 +31,13 @@ function parseArgs(argv: string[]): CliArgs {
   const out: CliArgs = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--help" || a === "-h") {out.help = true;}
-    else if (a === "--email" || a === "-e") {out.email = argv[++i];}
-    else if (a === "--tenant-id" || a === "-t") {out.tenantId = argv[++i];}
+    if (a === "--help" || a === "-h") {
+      out.help = true;
+    } else if (a === "--email" || a === "-e") {
+      out.email = argv[++i];
+    } else if (a === "--tenant-id" || a === "-t") {
+      out.tenantId = argv[++i];
+    }
   }
   return out;
 }
@@ -41,14 +45,14 @@ function parseArgs(argv: string[]): CliArgs {
 function printUsage(): void {
   process.stderr.write(
     "Usage: enclaws admin-reset-password --email <email> [--tenant-id <uuid>]\n" +
-    "\n" +
-    "  Generates a new temporary password for a platform-admin or owner account\n" +
-    "  and prints it to stdout. The user must change it on next login.\n" +
-    "\n" +
-    "Options:\n" +
-    "  --email, -e      Account email address (required)\n" +
-    "  --tenant-id, -t  Tenant id (required when the same email exists in multiple tenants)\n" +
-    "  --help, -h       Show this help message\n",
+      "\n" +
+      "  Generates a new temporary password for a platform-admin or owner account\n" +
+      "  and prints it to stdout. The user must change it on next login.\n" +
+      "\n" +
+      "Options:\n" +
+      "  --email, -e      Account email address (required)\n" +
+      "  --tenant-id, -t  Tenant id (required when the same email exists in multiple tenants)\n" +
+      "  --help, -h       Show this help message\n",
   );
 }
 
@@ -104,7 +108,9 @@ async function main(): Promise<void> {
 
   const role = String(userRow.role);
   if (role !== "platform-admin" && role !== "owner") {
-    console.error(`admin-reset: refusing to reset role="${role}" — only platform-admin / owner are supported.`);
+    console.error(
+      `admin-reset: refusing to reset role="${role}" — only platform-admin / owner are supported.`,
+    );
     await closeDb();
     process.exit(1);
   }
@@ -128,14 +134,14 @@ async function main(): Promise<void> {
 
   process.stdout.write(
     `\n` +
-    `===========================================================\n` +
-    ` ENCLAWS admin-reset — temporary password generated\n` +
-    `===========================================================\n` +
-    `   email:    ${email}\n` +
-    `   role:     ${role}\n` +
-    `   password: ${tempPassword}\n` +
-    `   note:     user must change this password on first login.\n` +
-    `===========================================================\n\n`,
+      `===========================================================\n` +
+      ` ENCLAWS admin-reset — temporary password generated\n` +
+      `===========================================================\n` +
+      `   email:    ${email}\n` +
+      `   role:     ${role}\n` +
+      `   password: ${tempPassword}\n` +
+      `   note:     user must change this password on first login.\n` +
+      `===========================================================\n\n`,
   );
 
   await closeDb();

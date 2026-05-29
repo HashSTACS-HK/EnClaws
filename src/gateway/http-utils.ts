@@ -24,9 +24,7 @@ export function getBearerToken(req: IncomingMessage): string | undefined {
 
 export function resolveAgentIdFromHeader(req: IncomingMessage): string | undefined {
   const raw =
-    getHeader(req, "x-enclaws-agent-id")?.trim() ||
-    getHeader(req, "x-enclaws-agent")?.trim() ||
-    "";
+    getHeader(req, "x-enclaws-agent-id")?.trim() || getHeader(req, "x-enclaws-agent")?.trim() || "";
   if (!raw) {
     return undefined;
   }

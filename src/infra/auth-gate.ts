@@ -27,9 +27,9 @@
  * call `registerAuthDriver(driver)`. **No plugin-side changes required.**
  */
 
-import { createSubsystemLogger } from "../logging/subsystem.js";
 import type { FinalizedMsgContext } from "../auto-reply/templating.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
 import { enqueuePendingAuth, type QueuedDispatchParams } from "./auth-gate-queue.js";
 
 const log = createSubsystemLogger("auth-gate");
@@ -82,7 +82,9 @@ export function registerAuthDriver(driver: AuthGateDriver): void {
 }
 
 function getDriver(provider: string | undefined): AuthGateDriver | undefined {
-  if (!provider) {return undefined;}
+  if (!provider) {
+    return undefined;
+  }
   return drivers.get(provider.toLowerCase());
 }
 
@@ -107,7 +109,9 @@ function cooldownKey(provider: string, accountId: string, openId: string): strin
 
 function isInCooldown(key: string): boolean {
   const expireAt = cooldownMap.get(key);
-  if (expireAt === undefined) {return false;}
+  if (expireAt === undefined) {
+    return false;
+  }
   if (expireAt <= Date.now()) {
     cooldownMap.delete(key);
     return false;
@@ -138,8 +142,12 @@ function clearCooldown(key: string): void {
  * placeholder patterns; for now we only cover Feishu.
  */
 function isMissingName(name: string | undefined | null): boolean {
-  if (!name) {return true;}
-  if (name.startsWith("ou_") || name.startsWith("on_")) {return true;}
+  if (!name) {
+    return true;
+  }
+  if (name.startsWith("ou_") || name.startsWith("on_")) {
+    return true;
+  }
   return false;
 }
 

@@ -7,13 +7,13 @@
 
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
-import { tenantRpc } from "./rpc.ts";
-import { caretFix } from "../../shared-styles.ts";
 import { t, I18nController } from "../../../i18n/index.ts";
+import { showConfirm } from "../../components/confirm-dialog.ts";
 import { formatRelativeTimestamp } from "../../format.ts";
 import { formatCronSchedule } from "../../presenter.ts";
-import { showConfirm } from "../../components/confirm-dialog.ts";
+import { caretFix } from "../../shared-styles.ts";
 import type { CronJob } from "../../types.ts";
+import { tenantRpc } from "./rpc.ts";
 
 type CronJobWithAgent = CronJob & { _agentId: string };
 
@@ -21,36 +21,153 @@ type CronJobWithAgent = CronJob & { _agentId: string };
 export class TenantCronView extends LitElement {
   private i18nCtrl = new I18nController(this);
 
-  static styles = [caretFix, css`
-    :host { display: block; padding: 1.5rem; }
-    .card { background: var(--surface-2, #f8fcfd); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
-    .card-title { font-size: 1.1rem; font-weight: 600; }
-    .card-sub { font-size: 0.8rem; color: var(--muted, #7ea5b2); margin-top: 2px; }
-    .stats { display: flex; gap: 32px; flex-wrap: wrap; }
-    .stat-item { text-align: center; }
-    .stat-value { font-size: 1.5rem; font-weight: 700; }
-    .stat-label { font-size: 0.75rem; color: var(--muted, #7ea5b2); }
-    .alert-section { background: var(--warn-subtle, rgba(245, 158, 11, 0.1)); border: 1px solid var(--warn-muted, rgba(245, 158, 11, 0.75)); border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
-    .alert-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.85rem; }
-    .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
-    .filters input, .filters select { padding: 4px 8px; border: 1px solid var(--border, #e2eef2); border-radius: 4px; background: var(--input-bg, #f8fcfd); color: inherit; font-size: 0.85rem; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border, #e2eef2); color: var(--muted, #7ea5b2); font-weight: 500; }
-    td { padding: 8px 12px; border-bottom: 1px solid var(--border, #e2eef2); }
-    .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
-    .chip-ok { background: var(--ok-subtle, rgba(16, 185, 129, 0.1)); color: var(--ok, #10b981); }
-    .chip-muted { background: var(--bg-muted, #f0fdfe); color: var(--muted, #7ea5b2); }
-    .chip-danger { background: var(--danger-subtle, rgba(239, 68, 68, 0.1)); color: var(--danger, #ef4444); }
-    .btn { padding: 4px 10px; border: 1px solid var(--border, #e2eef2); border-radius: 4px; background: var(--card, #ffffff); color: inherit; cursor: pointer; font-size: 0.8rem; }
-    .btn:hover { background: var(--bg-hover, #e8f9fc); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-danger { border-color: var(--danger-muted, rgba(239, 68, 68, 0.75)); color: var(--danger, #ef4444); }
-    .btn-primary { background: var(--accent, #0891b2); border-color: var(--accent, #0891b2); color: #fff; }
-    .agent-link { color: var(--accent, #0891b2); cursor: pointer; text-decoration: none; }
-    .agent-link:hover { text-decoration: underline; }
-    .empty { text-align: center; padding: 2rem; color: var(--muted, #7ea5b2); }
-    .loading { text-align: center; padding: 2rem; color: var(--muted, #7ea5b2); }
-  `];
+  static styles = [
+    caretFix,
+    css`
+      :host {
+        display: block;
+        padding: 1.5rem;
+      }
+      .card {
+        background: var(--surface-2, #f8fcfd);
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      .card-sub {
+        font-size: 0.8rem;
+        color: var(--muted, #7ea5b2);
+        margin-top: 2px;
+      }
+      .stats {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+      .stat-item {
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--muted, #7ea5b2);
+      }
+      .alert-section {
+        background: var(--warn-subtle, rgba(245, 158, 11, 0.1));
+        border: 1px solid var(--warn-muted, rgba(245, 158, 11, 0.75));
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+      }
+      .alert-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 0.85rem;
+      }
+      .filters {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filters input,
+      .filters select {
+        padding: 4px 8px;
+        border: 1px solid var(--border, #e2eef2);
+        border-radius: 4px;
+        background: var(--input-bg, #f8fcfd);
+        color: inherit;
+        font-size: 0.85rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th {
+        text-align: left;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border, #e2eef2);
+        color: var(--muted, #7ea5b2);
+        font-weight: 500;
+      }
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border, #e2eef2);
+      }
+      .chip {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+      }
+      .chip-ok {
+        background: var(--ok-subtle, rgba(16, 185, 129, 0.1));
+        color: var(--ok, #10b981);
+      }
+      .chip-muted {
+        background: var(--bg-muted, #f0fdfe);
+        color: var(--muted, #7ea5b2);
+      }
+      .chip-danger {
+        background: var(--danger-subtle, rgba(239, 68, 68, 0.1));
+        color: var(--danger, #ef4444);
+      }
+      .btn {
+        padding: 4px 10px;
+        border: 1px solid var(--border, #e2eef2);
+        border-radius: 4px;
+        background: var(--card, #ffffff);
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+      .btn:hover {
+        background: var(--bg-hover, #e8f9fc);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-danger {
+        border-color: var(--danger-muted, rgba(239, 68, 68, 0.75));
+        color: var(--danger, #ef4444);
+      }
+      .btn-primary {
+        background: var(--accent, #0891b2);
+        border-color: var(--accent, #0891b2);
+        color: #fff;
+      }
+      .agent-link {
+        color: var(--accent, #0891b2);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .agent-link:hover {
+        text-decoration: underline;
+      }
+      .empty {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted, #7ea5b2);
+      }
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted, #7ea5b2);
+      }
+    `,
+  ];
 
   @property({ type: String }) gatewayUrl = "";
   @state() private jobs: CronJobWithAgent[] = [];
@@ -75,7 +192,7 @@ export class TenantCronView extends LitElement {
     this.loading = true;
     this.error = null;
     try {
-      const res = await this.rpc("cron.listAll") as { jobs?: CronJobWithAgent[]; total?: number };
+      const res = (await this.rpc("cron.listAll")) as { jobs?: CronJobWithAgent[]; total?: number };
       this.jobs = res.jobs ?? [];
     } catch (err) {
       this.error = String(err);
@@ -86,25 +203,30 @@ export class TenantCronView extends LitElement {
 
   private get filteredJobs(): CronJobWithAgent[] {
     let result = this.jobs;
-    if (this.filterEnabled === "enabled") {result = result.filter(j => j.enabled);}
-    else if (this.filterEnabled === "disabled") {result = result.filter(j => !j.enabled);}
+    if (this.filterEnabled === "enabled") {
+      result = result.filter((j) => j.enabled);
+    } else if (this.filterEnabled === "disabled") {
+      result = result.filter((j) => !j.enabled);
+    }
     if (this.filterAgent) {
       const q = this.filterAgent.toLowerCase();
-      result = result.filter(j => j._agentId.toLowerCase().includes(q));
+      result = result.filter((j) => j._agentId.toLowerCase().includes(q));
     }
     if (this.filterQuery) {
       const q = this.filterQuery.toLowerCase();
-      result = result.filter(j => j.name.toLowerCase().includes(q) || j._agentId.toLowerCase().includes(q));
+      result = result.filter(
+        (j) => j.name.toLowerCase().includes(q) || j._agentId.toLowerCase().includes(q),
+      );
     }
     return result;
   }
 
   private get failedJobs(): CronJobWithAgent[] {
-    return this.jobs.filter(j => (j.state?.consecutiveErrors ?? 0) > 0);
+    return this.jobs.filter((j) => (j.state?.consecutiveErrors ?? 0) > 0);
   }
 
   private get agentIds(): string[] {
-    return [...new Set(this.jobs.map(j => j._agentId))].toSorted();
+    return [...new Set(this.jobs.map((j) => j._agentId))].toSorted();
   }
 
   private async toggleJob(job: CronJobWithAgent, enabled: boolean) {
@@ -127,7 +249,9 @@ export class TenantCronView extends LitElement {
       cancelText: t("cron.remove.cancelButton"),
       danger: true,
     });
-    if (!confirmed) {return;}
+    if (!confirmed) {
+      return;
+    }
     this.busy = true;
     try {
       await this.rpc("cron.remove", { _agentId: job._agentId, id: job.id });
@@ -141,17 +265,19 @@ export class TenantCronView extends LitElement {
 
   private navigateToAgent(agentId: string) {
     // Dispatch event for parent to handle navigation to tenant-agents + select agent + cron panel
-    this.dispatchEvent(new CustomEvent("navigate-to-agent-cron", {
-      detail: { agentId },
-      bubbles: true,
-      composed: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("navigate-to-agent-cron", {
+        detail: { agentId },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   render() {
     const filtered = this.filteredJobs;
     const failed = this.failedJobs;
-    const enabledCount = this.jobs.filter(j => j.enabled).length;
+    const enabledCount = this.jobs.filter((j) => j.enabled).length;
 
     return html`
       <div class="card">
@@ -193,15 +319,20 @@ export class TenantCronView extends LitElement {
       ${this.error ? html`<div class="card" style="color: var(--danger, #ef4444);">${this.error}</div>` : nothing}
 
       <!-- Failed alerts -->
-      ${failed.length > 0 ? html`
+      ${
+        failed.length > 0
+          ? html`
         <div class="alert-section">
           <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;"
-            @click=${() => this.alertsExpanded = !this.alertsExpanded}>
+            @click=${() => (this.alertsExpanded = !this.alertsExpanded)}>
             <span style="font-weight: 600;">\u26A0 ${t("tenantCron.failedAlerts")} (${failed.length})</span>
             <span>${this.alertsExpanded ? "\u25B2" : "\u25BC"}</span>
           </div>
-          ${this.alertsExpanded ? html`
-            ${failed.map(job => html`
+          ${
+            this.alertsExpanded
+              ? html`
+            ${failed.map(
+              (job) => html`
               <div class="alert-row">
                 <span>\u274C</span>
                 <strong>${job.name}</strong>
@@ -211,36 +342,46 @@ export class TenantCronView extends LitElement {
                   ${!job.enabled ? ` (${t("tenantCron.autoDisabled")})` : ""}
                 </span>
               </div>
-            `)}
-          ` : nothing}
+            `,
+            )}
+          `
+              : nothing
+          }
         </div>
-      ` : nothing}
+      `
+          : nothing
+      }
 
       <!-- Filters -->
       <div class="filters">
         <input placeholder=${t("cron.jobs.searchPlaceholder")} .value=${this.filterQuery}
-          @input=${(e: Event) => this.filterQuery = (e.target as HTMLInputElement).value} />
+          @input=${(e: Event) => (this.filterQuery = (e.target as HTMLInputElement).value)} />
         <select .value=${this.filterEnabled}
-          @change=${(e: Event) => this.filterEnabled = (e.target as HTMLSelectElement).value as "all" | "enabled" | "disabled"}>
+          @change=${(e: Event) => (this.filterEnabled = (e.target as HTMLSelectElement).value as "all" | "enabled" | "disabled")}>
           <option value="all">${t("cron.jobs.all")}</option>
           <option value="enabled">${t("cron.jobList.enabled")}</option>
           <option value="disabled">${t("cron.jobList.disabled")}</option>
         </select>
-        ${this.agentIds.length > 1 ? html`
+        ${
+          this.agentIds.length > 1
+            ? html`
           <select .value=${this.filterAgent}
-            @change=${(e: Event) => this.filterAgent = (e.target as HTMLSelectElement).value}>
+            @change=${(e: Event) => (this.filterAgent = (e.target as HTMLSelectElement).value)}>
             <option value="">${t("tenantCron.allAgents")}</option>
-            ${this.agentIds.map(id => html`<option value=${id}>${id}</option>`)}
+            ${this.agentIds.map((id) => html`<option value=${id}>${id}</option>`)}
           </select>
-        ` : nothing}
+        `
+            : nothing
+        }
       </div>
 
       <!-- Jobs table -->
-      ${this.loading && this.jobs.length === 0
-        ? html`<div class="loading">${t("cron.jobs.loading")}</div>`
-        : filtered.length === 0
-          ? html`<div class="empty">${t("cron.jobs.noMatching")}</div>`
-          : html`
+      ${
+        this.loading && this.jobs.length === 0
+          ? html`<div class="loading">${t("cron.jobs.loading")}</div>`
+          : filtered.length === 0
+            ? html`<div class="empty">${t("cron.jobs.noMatching")}</div>`
+            : html`
             <div class="card" style="padding: 0; overflow-x: auto;">
               <table>
                 <thead>
@@ -255,7 +396,7 @@ export class TenantCronView extends LitElement {
                   </tr>
                 </thead>
                 <tbody>
-                  ${filtered.map(job => this.renderJobRow(job))}
+                  ${filtered.map((job) => this.renderJobRow(job))}
                 </tbody>
               </table>
             </div>
@@ -269,9 +410,20 @@ export class TenantCronView extends LitElement {
 
   private renderJobRow(job: CronJobWithAgent) {
     const status = job.state?.lastRunStatus ?? job.state?.lastStatus;
-    const statusIcon = status === "ok" ? "\u2705" : status === "error" ? "\u274C" : status === "skipped" ? "\u23ED" : "";
-    const lastRunText = job.state?.lastRunAtMs ? formatRelativeTimestamp(job.state.lastRunAtMs) : "--";
-    const nextRunText = job.state?.nextRunAtMs ? formatRelativeTimestamp(job.state.nextRunAtMs) : "--";
+    const statusIcon =
+      status === "ok"
+        ? "\u2705"
+        : status === "error"
+          ? "\u274C"
+          : status === "skipped"
+            ? "\u23ED"
+            : "";
+    const lastRunText = job.state?.lastRunAtMs
+      ? formatRelativeTimestamp(job.state.lastRunAtMs)
+      : "--";
+    const nextRunText = job.state?.nextRunAtMs
+      ? formatRelativeTimestamp(job.state.nextRunAtMs)
+      : "--";
 
     return html`
       <tr>

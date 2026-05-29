@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
-import type { AgentsMemoryListResult, AgentsMemoryStatusResult } from "../types.ts";
 import { t } from "../../i18n/index.ts";
+import type { AgentsMemoryListResult, AgentsMemoryStatusResult } from "../types.ts";
 import { formatBytes } from "./agents-utils.ts";
 
 export function renderAgentKnowledge(params: {
@@ -22,7 +22,8 @@ export function renderAgentKnowledge(params: {
   onFileUpload: (files: FileList | File[]) => void;
   onFileDownload: (name: string) => void;
 }) {
-  const list = params.agentKnowledgeList?.agentId === params.agentId ? params.agentKnowledgeList : null;
+  const list =
+    params.agentKnowledgeList?.agentId === params.agentId ? params.agentKnowledgeList : null;
   const files = list?.files ?? [];
   const active = params.agentKnowledgeFileActive ?? null;
   const activeEntry = active ? (files.find((file) => file.name === active) ?? null) : null;
@@ -32,7 +33,10 @@ export function renderAgentKnowledge(params: {
   const editable = active
     ? [".md", ".txt", ".csv"].some((ext) => active.toLowerCase().endsWith(ext))
     : false;
-  const status = params.agentKnowledgeStatus?.agentId === params.agentId ? params.agentKnowledgeStatus.status : null;
+  const status =
+    params.agentKnowledgeStatus?.agentId === params.agentId
+      ? params.agentKnowledgeStatus.status
+      : null;
 
   return html`
     <section class="card">
@@ -52,7 +56,8 @@ export function renderAgentKnowledge(params: {
           class="btn btn--sm btn--primary"
           ?disabled=${params.agentKnowledgeSaving}
           @click=${(e: Event) => {
-            const input = (e.currentTarget as HTMLElement).nextElementSibling as HTMLInputElement | null;
+            const input = (e.currentTarget as HTMLElement)
+              .nextElementSibling as HTMLInputElement | null;
             input?.click();
           }}
         >

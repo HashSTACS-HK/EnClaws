@@ -11,7 +11,12 @@ import type { CSMessage } from "../types.js";
 // 客户端 → 服务端消息
 
 export type CSWidgetClientMessage =
-  | { type: "connect"; visitorId: string; visitorName?: string; metadata?: { url?: string; referrer?: string } }
+  | {
+      type: "connect";
+      visitorId: string;
+      visitorName?: string;
+      metadata?: { url?: string; referrer?: string };
+    }
   | { type: "send"; text: string }
   | { type: "feedback"; messageId: string; feedbackType: string; note?: string }
   | { type: "close" };
@@ -45,7 +50,9 @@ export function serializeServerMessage(msg: CSWidgetServerMessage): string {
 export function parseClientMessage(data: string): CSWidgetClientMessage | null {
   try {
     const parsed = JSON.parse(data);
-    if (!parsed || typeof parsed !== "object" || !parsed.type) {return null;}
+    if (!parsed || typeof parsed !== "object" || !parsed.type) {
+      return null;
+    }
     return parsed as CSWidgetClientMessage;
   } catch {
     return null;

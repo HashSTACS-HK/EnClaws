@@ -7,6 +7,7 @@ import {
 } from "./app-polling.ts";
 import { scheduleChatScroll, scheduleLogsScroll } from "./app-scroll.ts";
 import type { EnClawsApp } from "./app.ts";
+import { loadAuth } from "./auth-store.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
 import { loadAgents, loadToolsCatalog } from "./controllers/agents.ts";
@@ -35,7 +36,6 @@ import {
   tabFromPath,
   type Tab,
 } from "./navigation.ts";
-import { loadAuth } from "./auth-store.ts";
 import { saveSettings, type UiSettings } from "./storage.ts";
 import { startThemeTransition, type ThemeTransitionContext } from "./theme-transition.ts";
 import { resolveTheme, type ResolvedTheme, type ThemeMode } from "./theme.ts";
@@ -356,7 +356,9 @@ export function syncTabWithLocation(host: SettingsHost, replace: boolean) {
     return;
   }
   const auth = loadAuth();
-  if (!auth) {return;} // Don't sync URL before login
+  if (!auth) {
+    return;
+  } // Don't sync URL before login
   const defaultTab: Tab = auth.user?.role === "platform-admin" ? "overview" : "tenant-overview";
   const resolved = tabFromPath(window.location.pathname, host.basePath) ?? defaultTab;
   setTabFromRoute(host, resolved);

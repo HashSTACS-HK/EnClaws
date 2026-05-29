@@ -3,13 +3,13 @@
  * 支持钉钉 API 和 OAPI 的 Token 获取和缓存
  */
 
-import type { DingtalkConfig } from '../types/index.ts';
-import { dingtalkHttp, dingtalkOapiHttp } from './http-client.ts';
+import type { DingtalkConfig } from "../types/index.ts";
+import { dingtalkHttp, dingtalkOapiHttp } from "./http-client.ts";
 
 // ============ 常量 ============
 
-export const DINGTALK_API = 'https://api.dingtalk.com';
-export const DINGTALK_OAPI = 'https://oapi.dingtalk.com';
+export const DINGTALK_API = "https://api.dingtalk.com";
+export const DINGTALK_OAPI = "https://oapi.dingtalk.com";
 
 // ============ Access Token 缓存 ============
 
@@ -25,16 +25,16 @@ const apiTokenCache = new Map<string, CachedToken>();
 const oapiTokenCache = new Map<string, CachedToken>();
 
 function cacheKey(config: DingtalkConfig): string {
-  const clientId = String((config as any)?.clientId ?? '').trim();
-  
+  const clientId = String((config as any)?.clientId ?? "").trim();
+
   // 添加校验
   if (!clientId) {
     throw new Error(
-      'Invalid DingtalkConfig: clientId is required for token caching. ' +
-      'Please ensure your configuration includes a valid clientId.'
+      "Invalid DingtalkConfig: clientId is required for token caching. " +
+        "Please ensure your configuration includes a valid clientId.",
     );
   }
-  
+
   return clientId;
 }
 

@@ -4,12 +4,16 @@
  * 负责下载、检测格式、保存图片到本地，包含超时保护
  */
 
-import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
-import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import type { WSClient } from "@wecom/aibot-node-sdk";
 import { fileTypeFromBuffer } from "file-type";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
+import {
+  IMAGE_DOWNLOAD_TIMEOUT_MS,
+  FILE_DOWNLOAD_TIMEOUT_MS,
+  DEFAULT_MEDIA_MAX_MB,
+} from "./const.js";
 import { getWeComRuntime } from "./runtime.js";
-import { IMAGE_DOWNLOAD_TIMEOUT_MS, FILE_DOWNLOAD_TIMEOUT_MS, DEFAULT_MEDIA_MAX_MB } from "./const.js";
 import { withTimeout } from "./timeout.js";
 import type { ResolvedWeComAccount } from "./utils.js";
 
@@ -76,16 +80,20 @@ export async function downloadAndSaveImages(params: {
         imageBuffer = result.buffer;
         originalFilename = result.filename;
         imageContentType = await detectImageContentType(imageBuffer);
-        runtime.log?.(`[wecom] Image downloaded: size=${imageBuffer.length}, contentType=${imageContentType}, filename=${originalFilename ?? '(none)'}`);
+        runtime.log?.(
+          `[wecom] Image downloaded: size=${imageBuffer.length}, contentType=${imageContentType}, filename=${originalFilename ?? "(none)"}`,
+        );
       } catch (sdkError) {
         // 如果 SDK 方法失败，回退到原有方式（带超时保护）
         runtime.log?.(`[wecom] SDK download failed, fallback: ${String(sdkError)}`);
-        const fetched = await withTimeout(
+        const fetched = (await withTimeout(
           core.channel.media.fetchRemoteMedia({ url: imageUrl }),
           IMAGE_DOWNLOAD_TIMEOUT_MS,
           `Manual image download timed out: ${imageUrl}`,
-        ) as { buffer: Buffer; contentType?: string };
-        runtime.log?.(`[wecom] Image fetched: contentType=${fetched.contentType}, size=${fetched.buffer.length}`);
+        )) as { buffer: Buffer; contentType?: string };
+        runtime.log?.(
+          `[wecom] Image fetched: contentType=${fetched.contentType}, size=${fetched.buffer.length}`,
+        );
 
         imageBuffer = fetched.buffer;
         imageContentType = fetched.contentType ?? "application/octet-stream";
@@ -104,7 +112,9 @@ export async function downloadAndSaveImages(params: {
         originalFilename,
       );
       mediaList.push({ path: saved.path, contentType: saved.contentType });
-      runtime.log?.(`[wecom][plugin] Image saved: path=${saved.path}, contentType=${saved.contentType}`);
+      runtime.log?.(
+        `[wecom][plugin] Image saved: path=${saved.path}, contentType=${saved.contentType}`,
+      );
     } catch (err) {
       runtime.error?.(`[wecom] Failed to download image: ${String(err)}`);
     }
@@ -152,16 +162,20 @@ export async function downloadAndSaveFiles(params: {
         // 检测文件类型
         const type = await fileTypeFromBuffer(fileBuffer);
         fileContentType = type?.mime ?? "application/octet-stream";
-        runtime.log?.(`[wecom] File downloaded: size=${fileBuffer.length}, contentType=${fileContentType}, filename=${originalFilename ?? '(none)'}`);
+        runtime.log?.(
+          `[wecom] File downloaded: size=${fileBuffer.length}, contentType=${fileContentType}, filename=${originalFilename ?? "(none)"}`,
+        );
       } catch (sdkError) {
         // 如果 SDK 方法失败，回退到 fetchRemoteMedia（带超时保护）
         runtime.log?.(`[wecom] SDK file download failed, fallback: ${String(sdkError)}`);
-        const fetched = await withTimeout(
+        const fetched = (await withTimeout(
           core.channel.media.fetchRemoteMedia({ url: fileUrl }),
           FILE_DOWNLOAD_TIMEOUT_MS,
           `Manual file download timed out: ${fileUrl}`,
-        ) as { buffer: Buffer; contentType?: string };
-        runtime.log?.(`[wecom] File fetched: contentType=${fetched.contentType}, size=${fetched.buffer.length}`);
+        )) as { buffer: Buffer; contentType?: string };
+        runtime.log?.(
+          `[wecom] File fetched: contentType=${fetched.contentType}, size=${fetched.buffer.length}`,
+        );
 
         fileBuffer = fetched.buffer;
         fileContentType = fetched.contentType ?? "application/octet-stream";
@@ -175,7 +189,9 @@ export async function downloadAndSaveFiles(params: {
         originalFilename,
       );
       mediaList.push({ path: saved.path, contentType: saved.contentType });
-      runtime.log?.(`[wecom][plugin] File saved: path=${saved.path}, contentType=${saved.contentType}`);
+      runtime.log?.(
+        `[wecom][plugin] File saved: path=${saved.path}, contentType=${saved.contentType}`,
+      );
     } catch (err) {
       runtime.error?.(`[wecom] Failed to download file: ${String(err)}`);
     }

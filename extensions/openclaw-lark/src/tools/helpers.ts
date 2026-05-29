@@ -7,15 +7,15 @@
  * 提供所有工具通用的模式，减少重复代码。
  */
 
-import type { ClawdbotConfig, OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import type { Client as LarkSdkClient } from '@larksuiteoapi/node-sdk';
-import { getEnabledLarkAccounts, getLarkAccount } from '../core/accounts';
-import { LarkClient, getResolvedConfig } from '../core/lark-client';
-import type { LarkAccount } from '../core/types';
-import { getTicket } from '../core/lark-ticket';
-import type { ToolClient } from '../core/tool-client';
-import { createToolClient } from '../core/tool-client';
-import { shouldRegisterTool } from '../core/tools-config';
+import type { Client as LarkSdkClient } from "@larksuiteoapi/node-sdk";
+import type { ClawdbotConfig, OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { getEnabledLarkAccounts, getLarkAccount } from "../core/accounts";
+import { LarkClient, getResolvedConfig } from "../core/lark-client";
+import { getTicket } from "../core/lark-ticket";
+import type { ToolClient } from "../core/tool-client";
+import { createToolClient } from "../core/tool-client";
+import { shouldRegisterTool } from "../core/tools-config";
+import type { LarkAccount } from "../core/types";
 
 // ---------------------------------------------------------------------------
 // 类型定义
@@ -25,7 +25,7 @@ import { shouldRegisterTool } from '../core/tools-config';
  * 工具返回值的标准格式
  */
 export interface ToolResult {
-  content: Array<{ type: 'text'; text: string }>;
+  content: Array<{ type: "text"; text: string }>;
   details: unknown; // 必填，符合 AgentToolResult 类型要求
 }
 
@@ -62,7 +62,7 @@ export interface ToolContext {
 
 // getResolvedConfig is defined in lark-client.ts (core layer) so that both
 // tool-client.ts and this file can use it without a circular dependency.
-export { getResolvedConfig } from '../core/lark-client';
+export { getResolvedConfig } from "../core/lark-client";
 
 // ---------------------------------------------------------------------------
 // 客户端管理
@@ -116,12 +116,15 @@ export function createClientGetter(config: ClawdbotConfig, accountIndex = 0): Cl
 
     if (accounts.length === 0) {
       throw new Error(
-        'No enabled Feishu accounts configured. ' + 'Please add appId and appSecret in config under channels.feishu',
+        "No enabled Feishu accounts configured. " +
+          "Please add appId and appSecret in config under channels.feishu",
       );
     }
 
     if (accountIndex >= accounts.length) {
-      throw new Error(`Requested account index ${accountIndex} but only ${accounts.length} accounts available`);
+      throw new Error(
+        `Requested account index ${accountIndex} but only ${accounts.length} accounts available`,
+      );
     }
 
     const account = accounts[accountIndex];
@@ -163,7 +166,8 @@ export function getFirstAccount(config: ClawdbotConfig): LarkAccount {
 
   if (accounts.length === 0) {
     throw new Error(
-      'No enabled Feishu accounts configured. ' + 'Please add appId and appSecret in config under channels.feishu',
+      "No enabled Feishu accounts configured. " +
+        "Please add appId and appSecret in config under channels.feishu",
     );
   }
 
@@ -208,7 +212,7 @@ export function createToolContext(
   },
 ): ToolContext {
   if (!api.config) {
-    throw new Error('No config available');
+    throw new Error("No config available");
   }
 
   const config = api.config;
@@ -277,11 +281,11 @@ export function checkToolRegistration(api: OpenClawPluginApi, toolName: string):
  */
 export function registerTool(
   api: OpenClawPluginApi,
-  tool: Parameters<OpenClawPluginApi['registerTool']>[0],
-  opts?: Parameters<OpenClawPluginApi['registerTool']>[1],
+  tool: Parameters<OpenClawPluginApi["registerTool"]>[0],
+  opts?: Parameters<OpenClawPluginApi["registerTool"]>[1],
 ): boolean {
   // 提取工具名称
-  const toolName = typeof tool === 'function' ? tool.name : (tool as { name?: string }).name;
+  const toolName = typeof tool === "function" ? tool.name : (tool as { name?: string }).name;
 
   if (!toolName) {
     // 如果无法提取工具名，直接注册（不拦截）
@@ -331,7 +335,7 @@ export function formatToolResult(
   return {
     content: [
       {
-        type: 'text',
+        type: "text",
         text: JSON.stringify(data, null, indent),
       },
     ],
@@ -442,12 +446,12 @@ export function validateRequiredParams(
 ): { error: string; missing: string[] } | null {
   const missing = requiredFields.filter((field) => {
     const value = params[field];
-    return value === undefined || value == null || value === '';
+    return value === undefined || value == null || value === "";
   });
 
   if (missing.length > 0) {
     return {
-      error: `Missing required parameter(s): ${missing.join(', ')}`,
+      error: `Missing required parameter(s): ${missing.join(", ")}`,
       missing,
     };
   }

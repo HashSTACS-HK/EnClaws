@@ -57,8 +57,12 @@ export class FeishuTestClient {
 
   constructor(opts: FeishuTestClientOptions) {
     this.opts = opts;
-    this.cacheDir = opts.tokenCacheDir
-      ?? path.resolve(new URL(".", import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1"), ".token-cache");
+    this.cacheDir =
+      opts.tokenCacheDir ??
+      path.resolve(
+        new URL(".", import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1"),
+        ".token-cache",
+      );
   }
 
   async init(): Promise<void> {
@@ -68,7 +72,9 @@ export class FeishuTestClient {
     // 2. Get bot info
     const botInfo = await this.feishu("GET", "/bot/v3/info", null, this.tenantToken);
     this.botOpenId = botInfo.bot?.open_id;
-    if (!this.botOpenId) {throw new Error("Failed to get bot open_id");}
+    if (!this.botOpenId) {
+      throw new Error("Failed to get bot open_id");
+    }
     this.botName = botInfo.bot?.app_name ?? "Bot";
     console.log(`  Bot: ${this.botName} (${this.botOpenId})`);
 
@@ -102,7 +108,9 @@ export class FeishuTestClient {
     // Build message content — prepend @bot mention in group mode
     let content: string;
     if (isGroupMode && (opts?.mentionBot ?? true)) {
-      content = JSON.stringify({ text: `<at user_id="${this.botOpenId}">${this.botName}</at> ${message}` });
+      content = JSON.stringify({
+        text: `<at user_id="${this.botOpenId}">${this.botName}</at> ${message}`,
+      });
     } else {
       content = JSON.stringify({ text: message });
     }
@@ -111,14 +119,23 @@ export class FeishuTestClient {
     const receiveIdType = isGroupMode ? "chat_id" : "open_id";
     const receiveId = isGroupMode ? this.groupChatId! : this.botOpenId;
 
-    const sendRes = await this.withUserTokenRetry(() => this.feishu("POST", `/im/v1/messages?receive_id_type=${receiveIdType}`, {
-      receive_id: receiveId,
-      msg_type: "text",
-      content,
-    }, this.userToken!));
+    const sendRes = await this.withUserTokenRetry(() =>
+      this.feishu(
+        "POST",
+        `/im/v1/messages?receive_id_type=${receiveIdType}`,
+        {
+          receive_id: receiveId,
+          msg_type: "text",
+          content,
+        },
+        this.userToken!,
+      ),
+    );
 
     const userMsgId = sendRes.message_id;
-    if (!userMsgId) {throw new Error(`Send failed: ${JSON.stringify(sendRes)}`);}
+    if (!userMsgId) {
+      throw new Error(`Send failed: ${JSON.stringify(sendRes)}`);
+    }
 
     // Extract chat_id from send response (for P2P mode — group mode already has it)
     if (!isGroupMode && !this.p2pChatId && sendRes.chat_id) {
@@ -141,11 +158,27 @@ export class FeishuTestClient {
     const effectiveTimeout = expectNoReply ? Math.min(timeoutMs, 15_000) : timeoutMs;
 
     try {
-      const replyData = await this.waitForBotReply(userMsgId, beforeMsgId, effectiveTimeout, pollMs, chatIdForPoll);
-      return { text: replyData.text, messageId: userMsgId, durationMs: Date.now() - startedAt, reply: replyData.meta };
+      const replyData = await this.waitForBotReply(
+        userMsgId,
+        beforeMsgId,
+        effectiveTimeout,
+        pollMs,
+        chatIdForPoll,
+      );
+      return {
+        text: replyData.text,
+        messageId: userMsgId,
+        durationMs: Date.now() - startedAt,
+        reply: replyData.meta,
+      };
     } catch (e) {
       if (expectNoReply && (e as Error).message.includes("Timeout")) {
-        return { text: "", messageId: userMsgId, durationMs: Date.now() - startedAt, reply: { msgType: "none" } };
+        return {
+          text: "",
+          messageId: userMsgId,
+          durationMs: Date.now() - startedAt,
+          reply: { msgType: "none" },
+        };
       }
       throw e;
     }
@@ -155,7 +188,12 @@ export class FeishuTestClient {
   // Feishu API helpers
   // ---------------------------------------------------------------------------
 
-  private async feishu(method: string, endpoint: string, body: unknown, token: string): Promise<Record<string, any>> {
+  private async feishu(
+    method: string,
+    endpoint: string,
+    body: unknown,
+    token: string,
+  ): Promise<Record<string, any>> {
     const url = `${FEISHU_BASE}${endpoint}`;
     const res = await fetch(url, {
       method,
@@ -165,7 +203,7 @@ export class FeishuTestClient {
       },
       body: body ? JSON.stringify(body) : undefined,
     });
-    const json = await res.json() as Record<string, any>;
+    const json = (await res.json()) as Record<string, any>;
     if (json.code && json.code !== 0) {
       throw new Error(`Feishu API error [${endpoint}]: code=${json.code} msg=${json.msg}`);
     }
@@ -178,9 +216,13 @@ export class FeishuTestClient {
    */
   private async ensureFreshUserToken(): Promise<void> {
     const cached = this.loadCachedToken();
-    if (!cached) {return;}
+    if (!cached) {
+      return;
+    }
     const refreshThresholdMs = 5 * 60 * 1000;
-    if (cached.expiresAt > Date.now() + refreshThresholdMs) {return;}
+    if (cached.expiresAt > Date.now() + refreshThresholdMs) {
+      return;
+    }
     if (cached.refreshToken && (cached.refreshExpiresAt ?? 0) > Date.now()) {
       console.log(`  Token expiring soon, proactively refreshing...`);
       this.userToken = await this.refreshAccessToken(cached.refreshToken);
@@ -196,7 +238,11 @@ export class FeishuTestClient {
       return await fn();
     } catch (e) {
       const msg = (e as Error).message;
-      if (msg.includes("99991677") || msg.includes("token expired") || msg.includes("Authentication token expired")) {
+      if (
+        msg.includes("99991677") ||
+        msg.includes("token expired") ||
+        msg.includes("Authentication token expired")
+      ) {
         console.log(`  User token expired mid-run, refreshing...`);
         const cached = this.loadCachedToken();
         if (cached?.refreshToken && (cached.refreshExpiresAt ?? 0) > Date.now()) {
@@ -216,7 +262,7 @@ export class FeishuTestClient {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ app_id: this.opts.appId, app_secret: this.opts.appSecret }),
     });
-    const json = await res.json() as Record<string, any>;
+    const json = (await res.json()) as Record<string, any>;
     if (json.code !== 0 || !json.tenant_access_token) {
       throw new Error(`Failed to get tenant token: ${json.msg ?? JSON.stringify(json)}`);
     }
@@ -233,7 +279,9 @@ export class FeishuTestClient {
 
   private loadCachedToken(): StoredToken | null {
     try {
-      if (!fs.existsSync(this.tokenCachePath)) {return null;}
+      if (!fs.existsSync(this.tokenCachePath)) {
+        return null;
+      }
       return JSON.parse(fs.readFileSync(this.tokenCachePath, "utf-8")) as StoredToken;
     } catch {
       return null;
@@ -250,7 +298,9 @@ export class FeishuTestClient {
     if (cached) {
       // Access token still valid
       if (cached.expiresAt > Date.now()) {
-        console.log(`  Using cached user token (expires: ${new Date(cached.expiresAt).toISOString()})`);
+        console.log(
+          `  Using cached user token (expires: ${new Date(cached.expiresAt).toISOString()})`,
+        );
         return cached.accessToken;
       }
       // Access token expired but refresh token still valid — auto refresh
@@ -275,9 +325,11 @@ export class FeishuTestClient {
         client_secret: this.opts.appSecret,
       }).toString(),
     });
-    const data = await res.json() as Record<string, any>;
+    const data = (await res.json()) as Record<string, any>;
     if (data.error || !data.access_token) {
-      console.log(`  Refresh failed: ${data.error_description ?? data.error ?? data.msg}, falling back to Device Flow...`);
+      console.log(
+        `  Refresh failed: ${data.error_description ?? data.error ?? data.msg}, falling back to Device Flow...`,
+      );
       return await this.authorize();
     }
     const stored: StoredToken = {
@@ -306,8 +358,10 @@ export class FeishuTestClient {
         scope: "im:message im:message.send_as_user offline_access",
       }).toString(),
     });
-    const authData = await authRes.json() as Record<string, any>;
-    if (authData.error) {throw new Error(`Device auth failed: ${authData.error_description ?? authData.error}`);}
+    const authData = (await authRes.json()) as Record<string, any>;
+    if (authData.error) {
+      throw new Error(`Device auth failed: ${authData.error_description ?? authData.error}`);
+    }
 
     const deviceCode = authData.device_code as string;
     const userCode = authData.user_code as string;
@@ -339,12 +393,13 @@ export class FeishuTestClient {
           client_secret: this.opts.appSecret,
         }).toString(),
       });
-      const tokenData = await tokenRes.json() as Record<string, any>;
+      const tokenData = (await tokenRes.json()) as Record<string, any>;
       console.log(`  Poll response: ${JSON.stringify(tokenData).slice(0, 500)}`);
 
       // Feishu v2 may wrap in { code, data: { access_token, ... } } or return flat
       const flat = tokenData.access_token ? tokenData : tokenData.data;
-      const error = tokenData.error ?? (tokenData.code && tokenData.code !== 0 ? "api_error" : undefined);
+      const error =
+        tokenData.error ?? (tokenData.code && tokenData.code !== 0 ? "api_error" : undefined);
 
       if (!error && flat?.access_token) {
         const now = Date.now();
@@ -361,12 +416,23 @@ export class FeishuTestClient {
       }
 
       const errCode = error ?? tokenData.msg ?? "";
-      if (errCode === "authorization_pending" || String(tokenData.code) === "20018") {continue;}
-      if (errCode === "slow_down") { interval += 5; continue; }
-      if (errCode === "access_denied") {throw new Error("User denied authorization");}
-      if (errCode === "expired_token") {throw new Error("Device code expired");}
+      if (errCode === "authorization_pending" || String(tokenData.code) === "20018") {
+        continue;
+      }
+      if (errCode === "slow_down") {
+        interval += 5;
+        continue;
+      }
+      if (errCode === "access_denied") {
+        throw new Error("User denied authorization");
+      }
+      if (errCode === "expired_token") {
+        throw new Error("Device code expired");
+      }
       // Unknown but non-terminal — keep polling
-      if (tokenData.code && tokenData.code !== 0) {continue;}
+      if (tokenData.code && tokenData.code !== 0) {
+        continue;
+      }
     }
 
     throw new Error("Authorization timed out");
@@ -378,7 +444,9 @@ export class FeishuTestClient {
 
   private async getLatestMessageId(): Promise<string | null> {
     const chatId = this.groupChatId ?? this.p2pChatId;
-    if (!chatId) {return null;}
+    if (!chatId) {
+      return null;
+    }
     try {
       const data = await this.feishu(
         "GET",
@@ -437,9 +505,13 @@ export class FeishuTestClient {
 
         // Items are sorted desc (newest first). First match = newest bot reply for our msg.
         let foundThisRound: any = null;
-        for (const msg of (data.items ?? [])) {
-          if (msg.message_id === userMsgId) {continue;}
-          if (beforeMsgId && msg.message_id === beforeMsgId) {break;}
+        for (const msg of data.items ?? []) {
+          if (msg.message_id === userMsgId) {
+            continue;
+          }
+          if (beforeMsgId && msg.message_id === beforeMsgId) {
+            break;
+          }
           if (msg.sender?.sender_type === "app" && msg.parent_id === userMsgId) {
             foundThisRound = msg;
             break;
@@ -480,10 +552,13 @@ export class FeishuTestClient {
     try {
       const content = JSON.parse(msg.body?.content ?? "{}");
       if (content.json_card) {
-        const card = typeof content.json_card === "string" ? JSON.parse(content.json_card) : content.json_card;
+        const card =
+          typeof content.json_card === "string" ? JSON.parse(content.json_card) : content.json_card;
         return card.config?.streamingMode === true;
       }
-    } catch { /* not streaming */ }
+    } catch {
+      /* not streaming */
+    }
     return false;
   }
 
@@ -491,13 +566,18 @@ export class FeishuTestClient {
     // CardKit v2 raw_card_content: json_card contains the card JSON string
     if (card.json_card) {
       try {
-        const parsed = typeof card.json_card === "string" ? JSON.parse(card.json_card) : card.json_card;
+        const parsed =
+          typeof card.json_card === "string" ? JSON.parse(card.json_card) : card.json_card;
         // Prefer summary — it's the plain-text digest the card builder already computed
         const summary = parsed.config?.summary?.content;
-        if (summary) {return summary;}
+        if (summary) {
+          return summary;
+        }
         // Fallback: walk plain_text elements
         return this.walkCardElements(parsed);
-      } catch { /* fall through */ }
+      } catch {
+        /* fall through */
+      }
     }
     // Legacy card format
     return this.walkCardElements(card);
@@ -506,24 +586,45 @@ export class FeishuTestClient {
   private walkCardElements(node: any): string {
     const parts: string[] = [];
     const walk = (n: any) => {
-      if (!n) {return;}
-      if (typeof n === "string") {return;}
-      if (n.tag === "plain_text" && n.property?.content) {parts.push(n.property.content);}
-      if (n.tag === "markdown" && n.content) {parts.push(n.content);}
-      if (n.tag === "div" && n.text?.content) {parts.push(n.text.content);}
-      if (Array.isArray(n.property?.elements)) {n.property.elements.forEach(walk);}
-      if (Array.isArray(n.elements)) {n.elements.forEach(walk);}
-      if (Array.isArray(n)) {n.forEach(walk);}
+      if (!n) {
+        return;
+      }
+      if (typeof n === "string") {
+        return;
+      }
+      if (n.tag === "plain_text" && n.property?.content) {
+        parts.push(n.property.content);
+      }
+      if (n.tag === "markdown" && n.content) {
+        parts.push(n.content);
+      }
+      if (n.tag === "div" && n.text?.content) {
+        parts.push(n.text.content);
+      }
+      if (Array.isArray(n.property?.elements)) {
+        n.property.elements.forEach(walk);
+      }
+      if (Array.isArray(n.elements)) {
+        n.elements.forEach(walk);
+      }
+      if (Array.isArray(n)) {
+        n.forEach(walk);
+      }
     };
     walk(node.body ?? node);
     return parts.join("").trim();
   }
 
-  private extractReply(msg: { msg_type?: string; body?: { content?: string } }): { text: string; meta: FeishuReplyMeta } {
+  private extractReply(msg: { msg_type?: string; body?: { content?: string } }): {
+    text: string;
+    meta: FeishuReplyMeta;
+  } {
     const msgType = msg.msg_type ?? "unknown";
     const meta: FeishuReplyMeta = { msgType };
 
-    if (!msg.body?.content) {return { text: "", meta };}
+    if (!msg.body?.content) {
+      return { text: "", meta };
+    }
     try {
       const content = JSON.parse(msg.body.content);
 
@@ -532,12 +633,16 @@ export class FeishuTestClient {
       }
 
       if (msgType === "post") {
-        const locale = (content.zh_cn ?? content.en_us ?? Object.values(content)[0]);
-        if (!locale?.content) {return { text: msg.body.content, meta };}
+        const locale = content.zh_cn ?? content.en_us ?? Object.values(content)[0];
+        if (!locale?.content) {
+          return { text: msg.body.content, meta };
+        }
         const parts: string[] = [];
         for (const para of locale.content) {
           for (const el of para) {
-            if (el.text) {parts.push(el.text);}
+            if (el.text) {
+              parts.push(el.text);
+            }
           }
         }
         return { text: parts.join("\n").trim(), meta };

@@ -8,9 +8,9 @@
  * operations (pairing request creation, message sending).
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { LarkClient } from '../../core/lark-client';
-import { sendMessageFeishu } from '../outbound/send';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { LarkClient } from "../../core/lark-client";
+import { sendMessageFeishu } from "../outbound/send";
 
 // ---------------------------------------------------------------------------
 // Pairing reply
@@ -33,13 +33,13 @@ export async function sendPairingReply(params: {
   const core = LarkClient.runtime;
 
   const { code } = await core.channel.pairing.upsertPairingRequest({
-    channel: 'feishu',
+    channel: "feishu",
     id: senderId,
     accountId,
   });
 
   const pairingReply = core.channel.pairing.buildPairingReply({
-    channel: 'feishu',
+    channel: "feishu",
     idLine: senderId,
     code,
   });

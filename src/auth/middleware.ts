@@ -7,14 +7,14 @@
  */
 
 import type { IncomingMessage } from "node:http";
-import { verifyAccessToken } from "./jwt.js";
-import { hasPermission, mapMethodToPermission, mapRoleToGatewayScopes } from "./rbac.js";
-import { getUserById } from "../db/models/user.js";
-import { getTenantById } from "../db/models/tenant.js";
 import { isDbInitialized } from "../db/index.js";
+import { getTenantById } from "../db/models/tenant.js";
+import { getUserById } from "../db/models/user.js";
 import type { JwtPayload, UserRole, Permission } from "../db/types.js";
 import type { GatewayAuthResult } from "../gateway/auth.js";
 import type { TenantContext as BaseTenantContext } from "../types/tenant-context.js";
+import { verifyAccessToken } from "./jwt.js";
+import { hasPermission, mapMethodToPermission, mapRoleToGatewayScopes } from "./rbac.js";
 
 /**
  * Tenant context attached to authenticated requests.
@@ -42,7 +42,9 @@ export interface MultiTenantAuthResult extends GatewayAuthResult {
  */
 function extractBearerToken(req: IncomingMessage): string | null {
   const authHeader = req.headers.authorization;
-  if (!authHeader) {return null;}
+  if (!authHeader) {
+    return null;
+  }
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
   return match ? match[1] : null;
 }
@@ -53,13 +55,19 @@ function extractBearerToken(req: IncomingMessage): string | null {
  */
 export async function tryJwtAuth(req: IncomingMessage): Promise<MultiTenantAuthResult | null> {
   // Only attempt JWT auth if DB is initialized (multi-tenant mode)
-  if (!isDbInitialized()) {return null;}
+  if (!isDbInitialized()) {
+    return null;
+  }
 
   const token = extractBearerToken(req);
-  if (!token) {return null;}
+  if (!token) {
+    return null;
+  }
 
   // Don't intercept legacy gateway tokens (they're typically hex strings, not JWTs)
-  if (!token.includes(".")) {return null;}
+  if (!token.includes(".")) {
+    return null;
+  }
 
   let payload: JwtPayload;
   try {
@@ -73,10 +81,7 @@ export async function tryJwtAuth(req: IncomingMessage): Promise<MultiTenantAuthR
   }
 
   // Validate user and tenant still exist and are active
-  const [user, tenant] = await Promise.all([
-    getUserById(payload.sub),
-    getTenantById(payload.tid),
-  ]);
+  const [user, tenant] = await Promise.all([getUserById(payload.sub), getTenantById(payload.tid)]);
 
   if (!user || user.status !== "active") {
     return { ok: false, method: "token", reason: "User account is not active" };
@@ -141,6 +146,8 @@ export function extractTenantFromSessionKey(
   sessionKey: string,
 ): { tenantId: string; innerKey: string } | null {
   const match = sessionKey.match(/^t:([^:]+):(.+)$/);
-  if (!match) {return null;}
+  if (!match) {
+    return null;
+  }
   return { tenantId: match[1], innerKey: match[2] };
 }

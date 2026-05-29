@@ -11,7 +11,7 @@ description: 企业微信智能表格结构管理技能。提供子表（Sheet�
 
 管理智能表格的子表和字段（列）结构。所有接口支持通过 `docid` 或 `url` 二选一定位文档。
 
-##  调用方式
+## 调用方式
 
 通过 `wecom_mcp` tool 调用，品类为 `doc`：
 
@@ -21,10 +21,10 @@ description: 企业微信智能表格结构管理技能。提供子表（Sheet�
 
 所有接口返回 JSON 对象，包含以下公共字段：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
+| 字段      | 类型    | 说明                                  |
+| --------- | ------- | ------------------------------------- |
 | `errcode` | integer | 返回码，`0` 表示成功，非 `0` 表示失败 |
-| `errmsg` | string | 错误信息，成功时为 `"ok"` |
+| `errmsg`  | string  | 错误信息，成功时为 `"ok"`             |
 
 当 `errcode` 不为 `0` 时，说明接口调用失败，可重试 1 次；若仍失败，将 `errcode` 和 `errmsg` 展示给用户。
 
@@ -89,4 +89,3 @@ description: 企业微信智能表格结构管理技能。提供子表（Sheet�
 1. **了解表结构** → 使用 `wecom_mcp` tool 调用 `wecom_mcp call doc smartsheet_get_sheet` → 使用 `wecom_mcp` tool 调用 `wecom_mcp call doc smartsheet_get_fields`
 2. **创建表结构** → `smartsheet_add_sheet` 添加子表 → `smartsheet_add_fields` 定义列
 3. **修改表结构** → `smartsheet_update_fields` 改列名 / `smartsheet_delete_fields` 删列
-

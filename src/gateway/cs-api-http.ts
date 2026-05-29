@@ -8,6 +8,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { sendError } from "./cs-api/http-helpers.js";
 import {
   createObject,
   listObjects,
@@ -16,6 +17,7 @@ import {
   regenerateSecret,
   deleteObject,
 } from "./cs-api/objects.js";
+import { handleListSessions, handleGetSession, handleTranscript } from "./cs-api/queries.js";
 import {
   handleMessages,
   handleHandoff,
@@ -24,12 +26,6 @@ import {
   handleObserver,
   handleGetObject,
 } from "./cs-api/runtime.js";
-import {
-  handleListSessions,
-  handleGetSession,
-  handleTranscript,
-} from "./cs-api/queries.js";
-import { sendError } from "./cs-api/http-helpers.js";
 
 const PREFIX = "/api/cs-api";
 
@@ -41,7 +37,9 @@ export async function handleCsApiRequest(
   req: IncomingMessage,
   res: ServerResponse,
 ): Promise<boolean> {
-  if (!req.url?.startsWith(PREFIX)) { return false; }
+  if (!req.url?.startsWith(PREFIX)) {
+    return false;
+  }
 
   const url = new URL(req.url, "http://_");
   const path = url.pathname.slice(PREFIX.length);

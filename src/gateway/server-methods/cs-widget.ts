@@ -9,17 +9,21 @@
  *   cs.widget.history  — paginated message history
  */
 
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import type { GatewayRequestHandlers } from "./types.js";
-import { createCSSession, findActiveCSSession, updateCSSessionNotifiedAt } from "../../db/models/cs-session.js";
-import { createCSMessage, listCSMessages } from "../../db/models/cs-message.js";
-import { transition } from "../../customer-service/session-state-machine.js";
-import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
-import { CS_ROLE_LABELS } from "../../customer-service/types.js";
-import { sendCSNotification } from "../../customer-service/feishu/notify.js";
-import { readCSConfig } from "./cs-admin.js";
 import { loadTenantConfig } from "../../config/tenant-config.js";
+import { sendCSNotification } from "../../customer-service/feishu/notify.js";
+import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
+import { transition } from "../../customer-service/session-state-machine.js";
+import { CS_ROLE_LABELS } from "../../customer-service/types.js";
+import { createCSMessage, listCSMessages } from "../../db/models/cs-message.js";
+import {
+  createCSSession,
+  findActiveCSSession,
+  updateCSSessionNotifiedAt,
+} from "../../db/models/cs-session.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import { readCSConfig } from "./cs-admin.js";
+import type { GatewayRequestHandlers } from "./types.js";
 
 const log = createSubsystemLogger("cs-widget-handler");
 
@@ -39,7 +43,11 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
     const visitorId = params.visitorId as string;
 
     if (!tenantId || !visitorId) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "tenantId and visitorId are required"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "tenantId and visitorId are required"),
+      );
       return;
     }
 
@@ -77,7 +85,11 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
     const text = (params.text as string)?.trim();
 
     if (!tenantId || !visitorId || !text) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "tenantId, visitorId, and text are required"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "tenantId, visitorId, and text are required"),
+      );
       return;
     }
 
@@ -155,32 +167,38 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
         // csCfg already loaded above for skillsEnabled — reuse it here, no second read.
         // 飞书通知间隔：同一会话内，两次通知至少间隔 notifyIntervalMinutes 分钟（默认 10）。
         // csCfg 已在上方 readCSConfig 时加载，此处直接复用，不再二次读取。
-        Promise.resolve(csCfg).then(async (csCfg) => {
-          const { appId, appSecret, chatId } = csCfg.feishu ?? {};
-          if (!appId || !appSecret || !chatId) {return;}
+        Promise.resolve(csCfg)
+          .then(async (csCfg) => {
+            const { appId, appSecret, chatId } = csCfg.feishu ?? {};
+            if (!appId || !appSecret || !chatId) {
+              return;
+            }
 
-          const intervalMs = (csCfg.notifyIntervalMinutes ?? 10) * 60 * 1000;
-          const lastNotifiedAt = session.metadata?.lastNotifiedAt as string | undefined;
-          const lastNotifiedMs = lastNotifiedAt ? new Date(lastNotifiedAt).getTime() : 0;
-          const shouldNotify = Date.now() - lastNotifiedMs >= intervalMs;
+            const intervalMs = (csCfg.notifyIntervalMinutes ?? 10) * 60 * 1000;
+            const lastNotifiedAt = session.metadata?.lastNotifiedAt as string | undefined;
+            const lastNotifiedMs = lastNotifiedAt ? new Date(lastNotifiedAt).getTime() : 0;
+            const shouldNotify = Date.now() - lastNotifiedMs >= intervalMs;
 
-          if (!shouldNotify) {return;}
+            if (!shouldNotify) {
+              return;
+            }
 
-          await updateCSSessionNotifiedAt(session.id, new Date().toISOString());
-          return sendCSNotification({
-            appId,
-            appSecret,
-            chatId,
-            customerMessage: text,
-            aiReply: reply,
-            sessionId: session.id,
-            visitorName: session.visitorName ?? undefined,
-            channel: session.channel,
+            await updateCSSessionNotifiedAt(session.id, new Date().toISOString());
+            return sendCSNotification({
+              appId,
+              appSecret,
+              chatId,
+              customerMessage: text,
+              aiReply: reply,
+              sessionId: session.id,
+              visitorName: session.visitorName ?? undefined,
+              channel: session.channel,
+            });
+          })
+          .catch((err) => {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            log.error(`feishu notification failed: ${errMsg}`);
           });
-        }).catch((err) => {
-          const errMsg = err instanceof Error ? err.message : String(err);
-          log.error(`feishu notification failed: ${errMsg}`);
-        });
 
         respond(true, {
           sessionId: session.id,

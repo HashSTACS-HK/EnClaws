@@ -1,5 +1,5 @@
-import { normalizeAccountId } from "../sdk/helpers.ts";
 import { z } from "zod";
+import { normalizeAccountId } from "../sdk/helpers.ts";
 export { z };
 import { buildSecretInputSchema, hasConfiguredSecretInput } from "../secret-input.ts";
 
@@ -19,9 +19,7 @@ const ToolPolicySchema = z
  * - "group" (default): one session per group chat
  * - "group_sender": one session per (group + sender)
  */
-const GroupSessionScopeSchema = z
-  .enum(["group", "group_sender"])
-  .optional();
+const GroupSessionScopeSchema = z.enum(["group", "group_sender"]).optional();
 
 /**
  * Dingtalk tools configuration.
@@ -108,41 +106,41 @@ export const DingtalkConfigBaseSchema = z
   .strict();
 
 export const DingtalkConfigSchema = DingtalkConfigBaseSchema.superRefine((value, ctx) => {
-    const defaultAccount = value.defaultAccount?.trim();
-    if (defaultAccount && value.accounts && Object.keys(value.accounts).length > 0) {
-      const normalizedDefaultAccount = normalizeAccountId(defaultAccount);
-      if (!Object.prototype.hasOwnProperty.call(value.accounts, normalizedDefaultAccount)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["defaultAccount"],
-          message: `channels.dingtalk.defaultAccount="${defaultAccount}" does not match a configured account key`,
-        });
-      }
+  const defaultAccount = value.defaultAccount?.trim();
+  if (defaultAccount && value.accounts && Object.keys(value.accounts).length > 0) {
+    const normalizedDefaultAccount = normalizeAccountId(defaultAccount);
+    if (!Object.prototype.hasOwnProperty.call(value.accounts, normalizedDefaultAccount)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["defaultAccount"],
+        message: `channels.dingtalk.defaultAccount="${defaultAccount}" does not match a configured account key`,
+      });
     }
+  }
 
-    // Validate dmPolicy and allowFrom consistency
-    if (value.dmPolicy === "allowlist") {
-      const allowFrom = value.allowFrom ?? [];
-      if (allowFrom.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["allowFrom"],
-          message:
-            'channels.dingtalk.dmPolicy="allowlist" requires channels.dingtalk.allowFrom to contain at least one entry',
-        });
-      }
+  // Validate dmPolicy and allowFrom consistency
+  if (value.dmPolicy === "allowlist") {
+    const allowFrom = value.allowFrom ?? [];
+    if (allowFrom.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["allowFrom"],
+        message:
+          'channels.dingtalk.dmPolicy="allowlist" requires channels.dingtalk.allowFrom to contain at least one entry',
+      });
     }
-    
-    // Validate groupPolicy and groupAllowFrom consistency
-    if (value.groupPolicy === "allowlist") {
-      const groupAllowFrom = value.groupAllowFrom ?? [];
-      if (groupAllowFrom.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["groupAllowFrom"],
-          message:
-            'channels.dingtalk.groupPolicy="allowlist" requires channels.dingtalk.groupAllowFrom to contain at least one entry',
-        });
-      }
+  }
+
+  // Validate groupPolicy and groupAllowFrom consistency
+  if (value.groupPolicy === "allowlist") {
+    const groupAllowFrom = value.groupAllowFrom ?? [];
+    if (groupAllowFrom.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["groupAllowFrom"],
+        message:
+          'channels.dingtalk.groupPolicy="allowlist" requires channels.dingtalk.groupAllowFrom to contain at least one entry',
+      });
     }
-  });
+  }
+});

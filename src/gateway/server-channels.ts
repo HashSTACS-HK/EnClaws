@@ -361,12 +361,16 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
 
   const loadConfigWithDb = (): OpenClawConfig => {
     // Return cached enriched config if available (set by startChannels)
-    if (dbChannelsCache) {return dbChannelsCache;}
+    if (dbChannelsCache) {
+      return dbChannelsCache;
+    }
     return loadConfig();
   };
 
   const loadDbChannels = async (): Promise<void> => {
-    if (!isDbInitialized()) {return;}
+    if (!isDbInitialized()) {
+      return;
+    }
 
     try {
       const { listTenantChannels } = await import("../db/models/tenant-channel.js");
@@ -387,9 +391,7 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
       const channelAppIdToInfo = new Map<string, { channelType: string; appId: string }>();
 
       // Get all active tenants
-      const tenantsResult = await query(
-        "SELECT id FROM tenants WHERE status = 'active'",
-      );
+      const tenantsResult = await query("SELECT id FROM tenants WHERE status = 'active'");
 
       const allTenantAgents: Awaited<ReturnType<typeof listTenantAgents>> = [];
 
@@ -404,11 +406,15 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
         const allTenantApps = new Map<string, import("../db/types.js").TenantChannelApp>();
 
         for (const ch of channels) {
-          if (!ch.isActive || ch.channelPolicy === "disabled") {continue;}
+          if (!ch.isActive || ch.channelPolicy === "disabled") {
+            continue;
+          }
 
           const apps = await listChannelApps(ch.id);
           const enabledApps = apps.filter((a) => a.isActive && a.groupPolicy !== "disabled");
-          if (enabledApps.length === 0) {continue;}
+          if (enabledApps.length === 0) {
+            continue;
+          }
 
           for (const app of enabledApps) {
             allTenantApps.set(app.id, app);
@@ -452,7 +458,11 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
           // Exclude account-level fields (appId/appSecret) — they belong in accounts, not at channel top level.
           // Having them here would cause the plugin to create a phantom "default" account.
           if (ch.config && typeof ch.config === "object") {
-            const { appId: _a, appSecret: _s, ...channelLevelConfig } = ch.config as Record<string, unknown>;
+            const {
+              appId: _a,
+              appSecret: _s,
+              ...channelLevelConfig
+            } = ch.config as Record<string, unknown>;
             Object.assign(existing, channelLevelConfig);
           }
 
@@ -470,9 +480,13 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
         // Generate bindings from app.agentId (new: one-to-many, app points to agent)
         for (const [appDbId, appInfo] of channelAppIdToInfo) {
           const app = allTenantApps.get(appDbId);
-          if (!app?.agentId) {continue;}
+          if (!app?.agentId) {
+            continue;
+          }
           const agent = agents.find((a) => a.agentId === app.agentId && a.isActive);
-          if (!agent) {continue;}
+          if (!agent) {
+            continue;
+          }
 
           appBoundByAppAgentId.add(appDbId);
 
@@ -506,14 +520,14 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
             }
           }
         }
-
       }
 
       merged.bindings = bindings as OpenClawConfig["bindings"];
 
       // Load all tenant models and build a lookup map for model_id FK resolution.
       const { listTenantModels } = await import("../db/models/tenant-model.js");
-      const { toConfigAgentsList, buildTenantModelProviderKey } = await import("../db/models/tenant-agent.js");
+      const { toConfigAgentsList, buildTenantModelProviderKey } =
+        await import("../db/models/tenant-agent.js");
       const allTenantModelsMap = new Map<string, import("../db/types.js").TenantModel>();
       // Start with a CLEAN providers map — only non-tenant providers are inherited.
       // Tenant model providers (keyed "tm-{id}") are rebuilt entirely from DB each

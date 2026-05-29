@@ -398,7 +398,9 @@ export function createAgentEventHandler({
       chatLink?.sessionKey ?? eventSessionKey ?? resolveSessionKeyForRun(evt.runId);
     // Strip tenant prefix so client-facing events use the raw session key
     // that the browser subscribed with (e.g. "agent:xx:chat" not "t:{tid}:agent:xx:chat").
-    const sessionKey = rawSessionKey ? fromStorageSessionKey(rawSessionKey).innerKey : rawSessionKey;
+    const sessionKey = rawSessionKey
+      ? fromStorageSessionKey(rawSessionKey).innerKey
+      : rawSessionKey;
     const clientRunId = chatLink?.clientRunId ?? evt.runId;
     const eventRunId = chatLink?.clientRunId ?? evt.runId;
     const eventForClients = chatLink ? { ...evt, runId: eventRunId } : evt;

@@ -7,13 +7,17 @@ import {
 import { createServer as createHttpsServer } from "node:https";
 import type { TlsOptions } from "node:tls";
 import type { WebSocketServer } from "ws";
+import { listAgentEntries, resolveAgentEffectiveModelPrimary } from "../agents/agent-scope.js";
 import { resolveAgentAvatar } from "../agents/identity-avatar.js";
 import { CANVAS_WS_PATH, handleA2uiHttpRequest } from "../canvas-host/a2ui.js";
 import type { CanvasHostHandler } from "../canvas-host/server.js";
 import { loadConfig } from "../config/config.js";
+import { loadTenantConfig } from "../config/tenant-config.js";
+import { listTenants } from "../db/models/tenant.js";
 import type { createSubsystemLogger } from "../logging/subsystem.js";
 import { safeEqualSecret } from "../security/secret-equal.js";
 import { handleSlackHttpRequest } from "../slack/http/index.js";
+import { handleAgentChatHttpRequest } from "./agent-chat-http.js";
 import {
   AUTH_RATE_LIMIT_SCOPE_HOOK_AUTH,
   createAuthRateLimiter,
@@ -27,10 +31,7 @@ import {
   handleControlUiHttpRequest,
   type ControlUiRootState,
 } from "./control-ui.js";
-import { listTenants } from "../db/models/tenant.js";
-import { loadTenantConfig } from "../config/tenant-config.js";
-import { listAgentEntries, resolveAgentEffectiveModelPrimary } from "../agents/agent-scope.js";
-import { readCSConfig } from "./server-methods/cs-admin.js";
+import { handleCsApiRequest } from "./cs-api-http.js";
 import { applyHookMappings } from "./hooks-mapping.js";
 import {
   extractHookToken,
@@ -49,12 +50,11 @@ import {
   resolveHookChannel,
   resolveHookDeliver,
 } from "./hooks.js";
-import { handleAgentChatHttpRequest } from "./agent-chat-http.js";
-import { handleCsApiRequest } from "./cs-api-http.js";
 import { sendGatewayAuthFailure, setDefaultSecurityHeaders } from "./http-common.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
 import { handleOpenResponsesHttpRequest } from "./openresponses-http.js";
 import { isProtectedPluginRoutePath } from "./security-path.js";
+import { readCSConfig } from "./server-methods/cs-admin.js";
 import {
   authorizeCanvasRequest,
   enforcePluginRouteGatewayAuth,
@@ -389,11 +389,15 @@ export function createGatewayHttpServer(opts: {
       const agents = listAgentEntries(cfg);
       const hasAgentWithModel = agents.some((a) => {
         const id = a?.id;
-        if (!id) {return false;}
+        if (!id) {
+          return false;
+        }
         const modelRef = resolveAgentEffectiveModelPrimary(cfg, id);
         return !!modelRef && modelRef.trim().length > 0;
       });
-      if (!hasAgentWithModel) {return false;}
+      if (!hasAgentWithModel) {
+        return false;
+      }
 
       const csCfg = await readCSConfig(tenantId);
       const hasChatId = !!csCfg.feishu?.chatId?.trim();
@@ -515,7 +519,9 @@ export function createGatewayHttpServer(opts: {
       }
       // CS API — API Object CRUD + session endpoints for Agenora S2 integration
       if (req.url?.startsWith("/api/cs-api")) {
-        if (await handleCsApiRequest(req, res)) { return; }
+        if (await handleCsApiRequest(req, res)) {
+          return;
+        }
       }
       if (openResponsesEnabled) {
         if (

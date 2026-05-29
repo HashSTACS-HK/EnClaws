@@ -18,9 +18,9 @@
  * All output is single-line JSON.
  */
 
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { getConfig } from './token-utils.mjs';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { getConfig } from "./token-utils.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,14 +29,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ---------------------------------------------------------------------------
 
 async function getTenantAccessToken(appId, appSecret) {
-  const res = await fetch(
-    'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
-    },
-  );
+  const res = await fetch("https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
+  });
   const json = await res.json();
   if (json.code !== 0) {
     throw new Error(`Failed to get tenant_access_token: ${json.msg}`);
@@ -47,13 +44,13 @@ async function getTenantAccessToken(appId, appSecret) {
 async function sendFeishuMessage(tenantToken, receiveIdType, receiveId, cardContent, rawOverride) {
   const payload = rawOverride
     ? { receive_id: receiveId, ...rawOverride }
-    : { receive_id: receiveId, msg_type: 'interactive', content: JSON.stringify(cardContent) };
+    : { receive_id: receiveId, msg_type: "interactive", content: JSON.stringify(cardContent) };
   const res = await fetch(
     `https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=${receiveIdType}`,
     {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${tenantToken}`,
       },
       body: JSON.stringify(payload),
@@ -63,17 +60,14 @@ async function sendFeishuMessage(tenantToken, receiveIdType, receiveId, cardCont
 }
 
 async function updateFeishuMessage(tenantToken, messageId, cardContent) {
-  const res = await fetch(
-    `https://open.feishu.cn/open-apis/im/v1/messages/${messageId}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tenantToken}`,
-      },
-      body: JSON.stringify({ content: JSON.stringify(cardContent) }),
+  const res = await fetch(`https://open.feishu.cn/open-apis/im/v1/messages/${messageId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${tenantToken}`,
     },
-  );
+    body: JSON.stringify({ content: JSON.stringify(cardContent) }),
+  });
   return res.json();
 }
 
@@ -83,23 +77,25 @@ async function updateFeishuMessage(tenantToken, messageId, cardContent) {
 
 function buildCard({ title, body, buttonText, buttonUrl, color }) {
   const elements = [];
-  if (body) elements.push({ tag: 'markdown', content: body });
+  if (body) elements.push({ tag: "markdown", content: body });
   if (buttonUrl) {
     elements.push({
-      tag: 'action',
-      actions: [{
-        tag: 'button',
-        text: { tag: 'plain_text', content: buttonText || '点击打开' },
-        type: 'primary',
-        url: buttonUrl,
-      }],
+      tag: "action",
+      actions: [
+        {
+          tag: "button",
+          text: { tag: "plain_text", content: buttonText || "点击打开" },
+          type: "primary",
+          url: buttonUrl,
+        },
+      ],
     });
   }
   const card = { config: { wide_screen_mode: true }, elements };
   if (title) {
     card.header = {
-      title: { tag: 'plain_text', content: title },
-      template: color || 'blue',
+      title: { tag: "plain_text", content: title },
+      template: color || "blue",
     };
   }
   return card;
@@ -119,19 +115,23 @@ async function sendCard({
   color,
   fallbackText,
 }) {
-  if (!openId) throw new Error('sendCard: openId is required');
-  if (!body) throw new Error('sendCard: body is required');
+  if (!openId) throw new Error("sendCard: openId is required");
+  if (!body) throw new Error("sendCard: body is required");
 
   const cfg = getConfig(__dirname);
   const resolvedChatId = chatId || process.env.ENCLAWS_CHAT_ID || null;
-  const receiveIdType = resolvedChatId ? 'chat_id' : 'open_id';
+  const receiveIdType = resolvedChatId ? "chat_id" : "open_id";
   const receiveId = resolvedChatId || openId;
 
   let tenantToken;
   try {
     tenantToken = await getTenantAccessToken(cfg.appId, cfg.appSecret);
   } catch (err) {
-    return { success: false, error: err.message, reply: body + (buttonUrl ? `\n${buttonUrl}` : '') };
+    return {
+      success: false,
+      error: err.message,
+      reply: body + (buttonUrl ? `\n${buttonUrl}` : ""),
+    };
   }
 
   // Level 1: interactive card
@@ -147,22 +147,24 @@ async function sendCard({
   }
 
   // Level 2: plain text fallback
-  const text = fallbackText || (body + (buttonUrl ? `\n${buttonUrl}` : ''));
+  const text = fallbackText || body + (buttonUrl ? `\n${buttonUrl}` : "");
   try {
     const result = await sendFeishuMessage(tenantToken, receiveIdType, receiveId, null, {
-      msg_type: 'text',
+      msg_type: "text",
       content: JSON.stringify({ text }),
     });
     if (result.code === 0) {
       return { success: true, message_id: result.data?.message_id, fallback: true };
     }
-    process.stderr.write(`[send-card] text fallback failed: code=${result.code} msg=${result.msg}\n`);
+    process.stderr.write(
+      `[send-card] text fallback failed: code=${result.code} msg=${result.msg}\n`,
+    );
   } catch (err) {
     process.stderr.write(`[send-card] text fallback error: ${err.message}\n`);
   }
 
   // Level 3: return reply for Agent to display manually
-  return { success: false, error: 'all send methods failed', reply: text };
+  return { success: false, error: "all send methods failed", reply: text };
 }
 
 // ---------------------------------------------------------------------------
@@ -170,8 +172,8 @@ async function sendCard({
 // ---------------------------------------------------------------------------
 
 async function updateCard({ messageId, title, body, buttonText, buttonUrl, color }) {
-  if (!messageId) throw new Error('updateCard: messageId is required');
-  if (!body) throw new Error('updateCard: body is required');
+  if (!messageId) throw new Error("updateCard: messageId is required");
+  if (!body) throw new Error("updateCard: body is required");
 
   const cfg = getConfig(__dirname);
   try {
@@ -213,41 +215,48 @@ export default {
 // CLI mode (only when run directly: node send-card.mjs --open-id ...)
 // ---------------------------------------------------------------------------
 
-const isMainModule = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').replace(/^[A-Z]:/, m => m.toLowerCase()));
+const isMainModule =
+  process.argv[1] &&
+  import.meta.url.endsWith(
+    process.argv[1].replace(/\\/g, "/").replace(/^[A-Z]:/, (m) => m.toLowerCase()),
+  );
 
-if (isMainModule || process.argv[1]?.endsWith('send-card.mjs')) {
+if (isMainModule || process.argv[1]?.endsWith("send-card.mjs")) {
   const argv = process.argv.slice(2);
   function getArg(name) {
     const i = argv.indexOf(name);
     return i !== -1 && argv[i + 1] !== undefined ? argv[i + 1] : null;
   }
 
-  const openId = getArg('--open-id');
-  const body = getArg('--body');
+  const openId = getArg("--open-id");
+  const body = getArg("--body");
 
   if (!openId || !body) {
-    console.log(JSON.stringify({
-      error: 'usage',
-      message: 'Required: --open-id <id> --body <text>. Optional: --chat-id, --title, --button-text, --button-url, --color',
-    }));
+    console.log(
+      JSON.stringify({
+        error: "usage",
+        message:
+          "Required: --open-id <id> --body <text>. Optional: --chat-id, --title, --button-text, --button-url, --color",
+      }),
+    );
     process.exit(1);
   }
 
   sendCard({
     openId,
-    chatId: getArg('--chat-id'),
-    title: getArg('--title'),
+    chatId: getArg("--chat-id"),
+    title: getArg("--title"),
     body,
-    buttonText: getArg('--button-text'),
-    buttonUrl: getArg('--button-url'),
-    color: getArg('--color'),
-    fallbackText: getArg('--fallback-text'),
+    buttonText: getArg("--button-text"),
+    buttonUrl: getArg("--button-url"),
+    color: getArg("--color"),
+    fallbackText: getArg("--fallback-text"),
   })
-    .then(result => {
+    .then((result) => {
       console.log(JSON.stringify(result));
       process.exit(result.success ? 0 : 1);
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(JSON.stringify({ success: false, error: err.message }));
       process.exit(1);
     });

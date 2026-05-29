@@ -12,7 +12,9 @@ export const caretFix = css`
     caret-color: transparent;
     user-select: none;
   }
-  input, textarea, [contenteditable] {
+  input,
+  textarea,
+  [contenteditable] {
     caret-color: auto !important;
     user-select: text !important;
   }
@@ -33,8 +35,12 @@ export class CaretGuard implements ReactiveController {
   private host: ReactiveControllerHost & LitElement;
   private handler = (e: MouseEvent) => {
     const t = e.target as HTMLElement;
-    if (!t) {return;}
-    if (EDITABLE_TAGS.has(t.tagName) || t.isContentEditable) {return;}
+    if (!t) {
+      return;
+    }
+    if (EDITABLE_TAGS.has(t.tagName) || t.isContentEditable) {
+      return;
+    }
     // Clear any stray selection/caret the browser placed
     window.getSelection()?.removeAllRanges();
   };

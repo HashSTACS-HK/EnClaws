@@ -15,7 +15,7 @@ import type {
   FeishuGroupSchema,
   UATConfigSchema,
   z,
-} from './config-schema';
+} from "./config-schema";
 
 // ---------------------------------------------------------------------------
 // Inferred configuration types
@@ -40,17 +40,17 @@ export type FeishuAccountConfig = z.infer<typeof FeishuAccountConfigSchema>;
  * - `"lark"` targets the international Lark service.
  * - Any other string is treated as a custom base URL.
  */
-export type LarkBrand = 'feishu' | 'lark' | (string & {});
+export type LarkBrand = "feishu" | "lark" | (string & {});
 
 /** How the plugin connects to Feishu to receive events. */
-export type FeishuConnectionMode = 'websocket' | 'webhook';
+export type FeishuConnectionMode = "websocket" | "webhook";
 
 // ---------------------------------------------------------------------------
 // Feishu identifiers
 // ---------------------------------------------------------------------------
 
 /** The four ID types recognised by the Feishu API. */
-export type FeishuIdType = 'open_id' | 'user_id' | 'union_id' | 'chat_id';
+export type FeishuIdType = "open_id" | "user_id" | "union_id" | "chat_id";
 
 // ---------------------------------------------------------------------------
 // Tools configuration

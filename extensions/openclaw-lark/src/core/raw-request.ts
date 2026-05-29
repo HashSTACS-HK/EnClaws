@@ -8,8 +8,8 @@
  * 用于 SDK 未覆盖的 API 或需要精细控制请求的场景。
  */
 
-import type { LarkBrand } from './types';
-import { feishuFetch } from './feishu-fetch';
+import { feishuFetch } from "./feishu-fetch";
+import type { LarkBrand } from "./types";
 
 // ---------------------------------------------------------------------------
 // Domain URL resolution
@@ -18,8 +18,8 @@ import { feishuFetch } from './feishu-fetch';
 /** 将 LarkBrand 映射为 API base URL。 */
 export function resolveDomainUrl(brand: LarkBrand): string {
   const map: Record<string, string> = {
-    feishu: 'https://open.feishu.cn',
-    lark: 'https://open.larksuite.com',
+    feishu: "https://open.feishu.cn",
+    lark: "https://open.larksuite.com",
   };
   return map[brand] ?? `https://${brand}`;
 }
@@ -54,17 +54,17 @@ export async function rawLarkRequest<T>(options: RawLarkRequestOptions): Promise
 
   const headers: Record<string, string> = {};
   if (options.accessToken) {
-    headers['Authorization'] = `Bearer ${options.accessToken}`;
+    headers["Authorization"] = `Bearer ${options.accessToken}`;
   }
   if (options.body !== undefined) {
-    headers['Content-Type'] = 'application/json';
+    headers["Content-Type"] = "application/json";
   }
   if (options.headers) {
     Object.assign(headers, options.headers);
   }
 
   const resp = await feishuFetch(url.toString(), {
-    method: options.method ?? 'GET',
+    method: options.method ?? "GET",
     headers,
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
   });

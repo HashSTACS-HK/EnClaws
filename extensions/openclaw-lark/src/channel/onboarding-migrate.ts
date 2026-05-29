@@ -9,9 +9,9 @@
  * semantic of "allow this group for any sender".
  */
 
-import type { ClawdbotConfig, WizardPrompter } from 'openclaw/plugin-sdk';
-import type { FeishuConfig, FeishuGroupConfig } from '../core/types';
-import { setFeishuGroupAllowFrom, setFeishuGroups } from './onboarding-config';
+import type { ClawdbotConfig, WizardPrompter } from "openclaw/plugin-sdk";
+import type { FeishuConfig, FeishuGroupConfig } from "../core/types";
+import { setFeishuGroupAllowFrom, setFeishuGroups } from "./onboarding-config";
 
 /**
  * Detect and migrate legacy chat_id entries in groupAllowFrom.
@@ -30,9 +30,10 @@ export async function migrateLegacyGroupAllowFrom(params: {
   let next = params.cfg;
   const { prompter } = params;
 
-  const existingGroupAllowFrom = (next.channels?.feishu as FeishuConfig | undefined)?.groupAllowFrom ?? [];
-  const legacyChatIds = existingGroupAllowFrom.filter((e) => String(e).startsWith('oc_'));
-  const senderAllowFrom = existingGroupAllowFrom.filter((e) => !String(e).startsWith('oc_'));
+  const existingGroupAllowFrom =
+    (next.channels?.feishu as FeishuConfig | undefined)?.groupAllowFrom ?? [];
+  const legacyChatIds = existingGroupAllowFrom.filter((e) => String(e).startsWith("oc_"));
+  const senderAllowFrom = existingGroupAllowFrom.filter((e) => !String(e).startsWith("oc_"));
 
   if (legacyChatIds.length === 0) {
     return next;
@@ -40,16 +41,16 @@ export async function migrateLegacyGroupAllowFrom(params: {
 
   await prompter.note(
     [
-      `⚠️  Detected legacy config: groupAllowFrom contains chat_ids (${legacyChatIds.join(', ')})`,
-      '',
-      'Old semantic: groupAllowFrom controlled which groups could use the bot.',
-      'New semantic: groupAllowFrom is for SENDER filtering (open_ids like ou_xxx).',
-      '',
-      'Recommended migration:',
+      `⚠️  Detected legacy config: groupAllowFrom contains chat_ids (${legacyChatIds.join(", ")})`,
+      "",
+      "Old semantic: groupAllowFrom controlled which groups could use the bot.",
+      "New semantic: groupAllowFrom is for SENDER filtering (open_ids like ou_xxx).",
+      "",
+      "Recommended migration:",
       `  1. Move chat_ids (oc_xxx) → channels.feishu.groups`,
       `  2. Keep sender IDs (ou_xxx) in groupAllowFrom`,
-    ].join('\n'),
-    'Legacy config detected',
+    ].join("\n"),
+    "Legacy config detected",
   );
 
   const migrate = await prompter.confirm({
@@ -66,7 +67,7 @@ export async function migrateLegacyGroupAllowFrom(params: {
       if (!migratedGroups[String(chatId)]) {
         migratedGroups[String(chatId)] = {
           enabled: true,
-          groupPolicy: 'open',
+          groupPolicy: "open",
         } as FeishuGroupConfig;
       }
     }
@@ -77,10 +78,13 @@ export async function migrateLegacyGroupAllowFrom(params: {
     await prompter.note(
       `✅ Migrated: ${legacyChatIds.length} chat_id(s) moved to groups, ` +
         `${senderAllowFrom.length} sender(s) kept in groupAllowFrom`,
-      'Migration complete',
+      "Migration complete",
     );
   } else {
-    await prompter.note('Skipped migration. Please update config manually to avoid issues.', 'Migration skipped');
+    await prompter.note(
+      "Skipped migration. Please update config manually to avoid issues.",
+      "Migration skipped",
+    );
   }
 
   return next;

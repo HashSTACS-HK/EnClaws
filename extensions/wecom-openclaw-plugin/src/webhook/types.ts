@@ -199,16 +199,50 @@ export interface WebhookInboundMessage {
   attachment_count?: number;
 
   text?: { content?: string };
-  image?: { url?: string; aeskey?: string; encrypt_file_key?: string; file_url?: string; base64?: string; md5?: string };
-  file?: { url?: string; aeskey?: string; encrypt_file_key?: string; file_url?: string; filename?: string; file_name?: string; fileName?: string };
-  voice?: { content?: string; url?: string; aeskey?: string; encrypt_file_key?: string; file_url?: string };
+  image?: {
+    url?: string;
+    aeskey?: string;
+    encrypt_file_key?: string;
+    file_url?: string;
+    base64?: string;
+    md5?: string;
+  };
+  file?: {
+    url?: string;
+    aeskey?: string;
+    encrypt_file_key?: string;
+    file_url?: string;
+    filename?: string;
+    file_name?: string;
+    fileName?: string;
+  };
+  voice?: {
+    content?: string;
+    url?: string;
+    aeskey?: string;
+    encrypt_file_key?: string;
+    file_url?: string;
+  };
   video?: { url?: string; aeskey?: string; encrypt_file_key?: string; file_url?: string };
   mixed?: {
     msg_item: Array<{
       msgtype: string;
       text?: { content?: string };
-      image?: { url?: string; aeskey?: string; encrypt_file_key?: string; file_url?: string; base64?: string; md5?: string };
-      file?: { url?: string; aeskey?: string; encrypt_file_key?: string; file_url?: string; filename?: string };
+      image?: {
+        url?: string;
+        aeskey?: string;
+        encrypt_file_key?: string;
+        file_url?: string;
+        base64?: string;
+        md5?: string;
+      };
+      file?: {
+        url?: string;
+        aeskey?: string;
+        encrypt_file_key?: string;
+        file_url?: string;
+        filename?: string;
+      };
       [key: string]: unknown;
     }>;
   };
@@ -218,7 +252,12 @@ export interface WebhookInboundMessage {
   /** 发送者（企微 Bot 回调中 userid 是 from.userid） */
   from?: { userid?: string; corpid?: string };
   /** 事件（eventtype 非 event_type） */
-  event?: { eventtype?: string; event_key?: string; template_card_event?: Record<string, unknown>; [key: string]: unknown };
+  event?: {
+    eventtype?: string;
+    event_key?: string;
+    template_card_event?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
   /** 流式消息 */
   stream?: { id?: string };
   /** 下行回复 URL */

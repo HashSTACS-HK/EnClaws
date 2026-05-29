@@ -7,6 +7,7 @@ inline: true
 ---
 
 # feishu-create-doc
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -15,11 +16,11 @@ inline: true
 
 `--markdown` 入参可以来自其它技能的输出：
 
-| 上游技能 | 用途 |
-|---|---|
+| 上游技能                                | 用途                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------- |
 | **feishu-docx-download** + `extract.js` | 把云盘里的 Word/PDF/PPT/Excel 等附件文件提取为纯文本，再写入新建的飞书文档 |
-| **feishu-fetch-doc** | 把已有的飞书在线云文档内容（markdown 字段）作为新文档初始内容 |
-| 用户消息 / 其它任意来源 | 直接传 `--markdown "..."` |
+| **feishu-fetch-doc**                    | 把已有的飞书在线云文档内容（markdown 字段）作为新文档初始内容              |
+| 用户消息 / 其它任意来源                 | 直接传 `--markdown "..."`                                                  |
 
 > 典型工作流：`feishu-drive list` → `feishu-docx-download` 下载并提取 → **feishu-create-doc** 创建新文档并写入提取的内容。
 
@@ -37,6 +38,7 @@ node ../feishu-update-doc/update-doc.js --doc-id "TOKEN" --mode append --markdow
 ```
 
 只有在以下情况才用 `feishu-update-doc`：
+
 - 修改/追加**已存在**的文档（不是本次新建的）
 - 创建后**用户后续要求**追加新内容
 
@@ -65,9 +67,9 @@ node ./create-doc.js --open-id "SENDER_OPEN_ID" --title "文档标题" --markdow
 
 ## 必须确认的参数
 
-| 参数 | 何时询问 |
-|---|---|
-| `--title` | 用户未说明标题 |
+| 参数         | 何时询问                             |
+| ------------ | ------------------------------------ |
+| `--title`    | 用户未说明标题                       |
 | `--markdown` | 用户未提供内容（明确要空文档可省略） |
 
 ## 输出

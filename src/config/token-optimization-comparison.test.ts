@@ -1,8 +1,11 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { buildAgentSystemPrompt } from "../agents/system-prompt.js";
-import { buildInboundMetaSystemPrompt, buildInboundUserContextPrefix } from "../auto-reply/reply/inbound-meta.js";
-import { getEffectiveSoftTrimSettings } from "../agents/pi-extensions/context-pruning/settings.js";
 import { estimateCharsPerToken } from "../agents/pi-extensions/context-pruning/pruner.js";
+import { getEffectiveSoftTrimSettings } from "../agents/pi-extensions/context-pruning/settings.js";
+import { buildAgentSystemPrompt } from "../agents/system-prompt.js";
+import {
+  buildInboundMetaSystemPrompt,
+  buildInboundUserContextPrefix,
+} from "../auto-reply/reply/inbound-meta.js";
 
 // Helper: rough token estimate (chars / 4)
 function estimateTokens(text: string): number {
@@ -39,7 +42,6 @@ describe("Token Optimization Comparison Tests", () => {
   // Section A: Output length comparison
   // ============================================================
   describe("A: Output length reduction", () => {
-
     it("OPT-3: inbound meta system prompt is shorter with P1 enabled", () => {
       // Cast as any to satisfy TemplateContext — these are the fields the function actually reads
       const ctx = {
@@ -59,7 +61,9 @@ describe("Token Optimization Comparison Tests", () => {
       const originalTokens = estimateTokens(originalOutput);
       const optimizedTokens = estimateTokens(optimizedOutput);
 
-      console.log(`[OPT-3 meta] Original: ${originalTokens} tokens, Optimized: ${optimizedTokens} tokens, Saved: ${originalTokens - optimizedTokens} (${Math.round((1 - optimizedTokens / originalTokens) * 100)}%)`);
+      console.log(
+        `[OPT-3 meta] Original: ${originalTokens} tokens, Optimized: ${optimizedTokens} tokens, Saved: ${originalTokens - optimizedTokens} (${Math.round((1 - optimizedTokens / originalTokens) * 100)}%)`,
+      );
 
       expect(optimizedTokens).toBeLessThan(originalTokens);
     });
@@ -89,7 +93,9 @@ describe("Token Optimization Comparison Tests", () => {
       const originalTokens = estimateTokens(originalOutput);
       const optimizedTokens = estimateTokens(optimizedOutput);
 
-      console.log(`[OPT-3 user ctx] Original: ${originalTokens} tokens, Optimized: ${optimizedTokens} tokens, Saved: ${originalTokens - optimizedTokens} (${Math.round((1 - optimizedTokens / originalTokens) * 100)}%)`);
+      console.log(
+        `[OPT-3 user ctx] Original: ${originalTokens} tokens, Optimized: ${optimizedTokens} tokens, Saved: ${originalTokens - optimizedTokens} (${Math.round((1 - optimizedTokens / originalTokens) * 100)}%)`,
+      );
 
       expect(optimizedTokens).toBeLessThan(originalTokens);
     });
@@ -109,7 +115,9 @@ describe("Token Optimization Comparison Tests", () => {
       const originalTokens = estimateTokens(originalPrompt);
       const optimizedTokens = estimateTokens(optimizedPrompt);
 
-      console.log(`[OPT-1 system prompt] Original: ${originalTokens} tokens, Optimized: ${optimizedTokens} tokens, Saved: ${originalTokens - optimizedTokens} (${Math.round((1 - optimizedTokens / originalTokens) * 100)}%)`);
+      console.log(
+        `[OPT-1 system prompt] Original: ${originalTokens} tokens, Optimized: ${optimizedTokens} tokens, Saved: ${originalTokens - optimizedTokens} (${Math.round((1 - optimizedTokens / originalTokens) * 100)}%)`,
+      );
 
       expect(optimizedTokens).toBeLessThan(originalTokens);
     });
@@ -126,7 +134,9 @@ describe("Token Optimization Comparison Tests", () => {
       expect(optimizedExec.maxChars).toBeLessThan(defaultExec.maxChars);
       expect(optimizedWebFetch.maxChars).toBeLessThan(defaultExec.maxChars);
 
-      console.log(`[OPT-6] exec: ${defaultExec.maxChars} → ${optimizedExec.maxChars}, web_fetch: → ${optimizedWebFetch.maxChars}`);
+      console.log(
+        `[OPT-6] exec: ${defaultExec.maxChars} → ${optimizedExec.maxChars}, web_fetch: → ${optimizedWebFetch.maxChars}`,
+      );
     });
   });
 
@@ -134,7 +144,6 @@ describe("Token Optimization Comparison Tests", () => {
   // Section B: Behavioral correctness
   // ============================================================
   describe("B: Behavioral correctness", () => {
-
     it("OPT-1: Memory section uses conditional text when P1 is on", () => {
       const params = {
         workspaceDir: "/tmp/test",
@@ -177,9 +186,7 @@ describe("Token Optimization Comparison Tests", () => {
         ChatType: "group",
         MessageSid: "msg-123",
         SenderName: "Alice",
-        InboundHistory: [
-          { sender: "Bob", timestamp: 1700000000000, body: "Hi" },
-        ],
+        InboundHistory: [{ sender: "Bob", timestamp: 1700000000000, body: "Hi" }],
       } as any;
 
       disableAllToggles();
@@ -280,7 +287,8 @@ describe("Token Optimization Comparison Tests", () => {
       const systemParams = {
         workspaceDir: "/tmp/test",
         toolNames: ["memory_search", "memory_get", "exec", "web_fetch"],
-        extraSystemPrompt: "## Group Chat Context\nchat_id: test-group\nchannel: telegram\nprovider: anthropic\nsurface: telegram\nchat_type: group\ngroup_name: Test Group\nparticipants: Alice, Bob, Charlie",
+        extraSystemPrompt:
+          "## Group Chat Context\nchat_id: test-group\nchannel: telegram\nprovider: anthropic\nsurface: telegram\nchat_type: group\ngroup_name: Test Group\nparticipants: Alice, Bob, Charlie",
       };
 
       const metaCtx = {
@@ -293,8 +301,16 @@ describe("Token Optimization Comparison Tests", () => {
         SenderName: "Alice",
         SenderNumber: "+1234567890",
         InboundHistory: [
-          { sender: "Bob", timestamp: 1700000000000, body: "Hello everyone, let's discuss the project" },
-          { sender: "Charlie", timestamp: 1700000001000, body: "Sure, I have some updates to share" },
+          {
+            sender: "Bob",
+            timestamp: 1700000000000,
+            body: "Hello everyone, let's discuss the project",
+          },
+          {
+            sender: "Charlie",
+            timestamp: 1700000001000,
+            body: "Sure, I have some updates to share",
+          },
           { sender: "Alice", timestamp: 1700000002000, body: "Great, let me check my notes first" },
         ],
         ThreadStarterBody: "Project discussion thread",
@@ -334,8 +350,10 @@ describe("Token Optimization Comparison Tests", () => {
       console.log(report);
 
       // Just assert that optimization produced some savings
-      const totalOrig = estimateTokens(origSystem) + estimateTokens(origMeta) + estimateTokens(origUserCtx);
-      const totalOpt = estimateTokens(optSystem) + estimateTokens(optMeta) + estimateTokens(optUserCtx);
+      const totalOrig =
+        estimateTokens(origSystem) + estimateTokens(origMeta) + estimateTokens(origUserCtx);
+      const totalOpt =
+        estimateTokens(optSystem) + estimateTokens(optMeta) + estimateTokens(optUserCtx);
       expect(totalOpt).toBeLessThan(totalOrig);
     });
   });

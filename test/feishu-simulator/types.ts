@@ -75,13 +75,16 @@ export type ScriptAssert = {
   /** Expected exit code (default: 0) */
   exitCode?: number;
   /** Assert JSON output fields by dot-path */
-  jsonPath?: Record<string, {
-    equals?: unknown;
-    contains?: string;
-    matches?: string;
-    notContains?: string;
-    exists?: boolean;
-  }>;
+  jsonPath?: Record<
+    string,
+    {
+      equals?: unknown;
+      contains?: string;
+      matches?: string;
+      notContains?: string;
+      exists?: boolean;
+    }
+  >;
   /** Assert stdout contains string */
   stdoutContains?: string;
   /** Assert stdout does NOT contain string */

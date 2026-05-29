@@ -7,6 +7,7 @@ inline: true
 ---
 
 # feishu-calendar
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -79,13 +80,14 @@ node ./calendar.js --open-id "ou_xxx" --action check_freebusy --names "张三,�
 
 多项缺失时**合并成一条消息同时追问**，不要分多轮。
 
-| 参数 | 说明 | 缺失时追问 |
-|---|---|---|
-| `--summary` | 会议主题 | "请问这次会议的主题是什么？" |
-| `--start-time` / `--end-time` | 会议时间 | "请问会议的开始时间和结束时间（或时长）是什么时候？" |
-| `--attendees` | 参会人 open_id，逗号分隔 | "请问哪些人需要参加这次会议？" |
+| 参数                          | 说明                     | 缺失时追问                                           |
+| ----------------------------- | ------------------------ | ---------------------------------------------------- |
+| `--summary`                   | 会议主题                 | "请问这次会议的主题是什么？"                         |
+| `--start-time` / `--end-time` | 会议时间                 | "请问会议的开始时间和结束时间（或时长）是什么时候？" |
+| `--attendees`                 | 参会人 open_id，逗号分隔 | "请问哪些人需要参加这次会议？"                       |
 
 **处理规则**：
+
 - **创建者自动加入参会人**：`--attendees` 中必须包含 `SENDER_OPEN_ID`（当前用户），即使用户未提及自己也要自动添加
 - 用户提供姓名而非 open_id → 先执行 `node ../feishu-search-user/search-user.js --open-id "SENDER_OPEN_ID" --action search --query "姓名"` 取得 open_id 再创建
 - 时间支持自然语言（"明天下午3点到4点"、"今天16:00开始1小时"），转为 `YYYY-MM-DDTHH:mm:ss+08:00` 格式传入

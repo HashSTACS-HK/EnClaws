@@ -9,9 +9,9 @@
  * in CLI commands and other configuration flows.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { DmPolicy } from 'openclaw/plugin-sdk/setup';
-import { addWildcardAllowFrom } from 'openclaw/plugin-sdk/setup';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { DmPolicy } from "openclaw/plugin-sdk/setup";
+import { addWildcardAllowFrom } from "openclaw/plugin-sdk/setup";
 
 // ---------------------------------------------------------------------------
 // Config mutation helpers
@@ -19,7 +19,7 @@ import { addWildcardAllowFrom } from 'openclaw/plugin-sdk/setup';
 
 export function setFeishuDmPolicy(cfg: ClawdbotConfig, dmPolicy: DmPolicy): ClawdbotConfig {
   const allowFrom =
-    dmPolicy === 'open'
+    dmPolicy === "open"
       ? addWildcardAllowFrom(cfg.channels?.feishu?.allowFrom)?.map((entry) => String(entry))
       : undefined;
 
@@ -51,7 +51,7 @@ export function setFeishuAllowFrom(cfg: ClawdbotConfig, allowFrom: string[]): Cl
 
 export function setFeishuGroupPolicy(
   cfg: ClawdbotConfig,
-  groupPolicy: 'open' | 'allowlist' | 'disabled',
+  groupPolicy: "open" | "allowlist" | "disabled",
 ): ClawdbotConfig {
   return {
     ...cfg,
@@ -66,7 +66,10 @@ export function setFeishuGroupPolicy(
   };
 }
 
-export function setFeishuGroupAllowFrom(cfg: ClawdbotConfig, groupAllowFrom: string[]): ClawdbotConfig {
+export function setFeishuGroupAllowFrom(
+  cfg: ClawdbotConfig,
+  groupAllowFrom: string[],
+): ClawdbotConfig {
   return {
     ...cfg,
     channels: {
@@ -79,7 +82,10 @@ export function setFeishuGroupAllowFrom(cfg: ClawdbotConfig, groupAllowFrom: str
   };
 }
 
-export function setFeishuGroups(cfg: ClawdbotConfig, groups: Record<string, object>): ClawdbotConfig {
+export function setFeishuGroups(
+  cfg: ClawdbotConfig,
+  groups: Record<string, object>,
+): ClawdbotConfig {
   return {
     ...cfg,
     channels: {

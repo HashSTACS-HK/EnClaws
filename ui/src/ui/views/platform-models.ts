@@ -7,12 +7,15 @@
 
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
-import { tenantRpc } from "./tenant/rpc.ts";
-import { PROVIDER_TYPES as SHARED_PROVIDERS, API_PROTOCOLS as SHARED_PROTOCOLS } from "../../constants/providers.ts";
+import {
+  PROVIDER_TYPES as SHARED_PROVIDERS,
+  API_PROTOCOLS as SHARED_PROTOCOLS,
+} from "../../constants/providers.ts";
 import { t } from "../../i18n/index.ts";
 import { I18nController } from "../../i18n/lib/lit-controller.ts";
 import { showConfirm } from "../components/confirm-dialog.ts";
 import { caretFix } from "../shared-styles.ts";
+import { tenantRpc } from "./tenant/rpc.ts";
 
 interface ModelDefinition {
   id: string;
@@ -42,95 +45,260 @@ const API_PROTOCOLS = SHARED_PROTOCOLS;
 
 @customElement("platform-models-view")
 export class PlatformModelsView extends LitElement {
-  static styles = [caretFix, css`
-    :host {
-      display: block;
-      padding: 1.5rem;
-      color: var(--text);
-      font-family: var(--font-sans, system-ui, sans-serif);
-    }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
-    h3 { margin: 0 0 1rem; font-size: 0.95rem; font-weight: 600; }
-    h4 { margin: 0.75rem 0 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
-    .btn {
-      padding: 0.45rem 0.9rem; border: none; border-radius: var(--radius-md);
-      font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: var(--accent-foreground); }
-    .btn-danger { background: var(--danger-subtle); color: var(--danger); }
-    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 1rem;
-    }
-    .model-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-    }
-    .model-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
-    .model-name { font-size: 0.95rem; font-weight: 600; }
-    .model-provider { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
-    .model-meta { font-size: 0.8rem; color: var(--text-2); margin-bottom: 0.5rem; }
-    .model-meta span { margin-right: 1rem; }
-    .model-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
-    .model-tag {
-      font-size: 0.72rem; padding: 0.15rem 0.5rem;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 999px; color: var(--text-2);
-    }
-    .model-tag.reasoning { border-color: var(--warn); color: var(--warn); }
-    .shared-badge {
-      font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px;
-      background: var(--accent-light); color: var(--accent); margin-left: 0.4rem;
-    }
-    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.3rem; }
-    .status-dot.active { background: var(--ok); }
-    .status-dot.inactive { background: var(--border); }
-    .model-actions { display: flex; gap: 0.4rem; margin-top: 0.75rem; }
-    .error-msg {
-      background: var(--danger-subtle); border: 1px solid var(--danger);
-      border-radius: var(--radius-md); color: var(--danger);
-      padding: 0.5rem 0.75rem; font-size: 0.8rem; margin-bottom: 1rem;
-    }
-    .success-msg {
-      background: var(--ok-subtle); border: 1px solid var(--ok); border-radius: var(--radius-md);
-      color: var(--ok); padding: 0.5rem 0.75rem; font-size: 0.8rem; margin-bottom: 1rem;
-    }
-    .form-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem;
-    }
-    .form-row { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
-    .form-field { flex: 1; }
-    .form-field label { display: block; font-size: 0.8rem; margin-bottom: 0.3rem; color: var(--text-2); }
-    .form-field input, .form-field textarea, .form-field select {
-      width: 100%; padding: 0.45rem 0.65rem; background: var(--input-bg);
-      border: 1px solid var(--input-border); border-radius: var(--radius-md);
-      color: var(--text); font-size: 0.85rem; outline: none; box-sizing: border-box;
-    }
-    .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
-    .form-hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; }
-    .empty { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; }
-    .loading { text-align: center; padding: 2rem; color: var(--muted); }
-    .sub-models-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; }
-    .sub-models-table th, .sub-models-table td {
-      text-align: left; padding: 0.4rem 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .sub-models-table th { color: var(--text-2); font-weight: 500; }
-    .sub-model-form { background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem; margin-top: 0.5rem; }
-    .sub-model-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-end; }
-    .sub-model-row .form-field { flex: 1; }
-    .sub-model-row .form-field label { font-size: 0.72rem; }
-    .sub-model-row .form-field input { font-size: 0.8rem; padding: 0.35rem 0.5rem; }
-  `];
+  static styles = [
+    caretFix,
+    css`
+      :host {
+        display: block;
+        padding: 1.5rem;
+        color: var(--text);
+        font-family: var(--font-sans, system-ui, sans-serif);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      h3 {
+        margin: 0 0 1rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      h4 {
+        margin: 0.75rem 0 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-2);
+      }
+      .btn {
+        padding: 0.45rem 0.9rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .btn:hover {
+        opacity: 0.85;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+      .btn-danger {
+        background: var(--danger-subtle);
+        color: var(--danger);
+      }
+      .btn-sm {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 1rem;
+      }
+      .model-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+      }
+      .model-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+      }
+      .model-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .model-provider {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: 0.15rem;
+      }
+      .model-meta {
+        font-size: 0.8rem;
+        color: var(--text-2);
+        margin-bottom: 0.5rem;
+      }
+      .model-meta span {
+        margin-right: 1rem;
+      }
+      .model-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-top: 0.5rem;
+      }
+      .model-tag {
+        font-size: 0.72rem;
+        padding: 0.15rem 0.5rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text-2);
+      }
+      .model-tag.reasoning {
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      .shared-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        background: var(--accent-light);
+        color: var(--accent);
+        margin-left: 0.4rem;
+      }
+      .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.3rem;
+      }
+      .status-dot.active {
+        background: var(--ok);
+      }
+      .status-dot.inactive {
+        background: var(--border);
+      }
+      .model-actions {
+        display: flex;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+      }
+      .error-msg {
+        background: var(--danger-subtle);
+        border: 1px solid var(--danger);
+        border-radius: var(--radius-md);
+        color: var(--danger);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .success-msg {
+        background: var(--ok-subtle);
+        border: 1px solid var(--ok);
+        border-radius: var(--radius-md);
+        color: var(--ok);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .form-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+      .form-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      .form-field {
+        flex: 1;
+      }
+      .form-field label {
+        display: block;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+        color: var(--text-2);
+      }
+      .form-field input,
+      .form-field textarea,
+      .form-field select {
+        width: 100%;
+        padding: 0.45rem 0.65rem;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: var(--radius-md);
+        color: var(--text);
+        font-size: 0.85rem;
+        outline: none;
+        box-sizing: border-box;
+      }
+      .form-field input:focus,
+      .form-field select:focus {
+        border-color: var(--accent);
+      }
+      .form-hint {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 0.25rem;
+      }
+      .empty {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+      }
+      .sub-models-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+      }
+      .sub-models-table th,
+      .sub-models-table td {
+        text-align: left;
+        padding: 0.4rem 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .sub-models-table th {
+        color: var(--text-2);
+        font-weight: 500;
+      }
+      .sub-model-form {
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+      }
+      .sub-model-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        align-items: flex-end;
+      }
+      .sub-model-row .form-field {
+        flex: 1;
+      }
+      .sub-model-row .form-field label {
+        font-size: 0.72rem;
+      }
+      .sub-model-row .form-field input {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.5rem;
+      }
+    `,
+  ];
 
   private i18nController = new I18nController(this);
 
@@ -161,13 +329,19 @@ export class PlatformModelsView extends LitElement {
   private providerNameManuallyEdited = false;
 
   private showError(msg: string) {
-    this.error = msg; this.success = "";
-    if (this.msgTimer) {clearTimeout(this.msgTimer);}
+    this.error = msg;
+    this.success = "";
+    if (this.msgTimer) {
+      clearTimeout(this.msgTimer);
+    }
     this.msgTimer = setTimeout(() => (this.error = ""), 5000);
   }
   private showSuccess(msg: string) {
-    this.success = msg; this.error = "";
-    if (this.msgTimer) {clearTimeout(this.msgTimer);}
+    this.success = msg;
+    this.error = "";
+    if (this.msgTimer) {
+      clearTimeout(this.msgTimer);
+    }
     this.msgTimer = setTimeout(() => (this.success = ""), 5000);
   }
 
@@ -184,7 +358,7 @@ export class PlatformModelsView extends LitElement {
     this.loading = true;
     this.error = "";
     try {
-      const result = await this.rpc("platform.models.list") as { models: PlatformModelConfig[] };
+      const result = (await this.rpc("platform.models.list")) as { models: PlatformModelConfig[] };
       this.configs = result.models;
     } catch (err) {
       this.showError(err instanceof Error ? err.message : "Failed to load models");
@@ -249,14 +423,17 @@ export class PlatformModelsView extends LitElement {
       this.showError("Duplicate model ID");
       return;
     }
-    this.formModels = [...this.formModels, {
-      id: this.subModelId,
-      name: this.subModelName,
-      reasoning: false,
-      input: ["text"],
-      contextWindow: 128000,
-      maxTokens: 128000,
-    }];
+    this.formModels = [
+      ...this.formModels,
+      {
+        id: this.subModelId,
+        name: this.subModelName,
+        reasoning: false,
+        input: ["text"],
+        contextWindow: 128000,
+        maxTokens: 128000,
+      },
+    ];
     this.showModelForm = false;
   }
 
@@ -264,15 +441,17 @@ export class PlatformModelsView extends LitElement {
     const model = this.formModels[idx];
     if (this.editingId && model) {
       try {
-        const result = await this.rpc("platform.models.checkModelUsage", {
+        const result = (await this.rpc("platform.models.checkModelUsage", {
           providerId: this.editingId,
           modelId: model.id,
-        }) as { agents: string[] };
+        })) as { agents: string[] };
         if (result.agents && result.agents.length > 0) {
-          this.showError(t("platformModels.removeModelInUse", {
-            modelId: model.id,
-            agents: result.agents.join(", "),
-          }));
+          this.showError(
+            t("platformModels.removeModelInUse", {
+              modelId: model.id,
+              agents: result.agents.join(", "),
+            }),
+          );
           return;
         }
       } catch {
@@ -284,7 +463,9 @@ export class PlatformModelsView extends LitElement {
 
   private async handleSave(e: Event) {
     e.preventDefault();
-    if (!this.formProviderType || !this.formProviderName) {return;}
+    if (!this.formProviderType || !this.formProviderName) {
+      return;
+    }
     if (this.formModels.length === 0) {
       this.showError(t("models.needOneModel"));
       return;
@@ -343,7 +524,9 @@ export class PlatformModelsView extends LitElement {
       cancelText: t("models.cancel"),
       danger: true,
     });
-    if (!ok) {return;}
+    if (!ok) {
+      return;
+    }
     try {
       await this.rpc("platform.models.delete", { id: config.id });
       this.showSuccess(t("models.configDeleted", { name: config.providerName }));
@@ -374,7 +557,7 @@ export class PlatformModelsView extends LitElement {
         <h2>${t("platformModels.title", {}, "Platform Shared Models")}</h2>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-outline" @click=${() => this.loadConfigs()}>${t("models.refresh")}</button>
-          <button class="btn btn-primary" @click=${() => this.showForm ? (this.showForm = false) : this.startCreate()}>
+          <button class="btn btn-primary" @click=${() => (this.showForm ? (this.showForm = false) : this.startCreate())}>
             ${this.showForm ? t("models.cancel") : t("platformModels.addProvider", {}, "Add Shared Provider")}
           </button>
         </div>
@@ -385,16 +568,19 @@ export class PlatformModelsView extends LitElement {
 
       ${this.showForm ? this.renderForm() : nothing}
 
-      ${this.loading
-        ? html`<div class="loading">${t("models.loading")}</div>`
-        : this.configs.length === 0
-          ? html`<div class="empty">${t("platformModels.empty", {}, "No shared models yet. Create one to make it available to all tenants.")}</div>`
-          : html`<div class="card-grid">${this.configs.map((c) => this.renderCard(c))}</div>`}
+      ${
+        this.loading
+          ? html`<div class="loading">${t("models.loading")}</div>`
+          : this.configs.length === 0
+            ? html`<div class="empty">${t("platformModels.empty", {}, "No shared models yet. Create one to make it available to all tenants.")}</div>`
+            : html`<div class="card-grid">${this.configs.map((c) => this.renderCard(c))}</div>`
+      }
     `;
   }
 
   private renderCard(config: PlatformModelConfig) {
-    const providerLabel = PROVIDER_TYPES.find((p) => p.value === config.providerType)?.label ?? config.providerType;
+    const providerLabel =
+      PROVIDER_TYPES.find((p) => p.value === config.providerType)?.label ?? config.providerType;
     return html`
       <div class="model-card">
         <div class="model-card-header">
@@ -413,9 +599,11 @@ export class PlatformModelsView extends LitElement {
           <span>${t("models.authMode")}: ${config.authMode}${config.hasApiKey ? ` (${t("models.authConfigured")})` : ""}</span>
         </div>
         <div class="model-tags">
-          ${config.models.map((m) => html`
+          ${config.models.map(
+            (m) => html`
             <span class="model-tag ${m.reasoning ? "reasoning" : ""}">${m.name} (${m.id})</span>
-          `)}
+          `,
+          )}
         </div>
         <div class="model-actions">
           <button class="btn btn-outline btn-sm" @click=${() => this.startEdit(config)}>${t("models.edit")}</button>
@@ -435,15 +623,20 @@ export class PlatformModelsView extends LitElement {
               <label>${t("models.providerType")}</label>
               <select ?disabled=${!!this.editingId}
                 @change=${(e: Event) => this.onProviderTypeChange((e.target as HTMLSelectElement).value)}>
-                ${PROVIDER_TYPES.map((p) => html`
+                ${PROVIDER_TYPES.map(
+                  (p) => html`
                   <option value=${p.value} ?selected=${this.formProviderType === p.value}>${p.label}</option>
-                `)}
+                `,
+                )}
               </select>
             </div>
             <div class="form-field">
               <label>${t("models.providerName")}</label>
               <input type="text" required .value=${this.formProviderName}
-                @input=${(e: InputEvent) => { this.formProviderName = (e.target as HTMLInputElement).value; this.providerNameManuallyEdited = true; }} />
+                @input=${(e: InputEvent) => {
+                  this.formProviderName = (e.target as HTMLInputElement).value;
+                  this.providerNameManuallyEdited = true;
+                }} />
             </div>
           </div>
 
@@ -456,9 +649,11 @@ export class PlatformModelsView extends LitElement {
             <div class="form-field">
               <label>${t("models.apiProtocol")}</label>
               <select @change=${(e: Event) => (this.formApiProtocol = (e.target as HTMLSelectElement).value)}>
-                ${API_PROTOCOLS.map((p) => html`
+                ${API_PROTOCOLS.map(
+                  (p) => html`
                   <option value=${p.value} ?selected=${this.formApiProtocol === p.value}>${p.label}</option>
-                `)}
+                `,
+                )}
               </select>
             </div>
           </div>
@@ -472,32 +667,44 @@ export class PlatformModelsView extends LitElement {
                 <option value="none" ?selected=${this.formAuthMode === "none"}>${t("models.authNone")}</option>
               </select>
             </div>
-            ${this.formAuthMode === "api-key" || this.formAuthMode === "token" ? html`
+            ${
+              this.formAuthMode === "api-key" || this.formAuthMode === "token"
+                ? html`
               <div class="form-field">
                 <label>${t("models.apiKey")}${this.editingId ? t("models.apiKeyKeepHint") : ""}</label>
                 <input type="password" .value=${this.formApiKey}
                   @input=${(e: InputEvent) => (this.formApiKey = (e.target as HTMLInputElement).value)} />
               </div>
-            ` : nothing}
+            `
+                : nothing
+            }
           </div>
 
           <h4>${t("models.modelsCount", { count: String(this.formModels.length) })}</h4>
-          ${this.formModels.length > 0 ? html`
+          ${
+            this.formModels.length > 0
+              ? html`
             <table class="sub-models-table">
               <thead><tr><th>${t("models.modelId")}</th><th>${t("models.modelName")}</th><th></th></tr></thead>
               <tbody>
-                ${this.formModels.map((m, idx) => html`
+                ${this.formModels.map(
+                  (m, idx) => html`
                   <tr>
                     <td style="font-family:monospace">${m.id}</td>
                     <td>${m.name}</td>
                     <td><button type="button" class="btn btn-danger btn-sm" @click=${() => this.removeModel(idx)}>${t("models.remove")}</button></td>
                   </tr>
-                `)}
+                `,
+                )}
               </tbody>
             </table>
-          ` : nothing}
+          `
+              : nothing
+          }
 
-          ${this.showModelForm ? html`
+          ${
+            this.showModelForm
+              ? html`
             <div class="sub-model-form">
               <div class="sub-model-row">
                 <div class="form-field">
@@ -518,9 +725,11 @@ export class PlatformModelsView extends LitElement {
                 </div>
               </div>
             </div>
-          ` : html`
+          `
+              : html`
             <button type="button" class="btn btn-outline btn-sm" style="margin-top:0.5rem" @click=${() => this.startAddModel()}>${t("models.addModel")}</button>
-          `}
+          `
+          }
 
           <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
             <button class="btn btn-primary" type="submit" ?disabled=${this.saving}>

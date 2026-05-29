@@ -13,10 +13,10 @@ import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import "./cs-api-mode.js";
 import { I18nController, t } from "../../../i18n/index.ts";
-import { tenantRpc } from "./rpc.ts";
 import { loadAuth } from "../../auth-store.ts";
-import { loadSettings } from "../../storage.ts";
 import { caretFix } from "../../shared-styles.ts";
+import { loadSettings } from "../../storage.ts";
+import { tenantRpc } from "./rpc.ts";
 
 const MAX_CHANNELS = 3;
 
@@ -43,10 +43,20 @@ export class CSSetupView extends LitElement {
   static styles = [
     caretFix,
     css`
-      :host { display: block; }
+      :host {
+        display: block;
+      }
 
-      h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
-      h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+      h2 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      h3 {
+        margin: 0 0 12px;
+        font-size: 14px;
+        font-weight: 600;
+      }
 
       .section {
         margin-bottom: 28px;
@@ -62,16 +72,26 @@ export class CSSetupView extends LitElement {
         border-radius: 8px;
         padding: 10px 18px;
         font-size: 13px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         z-index: 9999;
         animation: toastIn 0.2s ease;
         min-width: 160px;
       }
-      .toast.ok  { border-left: 4px solid var(--color-success, #1a7f37); }
-      .toast.err { border-left: 4px solid var(--color-danger, #cf222e); }
+      .toast.ok {
+        border-left: 4px solid var(--color-success, #1a7f37);
+      }
+      .toast.err {
+        border-left: 4px solid var(--color-danger, #cf222e);
+      }
       @keyframes toastIn {
-        from { opacity: 0; transform: translateY(-8px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       /* Guide section — summary IS the .guide element */
@@ -90,14 +110,18 @@ export class CSSetupView extends LitElement {
         padding: 12px 16px;
       }
       summary.guide::marker,
-      summary.guide::-webkit-details-marker { display: none; }
+      summary.guide::-webkit-details-marker {
+        display: none;
+      }
       summary.guide::before {
         content: "▶";
         font-size: 10px;
         transition: transform 0.15s;
         flex-shrink: 0;
       }
-      details[open] > summary.guide::before { transform: rotate(90deg); }
+      details[open] > summary.guide::before {
+        transform: rotate(90deg);
+      }
       details[open] > summary.guide {
         border-radius: 8px 8px 0 0;
         border-bottom: none;
@@ -121,7 +145,8 @@ export class CSSetupView extends LitElement {
         margin-bottom: 12px;
       }
 
-      .guide-body th, .guide-body td {
+      .guide-body th,
+      .guide-body td {
         text-align: left;
         padding: 6px 10px;
         border-bottom: 1px solid var(--color-border, #e1e4e8);
@@ -177,7 +202,9 @@ export class CSSetupView extends LitElement {
         box-sizing: border-box;
         cursor: pointer;
       }
-      select:focus { border-color: var(--color-accent, #0969da); }
+      select:focus {
+        border-color: var(--color-accent, #0969da);
+      }
 
       .skills-toggle {
         display: flex;
@@ -191,10 +218,23 @@ export class CSSetupView extends LitElement {
         user-select: none;
       }
       .skills-toggle input[type="checkbox"] {
-        width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; margin-top: 2px;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 2px;
       }
-      .skills-toggle-label { font-size: 12px; font-weight: 500; line-height: 1.4; }
-      .skills-toggle-hint { font-size: 11px; color: var(--color-text-secondary, #6a737d); margin-top: 2px; line-height: 1.4; }
+      .skills-toggle-label {
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      .skills-toggle-hint {
+        font-size: 11px;
+        color: var(--color-text-secondary, #6a737d);
+        margin-top: 2px;
+        line-height: 1.4;
+      }
 
       textarea {
         width: 100%;
@@ -212,7 +252,9 @@ export class CSSetupView extends LitElement {
         box-sizing: border-box;
         min-height: 220px;
       }
-      textarea:focus { border-color: var(--color-accent, #0969da); }
+      textarea:focus {
+        border-color: var(--color-accent, #0969da);
+      }
 
       .prompt-actions {
         display: flex;
@@ -221,7 +263,8 @@ export class CSSetupView extends LitElement {
         margin-top: 8px;
       }
 
-      input[type="text"], input[type="password"] {
+      input[type="text"],
+      input[type="password"] {
         width: 100%;
         max-width: 480px;
         padding: 8px 10px;
@@ -235,7 +278,9 @@ export class CSSetupView extends LitElement {
         box-sizing: border-box;
       }
 
-      input:focus { border-color: var(--color-accent, #0969da); }
+      input:focus {
+        border-color: var(--color-accent, #0969da);
+      }
       input[readonly] {
         background: var(--color-bg-secondary, #f6f8fa);
         color: var(--color-text-secondary, #6a737d);
@@ -266,7 +311,9 @@ export class CSSetupView extends LitElement {
         border-color: var(--color-accent, #0969da);
       }
 
-      .btn-primary:hover { opacity: 0.85; }
+      .btn-primary:hover {
+        opacity: 0.85;
+      }
 
       .btn-secondary {
         background: transparent;
@@ -284,9 +331,14 @@ export class CSSetupView extends LitElement {
         border-color: var(--color-border, #e1e4e8);
       }
 
-      .btn-ghost:hover { background: var(--color-bg-hover, #eaeef2); }
+      .btn-ghost:hover {
+        background: var(--color-bg-hover, #eaeef2);
+      }
 
-      .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
 
       /* Check results */
       .check-header {
@@ -321,9 +373,18 @@ export class CSSetupView extends LitElement {
         font-size: 13px;
       }
 
-      .check-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-      .check-name { font-weight: 600; margin-right: 4px; }
-      .check-msg { color: var(--color-text-secondary, #6a737d); }
+      .check-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .check-name {
+        font-weight: 600;
+        margin-right: 4px;
+      }
+      .check-msg {
+        color: var(--color-text-secondary, #6a737d);
+      }
 
       /* Channel rows */
       .channel-block {
@@ -354,7 +415,9 @@ export class CSSetupView extends LitElement {
         color: var(--color-text, #1c1c1e);
       }
 
-      .channel-label-input:focus { border-color: var(--color-accent, #0969da); }
+      .channel-label-input:focus {
+        border-color: var(--color-accent, #0969da);
+      }
 
       .channel-label-input[readonly] {
         background: var(--color-bg-secondary, #f6f8fa);
@@ -414,7 +477,10 @@ export class CSSetupView extends LitElement {
         align-items: start;
       }
       @media (max-width: 860px) {
-        .config-grid { grid-template-columns: 1fr; gap: 0; }
+        .config-grid {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
       }
 
       /* Restriction checkboxes: 2x2 grid */
@@ -425,7 +491,9 @@ export class CSSetupView extends LitElement {
         max-width: 640px;
       }
       @media (max-width: 640px) {
-        .restrictions-grid { grid-template-columns: 1fr; }
+        .restrictions-grid {
+          grid-template-columns: 1fr;
+        }
       }
 
       /* Console mode switcher */
@@ -451,7 +519,9 @@ export class CSSetupView extends LitElement {
         color: #fff;
         border-color: var(--color-accent, #0969da);
       }
-      .mode-btn:hover:not(.active) { background: var(--color-bg-hover, #eaeef2); }
+      .mode-btn:hover:not(.active) {
+        background: var(--color-bg-hover, #eaeef2);
+      }
     `,
   ];
 
@@ -483,7 +553,14 @@ export class CSSetupView extends LitElement {
   @state() private checkResultsAt: string | null = null;
   @state() private loading = true;
   @state() private channels: Channel[] = [
-    { label: "default", html: null, mode: "initial", prevLabel: "default", prevHtml: null, expanded: false },
+    {
+      label: "default",
+      html: null,
+      mode: "initial",
+      prevLabel: "default",
+      prevHtml: null,
+      expanded: false,
+    },
   ];
   @state() private channelErrors: Record<number, string> = {};
   @state() private copiedIdx: number | null = null;
@@ -514,15 +591,19 @@ export class CSSetupView extends LitElement {
   private _showToast(text: string, ok: boolean) {
     clearTimeout(this._toastTimer);
     this.toast = { text, ok };
-    this._toastTimer = setTimeout(() => { this.toast = null; }, 3000);
+    this._toastTimer = setTimeout(() => {
+      this.toast = null;
+    }, 3000);
   }
 
   private async _loadConfig() {
     const tenantId = this.tenantId;
-    if (!tenantId) {return;}
+    if (!tenantId) {
+      return;
+    }
     this.loading = true;
     try {
-      const result = await tenantRpc("cs.config.get", { tenantId }) as {
+      const result = (await tenantRpc("cs.config.get", { tenantId })) as {
         config: {
           notificationChannel?: string;
           feishu: { appId: string; appSecretMasked: string; chatId: string; hasSecret: boolean };
@@ -555,10 +636,10 @@ export class CSSetupView extends LitElement {
       this.notifyIntervalMinutes = cfg.notifyIntervalMinutes ?? 10;
       const r = cfg.restrictions;
       this.restrictions = {
-        disableSkills:       r?.disableSkills       ?? true,
+        disableSkills: r?.disableSkills ?? true,
         strictKnowledgeBase: r?.strictKnowledgeBase ?? true,
-        disableMarkdown:     r?.disableMarkdown     ?? true,
-        hideInternals:       r?.hideInternals       ?? true,
+        disableMarkdown: r?.disableMarkdown ?? true,
+        hideInternals: r?.hideInternals ?? true,
       };
 
       // Restore saved channels as locked
@@ -586,7 +667,9 @@ export class CSSetupView extends LitElement {
    */
   private async _saveChannels() {
     const tenantId = this.tenantId;
-    if (!tenantId) {return;}
+    if (!tenantId) {
+      return;
+    }
     try {
       const channelsToSave = this.channels
         .filter((ch) => ch.html !== null)
@@ -598,9 +681,15 @@ export class CSSetupView extends LitElement {
   }
 
   private _validateConfig(): string | null {
-    if (!this.appId.trim()) {return "请填写飞书 App ID";}
-    if (!this.hasExistingSecret && !this.appSecret) {return "请填写飞书 App Secret";}
-    if (!this.chatId.trim()) {return "请填写飞书群聊 Chat ID";}
+    if (!this.appId.trim()) {
+      return "请填写飞书 App ID";
+    }
+    if (!this.hasExistingSecret && !this.appSecret) {
+      return "请填写飞书 App Secret";
+    }
+    if (!this.chatId.trim()) {
+      return "请填写飞书群聊 Chat ID";
+    }
     return null;
   }
 
@@ -611,7 +700,9 @@ export class CSSetupView extends LitElement {
       return;
     }
     const tenantId = this.tenantId;
-    if (!tenantId) {return;}
+    if (!tenantId) {
+      return;
+    }
     this.saving = true;
     try {
       await tenantRpc("cs.config.set", {
@@ -641,12 +732,14 @@ export class CSSetupView extends LitElement {
 
   private async _testConfig() {
     const tenantId = this.tenantId;
-    if (!tenantId) {return;}
+    if (!tenantId) {
+      return;
+    }
     this.testing = true;
     this.checkResults = null;
     this.checkResultsAt = null;
     try {
-      const result = await tenantRpc("cs.config.test", { tenantId }) as { checks: CheckResult[] };
+      const result = (await tenantRpc("cs.config.test", { tenantId })) as { checks: CheckResult[] };
       this.checkResults = result.checks;
       this.checkResultsAt = new Date().toLocaleTimeString("zh-CN", {
         hour: "2-digit",
@@ -654,7 +747,9 @@ export class CSSetupView extends LitElement {
         second: "2-digit",
       });
     } catch (err) {
-      this.checkResults = [{ name: "测试失败", ok: false, message: err instanceof Error ? err.message : String(err) }];
+      this.checkResults = [
+        { name: "测试失败", ok: false, message: err instanceof Error ? err.message : String(err) },
+      ];
       this.checkResultsAt = new Date().toLocaleTimeString("zh-CN", {
         hour: "2-digit",
         minute: "2-digit",
@@ -680,14 +775,19 @@ export class CSSetupView extends LitElement {
     // Uniqueness check
     const duplicate = this.channels.some((c, i) => i !== channelIdx && c.label.trim() === label);
     if (duplicate) {
-      this.channelErrors = { ...this.channelErrors, [channelIdx]: "渠道标签已存在，请使用唯一标签" };
+      this.channelErrors = {
+        ...this.channelErrors,
+        [channelIdx]: "渠道标签已存在，请使用唯一标签",
+      };
       return;
     }
 
     const tenantId = this.tenantId ?? "YOUR_TENANT_ID";
     const gatewayUrl = loadSettings().gatewayUrl || "wss://YOUR_EC_DOMAIN";
     // Convert ws(s):// to http(s):// for script src
-    const baseUrl = gatewayUrl.replace(/^wss?:\/\//, (m) => m.startsWith("wss") ? "https://" : "http://");
+    const baseUrl = gatewayUrl.replace(/^wss?:\/\//, (m) =>
+      m.startsWith("wss") ? "https://" : "http://",
+    );
 
     const embedHtml = [
       `<!-- EC AI 客服 Widget · 渠道: ${label} -->`,
@@ -709,7 +809,15 @@ export class CSSetupView extends LitElement {
 
     this.channels = this.channels.map((c, i) =>
       i === channelIdx
-        ? { ...c, label, html: embedHtml, mode: "locked", prevLabel: c.label, prevHtml: c.html, expanded: false }
+        ? {
+            ...c,
+            label,
+            html: embedHtml,
+            mode: "locked",
+            prevLabel: c.label,
+            prevHtml: c.html,
+            expanded: false,
+          }
         : c,
     );
 
@@ -739,8 +847,13 @@ export class CSSetupView extends LitElement {
   }
 
   private _addChannel() {
-    if (this.channels.length >= MAX_CHANNELS) {return;}
-    this.channels = [...this.channels, { label: "", html: null, mode: "initial", prevLabel: "", prevHtml: null, expanded: false }];
+    if (this.channels.length >= MAX_CHANNELS) {
+      return;
+    }
+    this.channels = [
+      ...this.channels,
+      { label: "", html: null, mode: "initial", prevLabel: "", prevHtml: null, expanded: false },
+    ];
   }
 
   private _removeChannel(idx: number) {
@@ -749,8 +862,11 @@ export class CSSetupView extends LitElement {
     const errs: Record<number, string> = {};
     Object.entries(this.channelErrors).forEach(([k, v]) => {
       const ki = parseInt(k, 10);
-      if (ki < idx) {errs[ki] = v;}
-      else if (ki > idx) {errs[ki - 1] = v;}
+      if (ki < idx) {
+        errs[ki] = v;
+      } else if (ki > idx) {
+        errs[ki - 1] = v;
+      }
     });
     this.channelErrors = errs;
     // Persist after remove
@@ -758,24 +874,26 @@ export class CSSetupView extends LitElement {
   }
 
   private _toggleChannelCode(idx: number) {
-    this.channels = this.channels.map((c, i) =>
-      i === idx ? { ...c, expanded: !c.expanded } : c,
-    );
+    this.channels = this.channels.map((c, i) => (i === idx ? { ...c, expanded: !c.expanded } : c));
   }
 
   private _updateChannelLabel(idx: number, value: string) {
     // Strip spaces as user types
     const cleaned = value.replace(/\s/g, "");
-    this.channels = this.channels.map((c, i) => i === idx ? { ...c, label: cleaned } : c);
+    this.channels = this.channels.map((c, i) => (i === idx ? { ...c, label: cleaned } : c));
   }
 
   private async _copyHtml(idx: number) {
     const embedHtml = this.channels[idx].html;
-    if (!embedHtml) {return;}
+    if (!embedHtml) {
+      return;
+    }
     try {
       await navigator.clipboard.writeText(embedHtml);
       this.copiedIdx = idx;
-      setTimeout(() => { this.copiedIdx = null; }, 2000);
+      setTimeout(() => {
+        this.copiedIdx = null;
+      }, 2000);
     } catch {
       // clipboard API not available
     }
@@ -789,7 +907,11 @@ export class CSSetupView extends LitElement {
           <div class="guide-body">
             <table>
               <thead>
-                <tr><th>参数</th><th>说明</th><th>获取方式</th></tr>
+                <tr>
+                  <th>参数</th>
+                  <th>说明</th>
+                  <th>获取方式</th>
+                </tr>
               </thead>
               <tbody>
                 <tr>
@@ -810,13 +932,19 @@ export class CSSetupView extends LitElement {
                 <tr>
                   <td><strong>渠道标签</strong></td>
                   <td>标识来源渠道，出现在会话记录和飞书通知中</td>
-                  <td>自定义字符串，不含空格，如 <code>default</code>、<code>website</code>、<code>wechat</code></td>
+                  <td>
+                    自定义字符串，不含空格，如 <code>default</code>、<code>website</code>、<code
+                      >wechat</code
+                    >
+                  </td>
                 </tr>
               </tbody>
             </table>
-            <p>生成的 HTML 嵌入代码可以放置在任意网页的 <code>&lt;body&gt;</code> 末尾，
-              访客打开页面后右下角即出现 AI 客服悬浮气泡。
-              嵌入前请确认 EC 服务可公网访问，否则访客无法连接 Gateway。</p>
+            <p>
+              生成的 HTML 嵌入代码可以放置在任意网页的 <code>&lt;body&gt;</code> 末尾，
+              访客打开页面后右下角即出现 AI 客服悬浮气泡。 嵌入前请确认 EC
+              服务可公网访问，否则访客无法连接 Gateway。
+            </p>
           </div>
         </details>
       </div>
@@ -841,7 +969,9 @@ export class CSSetupView extends LitElement {
           <label>通知渠道</label>
           <select
             .value=${this.notificationChannel}
-            @change=${(e: Event) => { this.notificationChannel = (e.target as HTMLSelectElement).value; }}
+            @change=${(e: Event) => {
+              this.notificationChannel = (e.target as HTMLSelectElement).value;
+            }}
           >
             <option value="feishu">飞书（Feishu）</option>
           </select>
@@ -854,7 +984,9 @@ export class CSSetupView extends LitElement {
             type="text"
             placeholder="cli_xxxxxxxxxx"
             .value=${this.appId}
-            @input=${(e: Event) => { this.appId = (e.target as HTMLInputElement).value; }}
+            @input=${(e: Event) => {
+              this.appId = (e.target as HTMLInputElement).value;
+            }}
           />
         </div>
         <div class="form-group">
@@ -863,11 +995,17 @@ export class CSSetupView extends LitElement {
             type="password"
             placeholder=${this.hasExistingSecret ? "已设置（输入新值覆盖）" : "请输入 App Secret"}
             .value=${this.appSecret}
-            @input=${(e: Event) => { this.appSecret = (e.target as HTMLInputElement).value; }}
+            @input=${(e: Event) => {
+              this.appSecret = (e.target as HTMLInputElement).value;
+            }}
           />
-          ${this.hasExistingSecret && !this.appSecret
-            ? html`<p class="hint">App Secret 已配置，留空则保留旧值</p>`
-            : nothing}
+          ${
+            this.hasExistingSecret && !this.appSecret
+              ? html`
+                  <p class="hint">App Secret 已配置，留空则保留旧值</p>
+                `
+              : nothing
+          }
         </div>
         <div class="form-group">
           <label>飞书群聊 Chat ID <span style="color:var(--color-danger,#cf222e)">*</span></label>
@@ -875,7 +1013,9 @@ export class CSSetupView extends LitElement {
             type="text"
             placeholder="oc_xxxxxxxxxx"
             .value=${this.chatId}
-            @input=${(e: Event) => { this.chatId = (e.target as HTMLInputElement).value; }}
+            @input=${(e: Event) => {
+              this.chatId = (e.target as HTMLInputElement).value;
+            }}
           />
           <p class="hint">群聊中 → 右上角「···」→ 群设置 → Chat ID</p>
         </div>
@@ -890,7 +1030,9 @@ export class CSSetupView extends LitElement {
             .value=${String(this.notifyIntervalMinutes)}
             @input=${(e: Event) => {
               const v = parseInt((e.target as HTMLInputElement).value, 10);
-              if (!isNaN(v)) {this.notifyIntervalMinutes = Math.max(1, Math.min(60, v));}
+              if (!isNaN(v)) {
+                this.notifyIntervalMinutes = Math.max(1, Math.min(60, v));
+              }
             }}
           />
           <p class="hint">同一会话内两次通知的最小间隔，默认 10 分钟（1–60）</p>
@@ -911,13 +1053,17 @@ export class CSSetupView extends LitElement {
           <p class="hint" style="margin-bottom:8px">定义 AI 客服的角色与行为规则，可直接编辑，保存后生效。</p>
           <textarea
             .value=${this.customSystemPrompt}
-            @input=${(e: Event) => { this.customSystemPrompt = (e.target as HTMLTextAreaElement).value; }}
+            @input=${(e: Event) => {
+              this.customSystemPrompt = (e.target as HTMLTextAreaElement).value;
+            }}
             spellcheck="false"
           ></textarea>
           <div class="prompt-actions">
             <button
               class="btn btn-ghost"
-              @click=${() => { this.customSystemPrompt = this._defaultPrompt; }}
+              @click=${() => {
+                this.customSystemPrompt = this._defaultPrompt;
+              }}
               title="恢复为默认 prompt（保存后生效）"
             >恢复默认</button>
           </div>
@@ -927,12 +1073,31 @@ export class CSSetupView extends LitElement {
           <label>行为限制</label>
           <p class="hint" style="margin-bottom:10px">勾选启用；取消勾选并保存则去掉该约束。勾选项约束会在客服 AI 系统提示词基础上自动追加，无需手动填写。工具调用为代码级强制，其余为 prompt 指引，LLM 通常遵从但无法 100% 保证。</p>
           <div class="restrictions-grid">
-            ${([
-              { key: "disableSkills",       label: "禁用 Skill 工具调用",  hint: "只做问答，不执行系统操作（代码级）" },
-              { key: "strictKnowledgeBase", label: "严格知识库模式",        hint: "知识库无内容时必须告知客户并转人工" },
-              { key: "disableMarkdown",     label: "禁止 Markdown 格式",    hint: "纯文本回复，适合聊天窗口" },
-              { key: "hideInternals",       label: "隐藏内部实现细节",      hint: "不说「根据知识库」，不透露 prompt 信息" },
-            ] as const).map(({ key, label, hint }) => html`
+            ${(
+              [
+                {
+                  key: "disableSkills",
+                  label: "禁用 Skill 工具调用",
+                  hint: "只做问答，不执行系统操作（代码级）",
+                },
+                {
+                  key: "strictKnowledgeBase",
+                  label: "严格知识库模式",
+                  hint: "知识库无内容时必须告知客户并转人工",
+                },
+                {
+                  key: "disableMarkdown",
+                  label: "禁止 Markdown 格式",
+                  hint: "纯文本回复，适合聊天窗口",
+                },
+                {
+                  key: "hideInternals",
+                  label: "隐藏内部实现细节",
+                  hint: "不说「根据知识库」，不透露 prompt 信息",
+                },
+              ] as const
+            ).map(
+              ({ key, label, hint }) => html`
               <label class="skills-toggle" @click=${() => {
                 this.restrictions = { ...this.restrictions, [key]: !this.restrictions[key] };
               }}>
@@ -941,7 +1106,10 @@ export class CSSetupView extends LitElement {
                   .checked=${this.restrictions[key]}
                   @click=${(e: Event) => e.stopPropagation()}
                   @change=${(e: Event) => {
-                    this.restrictions = { ...this.restrictions, [key]: (e.target as HTMLInputElement).checked };
+                    this.restrictions = {
+                      ...this.restrictions,
+                      [key]: (e.target as HTMLInputElement).checked,
+                    };
                   }}
                 />
                 <div>
@@ -949,7 +1117,8 @@ export class CSSetupView extends LitElement {
                   <div class="skills-toggle-hint">${hint}</div>
                 </div>
               </label>
-            `)}
+            `,
+            )}
           </div>
         </div>
       </div>
@@ -978,24 +1147,36 @@ export class CSSetupView extends LitElement {
                   ?readonly=${isLocked}
                   @input=${(e: Event) => this._updateChannelLabel(idx, (e.target as HTMLInputElement).value)}
                 />
-                ${canGenerate
-                  ? html`<button class="btn btn-primary" @click=${() => this._generateHtml(idx)}>生成</button>`
-                  : nothing}
-                ${isLocked
-                  ? html`<button class="btn btn-secondary" @click=${() => this._startEditChannel(idx)}>修改</button>`
-                  : nothing}
-                ${isEditing
-                  ? html`<button class="btn btn-ghost" @click=${() => this._cancelEditChannel(idx)}>取消</button>`
-                  : nothing}
-                ${idx > 0
-                  ? html`<button class="btn btn-ghost" @click=${() => this._removeChannel(idx)}>删除</button>`
-                  : nothing}
-                ${this.channelErrors[idx]
-                  ? html`<span class="channel-error">${this.channelErrors[idx]}</span>`
-                  : nothing}
+                ${
+                  canGenerate
+                    ? html`<button class="btn btn-primary" @click=${() => this._generateHtml(idx)}>生成</button>`
+                    : nothing
+                }
+                ${
+                  isLocked
+                    ? html`<button class="btn btn-secondary" @click=${() => this._startEditChannel(idx)}>修改</button>`
+                    : nothing
+                }
+                ${
+                  isEditing
+                    ? html`<button class="btn btn-ghost" @click=${() => this._cancelEditChannel(idx)}>取消</button>`
+                    : nothing
+                }
+                ${
+                  idx > 0
+                    ? html`<button class="btn btn-ghost" @click=${() => this._removeChannel(idx)}>删除</button>`
+                    : nothing
+                }
+                ${
+                  this.channelErrors[idx]
+                    ? html`<span class="channel-error">${this.channelErrors[idx]}</span>`
+                    : nothing
+                }
               </div>
 
-              ${ch.html && isLocked ? html`
+              ${
+                ch.html && isLocked
+                  ? html`
                 <div class="code-actions">
                   <button class="btn btn-ghost" @click=${() => this._copyHtml(idx)}>
                     ${this.copiedIdx === idx ? "✓ 已复制" : "复制代码"}
@@ -1005,32 +1186,42 @@ export class CSSetupView extends LitElement {
                   </button>
                 </div>
                 ${ch.expanded ? html`<div class="code-block">${ch.html}</div>` : nothing}
-              ` : nothing}
+              `
+                  : nothing
+              }
             </div>
           `;
         })}
 
-        ${this.channels.length < MAX_CHANNELS
-          ? html`
+        ${
+          this.channels.length < MAX_CHANNELS
+            ? html`
             <div class="add-channel-row">
               <button class="btn btn-ghost" @click=${this._addChannel}>
                 + 增加新渠道（最多 ${MAX_CHANNELS} 个）
               </button>
             </div>`
-          : nothing}
+            : nothing
+        }
       </div>
     `;
   }
 
   private _renderWidgetMode() {
     if (this.loading) {
-      return html`<div style="padding:32px;text-align:center;color:var(--color-text-secondary,#6a737d)">加载中…</div>`;
+      return html`
+        <div style="padding: 32px; text-align: center; color: var(--color-text-secondary, #6a737d)">
+          加载中…
+        </div>
+      `;
     }
 
     return html`
-      ${this.toast
-        ? html`<div class="toast ${this.toast.ok ? "ok" : "err"}">${this.toast.text}</div>`
-        : nothing}
+      ${
+        this.toast
+          ? html`<div class="toast ${this.toast.ok ? "ok" : "err"}">${this.toast.text}</div>`
+          : nothing
+      }
 
       <div class="section">
         <h2>客服设置 & 嵌入代码</h2>
@@ -1058,21 +1249,25 @@ export class CSSetupView extends LitElement {
           </button>
         </div>
 
-        ${this.checkResults
-          ? html`
+        ${
+          this.checkResults
+            ? html`
             <div class="check-header">
               <h4>测试结果</h4>
               ${this.checkResultsAt ? html`<span class="check-ts">上次检测：${this.checkResultsAt}</span>` : nothing}
             </div>
             <div class="check-list">
-              ${this.checkResults.map((c) => html`
+              ${this.checkResults.map(
+                (c) => html`
                 <div class="check-item">
                   <span class="check-icon">${c.ok ? "✅" : "❌"}</span>
                   <span><span class="check-name">${c.name}</span><span class="check-msg">${c.message}</span></span>
                 </div>
-              `)}
+              `,
+              )}
             </div>`
-          : nothing}
+            : nothing
+        }
       </div>
       <hr class="divider" />
       ${this._renderChannels()}
@@ -1083,18 +1278,24 @@ export class CSSetupView extends LitElement {
     return html`
       <div class="mode-switcher">
         <button
-          class="mode-btn ${this._consoleMode === 'widget' ? 'active' : ''}"
-          @click=${() => { this._consoleMode = 'widget'; }}
+          class="mode-btn ${this._consoleMode === "widget" ? "active" : ""}"
+          @click=${() => {
+            this._consoleMode = "widget";
+          }}
         >${t("cs.console.widgetModeBtn")}</button>
         <button
-          class="mode-btn ${this._consoleMode === 'api' ? 'active' : ''}"
-          @click=${() => { this._consoleMode = 'api'; }}
+          class="mode-btn ${this._consoleMode === "api" ? "active" : ""}"
+          @click=${() => {
+            this._consoleMode = "api";
+          }}
         >${t("cs.console.apiModeBtn")}</button>
       </div>
 
-      ${this._consoleMode === 'api'
-        ? html`<cs-api-mode-view .gatewayUrl=${this.gatewayUrl}></cs-api-mode-view>`
-        : this._renderWidgetMode()}
+      ${
+        this._consoleMode === "api"
+          ? html`<cs-api-mode-view .gatewayUrl=${this.gatewayUrl}></cs-api-mode-view>`
+          : this._renderWidgetMode()
+      }
     `;
   }
 }

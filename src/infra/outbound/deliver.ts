@@ -234,8 +234,16 @@ export async function deliverOutboundPayloads(
   const { channel, to, payloads } = params;
   if (channel === "feishu") {
     const preview = payloads?.[0]?.text?.slice(0, 60) ?? "(no text)";
-    log.info(`[DEBUG-DELIVER] feishu outbound channel=${channel} to=${to} accountId=${params.accountId ?? "(none)"} payloads=${payloads?.length ?? 0} preview=${preview}`);
-    log.info(`[DEBUG-DELIVER] stack=${new Error().stack?.split("\n").slice(1, 5).map(s => s.trim()).join(" <- ")}`);
+    log.info(
+      `[DEBUG-DELIVER] feishu outbound channel=${channel} to=${to} accountId=${params.accountId ?? "(none)"} payloads=${payloads?.length ?? 0} preview=${preview}`,
+    );
+    log.info(
+      `[DEBUG-DELIVER] stack=${new Error().stack
+        ?.split("\n")
+        .slice(1, 5)
+        .map((s) => s.trim())
+        .join(" <- ")}`,
+    );
   }
 
   // Write-ahead delivery queue: persist before sending, remove after success.

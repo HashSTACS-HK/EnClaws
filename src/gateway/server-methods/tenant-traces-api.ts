@@ -8,8 +8,8 @@
  *   tenant.traces.detail  - Get a single trace with full payload
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
 import { isDbInitialized } from "../../db/index.js";
 import {
   listInteractionTurns,
@@ -17,9 +17,9 @@ import {
   listInteractionTraces,
   getInteractionTrace,
 } from "../../db/models/interaction-trace.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
-import type { TenantContext } from "../../auth/middleware.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
 import { loadSessionEntry } from "../session-utils.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 /** Parse a date-only string and set to end of day (23:59:59.999). */
 function parseUntilDate(s: string): Date {
@@ -33,7 +33,11 @@ function getTenantCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -69,8 +73,12 @@ function enrichTurnsWithSessionMeta(
           tenantId,
           userId: turn.userId ?? undefined,
         });
-        if (entry?.displayName) {sessionDisplayName = entry.displayName;}
-        if (entry?.channel) {sessionChannel = entry.channel;}
+        if (entry?.displayName) {
+          sessionDisplayName = entry.displayName;
+        }
+        if (entry?.channel) {
+          sessionChannel = entry.channel;
+        }
       } catch {
         // Non-fatal: session file may not exist for old/pruned sessions
       }
@@ -85,7 +93,9 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.turns": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "audit.read");
@@ -126,7 +136,9 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.turn": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "audit.read");
@@ -159,7 +171,9 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "audit.read");
@@ -199,7 +213,9 @@ export const tenantTracesHandlers: GatewayRequestHandlers = {
    */
   "tenant.traces.detail": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "audit.read");

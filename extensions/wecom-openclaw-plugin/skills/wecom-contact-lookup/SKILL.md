@@ -25,33 +25,33 @@ description: 通讯录成员查询技能，基于 MCP tool 协议封装的 `get_
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok",
-    "userlist": [
-        {
-            "userid": "zhangsan",
-            "name": "张三",
-            "alias": "Sam"
-        },
-        {
-            "userid": "lisi",
-            "name": "李四",
-            "alias": ""
-        }
-    ]
+  "errcode": 0,
+  "errmsg": "ok",
+  "userlist": [
+    {
+      "userid": "zhangsan",
+      "name": "张三",
+      "alias": "Sam"
+    },
+    {
+      "userid": "lisi",
+      "name": "李四",
+      "alias": ""
+    }
+  ]
 }
 ```
 
 **返回字段说明：**
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `errcode` | integer | 返回码，`0` 表示成功 |
-| `errmsg` | string | 错误信息 |
-| `userlist` | array | 用户列表 |
-| `userlist[].userid` | string | 用户唯一 ID |
-| `userlist[].name` | string | 用户姓名 |
-| `userlist[].alias` | string | 用户别名，可能为空 |
+| 字段                | 类型    | 说明                 |
+| ------------------- | ------- | -------------------- |
+| `errcode`           | integer | 返回码，`0` 表示成功 |
+| `errmsg`            | string  | 错误信息             |
+| `userlist`          | array   | 用户列表             |
+| `userlist[].userid` | string  | 用户唯一 ID          |
+| `userlist[].name`   | string  | 用户姓名             |
+| `userlist[].alias`  | string  | 用户别名，可能为空   |
 
 ---
 
@@ -148,15 +148,15 @@ description: 通讯录成员查询技能，基于 MCP tool 协议封装的 `get_
 
 ### 接口说明
 
-| 接口 | 用途 | 输入 | 返回 |
-|------|------|------|------|
-| `get_userlist` | 获取可见范围内全量通讯录成员 | 无 | 用户列表（userid、name、alias） |
+| 接口           | 用途                         | 输入 | 返回                            |
+| -------------- | ---------------------------- | ---- | ------------------------------- |
+| `get_userlist` | 获取可见范围内全量通讯录成员 | 无   | 用户列表（userid、name、alias） |
 
 ### 本地筛选策略
 
-| 场景 | 策略 |
-|------|------|
-| 精确匹配（name 或 alias 完全一致） | 直接使用，无需用户确认 |
+| 场景                                           | 策略                     |
+| ---------------------------------------------- | ------------------------ |
+| 精确匹配（name 或 alias 完全一致）             | 直接使用，无需用户确认   |
 | 模糊匹配（name 或 alias 包含关键词），唯一结果 | 直接使用，向用户展示结果 |
-| 模糊匹配，多个结果 | 展示候选列表，请用户选择 |
-| 无匹配结果 | 告知用户未找到对应人员 |
+| 模糊匹配，多个结果                             | 展示候选列表，请用户选择 |
+| 无匹配结果                                     | 告知用户未找到对应人员   |

@@ -1,37 +1,32 @@
-import type {
-  ChannelPlugin,
-  ClawdbotConfig,
-} from "openclaw/plugin-sdk";
-import {
-  buildChannelConfigSchema,
-} from "openclaw/plugin-sdk";
-import {
-  createDefaultChannelRuntimeState,
-  DEFAULT_ACCOUNT_ID,
-  resolveAllowlistProviderRuntimeGroupPolicy,
-  resolveDefaultGroupPolicy,
-} from "./sdk/helpers.ts";
-import { DingtalkConfigBaseSchema } from "./config/schema.ts";
-import { createLogger } from "./utils/logger.ts";
+import type { ChannelPlugin, ClawdbotConfig } from "openclaw/plugin-sdk";
+import { buildChannelConfigSchema } from "openclaw/plugin-sdk";
 import {
   resolveDingtalkAccount,
   resolveDingtalkCredentials,
   listDingtalkAccountIds,
   resolveDefaultDingtalkAccountId,
 } from "./config/accounts.ts";
+import { DingtalkConfigBaseSchema } from "./config/schema.ts";
+import { monitorDingtalkProvider } from "./core/provider.ts";
 import {
   listDingtalkDirectoryPeers,
   listDingtalkDirectoryGroups,
   listDingtalkDirectoryPeersLive,
   listDingtalkDirectoryGroupsLive,
 } from "./directory.ts";
+import { dingtalkOnboardingAdapter } from "./onboarding.ts";
 import { resolveDingtalkGroupToolPolicy } from "./policy.ts";
 import { probeDingtalk } from "./probe.ts";
-import { normalizeDingtalkTarget, looksLikeDingtalkId } from "./targets.ts";
-import { dingtalkOnboardingAdapter } from "./onboarding.ts";
-import { monitorDingtalkProvider } from "./core/provider.ts";
+import {
+  createDefaultChannelRuntimeState,
+  DEFAULT_ACCOUNT_ID,
+  resolveAllowlistProviderRuntimeGroupPolicy,
+  resolveDefaultGroupPolicy,
+} from "./sdk/helpers.ts";
 import { sendTextToDingTalk, sendMediaToDingTalk } from "./services/messaging/index.ts";
+import { normalizeDingtalkTarget, looksLikeDingtalkId } from "./targets.ts";
 import type { ResolvedDingtalkAccount, DingtalkConfig } from "./types/index.ts";
+import { createLogger } from "./utils/logger.ts";
 
 const meta = {
   id: "dingtalk",
@@ -54,7 +49,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
     normalizeAllowEntry: (entry) => entry.replace(/^(dingtalk|user|dd):/i, ""),
     notifyApproval: async ({ cfg, id }) => {
       // TODO: Implement notification when pairing is approved
-      const logger = createLogger(false, 'DingTalk:Pairing');
+      const logger = createLogger(false, "DingTalk:Pairing");
       logger.info(`Pairing approved for user: ${id}`);
     },
   },
@@ -62,7 +57,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
     chatTypes: ["direct", "group"],
     polls: false,
     threads: false,
-    media: true,  // ✅ 启用媒体支持
+    media: true, // ✅ 启用媒体支持
     reactions: false,
     edit: false,
     reply: false,
@@ -77,7 +72,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
     resolveToolPolicy: resolveDingtalkGroupToolPolicy,
   },
   mentions: {
-    stripPatterns: () => ['@[^\\s]+'], // Strip @mentions
+    stripPatterns: () => ["@[^\\s]+"], // Strip @mentions
   },
   reload: { configPrefixes: ["channels.dingtalk"] },
   configSchema: buildChannelConfigSchema(DingtalkConfigBaseSchema),
@@ -95,7 +90,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
           ...cfg,
           channels: {
             ...cfg.channels,
-            "dingtalk": {
+            dingtalk: {
               ...cfg.channels?.["dingtalk"],
               enabled,
             },
@@ -109,7 +104,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         ...cfg,
         channels: {
           ...cfg.channels,
-          "dingtalk": {
+          dingtalk: {
             ...dingtalkCfg,
             accounts: {
               ...dingtalkCfg?.accounts,
@@ -147,7 +142,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         ...cfg,
         channels: {
           ...cfg.channels,
-          "dingtalk": {
+          dingtalk: {
             ...dingtalkCfg,
             accounts: Object.keys(accounts).length > 0 ? accounts : undefined,
           },
@@ -198,7 +193,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
           ...cfg,
           channels: {
             ...cfg.channels,
-            "dingtalk": {
+            dingtalk: {
               ...cfg.channels?.["dingtalk"],
               enabled: true,
             },
@@ -211,7 +206,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         ...cfg,
         channels: {
           ...cfg.channels,
-          "dingtalk": {
+          dingtalk: {
             ...dingtalkCfg,
             accounts: {
               ...dingtalkCfg?.accounts,
@@ -271,7 +266,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
       const chunks: string[] = [];
       const lines = text.split("\n");
       let currentChunk = "";
-      
+
       for (const line of lines) {
         const testChunk = currentChunk + (currentChunk ? "\n" : "") + line;
         if (testChunk.length <= limit) {
@@ -282,7 +277,7 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         }
       }
       if (currentChunk) chunks.push(currentChunk);
-      
+
       return chunks;
     },
     chunkerMode: "markdown",
@@ -307,7 +302,16 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         conversationId: to,
       };
     },
-    sendMedia: async ({ cfg, to, text, mediaUrl, accountId, mediaLocalRoots, replyToId, threadId }) => {
+    sendMedia: async ({
+      cfg,
+      to,
+      text,
+      mediaUrl,
+      accountId,
+      mediaLocalRoots,
+      replyToId,
+      threadId,
+    }) => {
       const account = resolveDingtalkAccount({ cfg, accountId });
       // 使用已解析的凭据覆盖原始 config，防止 clientId/clientSecret 为 SecretInput 对象或 undefined
       const resolvedConfig: DingtalkConfig = {
@@ -315,25 +319,28 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         ...(account.clientId != null ? { clientId: account.clientId } : {}),
         ...(account.clientSecret != null ? { clientSecret: account.clientSecret } : {}),
       };
-      const logger = createLogger(account.config?.debug ?? false, 'DingTalk:SendMedia');
-      
-      logger.info('开始处理，参数:', JSON.stringify({
-        to,
-        text,
-        mediaUrl,
-        accountId,
-        replyToId,
-        threadId,
-        toType: typeof to,
-        mediaUrlType: typeof mediaUrl,
-      }));
-      
+      const logger = createLogger(account.config?.debug ?? false, "DingTalk:SendMedia");
+
+      logger.info(
+        "开始处理，参数:",
+        JSON.stringify({
+          to,
+          text,
+          mediaUrl,
+          accountId,
+          replyToId,
+          threadId,
+          toType: typeof to,
+          mediaUrlType: typeof mediaUrl,
+        }),
+      );
+
       // 参数校验
-      if (!to || typeof to !== 'string') {
+      if (!to || typeof to !== "string") {
         throw new Error(`Invalid 'to' parameter: ${to}`);
       }
-      
-      if (!mediaUrl || typeof mediaUrl !== 'string') {
+
+      if (!mediaUrl || typeof mediaUrl !== "string") {
         throw new Error(`Invalid 'mediaUrl' parameter: ${mediaUrl}`);
       }
 
@@ -344,14 +351,17 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         mediaUrl,
         replyToId,
       });
-      
-      logger.info('sendMediaToDingTalk 返回结果:', JSON.stringify({
-        ok: result.ok,
-        error: result.error,
-        hasProcessQueryKey: !!result.processQueryKey,
-        hasCardInstanceId: !!result.cardInstanceId,
-      }));
-      
+
+      logger.info(
+        "sendMediaToDingTalk 返回结果:",
+        JSON.stringify({
+          ok: result.ok,
+          error: result.error,
+          hasProcessQueryKey: !!result.processQueryKey,
+          hasCardInstanceId: !!result.cardInstanceId,
+        }),
+      );
+
       return {
         channel: "dingtalk",
         messageId: result.processQueryKey ?? result.cardInstanceId ?? "unknown",
@@ -370,11 +380,12 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
       probe: snapshot.probe,
       lastProbeAt: snapshot.lastProbeAt ?? null,
     }),
-    probeAccount: async ({ account }) => await probeDingtalk({
-      clientId: account.clientId!,
-      clientSecret: account.clientSecret!,
-      accountId: account.accountId,
-    }),
+    probeAccount: async ({ account }) =>
+      await probeDingtalk({
+        clientId: account.clientId!,
+        clientSecret: account.clientSecret!,
+        accountId: account.accountId,
+      }),
     buildAccountSnapshot: ({ account, runtime, probe }) => ({
       accountId: account.accountId,
       enabled: account.enabled,
@@ -407,14 +418,14 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
             resolve();
             return;
           }
-          ctx.abortSignal?.addEventListener('abort', () => resolve(), { once: true });
+          ctx.abortSignal?.addEventListener("abort", () => resolve(), { once: true });
         });
       }
-      
+
       if (!account.configured) {
         throw new Error(`DingTalk account "${ctx.accountId}" is not properly configured`);
       }
-      
+
       // 去重检查：如果列表中排在当前账号之前的账号已使用相同 clientId，则跳过当前账号
       // 使用静态配置分析（而非运行时状态），避免并发竞态条件
       // 规则：同一 clientId 只有列表中第一个启用且已配置的账号才会建立连接
@@ -422,28 +433,33 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         const clientId = String(account.clientId);
         const allAccountIds = listDingtalkAccountIds(ctx.cfg);
         const currentIndex = allAccountIds.indexOf(ctx.accountId);
-        const priorAccountWithSameClientId = allAccountIds.slice(0, currentIndex).find((otherId) => {
-          const other = resolveDingtalkAccount({ cfg: ctx.cfg, accountId: otherId });
-          return other.enabled && other.configured && other.clientId && String(other.clientId) === clientId;
-        });
+        const priorAccountWithSameClientId = allAccountIds
+          .slice(0, currentIndex)
+          .find((otherId) => {
+            const other = resolveDingtalkAccount({ cfg: ctx.cfg, accountId: otherId });
+            return (
+              other.enabled &&
+              other.configured &&
+              other.clientId &&
+              String(other.clientId) === clientId
+            );
+          });
         if (priorAccountWithSameClientId) {
           ctx.log?.info?.(
-            `dingtalk[${ctx.accountId}] skipped: clientId "${clientId.substring(0, 8)}..." is already used by account "${priorAccountWithSameClientId}"`
+            `dingtalk[${ctx.accountId}] skipped: clientId "${clientId.substring(0, 8)}..." is already used by account "${priorAccountWithSameClientId}"`,
           );
           return new Promise<void>((resolve) => {
             if (ctx.abortSignal?.aborted) {
               resolve();
               return;
             }
-            ctx.abortSignal?.addEventListener('abort', () => resolve(), { once: true });
+            ctx.abortSignal?.addEventListener("abort", () => resolve(), { once: true });
           });
         }
       }
 
       ctx.setStatus({ accountId: ctx.accountId, port: null });
-      ctx.log?.info(
-        `starting dingtalk[${ctx.accountId}] (mode: stream)`,
-      );
+      ctx.log?.info(`starting dingtalk[${ctx.accountId}] (mode: stream)`);
 
       // 把 ctx.setStatus 包装成 onStatusChange 回调，传入连接层，
       // 使连接层能在 WebSocket 连接/断开/收到消息时更新 UI 显示的
@@ -453,7 +469,9 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
       const onStatusChange = (patch: Record<string, unknown>) => {
         const currentSnapshot = ctx.getStatus?.() ?? { accountId: ctx.accountId };
         const nextSnapshot = { ...currentSnapshot, ...patch, accountId: ctx.accountId };
-        process.stderr.write(`[dingtalk][${ctx.accountId}] onStatusChange patch=${JSON.stringify(patch)} current=${JSON.stringify(currentSnapshot)} next=${JSON.stringify(nextSnapshot)}\n`);
+        process.stderr.write(
+          `[dingtalk][${ctx.accountId}] onStatusChange patch=${JSON.stringify(patch)} current=${JSON.stringify(currentSnapshot)} next=${JSON.stringify(nextSnapshot)}\n`,
+        );
         ctx.setStatus(nextSnapshot as any);
       };
 
@@ -467,7 +485,9 @@ export const dingtalkPlugin: ChannelPlugin<ResolvedDingtalkAccount> = {
         });
       } catch (err: any) {
         // 打印真实错误到 stderr，绕过框架 log 系统（框架的 runtime.log 可能未初始化）
-        ctx.log?.error(`[dingtalk][${ctx.accountId}] startAccount error: ${err?.message ?? err}\n${err?.stack ?? ''}`);
+        ctx.log?.error(
+          `[dingtalk][${ctx.accountId}] startAccount error: ${err?.message ?? err}\n${err?.stack ?? ""}`,
+        );
         throw err;
       }
     },

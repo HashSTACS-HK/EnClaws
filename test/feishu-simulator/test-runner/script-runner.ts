@@ -8,9 +8,9 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { CsvWriter } from "./csv-writer.js";
-import { formatScriptAssert, checkScriptAssertions } from "./asserter.js";
 import type { ScriptTestFile, ScriptTestCase, ScriptResultRow } from "../types.js";
+import { formatScriptAssert, checkScriptAssertions } from "./asserter.js";
+import { CsvWriter } from "./csv-writer.js";
 
 export type ScriptRunnerOptions = {
   dataDir: string;
@@ -22,24 +22,34 @@ export type ScriptRunnerOptions = {
 
 type ExecResult = { stdout: string; stderr: string; exitCode: number };
 
-function execCommand(cmd: string, env: Record<string, string>, cwd: string, timeoutMs: number): Promise<ExecResult> {
+function execCommand(
+  cmd: string,
+  env: Record<string, string>,
+  cwd: string,
+  timeoutMs: number,
+): Promise<ExecResult> {
   return new Promise((resolve) => {
     const parts = parseCommand(cmd);
     const [bin, ...args] = parts;
 
-    execFile(bin, args, {
-      cwd,
-      env: { ...process.env, ...env },
-      timeout: timeoutMs,
-      maxBuffer: 10 * 1024 * 1024,
-      shell: true,
-    }, (error, stdout, stderr) => {
-      resolve({
-        stdout: stdout?.toString() ?? "",
-        stderr: stderr?.toString() ?? "",
-        exitCode: error?.code != null ? (typeof error.code === "number" ? error.code : 1) : 0,
-      });
-    });
+    execFile(
+      bin,
+      args,
+      {
+        cwd,
+        env: { ...process.env, ...env },
+        timeout: timeoutMs,
+        maxBuffer: 10 * 1024 * 1024,
+        shell: true,
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          stdout: stdout?.toString() ?? "",
+          stderr: stderr?.toString() ?? "",
+          exitCode: error?.code != null ? (typeof error.code === "number" ? error.code : 1) : 0,
+        });
+      },
+    );
   });
 }
 
@@ -51,16 +61,26 @@ function parseCommand(cmd: string): string[] {
   let inDouble = false;
 
   for (const ch of cmd) {
-    if (ch === "'" && !inDouble) { inSingle = !inSingle; continue; }
-    if (ch === '"' && !inSingle) { inDouble = !inDouble; continue; }
+    if (ch === "'" && !inDouble) {
+      inSingle = !inSingle;
+      continue;
+    }
+    if (ch === '"' && !inSingle) {
+      inDouble = !inDouble;
+      continue;
+    }
     if (ch === " " && !inSingle && !inDouble) {
-      if (current) {parts.push(current);}
+      if (current) {
+        parts.push(current);
+      }
       current = "";
       continue;
     }
     current += ch;
   }
-  if (current) {parts.push(current);}
+  if (current) {
+    parts.push(current);
+  }
   return parts;
 }
 
@@ -68,8 +88,13 @@ function applyTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{(\w+(?:\.\w+)*)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`);
 }
 
-export function loadScriptTestFiles(dir: string, prefix = ""): Array<{ fileName: string; data: ScriptTestFile }> {
-  if (!fs.existsSync(dir)) {return [];}
+export function loadScriptTestFiles(
+  dir: string,
+  prefix = "",
+): Array<{ fileName: string; data: ScriptTestFile }> {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
   const results: Array<{ fileName: string; data: ScriptTestFile }> = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -83,7 +108,9 @@ export function loadScriptTestFiles(dir: string, prefix = ""): Array<{ fileName:
   return results.toSorted((a, b) => a.fileName.localeCompare(b.fileName));
 }
 
-export async function runScriptTestFiles(opts: ScriptRunnerOptions): Promise<{ results: ScriptResultRow[]; errors: string[] }> {
+export async function runScriptTestFiles(
+  opts: ScriptRunnerOptions,
+): Promise<{ results: ScriptResultRow[]; errors: string[] }> {
   const testFiles = loadScriptTestFiles(opts.dataDir);
   if (testFiles.length === 0) {
     console.log(`No script test JSON files found in: ${opts.dataDir}`);
@@ -124,9 +151,14 @@ async function runSingleScriptFile(
     console.log(`  ERROR: ${errMsg}`);
     for (const tc of data.cases) {
       const row: ScriptResultRow = {
-        file: fileName, name: tc.name, message: tc.command,
-        expected: formatScriptAssert(tc.assert), actual: "", failures: `ERROR: ${errMsg}`,
-        passed: false, duration: "-",
+        file: fileName,
+        name: tc.name,
+        message: tc.command,
+        expected: formatScriptAssert(tc.assert),
+        actual: "",
+        failures: `ERROR: ${errMsg}`,
+        passed: false,
+        duration: "-",
       };
       results.push(row);
       csv.append(row);
@@ -168,9 +200,13 @@ async function runSingleScriptFile(
       console.log(`  [${i + 1}/${data.cases.length}] FAIL \u274C ${tc.name}`);
       console.log(`    Command:  ${command}`);
       console.log(`    Failures: ${failures.join("; ")}`);
-      if (exec.stderr) {console.log(`    Stderr:   ${exec.stderr.slice(0, 200)}`);}
+      if (exec.stderr) {
+        console.log(`    Stderr:   ${exec.stderr.slice(0, 200)}`);
+      }
       errors.push(`[${fileName}] "${tc.name}": ${failures.join("; ")}`);
-      if (!opts.continueOnFailure) {break;}
+      if (!opts.continueOnFailure) {
+        break;
+      }
     }
 
     // Run cleanup command if provided
@@ -186,7 +222,9 @@ async function runSingleScriptFile(
               resultVars[`result.${k}`] = String(v);
             }
           }
-        } catch { /* stdout not JSON, skip result vars */ }
+        } catch {
+          /* stdout not JSON, skip result vars */
+        }
 
         const cleanupCmd = applyTemplate(tc.cleanup, resultVars);
         console.log(`    Cleanup: ${cleanupCmd}`);

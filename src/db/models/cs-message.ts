@@ -4,16 +4,20 @@
  * 客服消息 CRUD，支持 PostgreSQL 和 SQLite 双后端。
  */
 
+import type { CSMessage, CSMessageRole, CSConfidence } from "../../customer-service/types.js";
 import { query, getDbType, DB_SQLITE } from "../index.js";
 import { sqliteQuery } from "../sqlite/index.js";
-import type { CSMessage, CSMessageRole, CSConfidence } from "../../customer-service/types.js";
 
 // -- Row mapper --
 
 function rowToMessage(row: Record<string, unknown>): CSMessage {
   const parseJson = (val: unknown) => {
     if (typeof val === "string") {
-      try { return JSON.parse(val); } catch { return null; }
+      try {
+        return JSON.parse(val);
+      } catch {
+        return null;
+      }
     }
     return val ?? null;
   };

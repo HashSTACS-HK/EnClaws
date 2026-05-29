@@ -7,21 +7,22 @@ inline: true
 ---
 
 # feishu-update-doc
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
 
 ## 已实现的模式
 
-| 模式 | 说明 | 状态 |
-|---|---|---|
-| `append` | 在文档末尾追加内容 | **已实现** |
-| `overwrite` | 清除原内容后写入新内容（破坏性操作） | **已实现** |
-| `replace_range` | 替换匹配 selection 的第一处内容 | 暂未实现 |
-| `replace_all` | 替换匹配 selection 的所有内容 | 暂未实现 |
-| `insert_before` | 在匹配 selection 之前插入内容 | 暂未实现 |
-| `insert_after` | 在匹配 selection 之后插入内容 | 暂未实现 |
-| `delete_range` | 删除匹配 selection 的内容 | 暂未实现 |
+| 模式            | 说明                                 | 状态       |
+| --------------- | ------------------------------------ | ---------- |
+| `append`        | 在文档末尾追加内容                   | **已实现** |
+| `overwrite`     | 清除原内容后写入新内容（破坏性操作） | **已实现** |
+| `replace_range` | 替换匹配 selection 的第一处内容      | 暂未实现   |
+| `replace_all`   | 替换匹配 selection 的所有内容        | 暂未实现   |
+| `insert_before` | 在匹配 selection 之前插入内容        | 暂未实现   |
+| `insert_after`  | 在匹配 selection 之后插入内容        | 暂未实现   |
+| `delete_range`  | 删除匹配 selection 的内容            | 暂未实现   |
 
 > 暂未实现的模式会返回 `{"error":"mode_not_implemented"}`。当前请只使用 `append` 或 `overwrite`。
 
@@ -43,11 +44,11 @@ node ./update-doc.js --open-id "SENDER_OPEN_ID" --doc-id "TOKEN" --mode "overwri
 
 ## 必须确认的参数
 
-| 参数 | 何时询问 |
-|---|---|
-| `--doc-id` | 用户未提供文档链接或 token |
-| `--mode` | 用户未说明"追加"还是"覆盖"，必须询问。**只能选择 append 或 overwrite** |
-| `--markdown` | 用户未提供内容 |
+| 参数         | 何时询问                                                               |
+| ------------ | ---------------------------------------------------------------------- |
+| `--doc-id`   | 用户未提供文档链接或 token                                             |
+| `--mode`     | 用户未说明"追加"还是"覆盖"，必须询问。**只能选择 append 或 overwrite** |
+| `--markdown` | 用户未提供内容                                                         |
 
 ## 授权
 

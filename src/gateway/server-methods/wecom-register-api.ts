@@ -9,11 +9,11 @@
  * @wecom/wecom-openclaw-cli.
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { isDbInitialized } from "../../db/index.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
 import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import { isDbInitialized } from "../../db/index.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 const QR_GENERATE_URL = "https://work.weixin.qq.com/ai/qc/generate";
 const QR_QUERY_URL = "https://work.weixin.qq.com/ai/qc/query_result";
@@ -27,7 +27,11 @@ function getTenantCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -58,7 +62,9 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
    */
   "tenant.wecom.register.begin": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -77,7 +83,11 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
       const scode = data?.scode as string | undefined;
       const authUrl = data?.auth_url as string | undefined;
       if (!scode || !authUrl) {
-        respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Failed to fetch WeCom QR code"));
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "Failed to fetch WeCom QR code"),
+        );
         return;
       }
       respond(true, {
@@ -88,7 +98,14 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
         expireIn: POLL_TIMEOUT_SEC,
       });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, `WeCom register begin failed: ${err instanceof Error ? err.message : String(err)}`));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `WeCom register begin failed: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
     }
   },
 
@@ -102,9 +119,15 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
    * Returns when pending: { status: "pending" }
    * Returns on error:   { status: "error", error }
    */
-  "tenant.wecom.register.poll": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+  "tenant.wecom.register.poll": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -147,7 +170,14 @@ export const wecomRegisterHandlers: GatewayRequestHandlers = {
 
       respond(true, { status: "pending" });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, `WeCom register poll failed: ${err instanceof Error ? err.message : String(err)}`));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `WeCom register poll failed: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
     }
   },
 };

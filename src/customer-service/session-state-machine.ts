@@ -17,10 +17,7 @@ import type { CSSessionState, CSEvent, CSTransitionResult } from "./types.js";
  *
  * 纯函数 — 根据 (state, event) 计算下一个状态和动作。
  */
-export function transition(
-  state: CSSessionState,
-  event: CSEvent,
-): CSTransitionResult {
+export function transition(state: CSSessionState, event: CSEvent): CSTransitionResult {
   // -- AI_ACTIVE state --
   if (state === "ai_active") {
     switch (event.type) {

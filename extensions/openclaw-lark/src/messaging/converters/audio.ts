@@ -5,8 +5,8 @@
  * Converter for "audio" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { formatDuration, safeParse  } from './utils';
+import type { ContentConverterFn } from "./types";
+import { formatDuration, safeParse } from "./utils";
 
 export const convertAudio: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as
@@ -18,14 +18,14 @@ export const convertAudio: ContentConverterFn = (raw) => {
 
   const fileKey = parsed?.file_key;
   if (!fileKey) {
-    return { content: '[audio]', resources: [] };
+    return { content: "[audio]", resources: [] };
   }
 
   const duration = parsed?.duration;
-  const durationAttr = duration != null ? ` duration="${formatDuration(duration)}"` : '';
+  const durationAttr = duration != null ? ` duration="${formatDuration(duration)}"` : "";
 
   return {
     content: `<audio key="${fileKey}"${durationAttr}/>`,
-    resources: [{ type: 'audio', fileKey, duration: duration ?? undefined }],
+    resources: [{ type: "audio", fileKey, duration: duration ?? undefined }],
   };
 };

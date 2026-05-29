@@ -9,16 +9,24 @@
  * unset fields fall back to the top-level defaults.
  */
 
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId as _sdkNormalizeAccountId } from 'openclaw/plugin-sdk/account-id';
+import {
+  DEFAULT_ACCOUNT_ID,
+  normalizeAccountId as _sdkNormalizeAccountId,
+} from "openclaw/plugin-sdk/account-id";
 
 const normalizeAccountId: (id: string) => string | undefined =
-  typeof _sdkNormalizeAccountId === 'function'
+  typeof _sdkNormalizeAccountId === "function"
     ? _sdkNormalizeAccountId
     : (id: string) => id?.trim().toLowerCase() || undefined;
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-
-import type { ConfiguredLarkAccount, FeishuConfig, LarkAccount, LarkBrand, LarkCredentials } from './types';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type {
+  ConfiguredLarkAccount,
+  FeishuConfig,
+  LarkAccount,
+  LarkBrand,
+  LarkCredentials,
+} from "./types";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -35,7 +43,7 @@ function getAccountMap(section: FeishuConfig): Record<string, Partial<FeishuConf
 }
 
 /** Strip the `accounts` key and return the remaining top-level config. */
-function baseConfig(section: FeishuConfig): Omit<FeishuConfig, 'accounts'> {
+function baseConfig(section: FeishuConfig): Omit<FeishuConfig, "accounts"> {
   const { accounts: _ignored, ...rest } = section as FeishuConfig & {
     accounts?: Record<string, unknown>;
   };
@@ -43,13 +51,16 @@ function baseConfig(section: FeishuConfig): Omit<FeishuConfig, 'accounts'> {
 }
 
 /** Merge base config with account override (account fields take precedence). */
-function mergeAccountConfig(base: Omit<FeishuConfig, 'accounts'>, override: Partial<FeishuConfig>): FeishuConfig {
+function mergeAccountConfig(
+  base: Omit<FeishuConfig, "accounts">,
+  override: Partial<FeishuConfig>,
+): FeishuConfig {
   return { ...base, ...override } as FeishuConfig;
 }
 
 /** Coerce a domain string to `LarkBrand`, defaulting to `"feishu"`. */
 function toBrand(domain: string | undefined): LarkBrand {
-  return (domain as LarkBrand) ?? 'feishu';
+  return (domain as LarkBrand) ?? "feishu";
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +109,9 @@ export function getDefaultLarkAccountId(cfg: ClawdbotConfig): string {
  * Falls back to the default account when `accountId` is omitted or `null`.
  */
 export function getLarkAccount(cfg: ClawdbotConfig, accountId?: string | null): LarkAccount {
-  const requestedId = accountId ? (normalizeAccountId(accountId) ?? DEFAULT_ACCOUNT_ID) : DEFAULT_ACCOUNT_ID;
+  const requestedId = accountId
+    ? (normalizeAccountId(accountId) ?? DEFAULT_ACCOUNT_ID)
+    : DEFAULT_ACCOUNT_ID;
 
   const section = getLarkConfig(cfg);
 
@@ -107,7 +120,7 @@ export function getLarkAccount(cfg: ClawdbotConfig, accountId?: string | null): 
       accountId: requestedId,
       enabled: false,
       configured: false,
-      brand: 'feishu',
+      brand: "feishu",
       config: {} as FeishuConfig,
     };
   }
@@ -174,7 +187,10 @@ export function getLarkAccount(cfg: ClawdbotConfig, accountId?: string | null): 
  * @param accountId - Optional target account ID
  * @returns Config with `channels.feishu` replaced by the merged account config
  */
-export function createAccountScopedConfig(cfg: ClawdbotConfig, accountId?: string | null): ClawdbotConfig {
+export function createAccountScopedConfig(
+  cfg: ClawdbotConfig,
+  accountId?: string | null,
+): ClawdbotConfig {
   const account = getLarkAccount(cfg, accountId);
 
   return {

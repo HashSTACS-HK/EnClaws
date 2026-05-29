@@ -7,8 +7,8 @@ import { formatTimeAgo } from "../infra/format-time/format-relative.ts";
 import type { HeartbeatEventPayload } from "../infra/heartbeat-events.js";
 import { formatUsageReportLines, loadProviderUsageSummary } from "../infra/provider-usage.js";
 import { resolveUpdateTrackDisplay } from "../infra/update-channels.js";
-import { getStoredUpdateTrack } from "../infra/update-settings.js";
 import { formatGitInstallLabel } from "../infra/update-check.js";
+import { getStoredUpdateTrack } from "../infra/update-settings.js";
 import {
   resolveMemoryCacheSummary,
   resolveMemoryFtsState,

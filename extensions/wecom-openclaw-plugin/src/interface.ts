@@ -4,8 +4,8 @@
 
 import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
-import type { ResolvedWeComAccount } from "./utils.js";
 import { WeComCommand } from "./const.js";
+import type { ResolvedWeComAccount } from "./utils.js";
 
 // ============================================================================
 // 运行时类型

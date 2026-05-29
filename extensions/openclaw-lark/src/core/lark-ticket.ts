@@ -10,7 +10,7 @@
  * (monitor.ts) and use {@link getTicket} anywhere downstream.
  */
 
-import { AsyncLocalStorage } from 'node:async_hooks';
+import { AsyncLocalStorage } from "node:async_hooks";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,7 +22,7 @@ export interface LarkTicket {
   accountId: string;
   startTime: number;
   senderOpenId?: string;
-  chatType?: 'p2p' | 'group';
+  chatType?: "p2p" | "group";
   threadId?: string;
 }
 

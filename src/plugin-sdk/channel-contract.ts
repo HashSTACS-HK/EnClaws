@@ -1,1 +1,4 @@
-export type { ChannelGroupContext, ChannelThreadingToolContext } from "../channels/plugins/types.core.js";
+export type {
+  ChannelGroupContext,
+  ChannelThreadingToolContext,
+} from "../channels/plugins/types.core.js";

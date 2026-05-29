@@ -122,7 +122,12 @@ describe("update-startup", () => {
   async function writeTestSettings(settings: {
     track?: "stable" | "beta" | "dev";
     checkOnStart?: boolean;
-    auto?: { enabled?: boolean; stableDelayHours?: number; stableJitterHours?: number; betaCheckIntervalHours?: number };
+    auto?: {
+      enabled?: boolean;
+      stableDelayHours?: number;
+      stableJitterHours?: number;
+      betaCheckIntervalHours?: number;
+    };
   }) {
     await fs.writeFile(
       path.join(tempDir, "update-settings.json"),
@@ -332,7 +337,11 @@ describe("update-startup", () => {
   it("runs auto-update when checkOnStart is false but auto-update is enabled", async () => {
     mockPackageUpdateStatus("beta", "2.0.0-beta.1");
     const runAutoUpdate = createAutoUpdateSuccessMock();
-    await writeTestSettings({ checkOnStart: false, track: "beta", auto: { enabled: true, betaCheckIntervalHours: 1 } });
+    await writeTestSettings({
+      checkOnStart: false,
+      track: "beta",
+      auto: { enabled: true, betaCheckIntervalHours: 1 },
+    });
 
     await runGatewayUpdateCheck({
       log: { info: vi.fn() },

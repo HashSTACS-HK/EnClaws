@@ -7,10 +7,7 @@ metadata:
       {
         "emoji": "📄",
         "always": true,
-        "requires":
-          {
-            "bins": ["mcporter"],
-          },
+        "requires": { "bins": ["mcporter"] },
         "install":
           [
             {
@@ -121,10 +118,10 @@ docid **只能**通过 `create_doc` 的返回结果获取。创建成功后需�
 
 ### docid 类型判断
 
-| doc_id 前缀 | 类型 | doc_type |
-|-------------|------|----------|
-| `w3_` | 文档 | 3 |
-| `s3_` | 智能表格 | 10 |
+| doc_id 前缀 | 类型     | doc_type |
+| ----------- | -------- | -------- |
+| `w3_`       | 文档     | 3        |
+| `s3_`       | 智能表格 | 10       |
 
 ## 工作流
 
@@ -173,47 +170,47 @@ smartsheet_get_sheet(docid) → sheet_id
 
 ### FieldType 枚举（16 种）
 
-| 类型 | 说明 | 使用场景建议 |
-|------|------|-------------|
-| `FIELD_TYPE_TEXT` | 文本 | 通用文本内容；当用户只提供了成员**姓名**（而非 user_id）时，也应使用 TEXT 而非 USER |
-| `FIELD_TYPE_NUMBER` | 数字 | 数值型数据（金额、数量、评分等） |
-| `FIELD_TYPE_CHECKBOX` | 复选框 | 是/否、完成/未完成等布尔状态 |
-| `FIELD_TYPE_DATE_TIME` | 日期时间 | 日期、截止时间、创建时间等 |
-| `FIELD_TYPE_IMAGE` | 图片 | 需要展示图片的场景 |
-| `FIELD_TYPE_USER` | 成员 | **仅**在明确知道成员 user_id 时使用；若用户只提供了姓名，应使用 TEXT 代替 |
-| `FIELD_TYPE_URL` | 链接 | 网址、外部链接 |
-| `FIELD_TYPE_SELECT` | 多选 | 标签、多分类等允许多选的场景 |
-| `FIELD_TYPE_SINGLE_SELECT` | 单选 | 状态、优先级、严重程度、分类等有固定选项的字段 |
-| `FIELD_TYPE_PROGRESS` | 进度 | 完成进度、完成百分比（值为 0-100 整数） |
-| `FIELD_TYPE_PHONE_NUMBER` | 手机号 | 手机号码 |
-| `FIELD_TYPE_EMAIL` | 邮箱 | 邮箱地址 |
-| `FIELD_TYPE_LOCATION` | 位置 | 地理位置信息 |
-| `FIELD_TYPE_CURRENCY` | 货币 | 金额（带货币符号） |
-| `FIELD_TYPE_PERCENTAGE` | 百分比 | 百分比数值（值为 0~1） |
-| `FIELD_TYPE_BARCODE` | 条码 | 条形码、ISBN 等 |
+| 类型                       | 说明     | 使用场景建议                                                                        |
+| -------------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `FIELD_TYPE_TEXT`          | 文本     | 通用文本内容；当用户只提供了成员**姓名**（而非 user_id）时，也应使用 TEXT 而非 USER |
+| `FIELD_TYPE_NUMBER`        | 数字     | 数值型数据（金额、数量、评分等）                                                    |
+| `FIELD_TYPE_CHECKBOX`      | 复选框   | 是/否、完成/未完成等布尔状态                                                        |
+| `FIELD_TYPE_DATE_TIME`     | 日期时间 | 日期、截止时间、创建时间等                                                          |
+| `FIELD_TYPE_IMAGE`         | 图片     | 需要展示图片的场景                                                                  |
+| `FIELD_TYPE_USER`          | 成员     | **仅**在明确知道成员 user_id 时使用；若用户只提供了姓名，应使用 TEXT 代替           |
+| `FIELD_TYPE_URL`           | 链接     | 网址、外部链接                                                                      |
+| `FIELD_TYPE_SELECT`        | 多选     | 标签、多分类等允许多选的场景                                                        |
+| `FIELD_TYPE_SINGLE_SELECT` | 单选     | 状态、优先级、严重程度、分类等有固定选项的字段                                      |
+| `FIELD_TYPE_PROGRESS`      | 进度     | 完成进度、完成百分比（值为 0-100 整数）                                             |
+| `FIELD_TYPE_PHONE_NUMBER`  | 手机号   | 手机号码                                                                            |
+| `FIELD_TYPE_EMAIL`         | 邮箱     | 邮箱地址                                                                            |
+| `FIELD_TYPE_LOCATION`      | 位置     | 地理位置信息                                                                        |
+| `FIELD_TYPE_CURRENCY`      | 货币     | 金额（带货币符号）                                                                  |
+| `FIELD_TYPE_PERCENTAGE`    | 百分比   | 百分比数值（值为 0~1）                                                              |
+| `FIELD_TYPE_BARCODE`       | 条码     | 条形码、ISBN 等                                                                     |
 
 ### FieldType ↔ CellValue 对照表
 
 添加记录（`smartsheet_add_records`）时，`values` 中每个字段的 **key 必须使用字段标题（field_title），不能使用 field_id**。value 必须匹配其字段类型：
 
-| 字段类型 | CellValue 格式 | 示例 |
-|---------|---------------|------|
-| `TEXT` | CellTextValue 数组 | `[{"type": "text", "text": "内容"}]` |
-| `NUMBER` | number | `85` |
-| `CHECKBOX` | boolean | `true` |
-| `DATE_TIME` | 日期时间**字符串** | `"2023-01-01 12:00:00"`、`"2023-01-01 12:00"`、`"2023-01-01"` |
-| `URL` | CellUrlValue 数组（限 1 个） | `[{"type": "url", "text": "百度", "link": "https://baidu.com"}]` |
-| `USER` | CellUserValue 数组 | `[{"user_id": "zhangsan"}]` |
-| `IMAGE` | CellImageValue 数组 | `[{"image_url": "https://..."}]`（`id`、`title` 可选） |
-| `SELECT` | Option 数组（多选） | `[{"text": "选项A"}, {"text": "选项B"}]` |
-| `SINGLE_SELECT` | Option 数组（限 1 个） | `[{"text": "选项A"}]` |
-| `PROGRESS` | number（0~100 整数） | `85`（表示 85%） |
-| `CURRENCY` | number | `99.5` |
-| `PERCENTAGE` | number（0~1） | `0.85` |
-| `PHONE_NUMBER` | string | `"13800138000"` |
-| `EMAIL` | string | `"user@example.com"` |
-| `BARCODE` | string | `"978-3-16-148410-0"` |
-| `LOCATION` | CellLocationValue 数组（限 1 个） | `[{"source_type": 1, "id": "xxx", "latitude": "39.9", "longitude": "116.3", "title": "北京"}]` |
+| 字段类型        | CellValue 格式                    | 示例                                                                                           |
+| --------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `TEXT`          | CellTextValue 数组                | `[{"type": "text", "text": "内容"}]`                                                           |
+| `NUMBER`        | number                            | `85`                                                                                           |
+| `CHECKBOX`      | boolean                           | `true`                                                                                         |
+| `DATE_TIME`     | 日期时间**字符串**                | `"2023-01-01 12:00:00"`、`"2023-01-01 12:00"`、`"2023-01-01"`                                  |
+| `URL`           | CellUrlValue 数组（限 1 个）      | `[{"type": "url", "text": "百度", "link": "https://baidu.com"}]`                               |
+| `USER`          | CellUserValue 数组                | `[{"user_id": "zhangsan"}]`                                                                    |
+| `IMAGE`         | CellImageValue 数组               | `[{"image_url": "https://..."}]`（`id`、`title` 可选）                                         |
+| `SELECT`        | Option 数组（多选）               | `[{"text": "选项A"}, {"text": "选项B"}]`                                                       |
+| `SINGLE_SELECT` | Option 数组（限 1 个）            | `[{"text": "选项A"}]`                                                                          |
+| `PROGRESS`      | number（0~100 整数）              | `85`（表示 85%）                                                                               |
+| `CURRENCY`      | number                            | `99.5`                                                                                         |
+| `PERCENTAGE`    | number（0~1）                     | `0.85`                                                                                         |
+| `PHONE_NUMBER`  | string                            | `"13800138000"`                                                                                |
+| `EMAIL`         | string                            | `"user@example.com"`                                                                           |
+| `BARCODE`       | string                            | `"978-3-16-148410-0"`                                                                          |
+| `LOCATION`      | CellLocationValue 数组（限 1 个） | `[{"source_type": 1, "id": "xxx", "latitude": "39.9", "longitude": "116.3", "title": "北京"}]` |
 
 > **Option 格式说明**：`SINGLE_SELECT`/`SELECT` 的选项支持 `style` 字段（1~27 对应不同颜色），如 `[{"text": "紧急", "style": 1}]`。`style` 为可选字段，不传则使用默认颜色。
 
@@ -262,6 +259,7 @@ echo "OPENCLAW_SHELL=${OPENCLAW_SHELL:-}" && command -v openclaw 2>/dev/null && 
 ```
 
 判断规则：
+
 - **`OPENCLAW_SHELL` 为空**（输出 `OPENCLAW_SHELL=`）→ 当前不在 OpenClaw 运行时中，跳到**「通用提示」**。
 - **`OPENCLAW_SHELL` 非空**（如 `exec`、`tui-local` 等）**且** `OPENCLAW_CLI=FOUND` → 确认在 OpenClaw 中且 CLI 可用，继续步骤二。
 - **`OPENCLAW_SHELL` 非空但 `OPENCLAW_CLI=NOT_FOUND`** → 虽然在 OpenClaw 中但 CLI 不可用，跳到**「通用提示」**。
@@ -302,7 +300,6 @@ openclaw config get channels.wecom.botId 2>&1
 > 机器人可通过MCP方式调用文档相关能力，当前暂未完成所需配置。请参考以下配置指引：
 >
 > 1. 请前往「企业微信-工作台-智能机器人应用」，以API模式创建机器人（如已创建，可忽略该步骤）
->
 > 2. 授权该机器人「文档」使用权限。授权后，可自行选择StreamableHttp URL 或 JSON Config 进行配置。
 
 输出提示后**等待用户回复**。用户可能：
@@ -354,7 +351,6 @@ mcporter config add wecom-doc \
 ```bash
 mcporter daemon start
 ```
-
 
 ## 注意事项
 

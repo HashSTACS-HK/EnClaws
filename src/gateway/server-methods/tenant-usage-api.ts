@@ -6,13 +6,13 @@
  *   tenant.usage.quota      - Check current quota status
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
 import { isDbInitialized } from "../../db/index.js";
 import { getTenantById, resolveEffectiveQuotas } from "../../db/models/tenant.js";
 import { getTenantUsageSummary, checkTokenQuota } from "../../db/models/usage.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
-import type { TenantContext } from "../../auth/middleware.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 /**
  * Parse a date-only string and pin it to the LOCAL start of that day.
@@ -44,7 +44,11 @@ function getTenantCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -67,7 +71,9 @@ export const tenantUsageHandlers: GatewayRequestHandlers = {
    */
   "tenant.usage.summary": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -101,7 +107,9 @@ export const tenantUsageHandlers: GatewayRequestHandlers = {
    */
   "tenant.usage.quota": async ({ client, respond, context }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     const tenant = await getTenantById(ctx.tenantId);
     if (!tenant) {

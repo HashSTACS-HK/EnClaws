@@ -8,14 +8,14 @@
  * and eliminate `as any` casts on FeishuConfig.
  */
 
-import type { FeishuConfig } from '../core/types';
-import { FEISHU_CARD_TABLE_LIMIT, findMarkdownTablesOutsideCodeBlocks } from './card-error';
+import type { FeishuConfig } from "../core/types";
+import { FEISHU_CARD_TABLE_LIMIT, findMarkdownTablesOutsideCodeBlocks } from "./card-error";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type ReplyModeValue = 'auto' | 'static' | 'streaming';
+type ReplyModeValue = "auto" | "static" | "streaming";
 
 // ---------------------------------------------------------------------------
 // resolveReplyMode
@@ -28,21 +28,22 @@ type ReplyModeValue = 'auto' | 'static' | 'streaming';
  */
 export function resolveReplyMode(params: {
   feishuCfg: FeishuConfig | undefined;
-  chatType?: 'p2p' | 'group';
+  chatType?: "p2p" | "group";
 }): ReplyModeValue {
   const { feishuCfg, chatType } = params;
 
   // streaming 布尔总开关：仅 true 时允许流式，未设置或 false 一律 static
-  if (feishuCfg?.streaming !== true) return 'static';
+  if (feishuCfg?.streaming !== true) return "static";
 
   const replyMode = feishuCfg?.replyMode;
-  if (!replyMode) return 'auto';
+  if (!replyMode) return "auto";
 
-  if (typeof replyMode === 'string') return replyMode;
+  if (typeof replyMode === "string") return replyMode;
 
   // Object form: pick scene-specific value
-  const sceneMode = chatType === 'group' ? replyMode.group : chatType === 'p2p' ? replyMode.direct : undefined;
-  return sceneMode ?? replyMode.default ?? 'auto';
+  const sceneMode =
+    chatType === "group" ? replyMode.group : chatType === "p2p" ? replyMode.direct : undefined;
+  return sceneMode ?? replyMode.default ?? "auto";
 }
 
 // ---------------------------------------------------------------------------
@@ -58,12 +59,12 @@ export function resolveReplyMode(params: {
 export function expandAutoMode(params: {
   mode: ReplyModeValue;
   streaming: boolean | undefined;
-  chatType?: 'p2p' | 'group';
-}): 'static' | 'streaming' {
+  chatType?: "p2p" | "group";
+}): "static" | "streaming" {
   const { mode, streaming, chatType } = params;
-  if (mode !== 'auto') return mode;
+  if (mode !== "auto") return mode;
 
-  return streaming === true ? (chatType === 'group' ? 'static' : 'streaming') : 'static';
+  return streaming === true ? (chatType === "group" ? "static" : "streaming") : "static";
 }
 
 // ---------------------------------------------------------------------------

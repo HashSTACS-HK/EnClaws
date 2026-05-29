@@ -28,9 +28,13 @@ export interface PasswordExpiryConfig {
 
 function parseIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
-  if (!raw) {return fallback;}
+  if (!raw) {
+    return fallback;
+  }
   const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed < 0) {return fallback;}
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return fallback;
+  }
   return Math.floor(parsed);
 }
 
@@ -53,11 +57,19 @@ export function computePasswordExpiresAt(
   passwordChangedAt: Date | null,
   cfg: PasswordExpiryConfig = loadPasswordExpiryConfig(),
 ): number | null {
-  if (cfg.maxAgeDays <= 0) {return null;}
-  if (!passwordChangedAt) {return null;}
+  if (cfg.maxAgeDays <= 0) {
+    return null;
+  }
+  if (!passwordChangedAt) {
+    return null;
+  }
   const changedAtMs =
-    passwordChangedAt instanceof Date ? passwordChangedAt.getTime() : Number(new Date(passwordChangedAt));
-  if (!Number.isFinite(changedAtMs)) {return null;}
+    passwordChangedAt instanceof Date
+      ? passwordChangedAt.getTime()
+      : Number(new Date(passwordChangedAt));
+  if (!Number.isFinite(changedAtMs)) {
+    return null;
+  }
   return changedAtMs + cfg.maxAgeDays * 86400_000;
 }
 
@@ -69,7 +81,9 @@ export function isPasswordExpired(
   cfg: PasswordExpiryConfig = loadPasswordExpiryConfig(),
 ): boolean {
   const expiresAt = computePasswordExpiresAt(passwordChangedAt, cfg);
-  if (expiresAt === null) {return false;}
+  if (expiresAt === null) {
+    return false;
+  }
   return Date.now() >= expiresAt;
 }
 
@@ -81,7 +95,9 @@ export function daysUntilExpiry(
   cfg: PasswordExpiryConfig = loadPasswordExpiryConfig(),
 ): number | null {
   const expiresAt = computePasswordExpiresAt(passwordChangedAt, cfg);
-  if (expiresAt === null) {return null;}
+  if (expiresAt === null) {
+    return null;
+  }
   const diffMs = expiresAt - Date.now();
   return Math.floor(diffMs / 86400_000);
 }
@@ -94,6 +110,8 @@ export function shouldWarnExpiry(
   cfg: PasswordExpiryConfig = loadPasswordExpiryConfig(),
 ): boolean {
   const days = daysUntilExpiry(passwordChangedAt, cfg);
-  if (days === null) {return false;}
+  if (days === null) {
+    return false;
+  }
   return days >= 0 && days <= cfg.warnDaysBefore;
 }

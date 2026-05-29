@@ -6,35 +6,35 @@
  * 包含：MCP 客户端、类型定义、通用辅助函数
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import type { TSchema } from '@sinclair/typebox';
-import { createToolContext, formatToolResult, registerTool } from '../helpers';
-import { handleInvokeErrorWithAutoAuth } from '../oapi/helpers';
-import { getUserAgent } from '../../core/version';
-import { mcpDomain } from '../../core/domains';
-import type { LarkBrand } from '../../core/types';
+import fs from "node:fs";
+import path from "node:path";
+import type { TSchema } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { mcpDomain } from "../../core/domains";
+import type { LarkBrand } from "../../core/types";
+import { getUserAgent } from "../../core/version";
+import { createToolContext, formatToolResult, registerTool } from "../helpers";
+import { handleInvokeErrorWithAutoAuth } from "../oapi/helpers";
 
 // ---------------------------------------------------------------------------
 // 类型定义
 // ---------------------------------------------------------------------------
 
 export interface McpRpcSuccess {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: number | string;
   result: unknown;
 }
 
 export interface McpRpcError {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: number | string | null;
   error: { code: number; message: string; data?: unknown };
 }
 
 export type McpRpcResponse = McpRpcSuccess | McpRpcError;
 
-import type { ToolActionKey } from '../../core/scope-manager';
+import type { ToolActionKey } from "../../core/scope-manager";
 
 export interface McpToolConfig<T = unknown> {
   name: string;
@@ -51,7 +51,7 @@ export interface McpToolConfig<T = unknown> {
 // ---------------------------------------------------------------------------
 
 export function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v != null;
+  return typeof v === "object" && v != null;
 }
 
 /**
@@ -65,8 +65,9 @@ export function extractMcpUrlFromConfig(cfg: unknown): string | undefined {
   if (!isRecord(feishu)) return undefined;
   const url = feishu.mcpEndpoint;
   const legacyUrl = feishu.mcp_url;
-  const chosen = typeof url === 'string' ? url : typeof legacyUrl === 'string' ? legacyUrl : undefined;
-  if (typeof chosen !== 'string') return undefined;
+  const chosen =
+    typeof url === "string" ? url : typeof legacyUrl === "string" ? legacyUrl : undefined;
+  if (typeof chosen !== "string") return undefined;
   const trimmed = chosen.trim();
   return trimmed ? trimmed : undefined;
 }
@@ -78,18 +79,18 @@ export function extractMcpUrlFromConfig(cfg: unknown): string | undefined {
 export function unwrapJsonRpcResult(v: unknown): unknown {
   if (!isRecord(v)) return v;
 
-  const hasJsonRpc = typeof v.jsonrpc === 'string';
-  const hasId = 'id' in v;
-  const hasResult = 'result' in v;
-  const hasError = 'error' in v;
+  const hasJsonRpc = typeof v.jsonrpc === "string";
+  const hasId = "id" in v;
+  const hasResult = "result" in v;
+  const hasError = "error" in v;
 
   if (hasJsonRpc && (hasResult || hasError)) {
     if (hasError) {
       const err = v.error;
-      if (isRecord(err) && typeof err.message === 'string') {
+      if (isRecord(err) && typeof err.message === "string") {
         throw new Error(err.message);
       }
-      throw new Error('MCP 返回 error，但无法解析 message');
+      throw new Error("MCP 返回 error，但无法解析 message");
     }
     return unwrapJsonRpcResult(v.result);
   }
@@ -116,10 +117,10 @@ function readMcpUrlFromOpenclawJson(): string | undefined {
   // 优先读取工作目录下的 `.openclaw/openclaw.json`
   // 约定：channels.feishu.mcpEndpoint（兼容旧字段 mcp_url）
   try {
-    const p = path.join(process.cwd(), '.openclaw', 'openclaw.json');
+    const p = path.join(process.cwd(), ".openclaw", "openclaw.json");
     if (!fs.existsSync(p)) return undefined;
 
-    const raw = fs.readFileSync(p, 'utf8');
+    const raw = fs.readFileSync(p, "utf8");
     const cfg = JSON.parse(raw) as unknown;
     return extractMcpUrlFromConfig(cfg);
   } catch {
@@ -143,7 +144,7 @@ function buildAuthHeader(): string | undefined {
   const token = process.env.FEISHU_MCP_BEARER_TOKEN?.trim() || process.env.FEISHU_MCP_TOKEN?.trim();
 
   if (!token) return undefined;
-  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
+  return token.toLowerCase().startsWith("bearer ") ? token : `Bearer ${token}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -169,9 +170,9 @@ export async function callMcpTool(
   const auth = buildAuthHeader();
 
   const body = {
-    jsonrpc: '2.0',
+    jsonrpc: "2.0",
     id: toolCallId,
-    method: 'tools/call',
+    method: "tools/call",
     params: {
       name,
       arguments: args,
@@ -179,15 +180,15 @@ export async function callMcpTool(
   };
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Lark-MCP-UAT': uat,
-    'X-Lark-MCP-Allowed-Tools': name,
-    'User-Agent': getUserAgent(),
+    "Content-Type": "application/json",
+    "X-Lark-MCP-UAT": uat,
+    "X-Lark-MCP-Allowed-Tools": name,
+    "User-Agent": getUserAgent(),
   };
   if (auth) headers.authorization = auth;
 
   const res = await fetch(endpoint, {
-    method: 'POST',
+    method: "POST",
     headers,
     body: JSON.stringify(body),
   });
@@ -204,7 +205,7 @@ export async function callMcpTool(
     throw new Error(`MCP 返回非 JSON：${text.slice(0, 4000)}`);
   }
 
-  if ('error' in data) {
+  if ("error" in data) {
     throw new Error(`MCP error ${data.error.code}: ${data.error.message}`);
   }
 
@@ -254,12 +255,12 @@ export function registerMcpTool<T extends Record<string, unknown>>(
             async (_sdk, _opts, uat) => {
               // 权限检查已通过，直接使用 invoke 传入的 UAT
               if (!uat) {
-                throw new Error('UAT not available');
+                throw new Error("UAT not available");
               }
               return callMcpTool(config.mcpToolName, p, toolCallId, uat, brand);
             },
             {
-              as: 'user',
+              as: "user",
             },
           );
 
@@ -276,7 +277,7 @@ export function registerMcpTool<T extends Record<string, unknown>>(
               text: string;
             }>;
             let details: unknown = result;
-            if (mcpContent.length === 1 && mcpContent[0]?.type === 'text') {
+            if (mcpContent.length === 1 && mcpContent[0]?.type === "text") {
               try {
                 details = JSON.parse(mcpContent[0].text);
               } catch {
@@ -285,7 +286,7 @@ export function registerMcpTool<T extends Record<string, unknown>>(
             }
             return {
               content: mcpContent.map((c) => ({
-                type: 'text' as const,
+                type: "text" as const,
                 text: c.text,
               })),
               details,

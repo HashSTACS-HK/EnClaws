@@ -70,10 +70,7 @@ export async function loadAgentPersona(agentDir: string): Promise<string> {
  *
  * 选择 CS 基础 prompt：persona 非空则用 persona；为空回退自定义 prompt / 默认模板。
  */
-export function selectBasePrompt(params: {
-  persona: string;
-  customSystemPrompt?: string;
-}): string {
+export function selectBasePrompt(params: { persona: string; customSystemPrompt?: string }): string {
   if (params.persona.trim()) {
     return params.persona;
   }

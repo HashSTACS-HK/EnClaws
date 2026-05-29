@@ -114,9 +114,7 @@ const SENSITIVE_PATH_WHITELIST_PREFIXES = [
 ] as const;
 
 /** Exact config paths whitelisted from the sensitive-key warning. */
-const SENSITIVE_PATH_WHITELIST = new Set([
-  "secrets",
-]);
+const SENSITIVE_PATH_WHITELIST = new Set(["secrets"]);
 const NORMALIZED_SENSITIVE_KEY_WHITELIST_SUFFIXES = SENSITIVE_KEY_WHITELIST_SUFFIXES.map((suffix) =>
   suffix.toLowerCase(),
 );

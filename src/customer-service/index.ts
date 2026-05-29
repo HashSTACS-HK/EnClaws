@@ -29,7 +29,11 @@ export { buildCSSystemPrompt } from "./rag/cs-system-prompt.js";
 // Widget
 export { parseClientMessage, serializeServerMessage } from "./widget/widget-protocol.js";
 export type { CSWidgetClientMessage, CSWidgetServerMessage } from "./widget/widget-protocol.js";
-export { generateVisitorId, generateVisitorToken, verifyVisitorToken } from "./widget/widget-auth.js";
+export {
+  generateVisitorId,
+  generateVisitorToken,
+  verifyVisitorToken,
+} from "./widget/widget-auth.js";
 export { registerConnection, handleWidgetMessage } from "./widget/widget-gateway.js";
 
 // Feishu notification

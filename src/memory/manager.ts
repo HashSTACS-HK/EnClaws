@@ -7,6 +7,7 @@ import type { ResolvedMemorySearchConfig } from "../agents/memory-search.js";
 import { resolveMemorySearchConfig } from "../agents/memory-search.js";
 import type { OpenClawConfig } from "../config/config.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
+import { extractKnowledgeText, isKnowledgeFilePath } from "./document-ingest.js";
 import {
   createEmbeddingProvider,
   type EmbeddingProvider,
@@ -18,19 +19,14 @@ import {
 } from "./embeddings.js";
 import { isFileMissingError, statRegularFile } from "./fs-utils.js";
 import { bm25RankToScore, buildFtsQuery, mergeHybridResults } from "./hybrid.js";
-import { extractKnowledgeText, isKnowledgeFilePath } from "./document-ingest.js";
-import {
-  isMemoryPath,
-  listMemoryFiles,
-  normalizeExtraMemoryPaths,
-} from "./internal.js";
+import { isMemoryPath, listMemoryFiles, normalizeExtraMemoryPaths } from "./internal.js";
 import { MemoryManagerEmbeddingOps } from "./manager-embedding-ops.js";
+import { searchKeyword, searchVector } from "./manager-search.js";
 import {
   outlineMarkdown,
   routeMarkdownProgressive,
   routeProgressiveIndex,
 } from "./progressive-retrieval.js";
-import { searchKeyword, searchVector } from "./manager-search.js";
 import { extractKeywords } from "./query-expansion.js";
 import type {
   MemoryEmbeddingProbeResult,
@@ -441,7 +437,30 @@ export class MemoryIndexManager extends MemoryManagerEmbeddingOps implements Mem
       maxBlocksPerSection: 1,
     });
     if (indexed && indexed.length > 0) {
-      return indexed.flatMap((file) =>
+      return indexed
+        .flatMap((file) =>
+          file.matches.map((match) => {
+            const block = match.blocks[0];
+            return {
+              path: file.path,
+              startLine: block?.startLine ?? match.section.startLine,
+              endLine: block?.endLine ?? match.section.endLine,
+              score: Math.min(1, Math.max(0.01, match.score / 20)),
+              snippet: block?.preview || match.section.summary || match.section.preview,
+              source: "memory" as MemorySource,
+            };
+          }),
+        )
+        .slice(0, maxResults);
+    }
+
+    const routed = await this.route({
+      query,
+      maxResults,
+      maxBlocksPerSection: 1,
+    });
+    return routed.files
+      .flatMap((file) =>
         file.matches.map((match) => {
           const block = match.blocks[0];
           return {
@@ -453,27 +472,8 @@ export class MemoryIndexManager extends MemoryManagerEmbeddingOps implements Mem
             source: "memory" as MemorySource,
           };
         }),
-      ).slice(0, maxResults);
-    }
-
-    const routed = await this.route({
-      query,
-      maxResults,
-      maxBlocksPerSection: 1,
-    });
-    return routed.files.flatMap((file) =>
-      file.matches.map((match) => {
-        const block = match.blocks[0];
-        return {
-          path: file.path,
-          startLine: block?.startLine ?? match.section.startLine,
-          endLine: block?.endLine ?? match.section.endLine,
-          score: Math.min(1, Math.max(0.01, match.score / 20)),
-          snippet: block?.preview || match.section.summary || match.section.preview,
-          source: "memory" as MemorySource,
-        };
-      }),
-    ).slice(0, maxResults);
+      )
+      .slice(0, maxResults);
   }
 
   private mergeHybridResults(params: {

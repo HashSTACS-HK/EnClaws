@@ -7,9 +7,9 @@ import {
   runOpenAiEmbeddingBatches,
 } from "./batch-openai.js";
 import { type VoyageBatchRequest, runVoyageEmbeddingBatches } from "./batch-voyage.js";
+import { extractKnowledgeText } from "./document-ingest.js";
 import { enforceEmbeddingMaxInputTokens } from "./embedding-chunk-limits.js";
 import { estimateUtf8Bytes } from "./embedding-input-limits.js";
-import { extractKnowledgeText } from "./document-ingest.js";
 import {
   chunkMarkdown,
   hashText,

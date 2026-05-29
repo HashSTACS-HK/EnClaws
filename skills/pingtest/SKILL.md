@@ -26,6 +26,7 @@ Simple connectivity test skill. Echoes back user input with current timestamp.
 
 User: `"测试连通性"`
 Assistant: invokes this skill → returns:
+
 ```
 [2026-03-15 10:54:32 CST] Echo: 测试连通性
 ```
@@ -60,6 +61,7 @@ scripts/pingtest.sh "your message here"
 ## Troubleshooting
 
 If the script is not found:
+
 - Ensure `scripts/pingtest.sh` exists in the skill directory
 - Check that the script is executable (on Unix: chmod +x)
 - Verify `date` command exists on the system

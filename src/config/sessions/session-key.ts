@@ -33,7 +33,12 @@ export function resolveSessionKey(scope: SessionScope, ctx: MsgContext, mainKey?
     // gets an isolated session. Group keys (containing :group: or
     // :channel:) are left untouched to keep the shared group session.
     const tenantUser = ctx.TenantUserId?.trim();
-    if (tenantUser && !key.includes(":group:") && !key.includes(":channel:") && !key.includes(":user:")) {
+    if (
+      tenantUser &&
+      !key.includes(":group:") &&
+      !key.includes(":channel:") &&
+      !key.includes(":user:")
+    ) {
       return `${key}:user:${tenantUser.toLowerCase()}`;
     }
     return key;

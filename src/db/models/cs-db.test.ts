@@ -21,13 +21,13 @@ let tmpDir: string;
 
 // Tenants created once; IDs used across all tests.
 // cs_sessions.tenant_id is a FK → tenants.id, so tenant must exist first.
-let tenantA: Tenant;   // primary test tenant
-let tenantB: Tenant;   // used for listCSSessions isolation tests
-let tenantC: Tenant;   // pagination
+let tenantA: Tenant; // primary test tenant
+let tenantB: Tenant; // used for listCSSessions isolation tests
+let tenantC: Tenant; // pagination
 let tenantMsgList: Tenant;
 let tenantMsgBefore: Tenant;
 let tenantMsgLimit: Tenant;
-let tenantCsApiState: Tenant;   // §F.2 cs-api state widening tests
+let tenantCsApiState: Tenant; // §F.2 cs-api state widening tests
 
 beforeAll(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cs-db-test-"));
@@ -104,7 +104,8 @@ describe("cs-session SQLite CRUD", () => {
   });
 
   it("findActiveCSSession — finds open session, null when closed", async () => {
-    const { createCSSession, findActiveCSSession, closeCSSession } = await import("./cs-session.js");
+    const { createCSSession, findActiveCSSession, closeCSSession } =
+      await import("./cs-session.js");
     const visitorId = "visitor-find-test";
     const session = await createCSSession({ tenantId: tenantA.id, visitorId });
 
@@ -151,7 +152,10 @@ describe("cs-session SQLite CRUD", () => {
 
   it("updateCSSessionState — transitions state correctly", async () => {
     const { createCSSession, getCSSession, updateCSSessionState } = await import("./cs-session.js");
-    const session = await createCSSession({ tenantId: tenantA.id, visitorId: "visitor-state-test" });
+    const session = await createCSSession({
+      tenantId: tenantA.id,
+      visitorId: "visitor-state-test",
+    });
     expect(session.state).toBe("ai_active");
 
     await updateCSSessionState(session.id, "human_active");
@@ -276,7 +280,12 @@ describe("cs-message SQLite CRUD", () => {
 
   it("getCSMessage — retrieves message by id", async () => {
     const { createCSMessage, getCSMessage } = await import("./cs-message.js");
-    const created = await createCSMessage({ sessionId, tenantId: tenantA.id, role: "ai", content: "AI reply" });
+    const created = await createCSMessage({
+      sessionId,
+      tenantId: tenantA.id,
+      role: "ai",
+      content: "AI reply",
+    });
     const fetched = await getCSMessage(created.id);
     expect(fetched).not.toBeNull();
     expect(fetched!.id).toBe(created.id);
@@ -293,11 +302,29 @@ describe("cs-message SQLite CRUD", () => {
     // REGRESSION: same sqliteQuery array-access bug as listCSSessions.
     const { createCSSession } = await import("./cs-session.js");
     const { createCSMessage, listCSMessages } = await import("./cs-message.js");
-    const session = await createCSSession({ tenantId: tenantMsgList.id, visitorId: "visitor-list" });
+    const session = await createCSSession({
+      tenantId: tenantMsgList.id,
+      visitorId: "visitor-list",
+    });
 
-    await createCSMessage({ sessionId: session.id, tenantId: tenantMsgList.id, role: "customer", content: "msg 1" });
-    await createCSMessage({ sessionId: session.id, tenantId: tenantMsgList.id, role: "ai", content: "msg 2" });
-    await createCSMessage({ sessionId: session.id, tenantId: tenantMsgList.id, role: "customer", content: "msg 3" });
+    await createCSMessage({
+      sessionId: session.id,
+      tenantId: tenantMsgList.id,
+      role: "customer",
+      content: "msg 1",
+    });
+    await createCSMessage({
+      sessionId: session.id,
+      tenantId: tenantMsgList.id,
+      role: "ai",
+      content: "msg 2",
+    });
+    await createCSMessage({
+      sessionId: session.id,
+      tenantId: tenantMsgList.id,
+      role: "customer",
+      content: "msg 3",
+    });
 
     const messages = await listCSMessages(session.id);
     expect(Array.isArray(messages)).toBe(true);
@@ -309,7 +336,10 @@ describe("cs-message SQLite CRUD", () => {
   it("listCSMessages with beforeId — returns older messages in correct order", async () => {
     const { createCSSession } = await import("./cs-session.js");
     const { createCSMessage, listCSMessages } = await import("./cs-message.js");
-    const session = await createCSSession({ tenantId: tenantMsgBefore.id, visitorId: "visitor-before" });
+    const session = await createCSSession({
+      tenantId: tenantMsgBefore.id,
+      visitorId: "visitor-before",
+    });
 
     // SQLite datetime('now') has second-level precision.
     // Insert messages with 1.1s gaps so each gets a distinct created_at timestamp,
@@ -317,11 +347,26 @@ describe("cs-message SQLite CRUD", () => {
     // SQLite 时间精度是秒，消息之间需要间隔 > 1s 才能区分前后顺序。
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    const m1 = await createCSMessage({ sessionId: session.id, tenantId: tenantMsgBefore.id, role: "customer", content: "first" });
+    const m1 = await createCSMessage({
+      sessionId: session.id,
+      tenantId: tenantMsgBefore.id,
+      role: "customer",
+      content: "first",
+    });
     await sleep(1100);
-    const m2 = await createCSMessage({ sessionId: session.id, tenantId: tenantMsgBefore.id, role: "ai", content: "second" });
+    const m2 = await createCSMessage({
+      sessionId: session.id,
+      tenantId: tenantMsgBefore.id,
+      role: "ai",
+      content: "second",
+    });
     await sleep(1100);
-    await createCSMessage({ sessionId: session.id, tenantId: tenantMsgBefore.id, role: "customer", content: "third" });
+    await createCSMessage({
+      sessionId: session.id,
+      tenantId: tenantMsgBefore.id,
+      role: "customer",
+      content: "third",
+    });
 
     // beforeId = m2 means: messages created before m2 (only m1)
     const older = await listCSMessages(session.id, { beforeId: m2.id });
@@ -333,10 +378,18 @@ describe("cs-message SQLite CRUD", () => {
   it("listCSMessages — respects limit", async () => {
     const { createCSSession } = await import("./cs-session.js");
     const { createCSMessage, listCSMessages } = await import("./cs-message.js");
-    const session = await createCSSession({ tenantId: tenantMsgLimit.id, visitorId: "visitor-limit" });
+    const session = await createCSSession({
+      tenantId: tenantMsgLimit.id,
+      visitorId: "visitor-limit",
+    });
 
     for (let i = 0; i < 5; i++) {
-      await createCSMessage({ sessionId: session.id, tenantId: tenantMsgLimit.id, role: "customer", content: `msg ${i}` });
+      await createCSMessage({
+        sessionId: session.id,
+        tenantId: tenantMsgLimit.id,
+        role: "customer",
+        content: `msg ${i}`,
+      });
     }
     const limited = await listCSMessages(session.id, { limit: 3 });
     expect(limited.length).toBe(3);

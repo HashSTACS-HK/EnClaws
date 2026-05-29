@@ -531,7 +531,11 @@ export async function initSessionState(params: {
     }
   }
   const fallbackSessionFile = !sessionEntry.sessionFile
-    ? resolveSessionTranscriptPathInDir(sessionEntry.sessionId, path.dirname(storePath), ctx.MessageThreadId)
+    ? resolveSessionTranscriptPathInDir(
+        sessionEntry.sessionId,
+        path.dirname(storePath),
+        ctx.MessageThreadId,
+      )
     : undefined;
   const resolvedSessionFile = await resolveAndPersistSessionFile({
     sessionId: sessionEntry.sessionId,

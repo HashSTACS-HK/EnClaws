@@ -7,10 +7,26 @@
 
 /** Gemini 不支持的 JSON Schema 关键词 */
 const GEMINI_UNSUPPORTED_KEYWORDS = new Set([
-  "patternProperties", "additionalProperties", "$schema", "$id", "$ref", "$defs",
-  "definitions", "examples", "minLength", "maxLength", "minimum", "maximum",
-  "multipleOf", "pattern", "format", "minItems", "maxItems", "uniqueItems",
-  "minProperties", "maxProperties",
+  "patternProperties",
+  "additionalProperties",
+  "$schema",
+  "$id",
+  "$ref",
+  "$defs",
+  "definitions",
+  "examples",
+  "minLength",
+  "maxLength",
+  "minimum",
+  "maximum",
+  "multipleOf",
+  "pattern",
+  "format",
+  "minItems",
+  "maxItems",
+  "uniqueItems",
+  "minProperties",
+  "maxProperties",
 ]);
 
 /**
@@ -25,8 +41,10 @@ export function cleanSchemaForGemini(schema: unknown): unknown {
 
   // 收集 $defs/definitions 用于后续 $ref 内联解析
   const defs: Record<string, unknown> = {
-    ...(obj.$defs && typeof obj.$defs === "object" ? obj.$defs as Record<string, unknown> : {}),
-    ...(obj.definitions && typeof obj.definitions === "object" ? obj.definitions as Record<string, unknown> : {}),
+    ...(obj.$defs && typeof obj.$defs === "object" ? (obj.$defs as Record<string, unknown>) : {}),
+    ...(obj.definitions && typeof obj.definitions === "object"
+      ? (obj.definitions as Record<string, unknown>)
+      : {}),
   };
 
   return cleanWithDefs(obj, defs, new Set());
@@ -76,7 +94,8 @@ function cleanWithDefs(
     if (key === "properties" && value && typeof value === "object" && !Array.isArray(value)) {
       cleaned[key] = Object.fromEntries(
         Object.entries(value as Record<string, unknown>).map(([k, v]) => [
-          k, cleanWithDefs(v, defs, refStack),
+          k,
+          cleanWithDefs(v, defs, refStack),
         ]),
       );
     } else if (key === "items" && value) {

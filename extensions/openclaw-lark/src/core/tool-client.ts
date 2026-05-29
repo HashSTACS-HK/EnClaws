@@ -28,20 +28,11 @@
  * ```
  */
 
-import * as Lark from '@larksuiteoapi/node-sdk';
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { ConfiguredLarkAccount } from './types';
-import { getEnabledLarkAccounts, getLarkAccount } from './accounts';
-import { LarkClient, getResolvedConfig } from './lark-client';
-import { getTicket } from './lark-ticket';
-import { callWithUAT } from './uat-client';
-import { getStoredToken } from './token-store';
-import { getAppGrantedScopes, invalidateAppScopeCache, missingScopes } from './app-scope-checker';
-import { getAppOwnerFallback } from './app-owner-fallback';
-import { larkLogger } from './lark-logger';
-import { type ToolActionKey, getRequiredScopes } from './scope-manager';
-import { rawLarkRequest } from './raw-request';
-import { assertOwnerAccessStrict } from './owner-policy';
+import * as Lark from "@larksuiteoapi/node-sdk";
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { getEnabledLarkAccounts, getLarkAccount } from "./accounts";
+import { getAppOwnerFallback } from "./app-owner-fallback";
+import { getAppGrantedScopes, invalidateAppScopeCache, missingScopes } from "./app-scope-checker";
 import {
   AppScopeCheckFailedError,
   AppScopeMissingError,
@@ -49,8 +40,17 @@ import {
   NeedAuthorizationError,
   UserAuthRequiredError,
   UserScopeInsufficientError,
-} from './auth-errors';
-import type { AuthHint, ScopeErrorInfo, TryInvokeResult } from './auth-errors';
+} from "./auth-errors";
+import type { AuthHint, ScopeErrorInfo, TryInvokeResult } from "./auth-errors";
+import { LarkClient, getResolvedConfig } from "./lark-client";
+import { larkLogger } from "./lark-logger";
+import { getTicket } from "./lark-ticket";
+import { assertOwnerAccessStrict } from "./owner-policy";
+import { rawLarkRequest } from "./raw-request";
+import { type ToolActionKey, getRequiredScopes } from "./scope-manager";
+import { getStoredToken } from "./token-store";
+import type { ConfiguredLarkAccount } from "./types";
+import { callWithUAT } from "./uat-client";
 
 // Re-export for backward compatibility — 下游模块可继续从 tool-client 导入
 export {
@@ -63,7 +63,7 @@ export {
 };
 export type { ScopeErrorInfo, AuthHint, TryInvokeResult };
 
-const tcLog = larkLogger('core/tool-client');
+const tcLog = larkLogger("core/tool-client");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,7 +89,7 @@ export type InvokeFn<T> = (sdk: Lark.Client, opts?: LarkRequestOptions, uat?: st
 /** invoke() 的选项。 */
 export interface InvokeOptions {
   /** 强制 token 类型。省略时根据 API meta 自动选择（优先 user）。 */
-  as?: 'user' | 'tenant';
+  as?: "user" | "tenant";
   /** 覆盖 senderOpenId。 */
   userOpenId?: string;
   /** 直接指定所需 scopes，跳过从 meta.json 读取。宽松模式：只要应用拥有部分 scope（交集非空）即可调用。 */
@@ -98,7 +98,7 @@ export interface InvokeOptions {
 
 /** invokeByPath() 的选项 — 在 InvokeOptions 基础上增加 HTTP 请求参数。 */
 export type InvokeByPathOptions = InvokeOptions & {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string>;
   /** 自定义请求 header，会与 Authorization / Content-Type 合并（自定义优先）。 */
@@ -179,17 +179,21 @@ export class ToolClient {
   /**
    * 内部 invoke 实现，只支持 ToolActionKey（严格类型检查）
    */
-  private async _invokeInternal<T>(toolAction: ToolActionKey, fn: InvokeFn<T>, options?: InvokeOptions): Promise<T> {
+  private async _invokeInternal<T>(
+    toolAction: ToolActionKey,
+    fn: InvokeFn<T>,
+    options?: InvokeOptions,
+  ): Promise<T> {
     // 检查旧版插件是否已禁用 (error)
     const feishuEntry = this.config.plugins?.entries?.feishu;
     if (feishuEntry && feishuEntry.enabled !== false) {
       throw new Error(
-        '❌ 检测到旧版插件未禁用。\n' +
-          '👉 请依次运行命令：\n' +
-          '```\n' +
-          'openclaw config set plugins.entries.feishu.enabled false --json\n' +
-          'openclaw gateway restart\n' +
-          '```',
+        "❌ 检测到旧版插件未禁用。\n" +
+          "👉 请依次运行命令：\n" +
+          "```\n" +
+          "openclaw config set plugins.entries.feishu.enabled false --json\n" +
+          "openclaw gateway restart\n" +
+          "```",
       );
     }
 
@@ -197,12 +201,13 @@ export class ToolClient {
     const requiredScopes = getRequiredScopes(toolAction);
 
     // 3. 决定 token 类型（默认 user，用户可通过 options.as 覆盖）
-    const tokenType = options?.as ?? 'user';
+    const tokenType = options?.as ?? "user";
 
     // ---- App Granted Scopes 检查（应用已开通的权限）----
     // UAT 调用额外检查 offline_access（OAuth Device Flow 的前提权限），
     // 但不加入 requiredScopes（避免阻断业务 scope 进入用户授权流程）。
-    const appCheckScopes = tokenType === 'user' ? [...new Set([...requiredScopes, 'offline_access'])] : requiredScopes;
+    const appCheckScopes =
+      tokenType === "user" ? [...new Set([...requiredScopes, "offline_access"])] : requiredScopes;
 
     let appScopeVerified = true;
     if (appCheckScopes.length > 0) {
@@ -214,7 +219,7 @@ export class ToolClient {
         if (missingAppScopes.length > 0) {
           throw new AppScopeMissingError(
             { apiName: toolAction, scopes: missingAppScopes, appId: this.account.appId },
-            'all',
+            "all",
             tokenType,
             requiredScopes,
           );
@@ -227,7 +232,7 @@ export class ToolClient {
     }
 
     // 5. 执行调用
-    if (tokenType === 'tenant') {
+    if (tokenType === "tenant") {
       return this.invokeAsTenant(toolAction, fn, requiredScopes);
     }
 
@@ -284,7 +289,11 @@ export class ToolClient {
    * ```
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async invokeByPath<T = any>(toolAction: ToolActionKey, path: string, options?: InvokeByPathOptions): Promise<T> {
+  async invokeByPath<T = any>(
+    toolAction: ToolActionKey,
+    path: string,
+    options?: InvokeByPathOptions,
+  ): Promise<T> {
     const fn: InvokeFn<T> = async (_sdk, _opts, uat) => {
       return this.rawRequest<T>(path, {
         method: options?.method,
@@ -301,11 +310,15 @@ export class ToolClient {
   // Private: TAT path
   // -------------------------------------------------------------------------
 
-  private async invokeAsTenant<T>(toolAction: ToolActionKey, fn: InvokeFn<T>, requiredScopes: string[]): Promise<T> {
+  private async invokeAsTenant<T>(
+    toolAction: ToolActionKey,
+    fn: InvokeFn<T>,
+    requiredScopes: string[],
+  ): Promise<T> {
     try {
       return await fn(this.sdk);
     } catch (err) {
-      this.rethrowStructuredError(err, toolAction, requiredScopes, undefined, 'tenant');
+      this.rethrowStructuredError(err, toolAction, requiredScopes, undefined, "tenant");
       throw err;
     }
   }
@@ -322,7 +335,7 @@ export class ToolClient {
     appScopeVerified: boolean,
   ): Promise<T> {
     if (!userOpenId) {
-      throw new UserAuthRequiredError('unknown', {
+      throw new UserAuthRequiredError("unknown", {
         apiName: toolAction,
         scopes: requiredScopes,
         appScopeVerified,
@@ -384,7 +397,7 @@ export class ToolClient {
           appScopeVerified,
         });
       }
-      this.rethrowStructuredError(err, toolAction, requiredScopes, userOpenId, 'user');
+      this.rethrowStructuredError(err, toolAction, requiredScopes, userOpenId, "user");
       throw err;
     }
   }
@@ -428,7 +441,7 @@ export class ToolClient {
     apiName: string,
     effectiveScopes: string[],
     userOpenId?: string,
-    tokenType?: 'user' | 'tenant',
+    tokenType?: "user" | "tenant",
   ): void {
     const code =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -443,7 +456,7 @@ export class ToolClient {
           scopes: effectiveScopes,
           appId: this.account.appId,
         },
-        'all',
+        "all",
         tokenType,
       );
     }
@@ -503,15 +516,20 @@ export function createToolClient(config: ClawdbotConfig, accountIndex = 0): Tool
     const accounts = getEnabledLarkAccounts(resolveConfig);
     if (accounts.length === 0) {
       throw new Error(
-        'No enabled Feishu accounts configured. ' + 'Please add appId and appSecret in config under channels.feishu',
+        "No enabled Feishu accounts configured. " +
+          "Please add appId and appSecret in config under channels.feishu",
       );
     }
     if (accountIndex >= accounts.length) {
-      throw new Error(`Requested account index ${accountIndex} but only ${accounts.length} accounts available`);
+      throw new Error(
+        `Requested account index ${accountIndex} but only ${accounts.length} accounts available`,
+      );
     }
     const fallback = accounts[accountIndex];
     if (!fallback.configured) {
-      throw new Error(`Account at index ${accountIndex} is not fully configured (missing appId or appSecret)`);
+      throw new Error(
+        `Account at index ${accountIndex} is not fully configured (missing appId or appSecret)`,
+      );
     }
     account = fallback;
   }

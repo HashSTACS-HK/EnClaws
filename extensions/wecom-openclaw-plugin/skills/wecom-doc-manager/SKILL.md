@@ -15,17 +15,17 @@ description: 企业微信文档管理技能。提供文档和智能主页的创�
 
 企业微信文档有三种品类，**URL 格式不同，读取内容所用的接口也不同**，切勿混用：
 
-| URL 模式 | 品类 | 读取内容接口 |
-|---|---|---|
-| `https://doc.weixin.qq.com/doc/*` | **文档**（doc_type=3） | `get_doc_content` |
-| `https://doc.weixin.qq.com/smartsheet/*` | **智能表格**（doc_type=10） | `get_doc_content` |
-| `https://doc.weixin.qq.com/smartpage/*` | **智能主页** | `smartpage_export_task` → `smartpage_get_export_result` |
+| URL 模式                                 | 品类                        | 读取内容接口                                            |
+| ---------------------------------------- | --------------------------- | ------------------------------------------------------- |
+| `https://doc.weixin.qq.com/doc/*`        | **文档**（doc_type=3）      | `get_doc_content`                                       |
+| `https://doc.weixin.qq.com/smartsheet/*` | **智能表格**（doc_type=10） | `get_doc_content`                                       |
+| `https://doc.weixin.qq.com/smartpage/*`  | **智能主页**                | `smartpage_export_task` → `smartpage_get_export_result` |
 
 **判断规则**：
+
 - URL 路径以 `/doc/*` 开头 → 文档 → 用 `get_doc_content`
 - URL 路径以 `/smartsheet/*` 开头 → 智能表格 → 用 `get_doc_content`
 - URL 路径以 `/smartpage/*` 开头 → 智能主页 → 用 `smartpage_export_task`
-
 
 ## 调用方式
 
@@ -37,17 +37,17 @@ description: 企业微信文档管理技能。提供文档和智能主页的创�
 
 所有接口返回 JSON 对象，包含以下公共字段：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
+| 字段      | 类型    | 说明                                  |
+| --------- | ------- | ------------------------------------- |
 | `errcode` | integer | 返回码，`0` 表示成功，非 `0` 表示失败 |
-| `errmsg` | string | 错误信息，成功时为 `"ok"` |
+| `errmsg`  | string  | 错误信息，成功时为 `"ok"`             |
 
 当 `errcode` 不为 `0` 时，说明接口调用失败，可重试 1 次；若仍失败，将 `errcode` 和 `errmsg` 展示给用户。
 
 ### 特殊错误码
 
-| errcode | errmsg | 含义 | 处理方式 |
-|---------|--------|------|----------|
+| errcode  | errmsg                  | 含义                         | 处理方式                                                                                                                                         |
+| -------- | ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `851002` | `incompatible doc type` | 文档品类与所调用的接口不匹配 | 换用另一种导出方式重试：若当前使用 `get_doc_content` 则改用 `smartpage_export_task`，若当前使用 `smartpage_export_task` 则改用 `get_doc_content` |
 
 ## 文档
@@ -56,6 +56,7 @@ description: 企业微信文档管理技能。提供文档和智能主页的创�
 适用 URL：`/doc/*`、`/smartsheet/*`
 
 适用场景：
+
 1. 以 Markdown 格式导出获取文档完整内容（异步轮询）
 2. 新建文档（doc_type=3）或智能表格（doc_type=10）
 3. 用 Markdown 格式覆写文档内容
@@ -95,6 +96,7 @@ description: 企业微信文档管理技能。提供文档和智能主页的创�
 适用 URL：`/smartpage/*`
 
 适用场景：
+
 1. 将本地 Markdown 文件创建为智能主页
 2. 异步导出智能主页内容为 Markdown 文件
 
@@ -105,6 +107,7 @@ description: 企业微信文档管理技能。提供文档和智能主页的创�
 - 使用 `wecom_mcp` tool 调用 `wecom_mcp call doc smartpage_create '{"title": "项目概览", "pages": [{"page_title": "需求文档", "content_type": 1, "page_filepath": "/path/to/requirements.md"}]}'`
 
 **注意**：
+
 - `content_type` **必须与文件实际内容匹配**：`.md` 文件或包含 Markdown 语法的内容必须传 `1`（Markdown），仅纯文本才传 `0`。绝大多数场景应传 `1`
 - docid 仅在创建时返回，需妥善保存
 - 每个子页面的 Markdown 文件大小不得超过 **10MB**，超过会导致创建失败。如果文件过大，需先拆分为多个子页面再创建

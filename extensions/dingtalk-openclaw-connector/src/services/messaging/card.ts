@@ -4,8 +4,8 @@
  */
 
 import type { DingtalkConfig } from "../../types/index.ts";
-import { DINGTALK_API, getAccessToken } from "../../utils/token.ts";
 import { dingtalkHttp } from "../../utils/http-client.ts";
+import { DINGTALK_API, getAccessToken } from "../../utils/token.ts";
 
 // ============ 常量 ============
 
@@ -46,10 +46,7 @@ function ensureTableBlankLines(text: string): string {
   const tableRowRegex = /^\s*\|?.*\|.*\|?\s*$/;
 
   const isDivider = (line: string) =>
-    line &&
-    typeof line === "string" &&
-    line.includes("|") &&
-    tableDividerRegex.test(line);
+    line && typeof line === "string" && line.includes("|") && tableDividerRegex.test(line);
 
   for (let i = 0; i < lines.length; i++) {
     const currentLine = lines[i];
@@ -96,10 +93,10 @@ export function buildDeliverBody(
     ...base,
     openSpaceId: `dtv1.card//IM_ROBOT.${target.userId}`,
     imRobotOpenDeliverModel: {
-      spaceType: 'IM_ROBOT',
+      spaceType: "IM_ROBOT",
       robotCode,
       extension: {
-        dynamicSummary: 'true',
+        dynamicSummary: "true",
       },
     },
   };
@@ -114,49 +111,37 @@ export async function createAICardForTarget(
   log?: any,
 ): Promise<AICardInstance | null> {
   const targetDesc =
-    target.type === "group"
-      ? `群聊 ${target.openConversationId}`
-      : `用户 ${target.userId}`;
+    target.type === "group" ? `群聊 ${target.openConversationId}` : `用户 ${target.userId}`;
 
   try {
     const token = await getAccessToken(config);
     const cardInstanceId = `card_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
-    log?.info?.(
-      `[DingTalk][AICard] 开始创建卡片：${targetDesc}, outTrackId=${cardInstanceId}`,
-    );
+    log?.info?.(`[DingTalk][AICard] 开始创建卡片：${targetDesc}, outTrackId=${cardInstanceId}`);
 
     // 1. 创建卡片实例
     const createBody = {
       cardTemplateId: AI_CARD_TEMPLATE_ID,
       outTrackId: cardInstanceId,
       cardData: {
-          cardParamMap: {
-              config: JSON.stringify({ autoLayout: true }),
-          }
+        cardParamMap: {
+          config: JSON.stringify({ autoLayout: true }),
+        },
       },
       callbackType: "STREAM",
       imGroupOpenSpaceModel: { supportForward: true },
       imRobotOpenSpaceModel: { supportForward: true },
     };
 
-    const createResp = await dingtalkHttp.post(
-      `${DINGTALK_API}/v1.0/card/instances`,
-      createBody,
-      {
-        headers: {
-          "x-acs-dingtalk-access-token": token,
-          "Content-Type": "application/json",
-        },
+    const createResp = await dingtalkHttp.post(`${DINGTALK_API}/v1.0/card/instances`, createBody, {
+      headers: {
+        "x-acs-dingtalk-access-token": token,
+        "Content-Type": "application/json",
       },
-    );
+    });
 
     // 2. 投放卡片
-    const deliverBody = buildDeliverBody(
-      cardInstanceId,
-      target,
-      String(config.clientId ?? ""),
-    );
+    const deliverBody = buildDeliverBody(cardInstanceId, target, String(config.clientId ?? ""));
 
     const deliverResp = await dingtalkHttp.post(
       `${DINGTALK_API}/v1.0/card/instances/deliver`,
@@ -171,16 +156,12 @@ export async function createAICardForTarget(
 
     // 记录 token 过期时间（钉钉 token 有效期 2 小时）
     const tokenExpireTime = Date.now() + 2 * 60 * 60 * 1000;
-    
+
     return { cardInstanceId, accessToken: token, tokenExpireTime, inputingStarted: false };
   } catch (err: any) {
-    log?.error?.(
-      `[DingTalk][AICard] 创建卡片失败 (${targetDesc}): ${err.message}`,
-    );
+    log?.error?.(`[DingTalk][AICard] 创建卡片失败 (${targetDesc}): ${err.message}`);
     if (err.response) {
-      log?.error?.(
-        `[DingTalk][AICard] 错误响应：status=${err.response.status}`,
-      );
+      log?.error?.(`[DingTalk][AICard] 错误响应：status=${err.response.status}`);
     }
     return null;
   }
@@ -189,10 +170,7 @@ export async function createAICardForTarget(
 /**
  * 确保 Token 有效（自动刷新过期的 Token）
  */
-async function ensureValidToken(
-  card: AICardInstance,
-  config: DingtalkConfig,
-): Promise<string> {
+async function ensureValidToken(card: AICardInstance, config: DingtalkConfig): Promise<string> {
   // 如果 token 即将过期（提前 5 分钟刷新）
   if (Date.now() > card.tokenExpireTime - 5 * 60 * 1000) {
     const newToken = await getAccessToken(config);
@@ -232,19 +210,13 @@ export async function streamAICard(
       },
     };
     try {
-      const statusResp = await dingtalkHttp.put(
-        `${DINGTALK_API}/v1.0/card/instances`,
-        statusBody,
-        {
-          headers: {
-            "x-acs-dingtalk-access-token": card.accessToken,
-            "Content-Type": "application/json",
-          },
+      const statusResp = await dingtalkHttp.put(`${DINGTALK_API}/v1.0/card/instances`, statusBody, {
+        headers: {
+          "x-acs-dingtalk-access-token": card.accessToken,
+          "Content-Type": "application/json",
         },
-      );
-      log?.info?.(
-        `[DingTalk][AICard] INPUTING 响应：status=${statusResp.status}`,
-      );
+      });
+      log?.info?.(`[DingTalk][AICard] INPUTING 响应：status=${statusResp.status}`);
     } catch (err: any) {
       log?.error?.(`[DingTalk][AICard] INPUTING 切换失败：${err.message}`);
       throw err;
@@ -267,19 +239,13 @@ export async function streamAICard(
     `[DingTalk][AICard] PUT /v1.0/card/streaming contentLen=${content.length} isFinalize=${finished}`,
   );
   try {
-    const streamResp = await dingtalkHttp.put(
-      `${DINGTALK_API}/v1.0/card/streaming`,
-      body,
-      {
-        headers: {
-          "x-acs-dingtalk-access-token": card.accessToken,
-          "Content-Type": "application/json",
-        },
+    const streamResp = await dingtalkHttp.put(`${DINGTALK_API}/v1.0/card/streaming`, body, {
+      headers: {
+        "x-acs-dingtalk-access-token": card.accessToken,
+        "Content-Type": "application/json",
       },
-    );
-    log?.info?.(
-      `[DingTalk][AICard] streaming 响应：status=${streamResp.status}`,
-    );
+    });
+    log?.info?.(`[DingTalk][AICard] streaming 响应：status=${streamResp.status}`);
   } catch (err: any) {
     throw err;
   }
@@ -299,9 +265,7 @@ export async function finishAICard(
     await ensureValidToken(card, config);
   }
   const fixedContent = ensureTableBlankLines(content);
-  log?.info?.(
-    `[DingTalk][AICard] 开始 finish，最终内容长度=${fixedContent.length}`,
-  );
+  log?.info?.(`[DingTalk][AICard] 开始 finish，最终内容长度=${fixedContent.length}`);
 
   await streamAICard(card, fixedContent, true, config, log);
 
@@ -322,19 +286,13 @@ export async function finishAICard(
   };
 
   try {
-    const finishResp = await dingtalkHttp.put(
-      `${DINGTALK_API}/v1.0/card/instances`,
-      body,
-      {
-        headers: {
-          "x-acs-dingtalk-access-token": card.accessToken,
-          "Content-Type": "application/json",
-        },
+    const finishResp = await dingtalkHttp.put(`${DINGTALK_API}/v1.0/card/instances`, body, {
+      headers: {
+        "x-acs-dingtalk-access-token": card.accessToken,
+        "Content-Type": "application/json",
       },
-    );
-    log?.info?.(
-      `[DingTalk][AICard] FINISHED 响应：status=${finishResp.status}`,
-    );
+    });
+    log?.info?.(`[DingTalk][AICard] FINISHED 响应：status=${finishResp.status}`);
   } catch (err: any) {
     log?.error?.(`[DingTalk][AICard] FINISHED 更新失败：${err.message}`);
   }

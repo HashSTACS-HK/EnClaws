@@ -13,8 +13,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import {
   StringEnum,
   assertLarkOk,
@@ -22,62 +22,62 @@ import {
   handleInvokeErrorWithAutoAuth,
   json,
   registerTool,
-} from '../helpers';
-import type { CommentReplyListData } from '../sdk-types';
+} from "../helpers";
+import type { CommentReplyListData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
 
 const ReplyElementSchema = Type.Object({
-  type: StringEnum(['text', 'mention', 'link']),
-  text: Type.Optional(Type.String({ description: '文本内容(type=text时必填)' })),
-  open_id: Type.Optional(Type.String({ description: '被@用户的open_id(type=mention时必填)' })),
-  url: Type.Optional(Type.String({ description: '链接URL(type=link时必填)' })),
+  type: StringEnum(["text", "mention", "link"]),
+  text: Type.Optional(Type.String({ description: "文本内容(type=text时必填)" })),
+  open_id: Type.Optional(Type.String({ description: "被@用户的open_id(type=mention时必填)" })),
+  url: Type.Optional(Type.String({ description: "链接URL(type=link时必填)" })),
 });
 
 const DocCommentsSchema = Type.Object({
-  action: StringEnum(['list', 'create', 'patch']),
+  action: StringEnum(["list", "create", "patch"]),
   file_token: Type.String({
-    description: '云文档token或wiki节点token(可从文档URL获取)。如果是wiki token，会自动转换为实际文档的obj_token',
+    description:
+      "云文档token或wiki节点token(可从文档URL获取)。如果是wiki token，会自动转换为实际文档的obj_token",
   }),
-  file_type: StringEnum(
-    ['doc', 'docx', 'sheet', 'file', 'slides', 'wiki'],
-    {
-      description: '文档类型。wiki类型会自动解析为实际文档类型(docx/sheet/bitable等)',
-    },
-  ),
+  file_type: StringEnum(["doc", "docx", "sheet", "file", "slides", "wiki"], {
+    description: "文档类型。wiki类型会自动解析为实际文档类型(docx/sheet/bitable等)",
+  }),
   // list action参数
   is_whole: Type.Optional(
     Type.Boolean({
-      description: '是否只获取全文评论(action=list时可选)',
+      description: "是否只获取全文评论(action=list时可选)",
     }),
   ),
   is_solved: Type.Optional(
     Type.Boolean({
-      description: '是否只获取已解决的评论(action=list时可选)',
+      description: "是否只获取已解决的评论(action=list时可选)",
     }),
   ),
-  page_size: Type.Optional(Type.Integer({ description: '分页大小' })),
-  page_token: Type.Optional(Type.String({ description: '分页标记' })),
+  page_size: Type.Optional(Type.Integer({ description: "分页大小" })),
+  page_token: Type.Optional(Type.String({ description: "分页标记" })),
   // create action参数
   elements: Type.Optional(
     Type.Array(ReplyElementSchema, {
-      description: '评论内容元素数组(action=create时必填)。' + '支持text(纯文本)、mention(@用户)、link(超链接)三种类型',
+      description:
+        "评论内容元素数组(action=create时必填)。" +
+        "支持text(纯文本)、mention(@用户)、link(超链接)三种类型",
     }),
   ),
   // patch action参数
   comment_id: Type.Optional(
     Type.String({
-      description: '评论ID(action=patch时必填)',
+      description: "评论ID(action=patch时必填)",
     }),
   ),
   is_solved_value: Type.Optional(
     Type.Boolean({
-      description: '解决状态:true=解决,false=恢复(action=patch时必填)',
+      description: "解决状态:true=解决,false=恢复(action=patch时必填)",
     }),
   ),
-  user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
+  user_id_type: Type.Optional(StringEnum(["open_id", "union_id", "user_id"])),
 });
 
 // ---------------------------------------------------------------------------
@@ -85,16 +85,16 @@ const DocCommentsSchema = Type.Object({
 // ---------------------------------------------------------------------------
 
 interface ReplyElement {
-  type: 'text' | 'mention' | 'link';
+  type: "text" | "mention" | "link";
   text?: string;
   open_id?: string;
   url?: string;
 }
 
 interface DocCommentsParams {
-  action: 'list' | 'create' | 'patch';
+  action: "list" | "create" | "patch";
   file_token: string;
-  file_type: 'doc' | 'docx' | 'sheet' | 'file' | 'slides' | 'wiki';
+  file_type: "doc" | "docx" | "sheet" | "file" | "slides" | "wiki";
   is_whole?: boolean;
   is_solved?: boolean;
   page_size?: number;
@@ -102,7 +102,7 @@ interface DocCommentsParams {
   elements?: ReplyElement[];
   comment_id?: string;
   is_solved_value?: boolean;
-  user_id_type?: 'open_id' | 'union_id' | 'user_id';
+  user_id_type?: "open_id" | "union_id" | "user_id";
 }
 
 // ---------------------------------------------------------------------------
@@ -111,23 +111,23 @@ interface DocCommentsParams {
 
 function convertElementsToSDKFormat(elements: ReplyElement[]) {
   return elements.map((el) => {
-    if (el.type === 'text') {
+    if (el.type === "text") {
       return {
-        type: 'text_run',
+        type: "text_run",
         text_run: { text: el.text! },
       };
-    } else if (el.type === 'mention') {
+    } else if (el.type === "mention") {
       return {
-        type: 'person',
+        type: "person",
         person: { user_id: el.open_id! },
       };
-    } else if (el.type === 'link') {
+    } else if (el.type === "link") {
       return {
-        type: 'docs_link',
+        type: "docs_link",
         docs_link: { url: el.url! },
       };
     }
-    return { type: 'text_run', text_run: { text: '' } };
+    return { type: "text_run", text_run: { text: "" } };
   });
 }
 
@@ -158,7 +158,7 @@ async function assembleCommentsWithReplies(
 
         while (hasMore) {
           const replyRes = await client.invoke(
-            'drive.v1.fileCommentReply.list',
+            "drive.v1.fileCommentReply.list",
             (sdk: any, opts: any) =>
               sdk.drive.v1.fileCommentReply.list(
                 {
@@ -175,7 +175,7 @@ async function assembleCommentsWithReplies(
                 },
                 opts,
               ),
-            { as: 'user' },
+            { as: "user" },
           );
 
           const replyData = replyRes.data as CommentReplyListData | undefined;
@@ -210,47 +210,49 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
   if (!api.config) return false;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_doc_comments');
+  const { toolClient, log } = createToolContext(api, "feishu_doc_comments");
 
   return registerTool(
     api,
     {
-      name: 'feishu_doc_comments',
-      label: 'Feishu: Doc Comments',
+      name: "feishu_doc_comments",
+      label: "Feishu: Doc Comments",
       description:
-        '【以用户身份】管理云文档评论。支持: ' +
-        '(1) list - 获取评论列表(含完整回复); ' +
-        '(2) create - 添加全文评论(支持文本、@用户、超链接); ' +
-        '(3) patch - 解决/恢复评论。' +
-        '支持 wiki token。',
+        "【以用户身份】管理云文档评论。支持: " +
+        "(1) list - 获取评论列表(含完整回复); " +
+        "(2) create - 添加全文评论(支持文本、@用户、超链接); " +
+        "(3) patch - 解决/恢复评论。" +
+        "支持 wiki token。",
       parameters: DocCommentsSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as DocCommentsParams;
         try {
           const client = toolClient();
-          const userIdType = p.user_id_type || 'open_id';
+          const userIdType = p.user_id_type || "open_id";
 
           // 如果是 wiki token，先转换为实际的 obj_token 和 obj_type
           let actualFileToken = p.file_token;
           let actualFileType = p.file_type;
 
-          if (p.file_type === 'wiki') {
-            log.info(`doc_comments: detected wiki token="${p.file_token}", converting to obj_token...`);
+          if (p.file_type === "wiki") {
+            log.info(
+              `doc_comments: detected wiki token="${p.file_token}", converting to obj_token...`,
+            );
 
             try {
               const wikiNodeRes = await client.invoke(
-                'feishu_wiki_space_node.get',
+                "feishu_wiki_space_node.get",
                 (sdk: any, opts: any) =>
                   sdk.wiki.space.getNode(
                     {
                       params: {
                         token: p.file_token,
-                        obj_type: 'wiki',
+                        obj_type: "wiki",
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(wikiNodeRes as any);
 
@@ -277,11 +279,13 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
           }
 
           // Action: list - 获取评论列表
-          if (p.action === 'list') {
-            log.info(`doc_comments.list: file_token="${actualFileToken}", file_type=${actualFileType}`);
+          if (p.action === "list") {
+            log.info(
+              `doc_comments.list: file_token="${actualFileToken}", file_type=${actualFileType}`,
+            );
 
             const res = await client.invoke(
-              'feishu_doc_comments.list',
+              "feishu_doc_comments.list",
               (sdk: any, opts: any) =>
                 sdk.drive.v1.fileComment.list(
                   {
@@ -297,7 +301,7 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                   },
                   opts,
                 ),
-              { as: 'user' },
+              { as: "user" },
             );
             assertLarkOk(res as any);
 
@@ -322,19 +326,21 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
           }
 
           // Action: create - 创建评论
-          if (p.action === 'create') {
+          if (p.action === "create") {
             if (!p.elements || p.elements.length === 0) {
               return json({
-                error: 'elements 参数必填且不能为空',
+                error: "elements 参数必填且不能为空",
               });
             }
 
-            log.info(`doc_comments.create: file_token="${actualFileToken}", elements=${p.elements.length}`);
+            log.info(
+              `doc_comments.create: file_token="${actualFileToken}", elements=${p.elements.length}`,
+            );
 
             const sdkElements = convertElementsToSDKFormat(p.elements);
 
             const res = await client.invoke(
-              'feishu_doc_comments.create',
+              "feishu_doc_comments.create",
               (sdk: any, opts: any) =>
                 sdk.drive.v1.fileComment.create(
                   {
@@ -357,32 +363,36 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                   },
                   opts,
                 ),
-              { as: 'user' },
+              { as: "user" },
             );
             assertLarkOk(res as any);
 
-            log.info(`doc_comments.create: created comment ${((res as any).data as any)?.comment_id}`);
+            log.info(
+              `doc_comments.create: created comment ${((res as any).data as any)?.comment_id}`,
+            );
 
             return json((res as any).data);
           }
 
           // Action: patch - 解决/恢复评论
-          if (p.action === 'patch') {
+          if (p.action === "patch") {
             if (!p.comment_id) {
               return json({
-                error: 'comment_id 参数必填',
+                error: "comment_id 参数必填",
               });
             }
             if (p.is_solved_value === undefined) {
               return json({
-                error: 'is_solved_value 参数必填',
+                error: "is_solved_value 参数必填",
               });
             }
 
-            log.info(`doc_comments.patch: comment_id="${p.comment_id}", is_solved=${p.is_solved_value}`);
+            log.info(
+              `doc_comments.patch: comment_id="${p.comment_id}", is_solved=${p.is_solved_value}`,
+            );
 
             const res = await client.invoke(
-              'feishu_doc_comments.patch',
+              "feishu_doc_comments.patch",
               (sdk: any, opts: any) =>
                 sdk.drive.v1.fileComment.patch(
                   {
@@ -399,7 +409,7 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                   },
                   opts,
                 ),
-              { as: 'user' },
+              { as: "user" },
             );
             assertLarkOk(res as any);
 
@@ -416,6 +426,6 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
         }
       },
     },
-    { name: 'feishu_doc_comments' },
+    { name: "feishu_doc_comments" },
   );
 }

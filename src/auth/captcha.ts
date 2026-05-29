@@ -34,7 +34,9 @@ const store = new Map<string, CaptchaEntry>();
 
 let cleanupTimer: ReturnType<typeof setInterval> | undefined;
 function ensureCleanupStarted(): void {
-  if (cleanupTimer) {return;}
+  if (cleanupTimer) {
+    return;
+  }
   cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [id, entry] of store) {
@@ -76,12 +78,20 @@ export function generateCaptcha(): CaptchaChallenge {
  * entry is deleted in every outcome — failed attempts cannot be reused.
  */
 export function verifyCaptcha(id: string | undefined, answer: string | undefined): boolean {
-  if (!id || typeof id !== "string") {return false;}
-  if (!answer || typeof answer !== "string") {return false;}
+  if (!id || typeof id !== "string") {
+    return false;
+  }
+  if (!answer || typeof answer !== "string") {
+    return false;
+  }
   const entry = store.get(id);
-  if (!entry) {return false;}
+  if (!entry) {
+    return false;
+  }
   store.delete(id);
-  if (entry.expiresAt <= Date.now()) {return false;}
+  if (entry.expiresAt <= Date.now()) {
+    return false;
+  }
   return entry.answer === answer.trim().toLowerCase();
 }
 

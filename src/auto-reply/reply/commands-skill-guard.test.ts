@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { OpenClawConfig } from "../../config/config.js";
-import { buildCommandTestParams } from "./commands.test-harness.js";
 import { handleInstallSkillCommand } from "./commands-install-skill.js";
 import { handleSkillInstallGuard, handleSkillMutateGuard } from "./commands-skill-guard.js";
+import { buildCommandTestParams } from "./commands.test-harness.js";
 
 const cfg = {
   commands: { text: true },
@@ -23,7 +23,10 @@ function paramsFor(body: string, tenantRole?: string, isAuthorized = true) {
 
 describe("handleInstallSkillCommand role check (Fix 2)", () => {
   it("blocks /install-skill for member role", async () => {
-    const result = await handleInstallSkillCommand(paramsFor("/install-skill feishu", "member"), true);
+    const result = await handleInstallSkillCommand(
+      paramsFor("/install-skill feishu", "member"),
+      true,
+    );
     expect(result).toEqual({
       shouldContinue: false,
       reply: { text: "权限不足：仅管理员可安装技能" },
@@ -31,7 +34,10 @@ describe("handleInstallSkillCommand role check (Fix 2)", () => {
   });
 
   it("blocks /install-skill for viewer role", async () => {
-    const result = await handleInstallSkillCommand(paramsFor("/install-skill feishu", "viewer"), true);
+    const result = await handleInstallSkillCommand(
+      paramsFor("/install-skill feishu", "viewer"),
+      true,
+    );
     expect(result?.shouldContinue).toBe(false);
     expect(result?.reply?.text).toContain("权限不足");
   });
@@ -50,7 +56,10 @@ describe("handleInstallSkillCommand role check (Fix 2)", () => {
   });
 
   it("returns null when text commands are disabled", async () => {
-    const result = await handleInstallSkillCommand(paramsFor("/install-skill feishu", "member"), false);
+    const result = await handleInstallSkillCommand(
+      paramsFor("/install-skill feishu", "member"),
+      false,
+    );
     expect(result).toBeNull();
   });
 
@@ -67,7 +76,10 @@ describe("handleInstallSkillCommand role check (Fix 2)", () => {
 describe("handleSkillInstallGuard (Fix 3)", () => {
   describe("role gating", () => {
     it("returns null when tenantRole is absent (single-user / CLI)", async () => {
-      const result = await handleSkillInstallGuard(paramsFor("帮我安装飞书技能包", undefined), true);
+      const result = await handleSkillInstallGuard(
+        paramsFor("帮我安装飞书技能包", undefined),
+        true,
+      );
       expect(result).toBeNull();
     });
 
@@ -77,7 +89,10 @@ describe("handleSkillInstallGuard (Fix 3)", () => {
     });
 
     it("returns null for admin", async () => {
-      const result = await handleSkillInstallGuard(paramsFor("install the feishu skill", "admin"), true);
+      const result = await handleSkillInstallGuard(
+        paramsFor("install the feishu skill", "admin"),
+        true,
+      );
       expect(result).toBeNull();
     });
 
@@ -139,7 +154,10 @@ describe("handleSkillInstallGuard (Fix 3)", () => {
 describe("handleSkillMutateGuard (delete/uninstall NL intent)", () => {
   describe("role gating", () => {
     it("returns null when tenantRole is absent (single-user / CLI)", async () => {
-      const result = await handleSkillMutateGuard(paramsFor("删除租户级所有skill", undefined), true);
+      const result = await handleSkillMutateGuard(
+        paramsFor("删除租户级所有skill", undefined),
+        true,
+      );
       expect(result).toBeNull();
     });
 
@@ -149,7 +167,10 @@ describe("handleSkillMutateGuard (delete/uninstall NL intent)", () => {
     });
 
     it("returns null for admin", async () => {
-      const result = await handleSkillMutateGuard(paramsFor("uninstall the feishu skill", "admin"), true);
+      const result = await handleSkillMutateGuard(
+        paramsFor("uninstall the feishu skill", "admin"),
+        true,
+      );
       expect(result).toBeNull();
     });
 

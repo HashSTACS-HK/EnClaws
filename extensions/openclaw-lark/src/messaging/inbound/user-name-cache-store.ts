@@ -67,7 +67,7 @@ export class UserNameCache {
     const result = new Map<string, string>();
     for (const id of openIds) {
       if (this.has(id)) {
-        result.set(id, this.get(id) ?? '');
+        result.set(id, this.get(id) ?? "");
       }
     }
     return result;

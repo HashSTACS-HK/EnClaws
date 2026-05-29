@@ -24,12 +24,59 @@
  *   auth.mfa.verify            - Second factor during login
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { createTenant, getTenantById } from "../../db/models/tenant.js";
-import { ensureTenantDirFiles } from "../../agents/workspace.js";
-import { resolveTenantDir } from "../../config/sessions/tenant-paths.js";
 import { installSkillPack } from "../../agents/skill-pack-installer.js";
+import { ensureTenantDirFiles } from "../../agents/workspace.js";
+import { verifyCaptcha } from "../../auth/captcha.js";
+import {
+  isEmailVerificationRequired,
+  issueVerifyEmailToken,
+  consumeVerifyEmailToken,
+  shouldThrottleResend,
+  noteResendIssued,
+} from "../../auth/email-verification.js";
+import { generateTokenPair, verifyRefreshToken, revokeAllUserTokens } from "../../auth/jwt.js";
+import { recordLoginAttempt } from "../../auth/login-attempts.js";
+import { loginRateLimiter, retryAfterSeconds } from "../../auth/login-rate-limit.js";
+import {
+  beginMfaSetup,
+  completeMfaSetup,
+  disableMfa,
+  verifyUserTotp,
+  tryBackupCode,
+  issueMfaChallenge,
+  consumeMfaChallenge,
+} from "../../auth/mfa.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { computePasswordExpiresAt, isPasswordExpired } from "../../auth/password-expiry.js";
+import { archivePasswordHash, isPasswordInHistory } from "../../auth/password-history.js";
+import { validatePasswordStrength, generateTempPassword } from "../../auth/password-policy.js";
+import {
+  issueResetToken,
+  issueViewTempToken,
+  findResetToken,
+  consumeResetToken,
+  decryptTempPasswordPayload,
+  revokeAllResetTokens,
+  shouldThrottleForgot,
+  noteForgotIssued,
+} from "../../auth/password-reset.js";
+import { verifyPassword } from "../../auth/password.js";
+import {
+  listUserSessions,
+  revokeSession as revokeSessionById,
+  revokeOtherSessions,
+  touchSession,
+} from "../../auth/sessions.js";
+import {
+  hasEmailCapability,
+  sendPasswordResetEmail,
+  sendVerifyEmail,
+} from "../../auth/smtp-capability.js";
+import { parseUserAgent } from "../../auth/user-agent-parser.js";
+import { resolveTenantDir } from "../../config/sessions/tenant-paths.js";
+import { isDbInitialized } from "../../db/index.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
+import { createTenant, getTenantById } from "../../db/models/tenant.js";
 import {
   createUser,
   getUserById,
@@ -41,65 +88,9 @@ import {
   setForceChangePassword,
   toSafeUser,
 } from "../../db/models/user.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
-import { verifyPassword } from "../../auth/password.js";
-import { generateTokenPair, verifyRefreshToken, revokeAllUserTokens } from "../../auth/jwt.js";
-import { validatePasswordStrength, generateTempPassword } from "../../auth/password-policy.js";
-import {
-  loginRateLimiter,
-  retryAfterSeconds,
-} from "../../auth/login-rate-limit.js";
-import { recordLoginAttempt } from "../../auth/login-attempts.js";
-import {
-  archivePasswordHash,
-  isPasswordInHistory,
-} from "../../auth/password-history.js";
-import {
-  computePasswordExpiresAt,
-  isPasswordExpired,
-} from "../../auth/password-expiry.js";
-import {
-  hasEmailCapability,
-  sendPasswordResetEmail,
-  sendVerifyEmail,
-} from "../../auth/smtp-capability.js";
-import {
-  listUserSessions,
-  revokeSession as revokeSessionById,
-  revokeOtherSessions,
-  touchSession,
-} from "../../auth/sessions.js";
-import { parseUserAgent } from "../../auth/user-agent-parser.js";
-import {
-  isEmailVerificationRequired,
-  issueVerifyEmailToken,
-  consumeVerifyEmailToken,
-  shouldThrottleResend,
-  noteResendIssued,
-} from "../../auth/email-verification.js";
-import {
-  beginMfaSetup,
-  completeMfaSetup,
-  disableMfa,
-  verifyUserTotp,
-  tryBackupCode,
-  issueMfaChallenge,
-  consumeMfaChallenge,
-} from "../../auth/mfa.js";
-import {
-  issueResetToken,
-  issueViewTempToken,
-  findResetToken,
-  consumeResetToken,
-  decryptTempPasswordPayload,
-  revokeAllResetTokens,
-  shouldThrottleForgot,
-  noteForgotIssued,
-} from "../../auth/password-reset.js";
-import { verifyCaptcha } from "../../auth/captcha.js";
-import { isDbInitialized } from "../../db/index.js";
-import type { TenantContext } from "../../auth/middleware.js";
 import type { JwtPayload } from "../../db/types.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 /**
  * Verify the graphic captcha attached to public auth forms. Runs
@@ -127,10 +118,14 @@ function requireCaptcha(
 
 function requireDb(respond: GatewayRequestHandlerOptions["respond"]): boolean {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(
-      ErrorCodes.INVALID_REQUEST,
-      "Multi-tenant mode not enabled. Set ENCLAWS_DB_URL to enable.",
-    ));
+    respond(
+      false,
+      undefined,
+      errorShape(
+        ErrorCodes.INVALID_REQUEST,
+        "Multi-tenant mode not enabled. Set ENCLAWS_DB_URL to enable.",
+      ),
+    );
     return false;
   }
   return true;
@@ -147,8 +142,12 @@ export const authHandlers: GatewayRequestHandlers = {
    *   displayName?: string
    */
   "auth.register": async ({ params, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireCaptcha(params, respond)) {return;}
-    if (!requireDb(respond)) {return;}
+    if (!requireCaptcha(params, respond)) {
+      return;
+    }
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const { tenantName, email, password, displayName } = params as {
       tenantName: string;
@@ -158,30 +157,32 @@ export const authHandlers: GatewayRequestHandlers = {
     };
 
     if (!tenantName || !email || !password) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_PARAMS,
-        "Missing required fields: tenantName, email, password",
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_PARAMS,
+          "Missing required fields: tenantName, email, password",
+        ),
+      );
       return;
     }
 
     // Validate password strength (Phase 1 — policy + weak-password blacklist)
     const policy = validatePasswordStrength(password, email);
     if (!policy.ok) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_PARAMS,
-        policy.message ?? "密码不符合安全策略",
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"),
+      );
       return;
     }
 
     // Check global email uniqueness
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        "该邮箱已注册",
-      ));
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "该邮箱已注册"));
       return;
     }
 
@@ -195,31 +196,42 @@ export const authHandlers: GatewayRequestHandlers = {
       try {
         await ensureTenantDirFiles(resolveTenantDir(tenant.id));
       } catch (dirErr: unknown) {
-        console.warn(`[auth.register] Failed to seed tenant dir files for ${tenant.id}: ${dirErr instanceof Error ? dirErr.message : "unknown"}`);
+        console.warn(
+          `[auth.register] Failed to seed tenant dir files for ${tenant.id}: ${dirErr instanceof Error ? dirErr.message : "unknown"}`,
+        );
       }
 
       // Auto-install skill pack (fire-and-forget, don't block registration)
-      installSkillPack(tenant.id).then((packResult) => {
-        if (packResult.skipped) {
-          console.error(`[skill-pack] tenant ${tenant.id}: skipped — ${packResult.skipped}`);
-        } else if (packResult.ok) {
-          console.error(`[skill-pack] tenant ${tenant.id}: installed ${packResult.installed.length} skills from ${packResult.source}`);
-        } else {
-          console.error(`[skill-pack] tenant ${tenant.id}: partial — ok: ${packResult.installed.join(", ")}; errors: ${packResult.errors.map((e) => e.skill).join(", ")}`);
-        }
-      }).catch((err) => {
-        console.error(`[skill-pack] tenant ${tenant.id}: unexpected error —`, err);
-      });
+      installSkillPack(tenant.id)
+        .then((packResult) => {
+          if (packResult.skipped) {
+            console.error(`[skill-pack] tenant ${tenant.id}: skipped — ${packResult.skipped}`);
+          } else if (packResult.ok) {
+            console.error(
+              `[skill-pack] tenant ${tenant.id}: installed ${packResult.installed.length} skills from ${packResult.source}`,
+            );
+          } else {
+            console.error(
+              `[skill-pack] tenant ${tenant.id}: partial — ok: ${packResult.installed.join(", ")}; errors: ${packResult.errors.map((e) => e.skill).join(", ")}`,
+            );
+          }
+        })
+        .catch((err) => {
+          console.error(`[skill-pack] tenant ${tenant.id}: unexpected error —`, err);
+        });
 
       // Create owner user (skip user-level directory init for page registration;
       // directories will be created on-demand when the user actually starts a session)
-      const user = await createUser({
-        tenantId: tenant.id,
-        email,
-        password,
-        displayName,
-        role: "owner",
-      }, { skipDirInit: true });
+      const user = await createUser(
+        {
+          tenantId: tenant.id,
+          email,
+          password,
+          displayName,
+          role: "owner",
+        },
+        { skipDirInit: true },
+      );
 
       // Phase 3: if email verification is required AND SMTP is available,
       // set the user to 'invited' status and send a verification email
@@ -299,8 +311,12 @@ export const authHandlers: GatewayRequestHandlers = {
     // Captcha first — a wrong answer must NOT reach login-attempts or
     // the rate-limit counter, otherwise attackers could lock real users
     // out by spraying bogus credentials with random captchas.
-    if (!requireCaptcha(params, respond)) {return;}
-    if (!requireDb(respond)) {return;}
+    if (!requireCaptcha(params, respond)) {
+      return;
+    }
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const { email, password } = params as {
       email: string;
@@ -315,7 +331,8 @@ export const authHandlers: GatewayRequestHandlers = {
     // Prefer rawClientIp (always populated, even for loopback) over
     // clientIp (undefined for localhost) so rate limiting and audit
     // logging work correctly during local development.
-    const clientIp = (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
+    const clientIp =
+      (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
 
     // Phase 1 RPC-layer rate limit: compound (ip+email) sliding window
     // + exponential backoff. Returns 429 with retryAfterMs when blocked.
@@ -343,11 +360,7 @@ export const authHandlers: GatewayRequestHandlers = {
       if (userAnyStatus) {
         const tenant = await getTenantById(userAnyStatus.tenantId);
         if (tenant && tenant.status === "suspended") {
-          respond(
-            false,
-            undefined,
-            errorShape(ErrorCodes.INVALID_REQUEST, "Tenant is suspended"),
-          );
+          respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Tenant is suspended"));
           return;
         }
       }
@@ -356,11 +369,17 @@ export const authHandlers: GatewayRequestHandlers = {
     // Phase 3: handle pending email verification separately so the
     // frontend can show the "verify your email first" page.
     if (user && user.status === "invited" && isEmailVerificationRequired()) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        "Please verify your email address before signing in",
-        { details: { pendingVerification: true, email: user.email } } as unknown as { retryAfterMs?: number },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "Please verify your email address before signing in",
+          { details: { pendingVerification: true, email: user.email } } as unknown as {
+            retryAfterMs?: number;
+          },
+        ),
+      );
       return;
     }
 
@@ -512,7 +531,9 @@ export const authHandlers: GatewayRequestHandlers = {
    *   refreshToken: string
    */
   "auth.refresh": async ({ params, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const { refreshToken } = params as { refreshToken: string };
     if (!refreshToken) {
@@ -522,13 +543,21 @@ export const authHandlers: GatewayRequestHandlers = {
 
     const result = await verifyRefreshToken(refreshToken);
     if (!result) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Invalid or expired refresh token"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "Invalid or expired refresh token"),
+      );
       return;
     }
 
     const user = await getUserById(result.userId);
     if (!user || user.status !== "active") {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User account is not active"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "User account is not active"),
+      );
       return;
     }
 
@@ -551,7 +580,9 @@ export const authHandlers: GatewayRequestHandlers = {
    * Logout — revoke all refresh tokens for the current user.
    */
   "auth.logout": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
     if (!tenant) {
@@ -574,7 +605,9 @@ export const authHandlers: GatewayRequestHandlers = {
    * Get current authenticated user info.
    */
   "auth.me": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
     if (!tenant) {
@@ -614,12 +647,10 @@ export const authHandlers: GatewayRequestHandlers = {
    *
    * On success: revokes all refresh tokens (forces re-login on every device).
    */
-  "auth.changePassword": async ({
-    params,
-    client,
-    respond,
-  }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+  "auth.changePassword": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
     if (!ctx) {
@@ -632,7 +663,11 @@ export const authHandlers: GatewayRequestHandlers = {
       newPassword: string;
     };
     if (!currentPassword || !newPassword) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing currentPassword or newPassword"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing currentPassword or newPassword"),
+      );
       return;
     }
 
@@ -655,16 +690,21 @@ export const authHandlers: GatewayRequestHandlers = {
 
     const policy = validatePasswordStrength(newPassword, user.email);
     if (!policy.ok) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"),
+      );
       return;
     }
 
     // Phase 2: reject reuse of any of the last N passwords
     if (await isPasswordInHistory(user.id, newPassword)) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_PARAMS,
-        "不能与最近 5 次使用过的密码相同",
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "不能与最近 5 次使用过的密码相同"),
+      );
       return;
     }
 
@@ -697,14 +737,17 @@ export const authHandlers: GatewayRequestHandlers = {
    * Public + IP-rate-limited (reuses login limiter under a synthetic email).
    */
   "auth.capabilities": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    const clientIp = (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
+    const clientIp =
+      (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
     const gate = loginRateLimiter.check(clientIp, "__capabilities__");
     if (!gate.allowed) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.RATE_LIMITED,
-        "Too many requests",
-        { retryAfterMs: gate.retryAfterMs },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.RATE_LIMITED, "Too many requests", {
+          retryAfterMs: gate.retryAfterMs,
+        }),
+      );
       return;
     }
     // Count this call against the IP bucket regardless of success.
@@ -723,8 +766,12 @@ export const authHandlers: GatewayRequestHandlers = {
    * Params: { email: string }
    */
   "auth.forgotPassword": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireCaptcha(params, respond)) {return;}
-    if (!requireDb(respond)) {return;}
+    if (!requireCaptcha(params, respond)) {
+      return;
+    }
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const { email } = params as { email: string };
     if (!email) {
@@ -748,16 +795,19 @@ export const authHandlers: GatewayRequestHandlers = {
     const user = await findUserByEmail(email);
     // Only console-login roles can use forgot-password
     const eligible =
-      user && user.status === "active" &&
-      (user.role === "platform-admin" || user.role === "owner");
+      user && user.status === "active" && (user.role === "platform-admin" || user.role === "owner");
 
-    console.log(`[auth.forgotPassword] email=${email} userFound=${!!user} role=${user?.role ?? "n/a"} status=${user?.status ?? "n/a"} eligible=${!!eligible}`);
+    console.log(
+      `[auth.forgotPassword] email=${email} userFound=${!!user} role=${user?.role ?? "n/a"} status=${user?.status ?? "n/a"} eligible=${!!eligible}`,
+    );
 
     if (eligible && user) {
       const issued = await issueResetToken(user.id, 30);
       const baseUrl = process.env.ENCLAWS_PUBLIC_BASE_URL ?? "";
       const resetUrl = `${baseUrl.replace(/\/$/, "")}/#/auth/reset-password?token=${encodeURIComponent(issued.token)}`;
-      console.log(`[auth.forgotPassword] issuing reset token for userId=${user.id} to=${user.email ?? email} url=${resetUrl}`);
+      console.log(
+        `[auth.forgotPassword] issuing reset token for userId=${user.id} to=${user.email ?? email} url=${resetUrl}`,
+      );
       const sent = await sendPasswordResetEmail({
         to: user.email ?? email,
         resetUrl,
@@ -775,7 +825,9 @@ export const authHandlers: GatewayRequestHandlers = {
         ipAddress: client?.clientIp,
       }).catch(() => undefined);
     } else {
-      console.log(`[auth.forgotPassword] skipped — user not eligible for reset (not found or not owner/platform-admin)`);
+      console.log(
+        `[auth.forgotPassword] skipped — user not eligible for reset (not found or not owner/platform-admin)`,
+      );
     }
 
     respond(true, { ok: true, email: true });
@@ -786,12 +838,22 @@ export const authHandlers: GatewayRequestHandlers = {
    *
    * Params: { token: string, newPassword: string }
    */
-  "auth.forgotPassword.verify": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+  "auth.forgotPassword.verify": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const { token, newPassword } = params as { token: string; newPassword: string };
     if (!token || !newPassword) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing token or newPassword"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing token or newPassword"),
+      );
       return;
     }
 
@@ -809,7 +871,11 @@ export const authHandlers: GatewayRequestHandlers = {
 
     const policy = validatePasswordStrength(newPassword, user.email);
     if (!policy.ok) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"),
+      );
       return;
     }
 
@@ -818,20 +884,18 @@ export const authHandlers: GatewayRequestHandlers = {
     // that were rotated away), so the history check below wouldn't catch
     // this on its own — especially for fresh accounts where history is
     // empty.  Compare new plaintext against the stored current hash.
-    if (user.passwordHash && await verifyPassword(newPassword, user.passwordHash)) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_PARAMS,
-        "新密码不能与当前密码相同",
-      ));
+    if (user.passwordHash && (await verifyPassword(newPassword, user.passwordHash))) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "新密码不能与当前密码相同"));
       return;
     }
 
     // Phase 2: reject reuse of any of the last N passwords
     if (await isPasswordInHistory(user.id, newPassword)) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_PARAMS,
-        "不能与最近 5 次使用过的密码相同",
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "不能与最近 5 次使用过的密码相同"),
+      );
       return;
     }
 
@@ -867,11 +931,17 @@ export const authHandlers: GatewayRequestHandlers = {
    *           — the admin sends this URL to the owner via any channel.
    */
   "auth.adminResetPassword": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
     if (!ctx || ctx.role !== "platform-admin") {
-      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Only platform-admin can perform this action"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.UNAUTHORIZED, "Only platform-admin can perform this action"),
+      );
       return;
     }
 
@@ -887,10 +957,14 @@ export const authHandlers: GatewayRequestHandlers = {
       return;
     }
     if (target.role !== "owner" && target.role !== "platform-admin") {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        "Admin reset is only available for owner / platform-admin accounts",
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "Admin reset is only available for owner / platform-admin accounts",
+        ),
+      );
       return;
     }
 
@@ -929,7 +1003,9 @@ export const authHandlers: GatewayRequestHandlers = {
    * return 404.
    */
   "auth.viewTempPassword": async ({ params, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
 
     const { token } = params as { token: string };
     if (!token) {
@@ -947,7 +1023,11 @@ export const authHandlers: GatewayRequestHandlers = {
     if (!tempPassword) {
       // Payload missing or undecryptable — consume to prevent replay and bail.
       await consumeResetToken(found.id);
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, "无法解密临时密码（密钥已变更）"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INTERNAL_ERROR, "无法解密临时密码（密钥已变更）"),
+      );
       return;
     }
 
@@ -962,34 +1042,76 @@ export const authHandlers: GatewayRequestHandlers = {
   // ==========================================================================
 
   "auth.sessions": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
-    if (!ctx) { respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated")); return; }
+    if (!ctx) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated"));
+      return;
+    }
     const { currentRefreshToken } = (params ?? {}) as { currentRefreshToken?: string };
     const sessions = await listUserSessions(ctx.userId, currentRefreshToken);
     respond(true, { sessions });
   },
 
   "auth.revokeSession": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
-    if (!ctx) { respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated")); return; }
+    if (!ctx) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated"));
+      return;
+    }
     const { sessionId } = params as { sessionId: string };
-    if (!sessionId) { respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing sessionId")); return; }
+    if (!sessionId) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing sessionId"));
+      return;
+    }
     const ok = await revokeSessionById(ctx.userId, sessionId);
-    if (!ok) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Session not found")); return; }
-    await createAuditLog({ tenantId: ctx.tenantId, userId: ctx.userId, action: "user.session.revoked", detail: { sessionId } }).catch(() => undefined);
+    if (!ok) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Session not found"));
+      return;
+    }
+    await createAuditLog({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      action: "user.session.revoked",
+      detail: { sessionId },
+    }).catch(() => undefined);
     respond(true, { ok: true });
   },
 
-  "auth.revokeAllOtherSessions": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+  "auth.revokeAllOtherSessions": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
+    if (!requireDb(respond)) {
+      return;
+    }
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
-    if (!ctx) { respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated")); return; }
+    if (!ctx) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated"));
+      return;
+    }
     const { currentRefreshToken } = params as { currentRefreshToken: string };
-    if (!currentRefreshToken) { respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing currentRefreshToken")); return; }
+    if (!currentRefreshToken) {
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing currentRefreshToken"),
+      );
+      return;
+    }
     const count = await revokeOtherSessions(ctx.userId, currentRefreshToken);
-    await createAuditLog({ tenantId: ctx.tenantId, userId: ctx.userId, action: "user.sessions.revoked_others", detail: { count } }).catch(() => undefined);
+    await createAuditLog({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      action: "user.sessions.revoked_others",
+      detail: { count },
+    }).catch(() => undefined);
     respond(true, { revoked: count });
   },
 
@@ -998,24 +1120,50 @@ export const authHandlers: GatewayRequestHandlers = {
   // ==========================================================================
 
   "auth.verifyEmail": async ({ params, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const { token } = params as { token: string };
-    if (!token) { respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing token")); return; }
+    if (!token) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing token"));
+      return;
+    }
     const userId = await consumeVerifyEmailToken(token);
-    if (!userId) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Invalid or expired verification link")); return; }
+    if (!userId) {
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "Invalid or expired verification link"),
+      );
+      return;
+    }
     // Activate the user
     const { query: dbQuery, getDbType: gdt, DB_SQLITE: sq } = await import("../../db/index.js");
     const nowExpr = gdt() === sq ? "datetime('now')" : "NOW()";
-    await dbQuery(`UPDATE users SET status = 'active', updated_at = ${nowExpr} WHERE id = $1 AND status = 'invited'`, [userId]);
+    await dbQuery(
+      `UPDATE users SET status = 'active', updated_at = ${nowExpr} WHERE id = $1 AND status = 'invited'`,
+      [userId],
+    );
     respond(true, { ok: true });
   },
 
   "auth.resendVerifyEmail": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const { email } = params as { email: string };
-    if (!email) { respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing email")); return; }
-    if (!hasEmailCapability()) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Email not configured")); return; }
-    if (shouldThrottleResend(email)) { respond(true, { ok: true }); return; }
+    if (!email) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing email"));
+      return;
+    }
+    if (!hasEmailCapability()) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Email not configured"));
+      return;
+    }
+    if (shouldThrottleResend(email)) {
+      respond(true, { ok: true });
+      return;
+    }
     const user = await findUserByEmail(email);
     if (user && user.status === "invited") {
       const issued = await issueVerifyEmailToken(user.id, 24 * 60);
@@ -1033,23 +1181,47 @@ export const authHandlers: GatewayRequestHandlers = {
   // ==========================================================================
 
   "auth.mfa.setup.begin": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
-    if (!ctx) { respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated")); return; }
+    if (!ctx) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated"));
+      return;
+    }
     const user = await getUserById(ctx.userId);
-    if (!user) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User not found")); return; }
-    if (user.mfaEnabled) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "MFA is already enabled")); return; }
+    if (!user) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User not found"));
+      return;
+    }
+    if (user.mfaEnabled) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "MFA is already enabled"));
+      return;
+    }
     const result = beginMfaSetup(user.email ?? ctx.userId);
     respond(true, result);
   },
 
   "auth.mfa.setup.verify": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
-    if (!ctx) { respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated")); return; }
-    const { secret, code, backupCodes } = params as { secret: string; code: string; backupCodes: string[] };
+    if (!ctx) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated"));
+      return;
+    }
+    const { secret, code, backupCodes } = params as {
+      secret: string;
+      code: string;
+      backupCodes: string[];
+    };
     if (!secret || !code || !Array.isArray(backupCodes)) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing secret, code, or backupCodes"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing secret, code, or backupCodes"),
+      );
       return;
     }
     // Verify the TOTP code against the secret to prove the user scanned the QR
@@ -1059,40 +1231,73 @@ export const authHandlers: GatewayRequestHandlers = {
       return;
     }
     await completeMfaSetup(ctx.userId, secret, backupCodes);
-    await createAuditLog({ tenantId: ctx.tenantId, userId: ctx.userId, action: "user.mfa.enabled" }).catch(() => undefined);
+    await createAuditLog({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      action: "user.mfa.enabled",
+    }).catch(() => undefined);
     respond(true, { ok: true });
   },
 
   "auth.mfa.disable": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const ctx = (client as unknown as { tenant?: TenantContext })?.tenant;
-    if (!ctx) { respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated")); return; }
+    if (!ctx) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAUTHORIZED, "Not authenticated"));
+      return;
+    }
     const { currentPassword } = params as { currentPassword: string };
-    if (!currentPassword) { respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing currentPassword")); return; }
+    if (!currentPassword) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing currentPassword"));
+      return;
+    }
     const user = await getUserById(ctx.userId);
-    if (!user || !user.passwordHash) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User not found")); return; }
+    if (!user || !user.passwordHash) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User not found"));
+      return;
+    }
     if (!(await verifyPassword(currentPassword, user.passwordHash))) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Wrong password")); return;
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Wrong password"));
+      return;
     }
     await disableMfa(ctx.userId);
-    await createAuditLog({ tenantId: ctx.tenantId, userId: ctx.userId, action: "user.mfa.disabled" }).catch(() => undefined);
+    await createAuditLog({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      action: "user.mfa.disabled",
+    }).catch(() => undefined);
     respond(true, { ok: true });
   },
 
   "auth.mfa.verify": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requireDb(respond)) {return;}
+    if (!requireDb(respond)) {
+      return;
+    }
     const { challengeToken, code } = params as { challengeToken: string; code: string };
     if (!challengeToken || !code) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing challengeToken or code"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing challengeToken or code"),
+      );
       return;
     }
     const challenge = consumeMfaChallenge(challengeToken);
     if (!challenge) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "MFA challenge expired or invalid"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "MFA challenge expired or invalid"),
+      );
       return;
     }
     const user = await getUserById(challenge.userId);
-    if (!user) { respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User not found")); return; }
+    if (!user) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "User not found"));
+      return;
+    }
 
     // Try TOTP code first, then backup code
     let ok = verifyUserTotp(user, code);
@@ -1112,9 +1317,12 @@ export const authHandlers: GatewayRequestHandlers = {
       role: user.role,
     };
     const pwExp = computePasswordExpiresAt(user.passwordChangedAt);
-    if (pwExp !== null) {payload.pwExp = pwExp;}
+    if (pwExp !== null) {
+      payload.pwExp = pwExp;
+    }
 
-    const clientIp = (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
+    const clientIp =
+      (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
     const uaParsed = parseUserAgent(null);
     const tokens = await generateTokenPair(payload, {
       ip: clientIp,

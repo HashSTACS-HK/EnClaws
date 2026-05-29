@@ -6,11 +6,15 @@
 
 import type WebSocket from "ws";
 import type { OpenClawConfig } from "../../config/config.js";
-import { createSubsystemLogger } from "../../logging/subsystem.js";
-import { createCSSession, findActiveCSSession, closeCSSession } from "../../db/models/cs-session.js";
 import { createCSMessage, listCSMessages } from "../../db/models/cs-message.js";
-import { transition } from "../session-state-machine.js";
+import {
+  createCSSession,
+  findActiveCSSession,
+  closeCSSession,
+} from "../../db/models/cs-session.js";
+import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { runCSAgentReply } from "../rag/cs-agent-runner.js";
+import { transition } from "../session-state-machine.js";
 import { CS_ROLE_LABELS } from "../types.js";
 import type { CSSession } from "../types.js";
 import {
@@ -78,13 +82,23 @@ export async function handleWidgetMessage(params: {
 
   const msg = parseClientMessage(data);
   if (!msg) {
-    sendToVisitor(visitorId, { type: "error", code: "INVALID_MESSAGE", message: "Invalid message format" });
+    sendToVisitor(visitorId, {
+      type: "error",
+      code: "INVALID_MESSAGE",
+      message: "Invalid message format",
+    });
     return;
   }
 
   switch (msg.type) {
     case "connect":
-      await handleConnect({ visitorId, visitorName: msg.visitorName, metadata: msg.metadata, cfg, tenantId });
+      await handleConnect({
+        visitorId,
+        visitorName: msg.visitorName,
+        metadata: msg.metadata,
+        cfg,
+        tenantId,
+      });
       break;
 
     case "send":
@@ -156,13 +170,19 @@ async function handleSend(params: {
 }): Promise<void> {
   const { visitorId, text, cfg, tenantId, notifyBoss } = params;
 
-  if (!text.trim()) {return;}
+  if (!text.trim()) {
+    return;
+  }
 
   // Find active session
   // 查找活跃会话
   const session = await findActiveCSSession(tenantId, visitorId);
   if (!session) {
-    sendToVisitor(visitorId, { type: "error", code: "NO_SESSION", message: "No active session. Send connect first." });
+    sendToVisitor(visitorId, {
+      type: "error",
+      code: "NO_SESSION",
+      message: "No active session. Send connect first.",
+    });
     return;
   }
 
@@ -239,10 +259,7 @@ async function handleSend(params: {
 // -- Close session --
 // 关闭会话
 
-async function handleClose(params: {
-  visitorId: string;
-  tenantId: string;
-}): Promise<void> {
+async function handleClose(params: { visitorId: string; tenantId: string }): Promise<void> {
   const { visitorId, tenantId } = params;
   const session = await findActiveCSSession(tenantId, visitorId);
   if (session) {

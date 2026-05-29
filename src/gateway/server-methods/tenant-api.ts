@@ -11,24 +11,40 @@
  *   tenant.audit.list     - List audit logs
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape, getPlanUpgradeLink } from "../protocol/index.js";
-import { getTenantById, updateTenant, checkTenantQuota, getMonthlyTokenUsage } from "../../db/models/tenant.js";
-import { createUser, listUsers, updateUser, deleteUser, getUserById, findUserByEmail } from "../../db/models/user.js";
+import type { TenantContext } from "../../auth/middleware.js";
 import { validatePasswordStrength } from "../../auth/password-policy.js";
-import { listAuditLogs, createAuditLog } from "../../db/models/audit-log.js";
 import { assertPermission } from "../../auth/rbac.js";
 import { RbacError } from "../../auth/rbac.js";
 import { isDbInitialized } from "../../db/index.js";
-import type { TenantContext } from "../../auth/middleware.js";
+import { listAuditLogs, createAuditLog } from "../../db/models/audit-log.js";
+import {
+  getTenantById,
+  updateTenant,
+  checkTenantQuota,
+  getMonthlyTokenUsage,
+} from "../../db/models/tenant.js";
+import {
+  createUser,
+  listUsers,
+  updateUser,
+  deleteUser,
+  getUserById,
+  findUserByEmail,
+} from "../../db/models/user.js";
 import type { UserRole } from "../../db/types.js";
+import { ErrorCodes, errorShape, getPlanUpgradeLink } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 function getTenantCtx(
   client: GatewayRequestHandlerOptions["client"],
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -53,12 +69,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -88,12 +108,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.update");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -134,12 +158,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "user.list");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -173,12 +201,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.invite": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "user.invite");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -197,42 +229,59 @@ export const tenantHandlers: GatewayRequestHandlers = {
     // Phase 1: enforce password policy on the temporary password the inviter chose.
     const policy = validatePasswordStrength(password, email);
     if (!policy.ok) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, policy.message ?? "密码不符合安全策略"),
+      );
       return;
     }
 
     // Prevent non-owners from creating owner/admin users
     const targetRole = role ?? "member";
     if (targetRole === "owner") {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Cannot invite owner users"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "Cannot invite owner users"),
+      );
       return;
     }
     if (targetRole === "admin" && ctx.role !== "owner") {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        "Only owner can invite admin users",
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "Only owner can invite admin users"),
+      );
       return;
     }
 
     // Check global email uniqueness
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        "该邮箱已注册",
-      ));
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "该邮箱已注册"));
       return;
     }
 
     // Check quota
     const quota = await checkTenantQuota(ctx.tenantId, "users");
     if (!quota.allowed) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.QUOTA_EXCEEDED,
-        `User quota reached (${quota.current}/${quota.max}). Upgrade your plan.`,
-        { details: { resource: "users", current: quota.current, max: quota.max, contactLink: getPlanUpgradeLink() } },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.QUOTA_EXCEEDED,
+          `User quota reached (${quota.current}/${quota.max}). Upgrade your plan.`,
+          {
+            details: {
+              resource: "users",
+              current: quota.current,
+              max: quota.max,
+              contactLink: getPlanUpgradeLink(),
+            },
+          },
+        ),
+      );
       return;
     }
 
@@ -277,7 +326,9 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     const { userId, role, status, displayName } = params as {
       userId: string;
@@ -299,7 +350,9 @@ export const tenantHandlers: GatewayRequestHandlers = {
         assertPermission(ctx.role, "user.update");
       }
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -314,10 +367,11 @@ export const tenantHandlers: GatewayRequestHandlers = {
     if (targetUser.role === "owner" && role && role !== "owner") {
       const { users } = await listUsers(ctx.tenantId, { role: "owner" });
       if (users.length <= 1) {
-        respond(false, undefined, errorShape(
-          ErrorCodes.INVALID_REQUEST,
-          "Cannot change role of the last owner",
-        ));
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "Cannot change role of the last owner"),
+        );
         return;
       }
     }
@@ -331,9 +385,12 @@ export const tenantHandlers: GatewayRequestHandlers = {
     // Evict auto-provision cache so the next session picks up the updated role from DB
     // instead of returning the stale cached value.
     try {
-      const { evictAutoProvisionCacheByUser } = await import("../../infra/channel-auto-provision.js");
+      const { evictAutoProvisionCacheByUser } =
+        await import("../../infra/channel-auto-provision.js");
       evictAutoProvisionCacheByUser(ctx.tenantId, userId);
-    } catch { /* non-critical — cache will expire naturally in 10 min */ }
+    } catch {
+      /* non-critical — cache will expire naturally in 10 min */
+    }
 
     await createAuditLog({
       tenantId: ctx.tenantId,
@@ -354,12 +411,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.users.remove": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "user.remove");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -412,12 +473,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.audit.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "audit.read");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -445,12 +510,16 @@ export const tenantHandlers: GatewayRequestHandlers = {
    */
   "tenant.plan.current": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
     } catch (err) {
-      if (handleRbacError(err, respond)) {return;}
+      if (handleRbacError(err, respond)) {
+        return;
+      }
       throw err;
     }
 
@@ -472,10 +541,10 @@ export const tenantHandlers: GatewayRequestHandlers = {
       status: tenant.status,
       quotas: tenant.quotas,
       usage: {
-        users:           { current: usersQ.current,    max: usersQ.max },
-        agents:          { current: agentsQ.current,   max: agentsQ.max },
-        channels:        { current: channelsQ.current, max: channelsQ.max },
-        tokensThisMonth: { current: tokensCurrent,     max: tenant.quotas.maxTokensPerMonth },
+        users: { current: usersQ.current, max: usersQ.max },
+        agents: { current: agentsQ.current, max: agentsQ.max },
+        channels: { current: channelsQ.current, max: channelsQ.max },
+        tokensThisMonth: { current: tokensCurrent, max: tenant.quotas.maxTokensPerMonth },
       },
     });
   },

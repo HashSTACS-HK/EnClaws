@@ -29,9 +29,9 @@ description: 企业微信待办详情批量查询技能，根据待办 ID 列表
 
 ## 参数说明
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `todo_id_list` | array | ✅ | 待办 ID 列表，最多 20 个 |
+| 参数           | 类型  | 必填 | 说明                     |
+| -------------- | ----- | ---- | ------------------------ |
+| `todo_id_list` | array | ✅   | 待办 ID 列表，最多 20 个 |
 
 **调用示例：**
 
@@ -41,49 +41,49 @@ description: 企业微信待办详情批量查询技能，根据待办 ID 列表
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok",
-    "data_list": [
-        {
-            "todo_id": "TODO_ID",
-            "todo_status": 1,
-            "content": "完成Q2规划文档",
-            "follower_list": {
-                "followers": [
-                    {
-                        "follower_id": "FOLLOWER_ID",
-                        "follower_status": 1,
-                        "update_time": "2025-01-16 14:20:00"
-                    }
-                ]
-            },
-            "creator_id": "CREATOR_ID",
-            "user_status": 1,
-            "remind_time": "2025-06-01 09:00:00",
-            "create_time": "2025-01-15 10:30:00",
+  "errcode": 0,
+  "errmsg": "ok",
+  "data_list": [
+    {
+      "todo_id": "TODO_ID",
+      "todo_status": 1,
+      "content": "完成Q2规划文档",
+      "follower_list": {
+        "followers": [
+          {
+            "follower_id": "FOLLOWER_ID",
+            "follower_status": 1,
             "update_time": "2025-01-16 14:20:00"
-        }
-    ]
+          }
+        ]
+      },
+      "creator_id": "CREATOR_ID",
+      "user_status": 1,
+      "remind_time": "2025-06-01 09:00:00",
+      "create_time": "2025-01-15 10:30:00",
+      "update_time": "2025-01-16 14:20:00"
+    }
+  ]
 }
 ```
 
 ## 返回字段说明
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `data_list` | array | 待办详情列表，最多 20 条 |
-| `data_list[].todo_id` | string | 待办 ID |
-| `data_list[].todo_status` | number | 待办状态：`0`-已完成，`1`-进行中，`2`-已删除 |
-| `data_list[].content` | string | 待办内容 |
-| `data_list[].follower_list.followers` | array | 分派人列表 |
-| `data_list[].follower_list.followers[].follower_id` | string | 分派人 ID（即 userid）— **展示前需通过 wecom-contact-lookup 转为姓名** |
-| `data_list[].follower_list.followers[].follower_status` | number | 分派人状态：`0`-拒绝，`1`-接受，`2`-已完成 |
-| `data_list[].follower_list.followers[].update_time` | string | 分派人状态更新时间 |
-| `data_list[].creator_id` | string | 创建人 ID — **展示前需通过 wecom-contact-lookup 转为姓名** |
-| `data_list[].user_status` | number | 当前用户状态 |
-| `data_list[].remind_time` | string | 提醒时间 |
-| `data_list[].create_time` | string | 创建时间 |
-| `data_list[].update_time` | string | 更新时间 |
+| 字段                                                    | 类型   | 说明                                                                   |
+| ------------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `data_list`                                             | array  | 待办详情列表，最多 20 条                                               |
+| `data_list[].todo_id`                                   | string | 待办 ID                                                                |
+| `data_list[].todo_status`                               | number | 待办状态：`0`-已完成，`1`-进行中，`2`-已删除                           |
+| `data_list[].content`                                   | string | 待办内容                                                               |
+| `data_list[].follower_list.followers`                   | array  | 分派人列表                                                             |
+| `data_list[].follower_list.followers[].follower_id`     | string | 分派人 ID（即 userid）— **展示前需通过 wecom-contact-lookup 转为姓名** |
+| `data_list[].follower_list.followers[].follower_status` | number | 分派人状态：`0`-拒绝，`1`-接受，`2`-已完成                             |
+| `data_list[].follower_list.followers[].update_time`     | string | 分派人状态更新时间                                                     |
+| `data_list[].creator_id`                                | string | 创建人 ID — **展示前需通过 wecom-contact-lookup 转为姓名**             |
+| `data_list[].user_status`                               | number | 当前用户状态                                                           |
+| `data_list[].remind_time`                               | string | 提醒时间                                                               |
+| `data_list[].create_time`                               | string | 创建时间                                                               |
+| `data_list[].update_time`                               | string | 更新时间                                                               |
 
 ---
 

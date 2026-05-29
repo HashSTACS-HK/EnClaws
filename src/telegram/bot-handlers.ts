@@ -421,7 +421,9 @@ export const registerTelegramHandlers = ({
 
   const loadStoreAllowFrom = async () => {
     const tenantContext = await resolveChannelTenantContext("telegram", accountId);
-    return readChannelAllowFromStore("telegram", process.env, accountId, tenantContext).catch(() => []);
+    return readChannelAllowFromStore("telegram", process.env, accountId, tenantContext).catch(
+      () => [],
+    );
   };
 
   const resolveReplyMediaForMessage = async (

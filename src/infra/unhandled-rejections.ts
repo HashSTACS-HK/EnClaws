@@ -1,6 +1,6 @@
 import process from "node:process";
-import { extractErrorCode, formatUncaughtError } from "./errors.js";
 import { PRODUCT_NAME_LOWER } from "../version.js";
+import { extractErrorCode, formatUncaughtError } from "./errors.js";
 
 type UnhandledRejectionHandler = (reason: unknown) => boolean;
 
@@ -247,13 +247,19 @@ export function installUnhandledRejectionHandler(): void {
     }
 
     if (isFatalError(reason)) {
-      console.error(`[${PRODUCT_NAME_LOWER}] FATAL unhandled rejection:`, formatUncaughtError(reason));
+      console.error(
+        `[${PRODUCT_NAME_LOWER}] FATAL unhandled rejection:`,
+        formatUncaughtError(reason),
+      );
       process.exit(1);
       return;
     }
 
     if (isConfigError(reason)) {
-      console.error(`[${PRODUCT_NAME_LOWER}] CONFIGURATION ERROR - requires fix:`, formatUncaughtError(reason));
+      console.error(
+        `[${PRODUCT_NAME_LOWER}] CONFIGURATION ERROR - requires fix:`,
+        formatUncaughtError(reason),
+      );
       process.exit(1);
       return;
     }
@@ -266,7 +272,10 @@ export function installUnhandledRejectionHandler(): void {
       return;
     }
 
-    console.error(`[${PRODUCT_NAME_LOWER}] Unhandled promise rejection:`, formatUncaughtError(reason));
+    console.error(
+      `[${PRODUCT_NAME_LOWER}] Unhandled promise rejection:`,
+      formatUncaughtError(reason),
+    );
     process.exit(1);
   });
 }

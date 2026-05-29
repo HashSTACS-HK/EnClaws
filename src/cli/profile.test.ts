@@ -94,9 +94,7 @@ describe("applyCliProfileEnv", () => {
 
     const resolvedHome = path.resolve("/srv/enclaws-home");
     expect(env.ENCLAWS_STATE_DIR).toBe(path.join(resolvedHome, ".enclaws-work"));
-    expect(env.ENCLAWS_CONFIG_PATH).toBe(
-      path.join(resolvedHome, ".enclaws-work", "enclaws.json"),
-    );
+    expect(env.ENCLAWS_CONFIG_PATH).toBe(path.join(resolvedHome, ".enclaws-work", "enclaws.json"));
   });
 });
 
@@ -155,9 +153,7 @@ describe("formatCliCommand", () => {
   });
 
   it("handles command with no args after enclaws", () => {
-    expect(formatCliCommand("enclaws", { ENCLAWS_PROFILE: "test" })).toBe(
-      "enclaws --profile test",
-    );
+    expect(formatCliCommand("enclaws", { ENCLAWS_PROFILE: "test" })).toBe("enclaws --profile test");
   });
 
   it("handles pnpm wrapper", () => {

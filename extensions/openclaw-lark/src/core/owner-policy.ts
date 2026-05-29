@@ -8,9 +8,9 @@
  * 提供 fail-close 策略（安全优先：授权发起路径）。
  */
 
-import type * as Lark from '@larksuiteoapi/node-sdk';
-import type { ConfiguredLarkAccount } from './types';
-import { getAppOwnerFallback } from './app-owner-fallback';
+import type * as Lark from "@larksuiteoapi/node-sdk";
+import { getAppOwnerFallback } from "./app-owner-fallback";
+import type { ConfiguredLarkAccount } from "./types";
 
 // ---------------------------------------------------------------------------
 // Error class
@@ -27,8 +27,8 @@ export class OwnerAccessDeniedError extends Error {
   readonly appOwnerId: string;
 
   constructor(userOpenId: string, appOwnerId: string) {
-    super('Permission denied: Only the app owner is authorized to use this feature.');
-    this.name = 'OwnerAccessDeniedError';
+    super("Permission denied: Only the app owner is authorized to use this feature.");
+    this.name = "OwnerAccessDeniedError";
     this.userOpenId = userOpenId;
     this.appOwnerId = appOwnerId;
   }
@@ -55,7 +55,7 @@ export async function assertOwnerAccessStrict(
   const ownerOpenId = await getAppOwnerFallback(account, sdk);
 
   if (!ownerOpenId) {
-    throw new OwnerAccessDeniedError(userOpenId, 'unknown');
+    throw new OwnerAccessDeniedError(userOpenId, "unknown");
   }
 
   if (ownerOpenId !== userOpenId) {

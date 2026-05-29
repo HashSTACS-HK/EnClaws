@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export function normalizeMediaUrlInput(value: string): string {
   let raw = value.trim();
 
   // Common wrappers from markdown/chat payloads.
-  if (raw.startsWith('<') && raw.endsWith('>') && raw.length >= 2) {
+  if (raw.startsWith("<") && raw.endsWith(">") && raw.length >= 2) {
     raw = raw.slice(1, -1).trim();
   }
 
@@ -20,7 +20,9 @@ export function normalizeMediaUrlInput(value: string): string {
   const last = raw[raw.length - 1];
   if (
     raw.length >= 2 &&
-    ((first === '"' && last === '"') || (first === "'" && last === "'") || (first === '`' && last === '`'))
+    ((first === '"' && last === '"') ||
+      (first === "'" && last === "'") ||
+      (first === "`" && last === "`"))
   ) {
     raw = raw.slice(1, -1).trim();
   }
@@ -33,12 +35,12 @@ function stripQueryAndHash(value: string): string {
 }
 
 export function isWindowsAbsolutePath(value: string): boolean {
-  return /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('\\\\');
+  return /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("\\\\");
 }
 
 export function isLocalMediaPath(value: string): boolean {
   const raw = normalizeMediaUrlInput(value);
-  return raw.startsWith('file://') || path.isAbsolute(raw) || isWindowsAbsolutePath(raw);
+  return raw.startsWith("file://") || path.isAbsolute(raw) || isWindowsAbsolutePath(raw);
 }
 
 export function safeFileUrlToPath(fileUrl: string): string {
@@ -68,7 +70,10 @@ export function safeFileUrlToPath(fileUrl: string): string {
  * @throws {Error} When the path is not under any allowed root, or
  *                 when `localRoots` is an empty array.
  */
-export function validateLocalMediaRoots(filePath: string, localRoots: readonly string[] | undefined): void {
+export function validateLocalMediaRoots(
+  filePath: string,
+  localRoots: readonly string[] | undefined,
+): void {
   // Not configured — skip validation (backwards-compatible).
   if (localRoots === undefined) return;
 
@@ -104,7 +109,7 @@ export function validateLocalMediaRoots(filePath: string, localRoots: readonly s
   if (!isAllowed) {
     throw new Error(
       `[feishu-media] Local file access denied for "${filePath}": ` +
-        `path is not under any allowed mediaLocalRoots (${localRoots.join(', ')}). ` +
+        `path is not under any allowed mediaLocalRoots (${localRoots.join(", ")}). ` +
         `Move the file to an allowed directory or use a remote URL instead.`,
     );
   }
@@ -113,8 +118,10 @@ export function validateLocalMediaRoots(filePath: string, localRoots: readonly s
 export function resolveBaseNameFromPath(value: string): string | undefined {
   const raw = normalizeMediaUrlInput(value);
   const cleanPath = stripQueryAndHash(raw);
-  const fileName = isWindowsAbsolutePath(cleanPath) ? path.win32.basename(cleanPath) : path.basename(cleanPath);
-  if (fileName && fileName !== '/' && fileName !== '.' && fileName !== '\\') {
+  const fileName = isWindowsAbsolutePath(cleanPath)
+    ? path.win32.basename(cleanPath)
+    : path.basename(cleanPath);
+  if (fileName && fileName !== "/" && fileName !== "." && fileName !== "\\") {
     return fileName;
   }
   return undefined;
@@ -125,7 +132,7 @@ export function resolveFileNameFromMediaUrl(mediaUrl: string): string | undefine
   if (!raw) return undefined;
 
   if (isLocalMediaPath(raw)) {
-    if (raw.startsWith('file://')) {
+    if (raw.startsWith("file://")) {
       const fromFileUrlPath = safeFileUrlToPath(raw);
       const fromFileUrlName = resolveBaseNameFromPath(fromFileUrlPath);
       if (fromFileUrlName) return fromFileUrlName;
@@ -135,9 +142,9 @@ export function resolveFileNameFromMediaUrl(mediaUrl: string): string | undefine
 
   try {
     const parsed = new URL(raw);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
       const fromUrlPath = path.posix.basename(parsed.pathname);
-      if (fromUrlPath && fromUrlPath !== '/') return fromUrlPath;
+      if (fromUrlPath && fromUrlPath !== "/") return fromUrlPath;
     }
   } catch {
     // Not a valid URL. Continue with file path fallback.

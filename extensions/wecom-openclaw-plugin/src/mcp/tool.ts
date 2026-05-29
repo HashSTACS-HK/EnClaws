@@ -13,9 +13,9 @@
  *   wecom_mcp call contact getContact '{}'
  */
 
-import { sendJsonRpc, type McpToolInfo } from "./transport.js";
-import { cleanSchemaForGemini } from "./schema.js";
 import { resolveBeforeCall, runAfterCall } from "./interceptors/index.js";
+import { cleanSchemaForGemini } from "./schema.js";
+import { sendJsonRpc, type McpToolInfo } from "./transport.js";
 
 // ============================================================================
 // 类型定义
@@ -59,7 +59,9 @@ const errorResult = (err: unknown) => {
 // ============================================================================
 
 const handleList = async (category: string): Promise<unknown> => {
-  const result = await sendJsonRpc(category, "tools/list") as { tools?: McpToolInfo[] } | undefined;
+  const result = (await sendJsonRpc(category, "tools/list")) as
+    | { tools?: McpToolInfo[] }
+    | undefined;
 
   const tools = result?.tools ?? [];
   if (tools.length === 0) {
@@ -100,7 +102,7 @@ const handleCall = async (
   if (resolvedArgs) {
     console.log(
       `[mcp] handleCall ${category}/${method} 拦截器替换 args: ${JSON.stringify(resolvedArgs).slice(0, 500)}` +
-      (JSON.stringify(resolvedArgs).length > 500 ? "...(truncated)" : ""),
+        (JSON.stringify(resolvedArgs).length > 500 ? "...(truncated)" : ""),
     );
   }
   if (options) {
@@ -108,10 +110,15 @@ const handleCall = async (
   }
 
   // 2. 执行 MCP 调用
-  const result = await sendJsonRpc(category, "tools/call", {
-    name: method,
-    arguments: finalArgs,
-  }, options);
+  const result = await sendJsonRpc(
+    category,
+    "tools/call",
+    {
+      name: method,
+      arguments: finalArgs,
+    },
+    options,
+  );
 
   const rpcDone = performance.now();
   const rpcMs = (rpcDone - callStart).toFixed(1);
@@ -119,7 +126,7 @@ const handleCall = async (
   const resultStr = JSON.stringify(result);
   console.log(
     `[mcp] handleCall ${category}/${method} MCP 响应 (${rpcMs}ms): ${resultStr.slice(0, 800)}` +
-    (resultStr.length > 800 ? "...(truncated)" : ""),
+      (resultStr.length > 800 ? "...(truncated)" : ""),
   );
 
   // 3. 管道式执行 afterCall 拦截器（业务错误码检查、响应变换等）
@@ -133,11 +140,11 @@ const handleCall = async (
     const finalStr = JSON.stringify(finalResult);
     console.log(
       `[mcp] handleCall ${category}/${method} afterCall 变换后 (${interceptMs}ms): ${finalStr.slice(0, 500)}` +
-      (finalStr.length > 500 ? "...(truncated)" : ""),
+        (finalStr.length > 500 ? "...(truncated)" : ""),
     );
     console.log(
       `[mcp] handleCall ${category}/${method} 总耗时: ${totalMs}ms` +
-      ` (MCP请求: ${rpcMs}ms, 拦截处理: ${interceptMs}ms)`,
+        ` (MCP请求: ${rpcMs}ms, 拦截处理: ${interceptMs}ms)`,
     );
   } else {
     console.log(`[mcp] handleCall ${category}/${method} 耗时: ${rpcMs}ms`);
@@ -207,7 +214,8 @@ export function createWeComMcpTool() {
         },
         args: {
           type: ["string", "object"],
-          description: "调用 MCP 方法的参数，可以是 JSON 字符串或对象（action=call 时使用，默认 {}）",
+          description:
+            "调用 MCP 方法的参数，可以是 JSON 字符串或对象（action=call 时使用，默认 {}）",
         },
       },
       required: ["action", "category"],
@@ -216,8 +224,8 @@ export function createWeComMcpTool() {
       const p = params as WeComToolsParams;
       console.log(
         `[mcp] execute: action=${p.action}, category=${p.category}` +
-        (p.method ? `, method=${p.method}` : "") +
-        (p.args ? `, args=${typeof p.args === "string" ? p.args : JSON.stringify(p.args)}` : ""),
+          (p.method ? `, method=${p.method}` : "") +
+          (p.args ? `, args=${typeof p.args === "string" ? p.args : JSON.stringify(p.args)}` : ""),
       );
       try {
         let result: ReturnType<typeof textResult>;
@@ -239,15 +247,15 @@ export function createWeComMcpTool() {
         }
         console.log(
           `[mcp] execute: action=${p.action}, category=${p.category}` +
-          (p.method ? `, method=${p.method}` : "") +
-          ` → 响应长度=${result.content[0].text.length} chars`,
+            (p.method ? `, method=${p.method}` : "") +
+            ` → 响应长度=${result.content[0].text.length} chars`,
         );
         return result;
       } catch (err) {
         console.error(
           `[mcp] execute: action=${p.action}, category=${p.category}` +
-          (p.method ? `, method=${p.method}` : "") +
-          ` → 异常: ${err instanceof Error ? err.message : String(err)}`,
+            (p.method ? `, method=${p.method}` : "") +
+            ` → 异常: ${err instanceof Error ? err.message : String(err)}`,
         );
         return errorResult(err);
       }

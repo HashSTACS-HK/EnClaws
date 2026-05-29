@@ -6,8 +6,8 @@
  * 统一导出所有即时通讯相关工具的注册函数
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { registerFeishuImBotImageTool } from './resource';
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { registerFeishuImBotImageTool } from "./resource";
 
 /**
  * 注册所有 IM 工具
@@ -17,6 +17,6 @@ import { registerFeishuImBotImageTool } from './resource';
  */
 export function registerFeishuImTools(api: OpenClawPluginApi): void {
   if (registerFeishuImBotImageTool(api)) {
-    api.logger.debug?.('feishu_im: Registered feishu_im_bot_image');
+    api.logger.debug?.("feishu_im: Registered feishu_im_bot_image");
   }
 }

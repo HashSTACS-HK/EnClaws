@@ -6,7 +6,6 @@
  */
 
 export const BLOCKED_PATTERN_SOURCES: readonly string[] = [
-
   // ── File deletion & overwrite ──
   "rm\\s+-rf",
   "rm\\s+-f",

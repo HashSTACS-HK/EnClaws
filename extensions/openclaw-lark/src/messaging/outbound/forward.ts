@@ -8,10 +8,10 @@
  * or user using the IM Message Forward API.
  */
 
-import type { OpenClawConfig } from 'openclaw/plugin-sdk';
-import type { FeishuSendResult } from '../types';
-import { LarkClient } from '../../core/lark-client';
-import { normalizeFeishuTarget, resolveReceiveIdType } from '../../core/targets';
+import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { LarkClient } from "../../core/lark-client";
+import { normalizeFeishuTarget, resolveReceiveIdType } from "../../core/targets";
+import type { FeishuSendResult } from "../types";
 
 // ---------------------------------------------------------------------------
 // forwardMessageFeishu
@@ -57,7 +57,7 @@ export async function forwardMessageFeishu(params: {
   });
 
   return {
-    messageId: response?.data?.message_id ?? '',
-    chatId: response?.data?.chat_id ?? '',
+    messageId: response?.data?.message_id ?? "",
+    chatId: response?.data?.chat_id ?? "",
   };
 }

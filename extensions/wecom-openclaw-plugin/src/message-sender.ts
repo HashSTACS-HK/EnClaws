@@ -4,8 +4,8 @@
  * 负责通过 WSClient 发送回复消息，包含超时保护
  */
 
-import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import { type WSClient, type WsFrame, generateReqId } from "@wecom/aibot-node-sdk";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import { REPLY_SEND_TIMEOUT_MS } from "./const.js";
 import { withTimeout } from "./timeout.js";
 
@@ -75,7 +75,9 @@ export async function sendWeComReply(params: {
   if (body.msgtype === "event") {
     // 中间帧（thinking / 流式增量）直接跳过，仅在最终帧主动发一次文本。
     if (!finish) {
-      runtime.log?.(`[plugin -> server] skip non-final stream for event callback, streamId=${streamId}`);
+      runtime.log?.(
+        `[plugin -> server] skip non-final stream for event callback, streamId=${streamId}`,
+      );
       return streamId;
     }
 
@@ -141,21 +143,21 @@ export async function sendWeComReplyNonBlocking(params: {
   runtime: RuntimeEnv;
   streamId: string;
   finish?: boolean;
-}): Promise<string | 'skipped'> {
+}): Promise<string | "skipped"> {
   const { wsClient, frame, text, runtime, streamId, finish = false } = params;
 
   if (!text) {
-    return 'skipped';
+    return "skipped";
   }
 
   if (!wsClient.isConnected) {
-    return 'skipped';
+    return "skipped";
   }
 
   try {
     const result = await wsClient.replyStreamNonBlocking(frame, streamId, text, finish);
-    if (result === 'skipped') {
-      return 'skipped';
+    if (result === "skipped") {
+      return "skipped";
     }
     return streamId;
   } catch (err: any) {

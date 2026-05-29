@@ -12,7 +12,7 @@
  * Used by both websocket inbound messages and synthetic message paths.
  */
 
-type QueueStatus = 'queued' | 'immediate';
+type QueueStatus = "queued" | "immediate";
 
 export interface ActiveDispatcherEntry {
   abortCard: () => Promise<void>;
@@ -34,7 +34,12 @@ export function threadScopedKey(base: string, threadId?: string): string {
   return threadId ? `${base}:thread:${threadId}` : base;
 }
 
-export function buildQueueKey(accountId: string, chatId: string, threadId?: string, senderId?: string): string {
+export function buildQueueKey(
+  accountId: string,
+  chatId: string,
+  threadId?: string,
+  senderId?: string,
+): string {
   const base = senderId ? `${accountId}:${chatId}:sender:${senderId}` : `${accountId}:${chatId}`;
   return threadScopedKey(base, threadId);
 }
@@ -66,7 +71,7 @@ export function enqueueFeishuChatTask(params: {
   const { accountId, chatId, threadId, senderId, task } = params;
   const key = buildQueueKey(accountId, chatId, threadId, senderId);
   const prev = chatQueues.get(key) ?? Promise.resolve();
-  const status: QueueStatus = chatQueues.has(key) ? 'queued' : 'immediate';
+  const status: QueueStatus = chatQueues.has(key) ? "queued" : "immediate";
 
   const taskPromise = prev.then(task, task);
   chatQueues.set(key, taskPromise);
@@ -94,11 +99,20 @@ function lastMentionedBotKey(chatId: string, senderId: string, threadId?: string
   return threadId ? `${chatId}:${senderId}:thread:${threadId}` : `${chatId}:${senderId}`;
 }
 
-export function setLastMentionedBot(chatId: string, senderId: string, threadId: string | undefined, accountId: string): void {
+export function setLastMentionedBot(
+  chatId: string,
+  senderId: string,
+  threadId: string | undefined,
+  accountId: string,
+): void {
   lastMentionedBotMap.set(lastMentionedBotKey(chatId, senderId, threadId), accountId);
 }
 
-export function getLastMentionedBot(chatId: string, senderId: string, threadId?: string): string | undefined {
+export function getLastMentionedBot(
+  chatId: string,
+  senderId: string,
+  threadId?: string,
+): string | undefined {
   return lastMentionedBotMap.get(lastMentionedBotKey(chatId, senderId, threadId));
 }
 

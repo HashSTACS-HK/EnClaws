@@ -9,7 +9,8 @@
  * transparently, and **never** exposed to the AI layer.
  */
 
-import type { LarkBrand } from './types';
+import { resolveOAuthEndpoints } from "./device-flow";
+import { larkLogger } from "./lark-logger";
 import {
   type StoredUAToken,
   getStoredToken,
@@ -17,13 +18,12 @@ import {
   removeStoredToken,
   setStoredToken,
   tokenStatus,
-} from './token-store';
-import { resolveOAuthEndpoints } from './device-flow';
-import { larkLogger } from './lark-logger';
+} from "./token-store";
+import type { LarkBrand } from "./types";
 
-const log = larkLogger('core/uat-client');
-import { feishuFetch } from './feishu-fetch';
-import { NeedAuthorizationError, REFRESH_TOKEN_RETRYABLE, TOKEN_RETRY_CODES } from './auth-errors';
+const log = larkLogger("core/uat-client");
+import { NeedAuthorizationError, REFRESH_TOKEN_RETRYABLE, TOKEN_RETRY_CODES } from "./auth-errors";
+import { feishuFetch } from "./feishu-fetch";
 
 // Re-export for backward compatibility
 export { NeedAuthorizationError };
@@ -46,7 +46,7 @@ export interface UATStatus {
   expiresAt?: number;
   refreshExpiresAt?: number;
   grantedAt?: number;
-  tokenStatus?: 'valid' | 'needs_refresh' | 'expired';
+  tokenStatus?: "valid" | "needs_refresh" | "expired";
 }
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,10 @@ const refreshLocks = new Map<string, Promise<StoredUAToken | null>>();
 // Refresh implementation
 // ---------------------------------------------------------------------------
 
-async function doRefreshToken(opts: UATCallOptions, stored: StoredUAToken): Promise<StoredUAToken | null> {
+async function doRefreshToken(
+  opts: UATCallOptions,
+  stored: StoredUAToken,
+): Promise<StoredUAToken | null> {
   // refresh_token already expired → can't refresh, need re-auth.
   if (Date.now() >= stored.refreshExpiresAt) {
     log.info(`refresh_token expired for ${opts.userOpenId}, clearing`);
@@ -76,7 +79,7 @@ async function doRefreshToken(opts: UATCallOptions, stored: StoredUAToken): Prom
 
   const endpoints = resolveOAuthEndpoints(opts.domain);
   const requestBody = new URLSearchParams({
-    grant_type: 'refresh_token',
+    grant_type: "refresh_token",
     refresh_token: stored.refreshToken,
     client_id: opts.appId,
     client_secret: opts.appSecret,
@@ -84,8 +87,8 @@ async function doRefreshToken(opts: UATCallOptions, stored: StoredUAToken): Prom
 
   const callEndpoint = async () => {
     const resp = await feishuFetch(endpoints.token, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: requestBody,
     });
     return (await resp.json()) as Record<string, unknown>;
@@ -109,7 +112,9 @@ async function doRefreshToken(opts: UATCallOptions, stored: StoredUAToken): Prom
       const retryError = data.error as string | undefined;
       if ((retryCode !== undefined && retryCode !== 0) || retryError) {
         const retryErrCode = retryCode ?? retryError;
-        log.warn(`refresh failed after retry (code=${retryErrCode}), clearing token for ${opts.userOpenId}`);
+        log.warn(
+          `refresh failed after retry (code=${retryErrCode}), clearing token for ${opts.userOpenId}`,
+        );
         await removeStoredToken(opts.appId, opts.userOpenId);
         return null;
       }
@@ -122,7 +127,7 @@ async function doRefreshToken(opts: UATCallOptions, stored: StoredUAToken): Prom
   }
 
   if (!data.access_token) {
-    throw new Error('Token refresh returned no access_token');
+    throw new Error("Token refresh returned no access_token");
   }
 
   const now = Date.now();
@@ -148,7 +153,10 @@ async function doRefreshToken(opts: UATCallOptions, stored: StoredUAToken): Prom
 /**
  * Refresh with per-user locking.
  */
-async function refreshWithLock(opts: UATCallOptions, stored: StoredUAToken): Promise<StoredUAToken | null> {
+async function refreshWithLock(
+  opts: UATCallOptions,
+  stored: StoredUAToken,
+): Promise<StoredUAToken | null> {
   const key = `${opts.appId}:${opts.userOpenId}`;
 
   // Another refresh is already in-flight – wait for it and re-read.
@@ -189,11 +197,11 @@ export async function getValidAccessToken(opts: UATCallOptions): Promise<string>
 
   const status = tokenStatus(stored);
 
-  if (status === 'valid') {
+  if (status === "valid") {
     return stored.accessToken;
   }
 
-  if (status === 'needs_refresh') {
+  if (status === "needs_refresh") {
     const refreshed = await refreshWithLock(opts, stored);
     if (!refreshed) {
       throw new NeedAuthorizationError(opts.userOpenId);
@@ -209,7 +217,10 @@ export async function getValidAccessToken(opts: UATCallOptions): Promise<string>
 /**
  * Execute an API call with a valid UAT, retrying once on token-expiry errors.
  */
-export async function callWithUAT<T>(opts: UATCallOptions, apiCall: (accessToken: string) => Promise<T>): Promise<T> {
+export async function callWithUAT<T>(
+  opts: UATCallOptions,
+  apiCall: (accessToken: string) => Promise<T>,
+): Promise<T> {
   const accessToken = await getValidAccessToken(opts);
   try {
     return await apiCall(accessToken);

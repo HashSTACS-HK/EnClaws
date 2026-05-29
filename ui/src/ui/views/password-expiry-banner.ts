@@ -15,8 +15,8 @@
 
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { loadAuth } from "../auth-store.ts";
 import { t, I18nController } from "../../i18n/index.ts";
+import { loadAuth } from "../auth-store.ts";
 
 /** Default warning window (days) — keep in sync with backend default. */
 const DEFAULT_WARN_DAYS = 14;
@@ -88,14 +88,18 @@ export class EnClawsPasswordExpiryBanner extends LitElement {
 
   private daysRemaining(): number | null {
     const auth = loadAuth();
-    if (!auth?.pwExp) {return null;}
+    if (!auth?.pwExp) {
+      return null;
+    }
     const diffMs = auth.pwExp - Date.now();
     return Math.floor(diffMs / 86400_000);
   }
 
   private dismiss(): void {
     const auth = loadAuth();
-    if (!auth?.pwExp) {return;}
+    if (!auth?.pwExp) {
+      return;
+    }
     try {
       sessionStorage.setItem(DISMISS_KEY_PREFIX + auth.user.id, String(auth.pwExp));
     } catch {
@@ -112,16 +116,23 @@ export class EnClawsPasswordExpiryBanner extends LitElement {
 
   render() {
     void this.i18nCtrl; // referenced for locale-change subscription
-    if (this.dismissed) {return nothing;}
+    if (this.dismissed) {
+      return nothing;
+    }
     const days = this.daysRemaining();
-    if (days === null) {return nothing;}
+    if (days === null) {
+      return nothing;
+    }
     // Only show when within the warning window (0..WARN_DAYS).
     // Already-expired users (days < 0) are handled by the force-change overlay.
-    if (days < 0 || days > DEFAULT_WARN_DAYS) {return nothing;}
+    if (days < 0 || days > DEFAULT_WARN_DAYS) {
+      return nothing;
+    }
 
-    const msg = days === 0
-      ? t("auth.banner.willExpireToday")
-      : t("auth.banner.willExpireDays", { days: String(days) });
+    const msg =
+      days === 0
+        ? t("auth.banner.willExpireToday")
+        : t("auth.banner.willExpireDays", { days: String(days) });
 
     return html`
       <div class="bar" role="alert">

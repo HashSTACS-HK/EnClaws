@@ -15,10 +15,10 @@
  */
 
 import fs from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { IncomingMessage, ServerResponse } from "node:http";
 
 let tmpDir: string;
 
@@ -47,10 +47,7 @@ describe("GET /{appId}", () => {
     tenantId = tenant.id;
   });
 
-  function makeRequest(opts: {
-    method?: string;
-    authorization?: string;
-  }): IncomingMessage {
+  function makeRequest(opts: { method?: string; authorization?: string }): IncomingMessage {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Readable } = require("node:stream");
     const req = new Readable({
@@ -73,17 +70,36 @@ describe("GET /{appId}", () => {
   } {
     const state = { body: "", statusCode: 200 };
     const res = {
-      get statusCode() { return state.statusCode; },
-      set statusCode(v: number) { state.statusCode = v; },
-      setHeader() { /* noop */ },
-      flushHeaders() { /* noop */ },
-      write(c: string) { state.body += c; return true; },
-      end(c?: string) { if (c) { state.body += c; } },
+      get statusCode() {
+        return state.statusCode;
+      },
+      set statusCode(v: number) {
+        state.statusCode = v;
+      },
+      setHeader() {
+        /* noop */
+      },
+      flushHeaders() {
+        /* noop */
+      },
+      write(c: string) {
+        state.body += c;
+        return true;
+      },
+      end(c?: string) {
+        if (c) {
+          state.body += c;
+        }
+      },
     } as unknown as ServerResponse;
     return {
       res,
-      get body() { return state.body; },
-      get statusCode() { return state.statusCode; },
+      get body() {
+        return state.body;
+      },
+      get statusCode() {
+        return state.statusCode;
+      },
     };
   }
 

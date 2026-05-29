@@ -6,14 +6,14 @@ EnClaws 生产环境部署方案——从单机开发到多租户企业级部署
 
 ## 部署方式概览
 
-| 方式 | 适用场景 | 数据库 | 复杂度 |
-|------|----------|--------|--------|
-| [CLI 本地运行](#1-cli-本地运行) | 开发、个人使用 | SQLite | 低 |
-| [Docker Compose](#2-docker-compose) | 小团队、预发布 | PostgreSQL | 中 |
-| [Windows 安装包](#3-windows-安装包) | Windows 用户、离线环境 | SQLite | 低 |
-| [macOS 安装包](#4-macos-安装包) | macOS 用户 | SQLite | 低 |
-| [VPS / 云服务器](#5-vps--云服务器) | 生产环境、常驻运行 | PostgreSQL | 中 |
-| [多实例高可用](#6-多实例高可用) | 企业级、高可用 | PostgreSQL | 高 |
+| 方式                                | 适用场景               | 数据库     | 复杂度 |
+| ----------------------------------- | ---------------------- | ---------- | ------ |
+| [CLI 本地运行](#1-cli-本地运行)     | 开发、个人使用         | SQLite     | 低     |
+| [Docker Compose](#2-docker-compose) | 小团队、预发布         | PostgreSQL | 中     |
+| [Windows 安装包](#3-windows-安装包) | Windows 用户、离线环境 | SQLite     | 低     |
+| [macOS 安装包](#4-macos-安装包)     | macOS 用户             | SQLite     | 低     |
+| [VPS / 云服务器](#5-vps--云服务器)  | 生产环境、常驻运行     | PostgreSQL | 中     |
+| [多实例高可用](#6-多实例高可用)     | 企业级、高可用         | PostgreSQL | 高     |
 
 ---
 
@@ -45,16 +45,16 @@ enclaws gateway --port 18789 --bind loopback --auth password
 
 ### CLI 参数
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `--port <n>` | 18789 | Gateway 端口 |
-| `--bind <mode>` | loopback | `loopback` / `lan` / `tailnet` / `auto` |
-| `--auth <mode>` | token | `none` / `token` / `password` / `trusted-proxy` |
-| `--token <t>` | — | WebSocket 认证 Token |
-| `--password <p>` | — | 密码认证 |
-| `--dev` | false | 开发模式 |
-| `--verbose` | false | 详细日志 |
-| `--allow-unconfigured` | false | 跳过配置校验 |
+| 参数                   | 默认值   | 说明                                            |
+| ---------------------- | -------- | ----------------------------------------------- |
+| `--port <n>`           | 18789    | Gateway 端口                                    |
+| `--bind <mode>`        | loopback | `loopback` / `lan` / `tailnet` / `auto`         |
+| `--auth <mode>`        | token    | `none` / `token` / `password` / `trusted-proxy` |
+| `--token <t>`          | —        | WebSocket 认证 Token                            |
+| `--password <p>`       | —        | 密码认证                                        |
+| `--dev`                | false    | 开发模式                                        |
+| `--verbose`            | false    | 详细日志                                        |
+| `--allow-unconfigured` | false    | 跳过配置校验                                    |
 
 ### 数据目录
 
@@ -132,18 +132,18 @@ docker-compose exec cli node --import tsx src/db/migrate.ts --status
 
 ### Docker Compose 服务
 
-| 服务 | 端口 | 说明 |
-|------|------|------|
-| `openclaw-db` | 5432 | PostgreSQL 16 Alpine |
-| `gateway` | 18789, 18790 | EnClaws Gateway |
-| `cli` | — | CLI 工具（与 Gateway 共享网络） |
+| 服务          | 端口         | 说明                            |
+| ------------- | ------------ | ------------------------------- |
+| `openclaw-db` | 5432         | PostgreSQL 16 Alpine            |
+| `gateway`     | 18789, 18790 | EnClaws Gateway                 |
+| `cli`         | —            | CLI 工具（与 Gateway 共享网络） |
 
 ### 数据卷
 
-| 卷 | 用途 |
-|----|------|
+| 卷                | 用途                  |
+| ----------------- | --------------------- |
 | `openclaw-pgdata` | PostgreSQL 持久化存储 |
-| `./data/enclaws` | Gateway 状态目录 |
+| `./data/enclaws`  | Gateway 状态目录      |
 
 ### 升级
 
@@ -432,66 +432,66 @@ server {
 
 ### 核心配置
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `ENCLAWS_GATEWAY_PORT` | `18789` | Gateway 端口 |
-| `ENCLAWS_GATEWAY_BIND` | `loopback` | 绑定模式：`loopback` / `lan` / `tailnet` / `auto` |
-| `ENCLAWS_GATEWAY_PASSWORD` | — | 认证密码 |
-| `ENCLAWS_STATE_DIR` | `~/.enclaws` | 状态目录路径 |
-| `ENCLAWS_HOME` | `~` | 主目录 |
+| 变量                       | 默认值       | 说明                                              |
+| -------------------------- | ------------ | ------------------------------------------------- |
+| `ENCLAWS_GATEWAY_PORT`     | `18789`      | Gateway 端口                                      |
+| `ENCLAWS_GATEWAY_BIND`     | `loopback`   | 绑定模式：`loopback` / `lan` / `tailnet` / `auto` |
+| `ENCLAWS_GATEWAY_PASSWORD` | —            | 认证密码                                          |
+| `ENCLAWS_STATE_DIR`        | `~/.enclaws` | 状态目录路径                                      |
+| `ENCLAWS_HOME`             | `~`          | 主目录                                            |
 
 ### 数据库
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `ENCLAWS_DB_URL` | `sqlite://...` | 完整连接 URL |
-| `ENCLAWS_DB_HOST` | `localhost` | PostgreSQL 主机 |
-| `ENCLAWS_DB_PORT` | `5432` | PostgreSQL 端口 |
-| `ENCLAWS_DB_NAME` | `enclaws` | 数据库名 |
-| `ENCLAWS_DB_USER` | `enclaws` | 数据库用户 |
-| `ENCLAWS_DB_PASSWORD` | — | 数据库密码 |
-| `ENCLAWS_DB_SSL` | `false` | 启用 SSL |
-| `ENCLAWS_DB_POOL_MAX` | `20` | 连接池大小 |
+| 变量                  | 默认值         | 说明            |
+| --------------------- | -------------- | --------------- |
+| `ENCLAWS_DB_URL`      | `sqlite://...` | 完整连接 URL    |
+| `ENCLAWS_DB_HOST`     | `localhost`    | PostgreSQL 主机 |
+| `ENCLAWS_DB_PORT`     | `5432`         | PostgreSQL 端口 |
+| `ENCLAWS_DB_NAME`     | `enclaws`      | 数据库名        |
+| `ENCLAWS_DB_USER`     | `enclaws`      | 数据库用户      |
+| `ENCLAWS_DB_PASSWORD` | —              | 数据库密码      |
+| `ENCLAWS_DB_SSL`      | `false`        | 启用 SSL        |
+| `ENCLAWS_DB_POOL_MAX` | `20`           | 连接池大小      |
 
 ### 认证
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `ENCLAWS_JWT_SECRET` | — | JWT 签名密钥（多租户必填） |
-| `ENCLAWS_JWT_ACCESS_EXPIRES` | `30m` | Access Token 有效期 |
-| `ENCLAWS_JWT_REFRESH_EXPIRES` | `7d` | Refresh Token 有效期 |
-| `ENCLAWS_CONTROL_UI_DISABLE_DEVICE_AUTH` | `false` | 禁用设备认证 |
-| `ENCLAWS_CONTROL_UI_ALLOWED_ORIGINS` | — | 控制面板 CORS 来源 |
+| 变量                                     | 默认值  | 说明                       |
+| ---------------------------------------- | ------- | -------------------------- |
+| `ENCLAWS_JWT_SECRET`                     | —       | JWT 签名密钥（多租户必填） |
+| `ENCLAWS_JWT_ACCESS_EXPIRES`             | `30m`   | Access Token 有效期        |
+| `ENCLAWS_JWT_REFRESH_EXPIRES`            | `7d`    | Refresh Token 有效期       |
+| `ENCLAWS_CONTROL_UI_DISABLE_DEVICE_AUTH` | `false` | 禁用设备认证               |
+| `ENCLAWS_CONTROL_UI_ALLOWED_ORIGINS`     | —       | 控制面板 CORS 来源         |
 
 ### LLM 提供商
 
-| 变量 | 说明 |
-|------|------|
-| `OPENAI_API_KEY` | OpenAI API Key |
-| `OPENAI_API_KEYS` | 多个 Key（逗号分隔） |
-| `ANTHROPIC_API_KEY` | Anthropic API Key |
-| `GEMINI_API_KEY` | Google Gemini API Key |
-| `OPENROUTER_API_KEY` | OpenRouter API Key |
-| `DEEPSEEK_API_KEY` | DeepSeek API Key |
+| 变量                 | 说明                  |
+| -------------------- | --------------------- |
+| `OPENAI_API_KEY`     | OpenAI API Key        |
+| `OPENAI_API_KEYS`    | 多个 Key（逗号分隔）  |
+| `ANTHROPIC_API_KEY`  | Anthropic API Key     |
+| `GEMINI_API_KEY`     | Google Gemini API Key |
+| `OPENROUTER_API_KEY` | OpenRouter API Key    |
+| `DEEPSEEK_API_KEY`   | DeepSeek API Key      |
 
 ### 消息通道
 
-| 变量 | 说明 |
-|------|------|
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot Token |
-| `DISCORD_BOT_TOKEN` | Discord Bot Token |
-| `SLACK_BOT_TOKEN` | Slack Bot Token |
-| `SLACK_APP_TOKEN` | Slack App-Level Token |
-| `MATTERMOST_BOT_TOKEN` | Mattermost Bot Token |
-| `ZALO_BOT_TOKEN` | Zalo Bot Token |
+| 变量                   | 说明                  |
+| ---------------------- | --------------------- |
+| `TELEGRAM_BOT_TOKEN`   | Telegram Bot Token    |
+| `DISCORD_BOT_TOKEN`    | Discord Bot Token     |
+| `SLACK_BOT_TOKEN`      | Slack Bot Token       |
+| `SLACK_APP_TOKEN`      | Slack App-Level Token |
+| `MATTERMOST_BOT_TOKEN` | Mattermost Bot Token  |
+| `ZALO_BOT_TOKEN`       | Zalo Bot Token        |
 
 ### Skill 包
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
+| 变量                      | 默认值  | 说明              |
+| ------------------------- | ------- | ----------------- |
 | `SKILL_PACK_AUTO_INSTALL` | `false` | 自动安装 Skill 包 |
-| `SKILL_PACK_LOCAL_DIR` | — | 本地 Skill 包目录 |
-| `SKILL_PACK_GIT_URL` | — | Skill 包 Git 地址 |
+| `SKILL_PACK_LOCAL_DIR`    | —       | 本地 Skill 包目录 |
+| `SKILL_PACK_GIT_URL`      | —       | Skill 包 Git 地址 |
 
 ---
 

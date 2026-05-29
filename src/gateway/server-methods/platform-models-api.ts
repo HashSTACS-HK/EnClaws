@@ -8,9 +8,12 @@
  *   platform.models.delete  - Delete a shared model
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import { clearTenantConfigCache } from "../../config/tenant-config.js";
 import { isDbInitialized } from "../../db/index.js";
+import { query as dbQuery, getDbType, DB_SQLITE } from "../../db/index.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
 import {
   createTenantModel,
   listSharedModels,
@@ -18,13 +21,10 @@ import {
   updateModelById,
   deleteModelById,
 } from "../../db/models/tenant-model.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
-import { clearTenantConfigCache } from "../../config/tenant-config.js";
-import type { TenantContext } from "../../auth/middleware.js";
-import type { TenantModelDefinition } from "../../db/types.js";
-import { query as dbQuery, getDbType, DB_SQLITE } from "../../db/index.js";
 import { sqliteQuery } from "../../db/sqlite/index.js";
+import type { TenantModelDefinition } from "../../db/types.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 /** Find agents that reference a specific providerId + modelId (exact JSON match). */
 function findAgentsByModelRef(providerId: string, modelId: string): string[] {
@@ -43,10 +43,14 @@ function findAgentsByModelRef(providerId: string, modelId: string): string[] {
   return rows
     .filter((r) => {
       try {
-        const configs = typeof r.model_config === "string" ? JSON.parse(r.model_config) : r.model_config;
-        return Array.isArray(configs) && configs.some(
-          (mc: { providerId?: string; modelId?: string }) =>
-            mc.providerId === providerId && mc.modelId === modelId,
+        const configs =
+          typeof r.model_config === "string" ? JSON.parse(r.model_config) : r.model_config;
+        return (
+          Array.isArray(configs) &&
+          configs.some(
+            (mc: { providerId?: string; modelId?: string }) =>
+              mc.providerId === providerId && mc.modelId === modelId,
+          )
         );
       } catch {
         return false;
@@ -67,9 +71,12 @@ async function findAgentsByModelRefAsync(providerId: string, modelId: string): P
   return (res.rows as Array<{ name: string; agent_id: string; model_config: unknown }>)
     .filter((r) => {
       const configs = r.model_config;
-      return Array.isArray(configs) && configs.some(
-        (mc: { providerId?: string; modelId?: string }) =>
-          mc.providerId === providerId && mc.modelId === modelId,
+      return (
+        Array.isArray(configs) &&
+        configs.some(
+          (mc: { providerId?: string; modelId?: string }) =>
+            mc.providerId === providerId && mc.modelId === modelId,
+        )
       );
     })
     .map((r) => r.name || r.agent_id);
@@ -80,7 +87,11 @@ function getPlatformCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -96,7 +107,10 @@ function sanitizeModel(m: Record<string, unknown>) {
   return { ...rest, hasApiKey: !!apiKeyEncrypted };
 }
 
-function validateModels(models: TenantModelDefinition[] | undefined, respond: GatewayRequestHandlerOptions["respond"]): boolean {
+function validateModels(
+  models: TenantModelDefinition[] | undefined,
+  respond: GatewayRequestHandlerOptions["respond"],
+): boolean {
   if (models && !Array.isArray(models)) {
     respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "models must be an array"));
     return false;
@@ -105,15 +119,25 @@ function validateModels(models: TenantModelDefinition[] | undefined, respond: Ga
     const modelIds = new Set<string>();
     for (const m of models) {
       if (!m.id || !m.name) {
-        respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Each model must have id and name"));
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_PARAMS, "Each model must have id and name"),
+        );
         return false;
       }
       if (modelIds.has(m.id)) {
-        respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, `Duplicate model id: ${m.id}`));
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_PARAMS, `Duplicate model id: ${m.id}`),
+        );
         return false;
       }
       modelIds.add(m.id);
-      if (!m.contextWindow) {m.contextWindow = 128000;}
+      if (!m.contextWindow) {
+        m.contextWindow = 128000;
+      }
     }
   }
   return true;
@@ -122,7 +146,9 @@ function validateModels(models: TenantModelDefinition[] | undefined, respond: Ga
 export const platformModelsHandlers: GatewayRequestHandlers = {
   "platform.models.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "platform.models.list");
@@ -136,28 +162,37 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
 
     const models = await listSharedModels({ activeOnly: false });
     respond(true, {
-      models: models.map((m) => sanitizeModel({
-        id: m.id,
-        tenantId: m.tenantId,
-        providerType: m.providerType,
-        providerName: m.providerName,
-        baseUrl: m.baseUrl,
-        apiProtocol: m.apiProtocol,
-        authMode: m.authMode,
-        apiKeyEncrypted: m.apiKeyEncrypted,
-        extraHeaders: m.extraHeaders,
-        extraConfig: m.extraConfig,
-        models: m.models,
-        visibility: m.visibility,
-        isActive: m.isActive,
-        createdAt: m.createdAt,
-      })),
+      models: models.map((m) =>
+        sanitizeModel({
+          id: m.id,
+          tenantId: m.tenantId,
+          providerType: m.providerType,
+          providerName: m.providerName,
+          baseUrl: m.baseUrl,
+          apiProtocol: m.apiProtocol,
+          authMode: m.authMode,
+          apiKeyEncrypted: m.apiKeyEncrypted,
+          extraHeaders: m.extraHeaders,
+          extraConfig: m.extraConfig,
+          models: m.models,
+          visibility: m.visibility,
+          isActive: m.isActive,
+          createdAt: m.createdAt,
+        }),
+      ),
     });
   },
 
-  "platform.models.create": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "platform.models.create": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "platform.models.create");
@@ -170,8 +205,15 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     }
 
     const {
-      providerType, providerName, baseUrl, apiProtocol, authMode,
-      apiKey, extraHeaders, extraConfig, models,
+      providerType,
+      providerName,
+      baseUrl,
+      apiProtocol,
+      authMode,
+      apiKey,
+      extraHeaders,
+      extraConfig,
+      models,
     } = params as {
       providerType: string;
       providerName: string;
@@ -185,10 +227,16 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     };
 
     if (!providerType || !providerName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerType or providerName"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerType or providerName"),
+      );
       return;
     }
-    if (!validateModels(models, respond)) {return;}
+    if (!validateModels(models, respond)) {
+      return;
+    }
 
     try {
       const model = await createTenantModel({
@@ -216,28 +264,38 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
         detail: { providerType, providerName, visibility: "shared" },
       });
 
-      respond(true, sanitizeModel({
-        id: model.id,
-        providerType: model.providerType,
-        providerName: model.providerName,
-        baseUrl: model.baseUrl,
-        apiProtocol: model.apiProtocol,
-        authMode: model.authMode,
-        apiKeyEncrypted: model.apiKeyEncrypted,
-        extraHeaders: model.extraHeaders,
-        extraConfig: model.extraConfig,
-        models: model.models,
-        visibility: model.visibility,
-        isActive: model.isActive,
-      }));
+      respond(
+        true,
+        sanitizeModel({
+          id: model.id,
+          providerType: model.providerType,
+          providerName: model.providerName,
+          baseUrl: model.baseUrl,
+          apiProtocol: model.apiProtocol,
+          authMode: model.authMode,
+          apiKeyEncrypted: model.apiKeyEncrypted,
+          extraHeaders: model.extraHeaders,
+          extraConfig: model.extraConfig,
+          models: model.models,
+          visibility: model.visibility,
+          isActive: model.isActive,
+        }),
+      );
     } catch (err: unknown) {
       throw err;
     }
   },
 
-  "platform.models.update": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "platform.models.update": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "platform.models.update");
@@ -249,22 +307,25 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
       throw err;
     }
 
-    const { id, providerName, baseUrl, apiProtocol, authMode, apiKey, models, isActive } = params as {
-      id: string;
-      providerName?: string;
-      baseUrl?: string;
-      apiProtocol?: string;
-      authMode?: string;
-      apiKey?: string;
-      models?: TenantModelDefinition[];
-      isActive?: boolean;
-    };
+    const { id, providerName, baseUrl, apiProtocol, authMode, apiKey, models, isActive } =
+      params as {
+        id: string;
+        providerName?: string;
+        baseUrl?: string;
+        apiProtocol?: string;
+        authMode?: string;
+        apiKey?: string;
+        models?: TenantModelDefinition[];
+        isActive?: boolean;
+      };
 
     if (!id) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing id"));
       return;
     }
-    if (!validateModels(models, respond)) {return;}
+    if (!validateModels(models, respond)) {
+      return;
+    }
 
     const existing = await getModelById(id);
     if (!existing || existing.visibility !== "shared") {
@@ -281,10 +342,14 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
         for (const removedModelId of removedIds) {
           const agentNames = await findAgentsByModelRefAsync(id, removedModelId);
           if (agentNames.length > 0) {
-            respond(false, undefined, errorShape(
-              ErrorCodes.INVALID_REQUEST,
-              `platformModels.removeModelInUse:${removedModelId}:${agentNames.join(", ")}`,
-            ));
+            respond(
+              false,
+              undefined,
+              errorShape(
+                ErrorCodes.INVALID_REQUEST,
+                `platformModels.removeModelInUse:${removedModelId}:${agentNames.join(", ")}`,
+              ),
+            );
             return;
           }
         }
@@ -292,13 +357,27 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     }
 
     const updates: Record<string, unknown> = {};
-    if (providerName !== undefined) {updates.providerName = providerName;}
-    if (baseUrl !== undefined) {updates.baseUrl = baseUrl;}
-    if (apiProtocol !== undefined) {updates.apiProtocol = apiProtocol;}
-    if (authMode !== undefined) {updates.authMode = authMode;}
-    if (apiKey !== undefined) {updates.apiKeyEncrypted = apiKey;}
-    if (models !== undefined) {updates.models = models;}
-    if (isActive !== undefined) {updates.isActive = isActive;}
+    if (providerName !== undefined) {
+      updates.providerName = providerName;
+    }
+    if (baseUrl !== undefined) {
+      updates.baseUrl = baseUrl;
+    }
+    if (apiProtocol !== undefined) {
+      updates.apiProtocol = apiProtocol;
+    }
+    if (authMode !== undefined) {
+      updates.authMode = authMode;
+    }
+    if (apiKey !== undefined) {
+      updates.apiKeyEncrypted = apiKey;
+    }
+    if (models !== undefined) {
+      updates.models = models;
+    }
+    if (isActive !== undefined) {
+      updates.isActive = isActive;
+    }
 
     const updated = await updateModelById(id, updates);
     if (!updated) {
@@ -316,25 +395,35 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
       detail: { providerName: updated.providerName },
     });
 
-    respond(true, sanitizeModel({
-      id: updated.id,
-      providerType: updated.providerType,
-      providerName: updated.providerName,
-      baseUrl: updated.baseUrl,
-      apiProtocol: updated.apiProtocol,
-      authMode: updated.authMode,
-      apiKeyEncrypted: updated.apiKeyEncrypted,
-      extraHeaders: updated.extraHeaders,
-      extraConfig: updated.extraConfig,
-      models: updated.models,
-      visibility: updated.visibility,
-      isActive: updated.isActive,
-    }));
+    respond(
+      true,
+      sanitizeModel({
+        id: updated.id,
+        providerType: updated.providerType,
+        providerName: updated.providerName,
+        baseUrl: updated.baseUrl,
+        apiProtocol: updated.apiProtocol,
+        authMode: updated.authMode,
+        apiKeyEncrypted: updated.apiKeyEncrypted,
+        extraHeaders: updated.extraHeaders,
+        extraConfig: updated.extraConfig,
+        models: updated.models,
+        visibility: updated.visibility,
+        isActive: updated.isActive,
+      }),
+    );
   },
 
-  "platform.models.delete": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "platform.models.delete": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "platform.models.delete");
@@ -364,14 +453,20 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     for (const mid of allModelIds) {
       const refs = await findAgentsByModelRefAsync(id, mid);
       for (const name of refs) {
-        if (!allRefAgents.includes(name)) {allRefAgents.push(name);}
+        if (!allRefAgents.includes(name)) {
+          allRefAgents.push(name);
+        }
       }
     }
     if (allRefAgents.length > 0) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        `platformModels.deleteInUse:${allRefAgents.join(", ")}`,
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `platformModels.deleteInUse:${allRefAgents.join(", ")}`,
+        ),
+      );
       return;
     }
 
@@ -389,9 +484,15 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
     respond(true, { ok: true });
   },
 
-  "platform.models.checkModelUsage": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+  "platform.models.checkModelUsage": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getPlatformCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "platform.models.update");
@@ -405,7 +506,11 @@ export const platformModelsHandlers: GatewayRequestHandlers = {
 
     const { providerId, modelId } = params as { providerId: string; modelId: string };
     if (!providerId || !modelId) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerId or modelId"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerId or modelId"),
+      );
       return;
     }
 

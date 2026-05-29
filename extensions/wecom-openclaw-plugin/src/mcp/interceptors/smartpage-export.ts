@@ -25,7 +25,8 @@ export const smartpageExportInterceptor: CallInterceptor = {
   name: "smartpage-export",
 
   /** 仅对 doc 品类的 smartpage_get_export_result 方法生效 */
-  match: (ctx: CallContext) => ctx.category === "doc" && ctx.method === "smartpage_get_export_result",
+  match: (ctx: CallContext) =>
+    ctx.category === "doc" && ctx.method === "smartpage_get_export_result",
 
   /** 拦截响应：将 markdown content 保存为本地文件 */
   async afterCall(_ctx: CallContext, result: unknown): Promise<unknown> {
@@ -83,7 +84,7 @@ async function interceptExportResponse(result: unknown): Promise<unknown> {
     buffer,
     "text/markdown",
     "inbound",
-    undefined,            // maxBytes: markdown 文本通常不大，使用默认限制
+    undefined, // maxBytes: markdown 文本通常不大，使用默认限制
     "smartpage_export.md", // originalFilename
   );
 
@@ -99,9 +100,11 @@ async function interceptExportResponse(result: unknown): Promise<unknown> {
 
   // 6. 返回修改后的 MCP result 结构
   return {
-    content: [{
-      type: "text" as const,
-      text: JSON.stringify(newBizData),
-    }],
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify(newBizData),
+      },
+    ],
   };
 }

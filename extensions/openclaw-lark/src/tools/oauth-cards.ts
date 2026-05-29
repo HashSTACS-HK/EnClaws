@@ -8,19 +8,19 @@
  * 卡片使用 v2 JSON 结构 + i18n_content 支持多语言。
  */
 
-import type { LarkBrand } from '../core/types';
-import { applinkDomain } from '../core/domains';
+import { applinkDomain } from "../core/domains";
+import type { LarkBrand } from "../core/types";
 
 // ---------------------------------------------------------------------------
 // i18n config helper
 // ---------------------------------------------------------------------------
 
-type Locale = 'zh_cn' | 'en_us';
+type Locale = "zh_cn" | "en_us";
 
 /** v2 卡片 i18n 配置，注入到 config 中 */
 const I18N_CONFIG = {
   update_multi: true,
-  locales: ['zh_cn', 'en_us'] as Locale[],
+  locales: ["zh_cn", "en_us"] as Locale[],
 };
 
 // ---------------------------------------------------------------------------
@@ -29,35 +29,36 @@ const I18N_CONFIG = {
 
 const CARD_TEXTS = {
   zh_cn: {
-    authRequired: '请授权以继续当前操作',
-    goAuth: '前往授权',
-    expiresHint: (min: number) => `<font color='grey'>授权链接将在 ${min} 分钟后失效，届时需重新发起</font>`,
+    authRequired: "请授权以继续当前操作",
+    goAuth: "前往授权",
+    expiresHint: (min: number) =>
+      `<font color='grey'>授权链接将在 ${min} 分钟后失效，届时需重新发起</font>`,
     batchAuthHint:
       "<font color='grey'>💡如果你希望一次性授予所有插件所需要的权限，可以告诉我「授予所有用户权限」，我会协助你完成。</font>",
 
     batchScopeMsg: (count: number, total: number, granted: number) =>
       `应用需要授权 **${count}** 个用户权限（共 ${total} 个，已授权 ${granted} 个）。`,
-    scopePreviewLabel: '**将要授权的权限**',
-    scopeListLabel: '**将要授权的权限列表**',
-    scopeDesc: '授权后，应用将能够以你的身份执行相关操作。',
-    requiredScopes: '所需权限：',
+    scopePreviewLabel: "**将要授权的权限**",
+    scopeListLabel: "**将要授权的权限列表**",
+    scopeDesc: "授权后，应用将能够以你的身份执行相关操作。",
+    requiredScopes: "所需权限：",
 
-    authSuccess: '授权成功',
+    authSuccess: "授权成功",
     authSuccessBody: (brandName: string) =>
       `你的${brandName}账号已成功授权，正在为你继续执行操作。\n\n` +
       "<font color='grey'>如需撤销授权，可随时告诉我。</font>",
 
-    authIncomplete: '授权未完成',
-    authExpiredBody: '授权链接已过期，请重新发起授权。',
+    authIncomplete: "授权未完成",
+    authExpiredBody: "授权链接已过期，请重新发起授权。",
 
-    authMismatchTitle: '授权失败，操作账号与发起账号不一致',
+    authMismatchTitle: "授权失败，操作账号与发起账号不一致",
     authMismatchBody: (brandName: string) =>
       `检测到当前进行授权操作的${brandName}账号与发起授权请求的账号不一致。为保障数据安全，本次授权已被拒绝。\n\n` +
       "<font color='grey'>请授权请求的发起人使用其账号，点击授权链接完成授权。</font>",
   },
   en_us: {
-    authRequired: 'Authorize to continue',
-    goAuth: 'Authorize Now',
+    authRequired: "Authorize to continue",
+    goAuth: "Authorize Now",
     expiresHint: (min: number) =>
       `<font color='grey'>This link will time out in ${min} minutes, so you'll need a new one if it expires.</font>`,
     batchAuthHint:
@@ -65,20 +66,20 @@ const CARD_TEXTS = {
 
     batchScopeMsg: (count: number, total: number, granted: number) =>
       `The app requires ${count} additional user token permissions (${granted} of ${total} granted).`,
-    scopePreviewLabel: '**Permissions to authorize**',
-    scopeListLabel: '**Permissions to authorize**',
-    scopeDesc: 'Once authorized, the app can perform actions on your behalf.',
-    requiredScopes: 'Required permissions:',
+    scopePreviewLabel: "**Permissions to authorize**",
+    scopeListLabel: "**Permissions to authorize**",
+    scopeDesc: "Once authorized, the app can perform actions on your behalf.",
+    requiredScopes: "Required permissions:",
 
-    authSuccess: 'Authorized',
+    authSuccess: "Authorized",
     authSuccessBody: (brandName: string) =>
       `${brandName} account authorized. Continuing with your request.\n\n` +
       "<font color='grey'>Let me know if you ever need to revoke the permissions.</font>",
 
-    authIncomplete: 'Authorization incomplete',
-    authExpiredBody: 'The link is no longer active. Please restart the process.',
+    authIncomplete: "Authorization incomplete",
+    authExpiredBody: "The link is no longer active. Please restart the process.",
 
-    authMismatchTitle: 'Authorization failed: Account mismatch',
+    authMismatchTitle: "Authorization failed: Account mismatch",
     authMismatchBody: (brandName: string) =>
       `The ${brandName} account used for authorization does not match the account that initiated the request. To protect your data, this request has been denied.\n\n` +
       "<font color='grey'>Only the person who started this request can authorize it using their account.</font>",
@@ -92,7 +93,7 @@ function i18nContent(zh: string, en: string): Record<Locale, string> {
 
 /** 构造带 i18n_content 的 plain_text（默认语言为英文） */
 function i18nPlainText(zh: string, en: string) {
-  return { tag: 'plain_text' as const, content: en, i18n_content: i18nContent(zh, en) };
+  return { tag: "plain_text" as const, content: en, i18n_content: i18nContent(zh, en) };
 }
 
 // ---------------------------------------------------------------------------
@@ -133,9 +134,17 @@ export function buildAuthCard(params: {
     ios_url: inAppUrl,
   };
 
-  const scopeParams = { scope, isBatchAuth, totalAppScopes, alreadyGranted, batchInfo, filteredScopes, appId };
-  const scopeDescZh = formatScopeDescription('zh_cn', scopeParams);
-  const scopeDescEn = formatScopeDescription('en_us', scopeParams);
+  const scopeParams = {
+    scope,
+    isBatchAuth,
+    totalAppScopes,
+    alreadyGranted,
+    batchInfo,
+    filteredScopes,
+    appId,
+  };
+  const scopeDescZh = formatScopeDescription("zh_cn", scopeParams);
+  const scopeDescEn = formatScopeDescription("en_us", scopeParams);
 
   const zhT = CARD_TEXTS.zh_cn;
   const enT = CARD_TEXTS.en_us;
@@ -143,26 +152,26 @@ export function buildAuthCard(params: {
   const elements: Record<string, unknown>[] = [
     // 授权说明
     {
-      tag: 'markdown',
+      tag: "markdown",
       content: scopeDescEn,
       i18n_content: i18nContent(scopeDescZh, scopeDescEn),
-      text_size: 'normal',
+      text_size: "normal",
     },
     // 授权按钮（small，靠右）
     {
-      tag: 'column_set',
-      flex_mode: 'none',
-      horizontal_align: 'right',
+      tag: "column_set",
+      flex_mode: "none",
+      horizontal_align: "right",
       columns: [
         {
-          tag: 'column',
-          width: 'auto',
+          tag: "column",
+          width: "auto",
           elements: [
             {
-              tag: 'button',
+              tag: "button",
               text: i18nPlainText(zhT.goAuth, enT.goAuth),
-              type: 'primary',
-              size: 'medium',
+              type: "primary",
+              size: "medium",
               multi_url: multiUrl,
             },
           ],
@@ -171,34 +180,34 @@ export function buildAuthCard(params: {
     },
     // 失效时间提醒
     {
-      tag: 'markdown',
+      tag: "markdown",
       content: enT.expiresHint(expiresMin),
       i18n_content: i18nContent(zhT.expiresHint(expiresMin), enT.expiresHint(expiresMin)),
-      text_size: 'notation',
+      text_size: "notation",
     },
     // 批量授权提示（仅 auto-auth 流程展示）
     ...(showBatchAuthHint
       ? [
           {
-            tag: 'markdown',
+            tag: "markdown",
             content: enT.batchAuthHint,
             i18n_content: i18nContent(zhT.batchAuthHint, enT.batchAuthHint),
-            text_size: 'notation',
+            text_size: "notation",
           },
         ]
       : []),
   ];
 
   return {
-    schema: '2.0',
+    schema: "2.0",
     config: {
       wide_screen_mode: false,
       ...I18N_CONFIG,
       style: {
         color: {
-          'light-yellow-bg': {
-            light_mode: 'rgba(255, 214, 102, 0.12)',
-            dark_mode: 'rgba(255, 214, 102, 0.08)',
+          "light-yellow-bg": {
+            light_mode: "rgba(255, 214, 102, 0.12)",
+            dark_mode: "rgba(255, 214, 102, 0.08)",
           },
         },
       },
@@ -206,14 +215,14 @@ export function buildAuthCard(params: {
     header: {
       title: i18nPlainText(zhT.authRequired, enT.authRequired),
       subtitle: {
-        tag: 'plain_text',
-        content: '',
+        tag: "plain_text",
+        content: "",
       },
-      template: 'blue',
-      padding: '12px 12px 12px 12px',
+      template: "blue",
+      padding: "12px 12px 12px 12px",
       icon: {
-        tag: 'standard_icon',
-        token: 'lock-chat_filled',
+        tag: "standard_icon",
+        token: "lock-chat_filled",
       },
     },
     body: { elements },
@@ -241,10 +250,10 @@ export function formatScopeDescription(
     let message = t.batchScopeMsg(scopes.length, totalAppScopes ?? 0, alreadyGranted ?? 0);
 
     if (scopes.length > 5) {
-      const previewScopes = scopes.slice(0, 3).join('\n');
+      const previewScopes = scopes.slice(0, 3).join("\n");
       message += `\n\n${t.scopePreviewLabel}：\n${previewScopes}\n...\n`;
     } else {
-      const scopeList = scopes.map((s, idx) => `${idx + 1}. ${s}`).join('\n');
+      const scopeList = scopes.map((s, idx) => `${idx + 1}. ${s}`).join("\n");
       message += `\n\n${t.scopeListLabel}：\n${scopeList}\n`;
     }
 
@@ -257,39 +266,42 @@ export function formatScopeDescription(
 
   if (!scopes?.length) return t.scopeDesc;
 
-  return t.scopeDesc + '\n\n' + t.requiredScopes + '\n' + scopes.map((s) => `- ${s}`).join('\n');
+  return t.scopeDesc + "\n\n" + t.requiredScopes + "\n" + scopes.map((s) => `- ${s}`).join("\n");
 }
 
 export function toInAppWebUrl(targetUrl: string, brand?: LarkBrand): string {
   const lkMeta = encodeURIComponent(
     JSON.stringify({
-      'page-meta': {
-        showNavBar: 'false',
-        showBottomNavBar: 'false',
+      "page-meta": {
+        showNavBar: "false",
+        showBottomNavBar: "false",
       },
     }),
   );
-  const separator = targetUrl.includes('?') ? '&' : '?';
+  const separator = targetUrl.includes("?") ? "&" : "?";
   const fullUrl = `${targetUrl}${separator}lk_meta=${lkMeta}`;
   const encoded = encodeURIComponent(fullUrl);
-  return `${applinkDomain(brand)}/client/web_url/open` + `?mode=sidebar-semi&max_width=800&reload=false&url=${encoded}`;
+  return (
+    `${applinkDomain(brand)}/client/web_url/open` +
+    `?mode=sidebar-semi&max_width=800&reload=false&url=${encoded}`
+  );
 }
 
 export function buildAuthSuccessCard(brand?: LarkBrand): Record<string, unknown> {
   const zhT = CARD_TEXTS.zh_cn;
   const enT = CARD_TEXTS.en_us;
-  const brandZh = brand === 'lark' ? 'Lark' : '飞书';
-  const brandEn = brand === 'lark' ? 'Lark' : 'Feishu';
+  const brandZh = brand === "lark" ? "Lark" : "飞书";
+  const brandEn = brand === "lark" ? "Lark" : "Feishu";
   return {
-    schema: '2.0',
+    schema: "2.0",
     config: {
       wide_screen_mode: false,
       ...I18N_CONFIG,
       style: {
         color: {
-          'light-green-bg': {
-            light_mode: 'rgba(52, 199, 89, 0.12)',
-            dark_mode: 'rgba(52, 199, 89, 0.08)',
+          "light-green-bg": {
+            light_mode: "rgba(52, 199, 89, 0.12)",
+            dark_mode: "rgba(52, 199, 89, 0.08)",
           },
         },
       },
@@ -297,20 +309,20 @@ export function buildAuthSuccessCard(brand?: LarkBrand): Record<string, unknown>
     header: {
       title: i18nPlainText(zhT.authSuccess, enT.authSuccess),
       subtitle: {
-        tag: 'plain_text',
-        content: '',
+        tag: "plain_text",
+        content: "",
       },
-      template: 'green',
-      padding: '12px 12px 12px 12px',
+      template: "green",
+      padding: "12px 12px 12px 12px",
       icon: {
-        tag: 'standard_icon',
-        token: 'yes_filled',
+        tag: "standard_icon",
+        token: "yes_filled",
       },
     },
     body: {
       elements: [
         {
-          tag: 'markdown',
+          tag: "markdown",
           content: enT.authSuccessBody(brandEn),
           i18n_content: i18nContent(zhT.authSuccessBody(brandZh), enT.authSuccessBody(brandEn)),
         },
@@ -323,15 +335,15 @@ export function buildAuthFailedCard(_reason: string): Record<string, unknown> {
   const zhT = CARD_TEXTS.zh_cn;
   const enT = CARD_TEXTS.en_us;
   return {
-    schema: '2.0',
+    schema: "2.0",
     config: {
       wide_screen_mode: false,
       ...I18N_CONFIG,
       style: {
         color: {
-          'light-grey-bg': {
-            light_mode: 'rgba(142, 142, 147, 0.12)',
-            dark_mode: 'rgba(142, 142, 147, 0.08)',
+          "light-grey-bg": {
+            light_mode: "rgba(142, 142, 147, 0.12)",
+            dark_mode: "rgba(142, 142, 147, 0.08)",
           },
         },
       },
@@ -339,20 +351,20 @@ export function buildAuthFailedCard(_reason: string): Record<string, unknown> {
     header: {
       title: i18nPlainText(zhT.authIncomplete, enT.authIncomplete),
       subtitle: {
-        tag: 'plain_text',
-        content: '',
+        tag: "plain_text",
+        content: "",
       },
-      template: 'yellow',
-      padding: '12px 12px 12px 12px',
+      template: "yellow",
+      padding: "12px 12px 12px 12px",
       icon: {
-        tag: 'standard_icon',
-        token: 'warning_filled',
+        tag: "standard_icon",
+        token: "warning_filled",
       },
     },
     body: {
       elements: [
         {
-          tag: 'markdown',
+          tag: "markdown",
           content: enT.authExpiredBody,
           i18n_content: i18nContent(zhT.authExpiredBody, enT.authExpiredBody),
         },
@@ -364,10 +376,10 @@ export function buildAuthFailedCard(_reason: string): Record<string, unknown> {
 export function buildAuthIdentityMismatchCard(brand?: LarkBrand): Record<string, unknown> {
   const zhT = CARD_TEXTS.zh_cn;
   const enT = CARD_TEXTS.en_us;
-  const brandZh = brand === 'lark' ? 'Lark' : '飞书';
-  const brandEn = brand === 'lark' ? 'Lark' : 'Feishu';
+  const brandZh = brand === "lark" ? "Lark" : "飞书";
+  const brandEn = brand === "lark" ? "Lark" : "Feishu";
   return {
-    schema: '2.0',
+    schema: "2.0",
     config: {
       wide_screen_mode: false,
       ...I18N_CONFIG,
@@ -375,20 +387,20 @@ export function buildAuthIdentityMismatchCard(brand?: LarkBrand): Record<string,
     header: {
       title: i18nPlainText(zhT.authMismatchTitle, enT.authMismatchTitle),
       subtitle: {
-        tag: 'plain_text',
-        content: '',
+        tag: "plain_text",
+        content: "",
       },
-      template: 'red',
-      padding: '12px 12px 12px 12px',
+      template: "red",
+      padding: "12px 12px 12px 12px",
       icon: {
-        tag: 'standard_icon',
-        token: 'close_filled',
+        tag: "standard_icon",
+        token: "close_filled",
       },
     },
     body: {
       elements: [
         {
-          tag: 'markdown',
+          tag: "markdown",
           content: enT.authMismatchBody(brandEn),
           i18n_content: i18nContent(zhT.authMismatchBody(brandZh), enT.authMismatchBody(brandEn)),
         },

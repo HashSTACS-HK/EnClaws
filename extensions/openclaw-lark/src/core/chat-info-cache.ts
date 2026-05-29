@@ -12,9 +12,9 @@
  * - `group_message_type`: "chat" | "thread" (only for chat_mode=group)
  */
 
-import type * as Lark from '@larksuiteoapi/node-sdk';
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { larkLogger } from './lark-logger';
+import type * as Lark from "@larksuiteoapi/node-sdk";
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { larkLogger } from "./lark-logger";
 
 // ---------------------------------------------------------------------------
 // LarkClient injection — breaks circular dependency with lark-client.ts.
@@ -34,15 +34,15 @@ export function injectLarkClient(cls: LarkClientStatic): void {
   _LarkClient = cls;
 }
 
-const log = larkLogger('core/chat-info-cache');
+const log = larkLogger("core/chat-info-cache");
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface ChatInfo {
-  chatMode: 'group' | 'topic' | 'p2p';
-  groupMessageType?: 'chat' | 'thread';
+  chatMode: "group" | "topic" | "p2p";
+  groupMessageType?: "chat" | "thread";
   /** Human-readable group/chat name, if available from im.chat.get */
   chatName?: string;
 }
@@ -146,7 +146,7 @@ export async function isThreadCapableGroup(params: {
   const { cfg, chatId, accountId } = params;
   const info = await getChatInfo({ cfg, chatId, accountId });
   if (!info) return false;
-  return info.chatMode === 'topic' || info.groupMessageType === 'thread';
+  return info.chatMode === "topic" || info.groupMessageType === "thread";
 }
 
 /**
@@ -160,32 +160,34 @@ export async function getChatInfo(params: {
   accountId?: string;
 }): Promise<ChatInfo | undefined> {
   const { cfg, chatId, accountId } = params;
-  const effectiveAccountId = accountId ?? 'default';
+  const effectiveAccountId = accountId ?? "default";
   const cache = getChatInfoCache(effectiveAccountId);
 
   const cached = cache.get(chatId);
   if (cached) return cached;
 
   try {
-    if (!_LarkClient) throw new Error('LarkClient not injected — circular dependency broken?');
+    if (!_LarkClient) throw new Error("LarkClient not injected — circular dependency broken?");
     const sdk = _LarkClient.fromCfg(cfg, accountId).sdk;
     const response = await sdk.im.chat.get({
       path: { chat_id: chatId },
     });
 
     const data = response?.data as Record<string, unknown> | undefined;
-    const chatMode = (data?.chat_mode as string) ?? 'group';
+    const chatMode = (data?.chat_mode as string) ?? "group";
     const groupMessageType = data?.group_message_type as string | undefined;
     const chatName = (data?.name as string | undefined)?.trim() || undefined;
 
     const info: ChatInfo = {
-      chatMode: chatMode as ChatInfo['chatMode'],
-      groupMessageType: groupMessageType as ChatInfo['groupMessageType'],
+      chatMode: chatMode as ChatInfo["chatMode"],
+      groupMessageType: groupMessageType as ChatInfo["groupMessageType"],
       chatName,
     };
 
     cache.set(chatId, info);
-    log.info(`resolved ${chatId} → chat_mode=${chatMode}, group_message_type=${groupMessageType ?? 'N/A'}, name=${chatName ?? 'N/A'}`);
+    log.info(
+      `resolved ${chatId} → chat_mode=${chatMode}, group_message_type=${groupMessageType ?? "N/A"}, name=${chatName ?? "N/A"}`,
+    );
     return info;
   } catch (err) {
     log.error(`failed to get chat info for ${chatId}: ${String(err)}`);
@@ -210,9 +212,9 @@ export async function getChatTypeFeishu(params: {
   cfg: ClawdbotConfig;
   chatId: string;
   accountId?: string;
-}): Promise<'p2p' | 'group'> {
+}): Promise<"p2p" | "group"> {
   const { cfg, chatId, accountId } = params;
   const info = await getChatInfo({ cfg, chatId, accountId });
-  if (!info) return 'p2p';
-  return info.chatMode === 'group' || info.chatMode === 'topic' ? 'group' : 'p2p';
+  if (!info) return "p2p";
+  return info.chatMode === "group" || info.chatMode === "topic" ? "group" : "p2p";
 }

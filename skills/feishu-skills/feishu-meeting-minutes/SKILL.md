@@ -106,18 +106,18 @@ node ../feishu-auth/send-card.js --chat-id "CHAT_ID" --title "会议纪要已生
 
 ## 错误处理
 
-| 错误 | 含义 | 处理 |
-|------|------|------|
-| `not_found` | 未找到对应会议 | 提示用户确认会议号 |
-| `no_recording` | 没有录制文件 | 提示用户该会议未开启录制 |
-| `file_too_large` | 录制文件超过 1GB | 提示用户文件过大 |
-| `file_not_found` | 本地文件不存在 | 检查文件路径 |
-| `download_error` | 下载失败 | 录制 URL 可能不支持直接下载，改用 `--file` 或 `--file-token` |
-| `auth_required` | 用户未授权 | 执行下方授权流程 |
-| `permission_required` | scope 不足 | 执行下方授权流程（含 required_scopes） |
-| `dependency_error` | faster-whisper 未安装 | 提示管理员安装依赖 |
-| `config_error` | 配置缺失 | 检查 feishu-auth/config.json |
-| `api_error` | API 调用失败 | 查看具体 msg |
+| 错误                  | 含义                  | 处理                                                         |
+| --------------------- | --------------------- | ------------------------------------------------------------ |
+| `not_found`           | 未找到对应会议        | 提示用户确认会议号                                           |
+| `no_recording`        | 没有录制文件          | 提示用户该会议未开启录制                                     |
+| `file_too_large`      | 录制文件超过 1GB      | 提示用户文件过大                                             |
+| `file_not_found`      | 本地文件不存在        | 检查文件路径                                                 |
+| `download_error`      | 下载失败              | 录制 URL 可能不支持直接下载，改用 `--file` 或 `--file-token` |
+| `auth_required`       | 用户未授权            | 执行下方授权流程                                             |
+| `permission_required` | scope 不足            | 执行下方授权流程（含 required_scopes）                       |
+| `dependency_error`    | faster-whisper 未安装 | 提示管理员安装依赖                                           |
+| `config_error`        | 配置缺失              | 检查 feishu-auth/config.json                                 |
+| `api_error`           | API 调用失败          | 查看具体 msg                                                 |
 
 ## 授权
 

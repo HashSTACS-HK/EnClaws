@@ -10,8 +10,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { toConfigAgentsList } from "./tenant-agent.js";
 import type { TenantAgent } from "../types.js";
+import { toConfigAgentsList } from "./tenant-agent.js";
 
 function makeAgent(overrides: Partial<TenantAgent> = {}): TenantAgent {
   const now = new Date("2026-04-20T00:00:00Z");

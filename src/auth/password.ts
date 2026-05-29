@@ -42,16 +42,15 @@ export async function hashPassword(password: string): Promise<string> {
  * We try the value as-is first; for non-hex inputs we also try the
  * SHA-256 to support both paths.
  */
-export async function verifyPassword(
-  password: string,
-  hash: string,
-): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   // If it's already a SHA-256 hex (from frontend), compare directly
   if (/^[0-9a-f]{64}$/.test(password)) {
     return bcrypt.compare(password, hash);
   }
   // Plaintext: try SHA-256(plaintext) first (matches frontend-registered passwords),
   // then fall back to raw plaintext (matches legacy/test passwords)
-  if (await bcrypt.compare(sha256Hex(password), hash)) {return true;}
+  if (await bcrypt.compare(sha256Hex(password), hash)) {
+    return true;
+  }
   return bcrypt.compare(password, hash);
 }

@@ -70,9 +70,10 @@ export async function loadAgentFileContent(
   state.agentFilesLoading = true;
   state.agentFilesError = null;
   try {
-    const locale = typeof localStorage !== "undefined"
-      ? localStorage.getItem("enclaws.i18n.locale") || "en"
-      : "en";
+    const locale =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("enclaws.i18n.locale") || "en"
+        : "en";
     const res = await state.client.request<AgentsFilesGetResult | null>("agents.files.get", {
       agentId,
       name,

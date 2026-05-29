@@ -78,6 +78,7 @@ import { monitorIMessageProvider } from "../../imessage/monitor.js";
 import { probeIMessage } from "../../imessage/probe.js";
 import { sendMessageIMessage } from "../../imessage/send.js";
 import { getChannelActivity, recordChannelActivity } from "../../infra/channel-activity.js";
+import { resolveChannelTenantContext } from "../../infra/channel-tenant-context.js";
 import { enqueueSystemEvent } from "../../infra/system-events.js";
 import {
   listLineAccountIds,
@@ -107,7 +108,6 @@ import { fetchRemoteMedia } from "../../media/fetch.js";
 import { getImageMetadata, resizeToJpeg } from "../../media/image-ops.js";
 import { detectMime } from "../../media/mime.js";
 import { saveMediaBuffer } from "../../media/store.js";
-import { resolveChannelTenantContext } from "../../infra/channel-tenant-context.js";
 import { buildPairingReply } from "../../pairing/pairing-messages.js";
 import {
   readChannelAllowFromStore,
@@ -493,7 +493,9 @@ function createRuntimeTenant(): PluginRuntime["tenant"] {
       // SDK consumers don't have to learn the new shape. The core
       // gateway path (tenant-enrich) uses the raw function and handles
       // the sentinel itself.
-      if (result && ("quotaExceeded" in result || "userSuspended" in result)) {return null;}
+      if (result && ("quotaExceeded" in result || "userSuspended" in result)) {
+        return null;
+      }
       return result;
     },
   };

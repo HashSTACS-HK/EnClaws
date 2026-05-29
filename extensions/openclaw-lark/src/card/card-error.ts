@@ -9,7 +9,7 @@
  * reply-dispatcher and streaming-card-controller.
  */
 
-import { extractLarkApiCode } from '../core/api-error';
+import { extractLarkApiCode } from "../core/api-error";
 
 // ---------------------------------------------------------------------------
 // Error code constants
@@ -50,7 +50,7 @@ export class CardKitApiError extends Error {
   constructor(params: { api: string; code: number; msg: string; context: string }) {
     const { api, code, msg, context } = params;
     super(`cardkit ${api} FAILED: code=${code}, msg=${msg}, ${context}`);
-    this.name = 'CardKitApiError';
+    this.name = "CardKitApiError";
     this.code = code;
     this.msg = msg;
   }
@@ -82,24 +82,26 @@ export function extractSubCode(msg: string): number | null {
  *
  * 返回 { code, subCode, errMsg }，如果无法提取 code 则返回 null。
  */
-export function parseCardApiError(err: unknown): { code: number; subCode: number | null; errMsg: string } | null {
+export function parseCardApiError(
+  err: unknown,
+): { code: number; subCode: number | null; errMsg: string } | null {
   const code = extractLarkApiCode(err);
   if (code === undefined) return null;
 
   // 按优先级提取 msg 文本
-  let errMsg = '';
-  if (err && typeof err === 'object') {
+  let errMsg = "";
+  if (err && typeof err === "object") {
     const e = err as {
       msg?: unknown;
       message?: unknown;
       response?: { data?: { msg?: unknown } };
     };
-    if (typeof e.msg === 'string') {
+    if (typeof e.msg === "string") {
       errMsg = e.msg;
-    } else if (typeof e.response?.data?.msg === 'string') {
+    } else if (typeof e.response?.data?.msg === "string") {
       // Axios errors: response.data.msg carries the Feishu detail with ErrCode
       errMsg = e.response.data.msg;
-    } else if (typeof e.message === 'string') {
+    } else if (typeof e.message === "string") {
       // Fallback to generic Error.message (e.g. CardKitApiError)
       errMsg = e.message;
     }
@@ -214,11 +216,18 @@ export function sanitizeTextSegmentsForCard(
  * 前 tableLimit 张表格保持原样（可正常卡片渲染）；
  * 超出部分用反引号包裹，阻止飞书将其解析为卡片表格元素。
  */
-export function sanitizeTextForCard(text: string, tableLimit: number = FEISHU_CARD_TABLE_LIMIT): string {
+export function sanitizeTextForCard(
+  text: string,
+  tableLimit: number = FEISHU_CARD_TABLE_LIMIT,
+): string {
   return sanitizeTextSegmentsForCard([text], tableLimit)[0];
 }
 
-function wrapTablesBeyondLimit(text: string, matches: readonly MarkdownTableMatch[], keepCount: number): string {
+function wrapTablesBeyondLimit(
+  text: string,
+  matches: readonly MarkdownTableMatch[],
+  keepCount: number,
+): string {
   if (matches.length <= keepCount) return text;
 
   // Back-to-front replacement keeps the original indices stable.

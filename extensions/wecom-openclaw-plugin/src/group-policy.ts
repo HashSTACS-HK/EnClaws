@@ -69,14 +69,17 @@ function isWeComGroupAllowed(params: {
   }
   // allowlist 模式：检查群组是否在允许列表中
   const normalizedAllowFrom = params.allowFrom.map((entry) =>
-    String(entry).replace(new RegExp(`^${CHANNEL_ID}:`, "i"), "").trim()
+    String(entry)
+      .replace(new RegExp(`^${CHANNEL_ID}:`, "i"), "")
+      .trim(),
   );
   if (normalizedAllowFrom.includes("*")) {
     return true;
   }
   const normalizedGroupId = params.groupId.trim();
   return normalizedAllowFrom.some(
-    (entry) => entry === normalizedGroupId || entry.toLowerCase() === normalizedGroupId.toLowerCase()
+    (entry) =>
+      entry === normalizedGroupId || entry.toLowerCase() === normalizedGroupId.toLowerCase(),
   );
 }
 
@@ -131,7 +134,7 @@ export function checkGroupPolicy(params: {
   // 避免多账户模式下 groupAllowFrom / groups 等字段取不到账号级配置
   const wecomConfig = account.config;
 
-  const groupPolicy = wecomConfig.groupPolicy ?? "open"
+  const groupPolicy = wecomConfig.groupPolicy ?? "open";
 
   const groupAllowFrom = wecomConfig.groupAllowFrom ?? [];
   const groupAllowed = isWeComGroupAllowed({
@@ -141,9 +144,7 @@ export function checkGroupPolicy(params: {
   });
 
   if (!groupAllowed) {
-    runtime.log?.(
-      `[WeCom] Group ${chatId} not allowed (groupPolicy=${groupPolicy})`,
-    );
+    runtime.log?.(`[WeCom] Group ${chatId} not allowed (groupPolicy=${groupPolicy})`);
     return { allowed: false };
   }
 
@@ -154,9 +155,7 @@ export function checkGroupPolicy(params: {
   });
 
   if (!senderAllowed) {
-    runtime.log?.(
-      `[WeCom] Sender ${senderId} not in group ${chatId} sender allowlist`,
-    );
+    runtime.log?.(`[WeCom] Sender ${senderId} not in group ${chatId} sender allowlist`);
     return { allowed: false };
   }
 

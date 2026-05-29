@@ -18,6 +18,7 @@ import {
   handleStatusCommand,
   handleWhoamiCommand,
 } from "./commands-info.js";
+import { handleInstallSkillCommand } from "./commands-install-skill.js";
 import { handleModelsCommand } from "./commands-models.js";
 import { handlePluginCommand } from "./commands-plugin.js";
 import {
@@ -29,9 +30,8 @@ import {
   handleStopCommand,
   handleUsageCommand,
 } from "./commands-session.js";
-import { handleSubagentsCommand } from "./commands-subagents.js";
-import { handleInstallSkillCommand } from "./commands-install-skill.js";
 import { handleSkillInstallGuard, handleSkillMutateGuard } from "./commands-skill-guard.js";
+import { handleSubagentsCommand } from "./commands-subagents.js";
 import { handleTasksCommand } from "./commands-tasks.js";
 import { handleTtsCommands } from "./commands-tts.js";
 import type {

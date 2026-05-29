@@ -1,3 +1,5 @@
+import { loadConfig } from "../../config/io.js";
+import { listTenantAgentIdsFromDisk } from "../../config/sessions/tenant-paths.js";
 import { normalizeCronJobCreate, normalizeCronJobPatch } from "../../cron/normalize.js";
 import {
   readCronRunLogEntriesPage,
@@ -6,8 +8,6 @@ import {
 } from "../../cron/run-log.js";
 import type { CronJob, CronJobCreate, CronJobPatch } from "../../cron/types.js";
 import { validateScheduleTimestamp } from "../../cron/validate-timestamp.js";
-import { listTenantAgentIdsFromDisk } from "../../config/sessions/tenant-paths.js";
-import { loadConfig } from "../../config/io.js";
 import { isDbInitialized } from "../../db/index.js";
 import { getTenantById, resolveEffectiveQuotas } from "../../db/models/tenant.js";
 import { getUserDisplayNamesByOpenIds } from "../../db/models/user.js";
@@ -50,28 +50,42 @@ function resolveEffectiveCron(
       client?.tenant?.tenantId ??
       (typeof params._tenantId === "string" ? params._tenantId.trim() : "");
     if (agentId && tenantId) {
-      context.logGateway.info(`resolveEffectiveCron: agent-scoped tenantId=${tenantId} agentId=${agentId}`);
+      context.logGateway.info(
+        `resolveEffectiveCron: agent-scoped tenantId=${tenantId} agentId=${agentId}`,
+      );
       const resolved = context.resolveTenantAgentCron(tenantId, agentId);
-      if (resolved) {return resolved;}
+      if (resolved) {
+        return resolved;
+      }
     }
   }
   // Primary path: client already carries a tenant context (JWT-authenticated).
   if (client?.tenant && context.resolveTenantCron) {
-    context.logGateway.info(`resolveEffectiveCron: using client.tenant userId=${client.tenant.userId}`);
+    context.logGateway.info(
+      `resolveEffectiveCron: using client.tenant userId=${client.tenant.userId}`,
+    );
     const resolved = context.resolveTenantCron(client.tenant);
-    if (resolved) {return resolved;}
+    if (resolved) {
+      return resolved;
+    }
   }
   // Fallback: extract tenant info from params (injected by cron-tool.ts).
   if (context.resolveTenantCron && params) {
     const tenantId = typeof params._tenantId === "string" ? params._tenantId.trim() : "";
     const userId = typeof params._tenantUserId === "string" ? params._tenantUserId.trim() : "";
-    context.logGateway.info(`resolveEffectiveCron: params._tenantId=${tenantId || "(empty)"} params._tenantUserId=${userId || "(empty)"} hasResolveTenantCron=${!!context.resolveTenantCron}`);
+    context.logGateway.info(
+      `resolveEffectiveCron: params._tenantId=${tenantId || "(empty)"} params._tenantUserId=${userId || "(empty)"} hasResolveTenantCron=${!!context.resolveTenantCron}`,
+    );
     if (tenantId && userId) {
       const resolved = context.resolveTenantCron({ tenantId, userId });
-      if (resolved) {return resolved;}
+      if (resolved) {
+        return resolved;
+      }
     }
   } else {
-    context.logGateway.info(`resolveEffectiveCron: fallback to global cron (resolveTenantCron=${!!context.resolveTenantCron}, params=${!!params}, paramKeys=${params ? Object.keys(params).join(",") : "none"})`);
+    context.logGateway.info(
+      `resolveEffectiveCron: fallback to global cron (resolveTenantCron=${!!context.resolveTenantCron}, params=${!!params}, paramKeys=${params ? Object.keys(params).join(",") : "none"})`,
+    );
   }
   return { cron: context.cron, cronStorePath: context.cronStorePath };
 }
@@ -83,10 +97,21 @@ function resolveEffectiveCron(
  * (the tenant fields are read from it by `resolveEffectiveCron`).
  */
 function stripTenantParams(params: Record<string, unknown>): Record<string, unknown> {
-  if (!("_tenantId" in params) && !("_tenantUserId" in params) && !("_agentId" in params) && !("_tenantUserDisplayName" in params)) {
+  if (
+    !("_tenantId" in params) &&
+    !("_tenantUserId" in params) &&
+    !("_agentId" in params) &&
+    !("_tenantUserDisplayName" in params)
+  ) {
     return params;
   }
-  const { _tenantId: _, _tenantUserId: __, _agentId: ___, _tenantUserDisplayName: ____, ...rest } = params;
+  const {
+    _tenantId: _,
+    _tenantUserId: __,
+    _agentId: ___,
+    _tenantUserDisplayName: ____,
+    ...rest
+  } = params;
   return rest;
 }
 
@@ -164,7 +189,9 @@ export const cronHandlers: GatewayRequestHandlers = {
     respond(true, status, undefined);
   },
   "cron.add": async ({ params, respond, context, client }) => {
-    context.logGateway.info(`cron.add: received params keys=${Object.keys(params).join(",")} _tenantId=${(params as any)._tenantId || "(missing)"} _tenantUserId=${(params as any)._tenantUserId || "(missing)"} hasClient=${!!client} connId=${client?.connId || "(none)"} clientName=${client?.connect?.name || "(none)"} clientTenant=${client?.tenant ? JSON.stringify(client.tenant) : "(none)"}`);
+    context.logGateway.info(
+      `cron.add: received params keys=${Object.keys(params).join(",")} _tenantId=${(params as any)._tenantId || "(missing)"} _tenantUserId=${(params as any)._tenantUserId || "(missing)"} hasClient=${!!client} connId=${client?.connId || "(none)"} clientName=${client?.connect?.name || "(none)"} clientTenant=${client?.tenant ? JSON.stringify(client.tenant) : "(none)"}`,
+    );
     const cleaned = stripTenantParams(params);
     const normalized = normalizeCronJobCreate(cleaned) ?? cleaned;
     if (!validateCronAddParams(normalized)) {
@@ -260,9 +287,16 @@ export const cronHandlers: GatewayRequestHandlers = {
     }
     // Fallback for internal calls (e.g. cron-tool) that pass _tenantUserId
     // but don't have a JWT client.
-    if (!jobCreate.createdBy && typeof params?._tenantUserId === "string" && params._tenantUserId.trim()) {
+    if (
+      !jobCreate.createdBy &&
+      typeof params?._tenantUserId === "string" &&
+      params._tenantUserId.trim()
+    ) {
       const userId = params._tenantUserId.trim();
-      const senderId = typeof params._tenantUserDisplayName === "string" ? params._tenantUserDisplayName.trim() : "";
+      const senderId =
+        typeof params._tenantUserDisplayName === "string"
+          ? params._tenantUserDisplayName.trim()
+          : "";
       const tenantId =
         client?.tenant?.tenantId ??
         (typeof params._tenantId === "string" ? params._tenantId.trim() : "");
@@ -280,7 +314,11 @@ export const cronHandlers: GatewayRequestHandlers = {
     }
     const { cron, cronStorePath } = resolveEffectiveCron(context, client, params);
     const job = await cron.add(jobCreate);
-    context.logGateway.info("cron: job created", { jobId: job.id, schedule: jobCreate.schedule, storePath: cronStorePath });
+    context.logGateway.info("cron: job created", {
+      jobId: job.id,
+      schedule: jobCreate.schedule,
+      storePath: cronStorePath,
+    });
     respond(true, job, undefined);
   },
   "cron.update": async ({ params, respond, context, client }) => {
@@ -495,9 +533,13 @@ export const cronHandlers: GatewayRequestHandlers = {
     const agentIds = listTenantAgentIdsFromDisk(tenantId);
     const allJobs: (CronJob & { _agentId: string })[] = [];
     for (const agentId of agentIds) {
-      if (!context.resolveTenantAgentCron) {continue;}
+      if (!context.resolveTenantAgentCron) {
+        continue;
+      }
       const resolved = context.resolveTenantAgentCron(tenantId, agentId);
-      if (!resolved) {continue;}
+      if (!resolved) {
+        continue;
+      }
       try {
         const jobs = await resolved.cron.list({ includeDisabled: true });
         for (const job of jobs) {
@@ -530,8 +572,12 @@ export const cronHandlers: GatewayRequestHandlers = {
     filtered.sort((a, b) => {
       const av = sortBy === "name" ? a.name : (a.state[sortBy] ?? 0);
       const bv = sortBy === "name" ? b.name : (b.state[sortBy] ?? 0);
-      if (av < bv) {return -1 * sortDir;}
-      if (av > bv) {return 1 * sortDir;}
+      if (av < bv) {
+        return -1 * sortDir;
+      }
+      if (av > bv) {
+        return 1 * sortDir;
+      }
       return 0;
     });
     respond(true, { jobs: filtered, total: filtered.length }, undefined);

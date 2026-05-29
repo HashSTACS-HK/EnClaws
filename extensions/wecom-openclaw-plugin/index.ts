@@ -1,10 +1,10 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
-import { emptyPluginConfigSchema } from "./src/openclaw-compat.js";
-import { wecomPlugin } from "./src/channel.js";
-import { createWeComMcpTool } from "./src/mcp/index.js";
-import { setWeComRuntime } from "./src/runtime.js";
-import { CHANNEL_ID, WEBHOOK_PATHS } from "./src/const.js";
 import { createWecomAgentWebhookHandler } from "./src/agent/webhook.js";
+import { wecomPlugin } from "./src/channel.js";
+import { CHANNEL_ID, WEBHOOK_PATHS } from "./src/const.js";
+import { createWeComMcpTool } from "./src/mcp/index.js";
+import { emptyPluginConfigSchema } from "./src/openclaw-compat.js";
+import { setWeComRuntime } from "./src/runtime.js";
 import { handleWecomWebhookRequest } from "./src/webhook/index.js";
 
 const plugin = {
@@ -13,7 +13,6 @@ const plugin = {
   description: "企业微信 OpenClaw 插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
-
     setWeComRuntime(api.runtime);
     api.registerChannel({ plugin: wecomPlugin });
 
@@ -36,7 +35,7 @@ const plugin = {
       match: "prefix",
     });
 
-        // ── 注册 bot Webhook HTTP 路由 ────────────────────────────────────────
+    // ── 注册 bot Webhook HTTP 路由 ────────────────────────────────────────
     // 前缀匹配模式，同时覆盖 /plugins/wecom 和 /wecom 路径
     const webhookRoutes = [WEBHOOK_PATHS.BOT_PLUGIN, WEBHOOK_PATHS.BOT_ALT, WEBHOOK_PATHS.BOT];
     for (const routePath of webhookRoutes) {
@@ -57,7 +56,7 @@ const plugin = {
       return {
         appendSystemContext: [
           "重要：涉及发送图片/视频/语音/文件给用户时，请务必使用 `MEDIA:` 指令。详见  wecom-send-media 这个 skill（技能）。",
-          "重要：当需要向用户发送结构化卡片消息（如通知、投票、按钮选择等）时，请在回复中直接输出 JSON 代码块（```json ... ```），其中 card_type 字段标明卡片类型。详见 wecom-send-template-card 技能。"
+          "重要：当需要向用户发送结构化卡片消息（如通知、投票、按钮选择等）时，请在回复中直接输出 JSON 代码块（```json ... ```），其中 card_type 字段标明卡片类型。详见 wecom-send-template-card 技能。",
         ].join("\n"),
       };
     });

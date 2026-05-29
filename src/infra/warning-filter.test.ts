@@ -87,9 +87,7 @@ describe("warning filter", () => {
 
       emitWarning("Visible warning", { type: "Warning", code: "ENCLAWS_TEST_WARNING" });
       await new Promise((resolve) => setImmediate(resolve));
-      expect(
-        seenWarnings.find((warning) => warning.code === "ENCLAWS_TEST_WARNING"),
-      ).toBeDefined();
+      expect(seenWarnings.find((warning) => warning.code === "ENCLAWS_TEST_WARNING")).toBeDefined();
     } finally {
       process.off("warning", onWarning);
     }

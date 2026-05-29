@@ -6,39 +6,39 @@
 
 ```json
 {
-    "name": "edit_doc_content",
-    "description": "编辑文档内容",
-    "inputSchema": {
-        "properties": {
-            "docid": {
-                "description": "文档 id，与 url 二选一传入",
-                "title": "Docid",
-                "type": "string"
-            },
-            "url": {
-                "description": "文档的访问链接，与 docid 二选一传入",
-                "title": "URL",
-                "type": "string"
-            },
-            "content": {
-                "description": "覆写的文档内容",
-                "title": "Content",
-                "type": "string"
-            },
-            "content_type": {
-                "description": "内容类型格式。1:markdown",
-                "enum": [1],
-                "title": "Content Type",
-                "type": "integer"
-            }
-        },
-        "oneOf": [
-            { "required": ["docid", "content", "content_type"] },
-            { "required": ["url", "content", "content_type"] }
-        ],
-        "title": "edit_doc_contentArguments",
-        "type": "object"
-    }
+  "name": "edit_doc_content",
+  "description": "编辑文档内容",
+  "inputSchema": {
+    "properties": {
+      "docid": {
+        "description": "文档 id，与 url 二选一传入",
+        "title": "Docid",
+        "type": "string"
+      },
+      "url": {
+        "description": "文档的访问链接，与 docid 二选一传入",
+        "title": "URL",
+        "type": "string"
+      },
+      "content": {
+        "description": "覆写的文档内容",
+        "title": "Content",
+        "type": "string"
+      },
+      "content_type": {
+        "description": "内容类型格式。1:markdown",
+        "enum": [1],
+        "title": "Content Type",
+        "type": "integer"
+      }
+    },
+    "oneOf": [
+      { "required": ["docid", "content", "content_type"] },
+      { "required": ["url", "content", "content_type"] }
+    ],
+    "title": "edit_doc_contentArguments",
+    "type": "object"
+  }
 }
 ```
 
@@ -46,9 +46,9 @@
 
 ```json
 {
-    "docid": "DOCID",
-    "content": "# 标题\n\n正文内容",
-    "content_type": 1
+  "docid": "DOCID",
+  "content": "# 标题\n\n正文内容",
+  "content_type": 1
 }
 ```
 
@@ -56,8 +56,8 @@
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok"
+  "errcode": 0,
+  "errmsg": "ok"
 }
 ```
 

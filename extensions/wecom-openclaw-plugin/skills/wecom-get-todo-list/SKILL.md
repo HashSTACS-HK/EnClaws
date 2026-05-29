@@ -27,51 +27,51 @@ description: 企业微信待办列表查询技能，支持按创建时间和提�
 
 ## 参数说明
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `create_begin_time` | string | ❌ | 创建开始时间，格式：`YYYY-MM-DD HH:mm:ss` |
-| `create_end_time` | string | ❌ | 创建结束时间，格式：`YYYY-MM-DD HH:mm:ss` |
-| `remind_begin_time` | string | ❌ | 提醒开始时间，格式：`YYYY-MM-DD HH:mm:ss` |
-| `remind_end_time` | string | ❌ | 提醒结束时间，格式：`YYYY-MM-DD HH:mm:ss` |
-| `limit` | number | ❌ | 最大返回数量，默认 10，最大 20 |
-| `cursor` | string | ❌ | 分页游标，首次请求不传，后续传入上次响应的 `next_cursor` |
+| 参数                | 类型   | 必填 | 说明                                                     |
+| ------------------- | ------ | ---- | -------------------------------------------------------- |
+| `create_begin_time` | string | ❌   | 创建开始时间，格式：`YYYY-MM-DD HH:mm:ss`                |
+| `create_end_time`   | string | ❌   | 创建结束时间，格式：`YYYY-MM-DD HH:mm:ss`                |
+| `remind_begin_time` | string | ❌   | 提醒开始时间，格式：`YYYY-MM-DD HH:mm:ss`                |
+| `remind_end_time`   | string | ❌   | 提醒结束时间，格式：`YYYY-MM-DD HH:mm:ss`                |
+| `limit`             | number | ❌   | 最大返回数量，默认 10，最大 20                           |
+| `cursor`            | string | ❌   | 分页游标，首次请求不传，后续传入上次响应的 `next_cursor` |
 
 ## 返回格式
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok",
-    "index_list": [
-        {
-            "todo_id": "TODO_ID",
-            "todo_status": 1,
-            "user_status": 1,
-            "creator_id": "CREATOR_ID",
-            "remind_time": "2025-06-01 09:00:00",
-            "create_time": "2025-01-15 10:30:00",
-            "update_time": "2025-01-16 14:20:00"
-        }
-    ],
-    "next_cursor": "NEXT_CURSOR",
-    "has_more": false
+  "errcode": 0,
+  "errmsg": "ok",
+  "index_list": [
+    {
+      "todo_id": "TODO_ID",
+      "todo_status": 1,
+      "user_status": 1,
+      "creator_id": "CREATOR_ID",
+      "remind_time": "2025-06-01 09:00:00",
+      "create_time": "2025-01-15 10:30:00",
+      "update_time": "2025-01-16 14:20:00"
+    }
+  ],
+  "next_cursor": "NEXT_CURSOR",
+  "has_more": false
 }
 ```
 
 ## 返回字段说明
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `index_list` | array | 待办列表 |
-| `index_list[].todo_id` | string | 待办唯一 ID |
-| `index_list[].todo_status` | number | 待办状态：`0`-已完成，`1`-进行中，`2`-已删除 |
-| `index_list[].user_status` | number | 用户状态：`0`-拒绝，`1`-接受，`2`-已完成 |
-| `index_list[].creator_id` | string | 创建人 ID |
-| `index_list[].remind_time` | string | 提醒时间 |
-| `index_list[].create_time` | string | 创建时间 |
-| `index_list[].update_time` | string | 更新时间 |
-| `next_cursor` | string | 下一页游标 |
-| `has_more` | boolean | 是否还有更多记录 |
+| 字段                       | 类型    | 说明                                         |
+| -------------------------- | ------- | -------------------------------------------- |
+| `index_list`               | array   | 待办列表                                     |
+| `index_list[].todo_id`     | string  | 待办唯一 ID                                  |
+| `index_list[].todo_status` | number  | 待办状态：`0`-已完成，`1`-进行中，`2`-已删除 |
+| `index_list[].user_status` | number  | 用户状态：`0`-拒绝，`1`-接受，`2`-已完成     |
+| `index_list[].creator_id`  | string  | 创建人 ID                                    |
+| `index_list[].remind_time` | string  | 提醒时间                                     |
+| `index_list[].create_time` | string  | 创建时间                                     |
+| `index_list[].update_time` | string  | 更新时间                                     |
+| `next_cursor`              | string  | 下一页游标                                   |
+| `has_more`                 | boolean | 是否还有更多记录                             |
 
 > 列表返回的是待办概要信息（不含内容和分派人）。拿到列表后，必须调用 `wecom-get-todo-detail` 获取完整详情再展示给用户。
 
@@ -104,6 +104,7 @@ description: 企业微信待办列表查询技能，支持按创建时间和提�
 - 第二次请求（传入上次的 next_cursor）：使用 `wecom_mcp` tool 调用 `wecom_mcp call todo get_todo_list '{"limit": 20, "cursor": "CURSOR_1"}'`，返回 has_more=false，拉取完毕
 
 **分页规则：**
+
 - 首次请求不传 `cursor`
 - `has_more` 为 `true` 时，将 `next_cursor` 作为下次请求的 `cursor` 传入
 - `has_more` 为 `false` 时停止请求

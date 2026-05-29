@@ -113,17 +113,23 @@ function escapeRegex(input: string): string {
  */
 export function parseDenylist(raw: string | null | undefined): ExecDenylistEntry[] {
   const trimmed = (raw ?? "").trim();
-  if (!trimmed) {return [];}
+  if (!trimmed) {
+    return [];
+  }
 
   const entries: ExecDenylistEntry[] = [];
   for (const part of trimmed.split(/(?<!\\)[|\n,]+/)) {
     const piece = part.replace(/\\\|/g, "|").trim();
-    if (!piece) {continue;}
+    if (!piece) {
+      continue;
+    }
 
     const colon = piece.indexOf(":");
     const bin = (colon === -1 ? piece : piece.slice(0, colon)).trim().toLowerCase();
     const patternSrc = colon === -1 ? "" : piece.slice(colon + 1).trim();
-    if (!bin) {continue;}
+    if (!bin) {
+      continue;
+    }
 
     let binRegex: RegExp;
     try {

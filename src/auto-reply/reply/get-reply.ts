@@ -5,12 +5,6 @@ import {
   resolveSessionAgentId,
   resolveAgentSkillsFilter,
 } from "../../agents/agent-scope.js";
-import {
-  resolveTenantAgentWorkspaceDir,
-  resolveTenantAgentDir,
-  resolveTenantDir,
-  resolveTenantUserDir,
-} from "../../config/sessions/tenant-paths.js";
 import { resolveModelRefFromString } from "../../agents/model-selection.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import {
@@ -20,15 +14,22 @@ import {
   registerTenantBootstrapContext,
   type TenantBootstrapContext,
 } from "../../agents/workspace.js";
-import { getTenantAgent } from "../../db/models/tenant-agent.js";
-import { isDbInitialized } from "../../db/index.js";
 import { resolveChannelModelOverride } from "../../channels/model-overrides.js";
 import { type OpenClawConfig, loadConfig } from "../../config/config.js";
-import { applyLinkUnderstanding } from "../../link-understanding/apply.js";
-import { applyMediaUnderstanding } from "../../media-understanding/apply.js";
-import { defaultRuntime } from "../../runtime.js";
+import {
+  resolveTenantAgentWorkspaceDir,
+  resolveTenantAgentDir,
+  resolveTenantDir,
+  resolveTenantUserDir,
+} from "../../config/sessions/tenant-paths.js";
+import { isDbInitialized } from "../../db/index.js";
+import { getTenantAgent } from "../../db/models/tenant-agent.js";
 import { getTenantById } from "../../db/models/tenant.js";
 import { checkTokenQuota } from "../../db/models/usage.js";
+import { applyLinkUnderstanding } from "../../link-understanding/apply.js";
+import { createSubsystemLogger } from "../../logging/subsystem.js";
+import { applyMediaUnderstanding } from "../../media-understanding/apply.js";
+import { defaultRuntime } from "../../runtime.js";
 import { resolveCommandAuthorization } from "../command-auth.js";
 import type { MsgContext } from "../templating.js";
 import { SILENT_REPLY_TOKEN } from "../tokens.js";
@@ -38,7 +39,6 @@ import { resolveDefaultModel } from "./directive-handling.js";
 import { resolveReplyDirectives } from "./get-reply-directives.js";
 import { handleInlineActions } from "./get-reply-inline-actions.js";
 import { runPreparedReply } from "./get-reply-run.js";
-import { createSubsystemLogger } from "../../logging/subsystem.js";
 const skillsLog = createSubsystemLogger("skills");
 import { finalizeInboundContext } from "./inbound-context.js";
 import { applyResetModelOverride } from "./session-reset-model.js";
@@ -97,15 +97,16 @@ export async function getReplyFromConfig(
         disabledBundledSkills = tenantAgentRecord.skills;
       }
     } catch (err) {
-      skillsLog.warn(`[skills-chain] failed to fetch tenant agent skill list: ${err instanceof Error ? err.message : String(err)}`);
+      skillsLog.warn(
+        `[skills-chain] failed to fetch tenant agent skill list: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
   // Channel-level skillFilter (allowlist) — only merge with file-config agent filter, not DB denylist
-  const mergedSkillFilter = mergeSkillFilters(
-    opts?.skillFilter,
-    agentSkillFilter,
+  const mergedSkillFilter = mergeSkillFilters(opts?.skillFilter, agentSkillFilter);
+  skillsLog.info(
+    `[skills-chain] get-reply: agentId=${agentId}, agentSkillFilter=${JSON.stringify(agentSkillFilter ?? null)}, disabledBundledSkills=${JSON.stringify(disabledBundledSkills ?? null)}, channelFilter=${JSON.stringify(opts?.skillFilter ?? null)}, merged=${JSON.stringify(mergedSkillFilter ?? null)}`,
   );
-  skillsLog.info(`[skills-chain] get-reply: agentId=${agentId}, agentSkillFilter=${JSON.stringify(agentSkillFilter ?? null)}, disabledBundledSkills=${JSON.stringify(disabledBundledSkills ?? null)}, channelFilter=${JSON.stringify(opts?.skillFilter ?? null)}, merged=${JSON.stringify(mergedSkillFilter ?? null)}`);
   const resolvedOpts = {
     ...opts,
     ...(mergedSkillFilter !== undefined ? { skillFilter: mergedSkillFilter } : {}),
@@ -156,7 +157,9 @@ export async function getReplyFromConfig(
   // In multi-tenant mode, every message must be associated with a tenant user.
   // Reject if we cannot resolve the owner — do not fall back to _shared.
   if (ctx.TenantId && !ctx.TenantUserId) {
-    return { text: `Agent '${agentId}' has no associated tenant user. Please configure the agent properly.` };
+    return {
+      text: `Agent '${agentId}' has no associated tenant user. Please configure the agent properly.`,
+    };
   }
 
   // Multi-tenant token quota enforcement: short-circuit before invoking LLM

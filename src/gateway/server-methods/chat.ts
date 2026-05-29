@@ -4,11 +4,15 @@ import { CURRENT_SESSION_VERSION } from "@mariozechner/pi-coding-agent";
 import { resolveSessionAgentId } from "../../agents/agent-scope.js";
 import { resolveThinkingDefault } from "../../agents/model-selection.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
+import type { TenantContext } from "../../auth/middleware.js";
 import { dispatchInboundMessage } from "../../auto-reply/dispatch.js";
 import { createReplyDispatcher } from "../../auto-reply/reply/reply-dispatcher.js";
 import type { MsgContext } from "../../auto-reply/templating.js";
 import { createReplyPrefixOptions } from "../../channels/reply-prefix.js";
 import { resolveSessionFilePath } from "../../config/sessions.js";
+import { loadSessionStore } from "../../config/sessions.js";
+import { isDbInitialized } from "../../db/index.js";
+import { getTenantAgent } from "../../db/models/tenant-agent.js";
 import { resolveSendPolicy } from "../../sessions/send-policy.js";
 import {
   stripInlineDirectiveTagsForDisplay,
@@ -43,16 +47,12 @@ import {
   resolveSessionModelRef,
   resolveSessionStoreKey,
 } from "../session-utils.js";
-import { loadSessionStore } from "../../config/sessions.js";
 import {
   resolveRequestConfig,
   resolveRequestStorePath,
   toStorageSessionKey,
   resolveSessionAgentIdFromKey,
 } from "../tenant-session-utils.js";
-import type { TenantContext } from "../../auth/middleware.js";
-import { isDbInitialized } from "../../db/index.js";
-import { getTenantAgent } from "../../db/models/tenant-agent.js";
 import { formatForLog } from "../ws-log.js";
 import { injectTimestamp, timestampOptsFromConfig } from "./agent-timestamp.js";
 import { normalizeRpcAttachmentsToChatAttachments } from "./attachment-normalize.js";
@@ -63,10 +63,7 @@ import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
  * Tenant-aware session entry loader. When tenant context is present,
  * uses tenant-scoped config and storage paths.
  */
-async function loadTenantAwareSessionEntry(
-  sessionKey: string,
-  tenant?: TenantContext,
-) {
+async function loadTenantAwareSessionEntry(sessionKey: string, tenant?: TenantContext) {
   const cfg = await resolveRequestConfig(tenant);
   const tenantId = tenant?.tenantId;
   const userId = tenant?.userId;
@@ -592,9 +589,7 @@ export const chatHandlers: GatewayRequestHandlers = {
     };
     const historyTenant =
       client?.tenant ??
-      (_tenantId && _tenantUserId
-        ? { tenantId: _tenantId, userId: _tenantUserId }
-        : undefined);
+      (_tenantId && _tenantUserId ? { tenantId: _tenantId, userId: _tenantUserId } : undefined);
     const { cfg, storePath, entry } = historyTenant
       ? await loadTenantAwareSessionEntry(sessionKey, historyTenant)
       : loadSessionEntry(sessionKey);
@@ -785,7 +780,11 @@ export const chatHandlers: GatewayRequestHandlers = {
     }
     const rawSessionKey = p.sessionKey;
     const tenant = client?.tenant;
-    const { cfg, entry, canonicalKey: sessionKey } = tenant
+    const {
+      cfg,
+      entry,
+      canonicalKey: sessionKey,
+    } = tenant
       ? await loadTenantAwareSessionEntry(rawSessionKey, tenant)
       : loadSessionEntry(rawSessionKey);
 
@@ -796,10 +795,14 @@ export const chatHandlers: GatewayRequestHandlers = {
       const agentIdForCheck = resolveSessionAgentIdFromKey(cfg, storageKey);
       const agentRecord = await getTenantAgent(tenant.tenantId, agentIdForCheck);
       if (!agentRecord) {
-        respond(false, undefined, errorShape(
-          ErrorCodes.INVALID_REQUEST,
-          `Agent '${agentIdForCheck}' not found. Please create the agent before starting a conversation.`,
-        ));
+        respond(
+          false,
+          undefined,
+          errorShape(
+            ErrorCodes.INVALID_REQUEST,
+            `Agent '${agentIdForCheck}' not found. Please create the agent before starting a conversation.`,
+          ),
+        );
         return;
       }
     }

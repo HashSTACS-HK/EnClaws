@@ -5,8 +5,8 @@
  * Converter for "vote" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertVote: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as
@@ -16,7 +16,7 @@ export const convertVote: ContentConverterFn = (raw) => {
       }
     | undefined;
 
-  const topic = parsed?.topic ?? '';
+  const topic = parsed?.topic ?? "";
   const options = parsed?.options ?? [];
 
   const parts: string[] = [];
@@ -29,7 +29,7 @@ export const convertVote: ContentConverterFn = (raw) => {
     parts.push(`• ${opt}`);
   }
 
-  const inner = parts.join('\n') || '[vote]';
+  const inner = parts.join("\n") || "[vote]";
 
   return {
     content: `<vote>\n${inner}\n</vote>`,

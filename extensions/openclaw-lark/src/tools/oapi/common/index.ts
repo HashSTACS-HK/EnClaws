@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: MIT
  */
 
-export { registerGetUserTool } from './get-user';
-export { registerSearchUserTool } from './search-user';
+export { registerGetUserTool } from "./get-user";
+export { registerSearchUserTool } from "./search-user";

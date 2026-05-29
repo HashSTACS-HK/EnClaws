@@ -1,6 +1,6 @@
 /**
  * DingTalk Connector SDK Types
- * 
+ *
  * 完全独立的类型定义，不依赖任何外部 SDK。
  * 这是钉钉连接器插件的核心类型系统。
  */
@@ -12,7 +12,7 @@
 /**
  * SecretInput 支持多种输入方式
  */
-export type SecretInput = 
+export type SecretInput =
   | string // 直接字符串
   | SecretInputRef; // 引用
 
@@ -135,7 +135,7 @@ export interface DingtalkConfig {
  */
 export interface ChannelsConfig {
   [key: string]: unknown;
-  "dingtalk"?: DingtalkConfig;
+  dingtalk?: DingtalkConfig;
 }
 
 /**
@@ -229,7 +229,11 @@ export interface ChannelConfig<TAccount> {
   listAccountIds: (cfg: ClawdbotConfig) => string[];
   resolveAccount: (cfg: ClawdbotConfig, accountId: string) => TAccount;
   defaultAccountId: (cfg: ClawdbotConfig) => string;
-  setAccountEnabled: (params: { cfg: ClawdbotConfig; accountId: string; enabled: boolean }) => ClawdbotConfig;
+  setAccountEnabled: (params: {
+    cfg: ClawdbotConfig;
+    accountId: string;
+    enabled: boolean;
+  }) => ClawdbotConfig;
   deleteAccount: (params: { cfg: ClawdbotConfig; accountId: string }) => ClawdbotConfig;
   isConfigured: (account: TAccount) => boolean;
   describeAccount: (account: TAccount) => unknown;
@@ -275,7 +279,10 @@ export interface ChannelOnboardingAdapter {
     allowFromKey: string;
     getCurrent: (cfg: ClawdbotConfig) => string;
     setPolicy: (cfg: ClawdbotConfig, policy: string) => ClawdbotConfig;
-    promptAllowFrom: (params: { cfg: ClawdbotConfig; prompter: unknown }) => Promise<ClawdbotConfig>;
+    promptAllowFrom: (params: {
+      cfg: ClawdbotConfig;
+      prompter: unknown;
+    }) => Promise<ClawdbotConfig>;
   };
   disable: (cfg: ClawdbotConfig) => ClawdbotConfig;
 }
@@ -296,10 +303,30 @@ export interface ChannelMessaging {
  */
 export interface ChannelDirectory {
   self: () => Promise<unknown>;
-  listPeers: (params: { cfg: ClawdbotConfig; query?: string; limit?: number; accountId?: string }) => Promise<unknown[]>;
-  listGroups: (params: { cfg: ClawdbotConfig; query?: string; limit?: number; accountId?: string }) => Promise<unknown[]>;
-  listPeersLive: (params: { cfg: ClawdbotConfig; query?: string; limit?: number; accountId?: string }) => Promise<unknown[]>;
-  listGroupsLive: (params: { cfg: ClawdbotConfig; query?: string; limit?: number; accountId?: string }) => Promise<unknown[]>;
+  listPeers: (params: {
+    cfg: ClawdbotConfig;
+    query?: string;
+    limit?: number;
+    accountId?: string;
+  }) => Promise<unknown[]>;
+  listGroups: (params: {
+    cfg: ClawdbotConfig;
+    query?: string;
+    limit?: number;
+    accountId?: string;
+  }) => Promise<unknown[]>;
+  listPeersLive: (params: {
+    cfg: ClawdbotConfig;
+    query?: string;
+    limit?: number;
+    accountId?: string;
+  }) => Promise<unknown[]>;
+  listGroupsLive: (params: {
+    cfg: ClawdbotConfig;
+    query?: string;
+    limit?: number;
+    accountId?: string;
+  }) => Promise<unknown[]>;
 }
 
 /**
@@ -367,7 +394,11 @@ export interface ChannelStatus<TAccount> {
   defaultRuntime: ChannelRuntimeState;
   buildChannelSummary: (params: { snapshot: unknown }) => unknown;
   probeAccount: (params: { account: TAccount }) => Promise<BaseProbeResult<unknown>>;
-  buildAccountSnapshot: (params: { account: TAccount; runtime?: ChannelRuntimeState; probe?: BaseProbeResult<unknown> }) => unknown;
+  buildAccountSnapshot: (params: {
+    account: TAccount;
+    runtime?: ChannelRuntimeState;
+    probe?: BaseProbeResult<unknown>;
+  }) => unknown;
 }
 
 /**
@@ -492,10 +523,7 @@ export interface WizardPrompter {
     options: Array<{ value: T; label: string }>;
     initialValue?: T;
   }) => Promise<T>;
-  confirm: (params: {
-    message: string;
-    initialValue?: boolean;
-  }) => Promise<boolean>;
+  confirm: (params: { message: string; initialValue?: boolean }) => Promise<boolean>;
   [key: string]: unknown;
 }
 
@@ -509,5 +537,8 @@ export interface ChannelOnboardingDmPolicy {
   allowFromKey: string;
   getCurrent: (cfg: ClawdbotConfig) => string;
   setPolicy: (cfg: ClawdbotConfig, policy: string) => ClawdbotConfig;
-  promptAllowFrom: (params: { cfg: ClawdbotConfig; prompter: WizardPrompter }) => Promise<ClawdbotConfig>;
+  promptAllowFrom: (params: {
+    cfg: ClawdbotConfig;
+    prompter: WizardPrompter;
+  }) => Promise<ClawdbotConfig>;
 }

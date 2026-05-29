@@ -1,6 +1,6 @@
-import { logVerbose } from "../../globals.js";
-import { precheckSkill } from "../../agents/skills-precheck.js";
 import { installSkill } from "../../agents/skills-install.js";
+import { precheckSkill } from "../../agents/skills-precheck.js";
+import { logVerbose } from "../../globals.js";
 import type { CommandHandler } from "./commands-types.js";
 
 export const handleInstallSkillCommand: CommandHandler = async (params, allowTextCommands) => {
@@ -33,7 +33,9 @@ export const handleInstallSkillCommand: CommandHandler = async (params, allowTex
   if (!arg) {
     return {
       shouldContinue: false,
-      reply: { text: "用法:\n  /install-skill <技能名称> — 检查依赖\n  /install-skill <技能名称> install — 自动安装缺失依赖" },
+      reply: {
+        text: "用法:\n  /install-skill <技能名称> — 检查依赖\n  /install-skill <技能名称> install — 自动安装缺失依赖",
+      },
     };
   }
 
@@ -49,7 +51,9 @@ export const handleInstallSkillCommand: CommandHandler = async (params, allowTex
       workspaceDir: params.workspaceDir,
       skillName,
       config: params.cfg,
-      notify: (msg) => { lines.push(msg); },
+      notify: (msg) => {
+        lines.push(msg);
+      },
       confirm: async () => true,
       _installSkill: async (p) => installSkill({ ...p, installId: p.installId }),
     });
@@ -78,7 +82,9 @@ export const handleInstallSkillCommand: CommandHandler = async (params, allowTex
     workspaceDir: params.workspaceDir,
     skillName,
     config: params.cfg,
-    notify: (msg) => { lines.push(msg); },
+    notify: (msg) => {
+      lines.push(msg);
+    },
   });
 
   if (result.ok) {

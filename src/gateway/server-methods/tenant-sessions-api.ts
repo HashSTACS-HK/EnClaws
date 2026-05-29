@@ -10,11 +10,14 @@
  *   tenant.sessions.delete  - Delete a session
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { isDbInitialized } from "../../db/index.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
 import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import { loadSessionStore } from "../../config/sessions.js";
+import { updateSessionStore } from "../../config/sessions/store.js";
+import { isDbInitialized } from "../../db/index.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import { archiveSessionTranscripts } from "../session-utils.fs.js";
 import {
   resolveRequestConfig,
   loadTenantSessionStore,
@@ -22,17 +25,18 @@ import {
   resolveSessionAgentIdFromKey,
   verifySessionTenantAccess,
 } from "../tenant-session-utils.js";
-import { loadSessionStore } from "../../config/sessions.js";
-import { updateSessionStore } from "../../config/sessions/store.js";
-import { archiveSessionTranscripts } from "../session-utils.fs.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 function getTenantCtx(
   client: GatewayRequestHandlerOptions["client"],
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -54,7 +58,9 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
    */
   "tenant.sessions.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "session.list");
@@ -69,7 +75,11 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
     const cfg = await resolveRequestConfig(ctx);
     const store = loadTenantSessionStore(ctx.tenantId, cfg, ctx.userId);
 
-    const { agentId, limit = 50, offset = 0 } = params as {
+    const {
+      agentId,
+      limit = 50,
+      offset = 0,
+    } = params as {
       agentId?: string;
       limit?: number;
       offset?: number;
@@ -110,7 +120,9 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
    */
   "tenant.sessions.get": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "session.list");
@@ -170,7 +182,9 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
    */
   "tenant.sessions.delete": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "session.delete");
@@ -203,7 +217,9 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
       const entry = store[key];
 
       const deleted = await updateSessionStore(storePath, (s) => {
-        if (!s[key]) {return false;}
+        if (!s[key]) {
+          return false;
+        }
         delete s[key];
         return true;
       });
@@ -233,10 +249,14 @@ export const tenantSessionsHandlers: GatewayRequestHandlers = {
 
       respond(true, { deleted: true });
     } catch (err) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        `Failed to delete session: ${err instanceof Error ? err.message : "unknown error"}`,
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `Failed to delete session: ${err instanceof Error ? err.message : "unknown error"}`,
+        ),
+      );
     }
   },
 };

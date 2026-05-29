@@ -18,11 +18,17 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
-import type { PaginatedData } from '../sdk-types';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
+import type { PaginatedData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -31,9 +37,9 @@ import type { PaginatedData } from '../sdk-types';
 const FeishuBitableAppTableRecordSchema = Type.Union([
   // CREATE (P0)
   Type.Object({
-    action: Type.Literal('create'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
+    action: Type.Literal("create"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
     fields: Type.Object(
       {},
       {
@@ -46,93 +52,106 @@ const FeishuBitableAppTableRecordSchema = Type.Union([
 
   // UPDATE (P0)
   Type.Object({
-    action: Type.Literal('update'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    record_id: Type.String({ description: '记录 ID' }),
+    action: Type.Literal("update"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    record_id: Type.String({ description: "记录 ID" }),
     fields: Type.Object(
       {},
       {
         additionalProperties: true,
-        description: '要更新的字段',
+        description: "要更新的字段",
       },
     ),
   }),
 
   // DELETE (P0)
   Type.Object({
-    action: Type.Literal('delete'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    record_id: Type.String({ description: '记录 ID' }),
+    action: Type.Literal("delete"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    record_id: Type.String({ description: "记录 ID" }),
   }),
 
   // BATCH_CREATE (P1)
   Type.Object({
-    action: Type.Literal('batch_create'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
+    action: Type.Literal("batch_create"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
     records: Type.Array(
       Type.Object({
         fields: Type.Object({}, { additionalProperties: true }),
       }),
-      { description: '要批量创建的记录列表（最多 500 条）' },
+      { description: "要批量创建的记录列表（最多 500 条）" },
     ),
   }),
 
   // BATCH_UPDATE (P1)
   Type.Object({
-    action: Type.Literal('batch_update'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
+    action: Type.Literal("batch_update"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
     records: Type.Array(
       Type.Object({
         record_id: Type.String(),
         fields: Type.Object({}, { additionalProperties: true }),
       }),
-      { description: '要批量更新的记录列表（最多 500 条）' },
+      { description: "要批量更新的记录列表（最多 500 条）" },
     ),
   }),
 
   // BATCH_DELETE (P1)
   Type.Object({
-    action: Type.Literal('batch_delete'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    record_ids: Type.Array(Type.String(), { description: '要删除的记录 ID 列表（最多 500 条）' }),
+    action: Type.Literal("batch_delete"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    record_ids: Type.Array(Type.String(), { description: "要删除的记录 ID 列表（最多 500 条）" }),
   }),
 
   // LIST (P0) - 使用 search API（旧 list API 已废弃）
   Type.Object({
-    action: Type.Literal('list'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    view_id: Type.Optional(Type.String({ description: '视图 ID（可选，建议指定以获得更好的性能）' })),
+    action: Type.Literal("list"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    view_id: Type.Optional(
+      Type.String({ description: "视图 ID（可选，建议指定以获得更好的性能）" }),
+    ),
     field_names: Type.Optional(
       Type.Array(Type.String(), {
-        description: '要返回的字段名列表（可选，不指定则返回所有字段）',
+        description: "要返回的字段名列表（可选，不指定则返回所有字段）",
       }),
     ),
     filter: Type.Optional(
       Type.Object(
         {
-          conjunction: StringEnum(['and', 'or'], {
-            description: '条件逻辑：and（全部满足）or（任一满足）',
+          conjunction: StringEnum(["and", "or"], {
+            description: "条件逻辑：and（全部满足）or（任一满足）",
           }),
           conditions: Type.Array(
             Type.Object({
-              field_name: Type.String({ description: '字段名' }),
+              field_name: Type.String({ description: "字段名" }),
               operator: StringEnum(
-                ['is', 'isNot', 'contains', 'doesNotContain', 'isEmpty', 'isNotEmpty', 'isGreater', 'isGreaterEqual', 'isLess', 'isLessEqual'],
-                { description: '运算符' },
+                [
+                  "is",
+                  "isNot",
+                  "contains",
+                  "doesNotContain",
+                  "isEmpty",
+                  "isNotEmpty",
+                  "isGreater",
+                  "isGreaterEqual",
+                  "isLess",
+                  "isLessEqual",
+                ],
+                { description: "运算符" },
               ),
               value: Type.Optional(
                 Type.Array(Type.String(), {
-                  description: '条件值（isEmpty/isNotEmpty 时可省略）',
+                  description: "条件值（isEmpty/isNotEmpty 时可省略）",
                 }),
               ),
             }),
-            { description: '筛选条件列表' },
+            { description: "筛选条件列表" },
           ),
         },
         {
@@ -144,19 +163,20 @@ const FeishuBitableAppTableRecordSchema = Type.Union([
     sort: Type.Optional(
       Type.Array(
         Type.Object({
-          field_name: Type.String({ description: '排序字段名' }),
-          desc: Type.Boolean({ description: '是否降序' }),
+          field_name: Type.String({ description: "排序字段名" }),
+          desc: Type.Boolean({ description: "是否降序" }),
         }),
-        { description: '排序规则' },
+        { description: "排序规则" },
       ),
     ),
     automatic_fields: Type.Optional(
       Type.Boolean({
-        description: '是否返回自动字段（created_time, last_modified_time, created_by, last_modified_by），默认 false',
+        description:
+          "是否返回自动字段（created_time, last_modified_time, created_by, last_modified_by），默认 false",
       }),
     ),
-    page_size: Type.Optional(Type.Number({ description: '每页数量，默认 50，最大 500' })),
-    page_token: Type.Optional(Type.String({ description: '分页标记' })),
+    page_size: Type.Optional(Type.Number({ description: "每页数量，默认 50，最大 500" })),
+    page_token: Type.Optional(Type.String({ description: "分页标记" })),
   }),
 ]);
 
@@ -166,69 +186,69 @@ const FeishuBitableAppTableRecordSchema = Type.Union([
 
 type FeishuBitableAppTableRecordParams =
   | {
-      action: 'create';
+      action: "create";
       app_token: string;
       table_id: string;
       fields: Record<string, any>;
     }
   | {
-      action: 'get';
+      action: "get";
       app_token: string;
       table_id: string;
       record_id: string;
     }
   | {
-      action: 'update';
+      action: "update";
       app_token: string;
       table_id: string;
       record_id: string;
       fields: Record<string, any>;
     }
   | {
-      action: 'delete';
+      action: "delete";
       app_token: string;
       table_id: string;
       record_id: string;
     }
   | {
-      action: 'batch_create';
+      action: "batch_create";
       app_token: string;
       table_id: string;
       records: Array<{ fields: Record<string, any> }>;
     }
   | {
-      action: 'batch_update';
+      action: "batch_update";
       app_token: string;
       table_id: string;
       records: Array<{ record_id: string; fields: Record<string, any> }>;
     }
   | {
-      action: 'batch_delete';
+      action: "batch_delete";
       app_token: string;
       table_id: string;
       record_ids: string[];
     }
   | {
-      action: 'list';
+      action: "list";
       app_token: string;
       table_id: string;
       view_id?: string;
       field_names?: string[];
       filter?: {
-        conjunction: 'and' | 'or';
+        conjunction: "and" | "or";
         conditions: Array<{
           field_name: string;
           operator:
-            | 'is'
-            | 'isNot'
-            | 'contains'
-            | 'doesNotContain'
-            | 'isEmpty'
-            | 'isNotEmpty'
-            | 'isGreater'
-            | 'isGreaterEqual'
-            | 'isLess'
-            | 'isLessEqual';
+            | "is"
+            | "isNot"
+            | "contains"
+            | "doesNotContain"
+            | "isEmpty"
+            | "isNotEmpty"
+            | "isGreater"
+            | "isGreaterEqual"
+            | "isLess"
+            | "isLessEqual";
           value?: string[];
         }>;
       };
@@ -246,24 +266,24 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
   if (!api.config) return;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_bitable_app_table_record');
+  const { toolClient, log } = createToolContext(api, "feishu_bitable_app_table_record");
 
   registerTool(
     api,
     {
-      name: 'feishu_bitable_app_table_record',
-      label: 'Feishu Bitable Records',
+      name: "feishu_bitable_app_table_record",
+      label: "Feishu Bitable Records",
       description:
-        '【以用户身份】飞书多维表格记录（行）管理工具。当用户要求创建/查询/更新/删除记录、搜索数据时使用。\n\n' +
-        'Actions:\n' +
-        '- create（创建单条记录，使用 fields 参数）\n' +
-        '- batch_create（批量创建记录，使用 records 数组参数）\n' +
-        '- list（列出/搜索记录）\n' +
-        '- update（更新记录）\n' +
-        '- delete（删除记录）\n' +
-        '- batch_update（批量更新）\n' +
-        '- batch_delete（批量删除）\n\n' +
-        '⚠️ 注意参数区别：\n' +
+        "【以用户身份】飞书多维表格记录（行）管理工具。当用户要求创建/查询/更新/删除记录、搜索数据时使用。\n\n" +
+        "Actions:\n" +
+        "- create（创建单条记录，使用 fields 参数）\n" +
+        "- batch_create（批量创建记录，使用 records 数组参数）\n" +
+        "- list（列出/搜索记录）\n" +
+        "- update（更新记录）\n" +
+        "- delete（删除记录）\n" +
+        "- batch_update（批量更新）\n" +
+        "- batch_delete（批量删除）\n\n" +
+        "⚠️ 注意参数区别：\n" +
         "- create 使用 'fields' 对象（单条）\n" +
         "- batch_create 使用 'records' 数组（批量）",
       parameters: FeishuBitableAppTableRecordSchema,
@@ -277,26 +297,26 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // CREATE
             // -----------------------------------------------------------------
-            case 'create': {
+            case "create": {
               // 参数验证：检查是否误用了 batch_create 的参数格式
               if ((p as any).records) {
                 return json({
                   error: "create action does not accept 'records' parameter",
                   hint: "Use 'fields' for single record creation. For batch creation, use action: 'batch_create' with 'records' parameter.",
                   correct_format: {
-                    action: 'create',
-                    fields: { 字段名: '字段值' },
+                    action: "create",
+                    fields: { 字段名: "字段值" },
                   },
                   batch_create_format: {
-                    action: 'batch_create',
-                    records: [{ fields: { 字段名: '字段值' } }],
+                    action: "batch_create",
+                    records: [{ fields: { 字段名: "字段值" } }],
                   },
                 });
               }
 
               if (!p.fields || Object.keys(p.fields).length === 0) {
                 return json({
-                  error: 'fields is required and cannot be empty',
+                  error: "fields is required and cannot be empty",
                   hint: "create action requires 'fields' parameter, e.g. { 'field_name': 'value', ... }",
                 });
               }
@@ -304,7 +324,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
               log.info(`create: app_token=${p.app_token}, table_id=${p.table_id}`);
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.create',
+                "feishu_bitable_app_table_record.create",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.create(
                     {
@@ -313,7 +333,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                         table_id: p.table_id,
                       },
                       params: {
-                        user_id_type: 'open_id' as any,
+                        user_id_type: "open_id" as any,
                       },
                       data: {
                         fields: p.fields,
@@ -321,7 +341,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -335,28 +355,30 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // UPDATE
             // -----------------------------------------------------------------
-            case 'update': {
+            case "update": {
               // 参数验证：检查是否误用了 batch_update 的参数格式
               if ((p as any).records) {
                 return json({
                   error: "update action does not accept 'records' parameter",
                   hint: "Use 'record_id' + 'fields' for single record update. For batch update, use action: 'batch_update' with 'records' parameter.",
                   correct_format: {
-                    action: 'update',
-                    record_id: 'recXXX',
-                    fields: { 字段名: '字段值' },
+                    action: "update",
+                    record_id: "recXXX",
+                    fields: { 字段名: "字段值" },
                   },
                   batch_update_format: {
-                    action: 'batch_update',
-                    records: [{ record_id: 'recXXX', fields: { 字段名: '字段值' } }],
+                    action: "batch_update",
+                    records: [{ record_id: "recXXX", fields: { 字段名: "字段值" } }],
                   },
                 });
               }
 
-              log.info(`update: app_token=${p.app_token}, table_id=${p.table_id}, record_id=${p.record_id}`);
+              log.info(
+                `update: app_token=${p.app_token}, table_id=${p.table_id}, record_id=${p.record_id}`,
+              );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.update',
+                "feishu_bitable_app_table_record.update",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.update(
                     {
@@ -366,7 +388,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                         record_id: p.record_id,
                       },
                       params: {
-                        user_id_type: 'open_id' as any,
+                        user_id_type: "open_id" as any,
                       },
                       data: {
                         fields: p.fields,
@@ -374,7 +396,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -388,11 +410,13 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // DELETE
             // -----------------------------------------------------------------
-            case 'delete': {
-              log.info(`delete: app_token=${p.app_token}, table_id=${p.table_id}, record_id=${p.record_id}`);
+            case "delete": {
+              log.info(
+                `delete: app_token=${p.app_token}, table_id=${p.table_id}, record_id=${p.record_id}`,
+              );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.delete',
+                "feishu_bitable_app_table_record.delete",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.delete(
                     {
@@ -404,7 +428,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -418,33 +442,33 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // BATCH_CREATE (P1)
             // -----------------------------------------------------------------
-            case 'batch_create': {
+            case "batch_create": {
               // 参数验证：检查是否误用了 create 的参数格式
               if ((p as any).fields) {
                 return json({
                   error: "batch_create action does not accept 'fields' parameter",
                   hint: "Use 'records' array for batch creation. For single record, use action: 'create' with 'fields' parameter.",
                   correct_format: {
-                    action: 'batch_create',
-                    records: [{ fields: { 字段名: '字段值' } }],
+                    action: "batch_create",
+                    records: [{ fields: { 字段名: "字段值" } }],
                   },
                   single_create_format: {
-                    action: 'create',
-                    fields: { 字段名: '字段值' },
+                    action: "create",
+                    fields: { 字段名: "字段值" },
                   },
                 });
               }
 
               if (!p.records || p.records.length === 0) {
                 return json({
-                  error: 'records is required and cannot be empty',
+                  error: "records is required and cannot be empty",
                   hint: "batch_create requires 'records' array, e.g. [{ fields: {...} }, ...]",
                 });
               }
 
               if (p.records.length > 500) {
                 return json({
-                  error: 'records count exceeds limit (maximum 500)',
+                  error: "records count exceeds limit (maximum 500)",
                   received_count: p.records.length,
                 });
               }
@@ -454,7 +478,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
               );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.batch_create',
+                "feishu_bitable_app_table_record.batch_create",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.batchCreate(
                     {
@@ -463,7 +487,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                         table_id: p.table_id,
                       },
                       params: {
-                        user_id_type: 'open_id' as any,
+                        user_id_type: "open_id" as any,
                       },
                       data: {
                         records: p.records,
@@ -471,7 +495,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -485,34 +509,34 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // BATCH_UPDATE (P1)
             // -----------------------------------------------------------------
-            case 'batch_update': {
+            case "batch_update": {
               // 参数验证：检查是否误用了 update 的参数格式
               if ((p as any).record_id || (p as any).fields) {
                 return json({
                   error: "batch_update action does not accept 'record_id' or 'fields' parameters",
                   hint: "Use 'records' array for batch update. For single record, use action: 'update' with 'record_id' + 'fields' parameters.",
                   correct_format: {
-                    action: 'batch_update',
-                    records: [{ record_id: 'recXXX', fields: { 字段名: '字段值' } }],
+                    action: "batch_update",
+                    records: [{ record_id: "recXXX", fields: { 字段名: "字段值" } }],
                   },
                   single_update_format: {
-                    action: 'update',
-                    record_id: 'recXXX',
-                    fields: { 字段名: '字段值' },
+                    action: "update",
+                    record_id: "recXXX",
+                    fields: { 字段名: "字段值" },
                   },
                 });
               }
 
               if (!p.records || p.records.length === 0) {
                 return json({
-                  error: 'records is required and cannot be empty',
+                  error: "records is required and cannot be empty",
                   hint: "batch_update requires 'records' array, e.g. [{ record_id: 'recXXX', fields: {...} }, ...]",
                 });
               }
 
               if (p.records.length > 500) {
                 return json({
-                  error: 'records cannot exceed 500 items',
+                  error: "records cannot exceed 500 items",
                 });
               }
 
@@ -521,7 +545,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
               );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.batch_update',
+                "feishu_bitable_app_table_record.batch_update",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.batchUpdate(
                     {
@@ -530,7 +554,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                         table_id: p.table_id,
                       },
                       params: {
-                        user_id_type: 'open_id' as any,
+                        user_id_type: "open_id" as any,
                       },
                       data: {
                         records: p.records,
@@ -538,7 +562,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -552,16 +576,16 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // BATCH_DELETE (P1)
             // -----------------------------------------------------------------
-            case 'batch_delete': {
+            case "batch_delete": {
               if (!p.record_ids || p.record_ids.length === 0) {
                 return json({
-                  error: 'record_ids is required and cannot be empty',
+                  error: "record_ids is required and cannot be empty",
                 });
               }
 
               if (p.record_ids.length > 500) {
                 return json({
-                  error: 'record_ids cannot exceed 500 items',
+                  error: "record_ids cannot exceed 500 items",
                 });
               }
 
@@ -570,7 +594,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
               );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.batch_delete',
+                "feishu_bitable_app_table_record.batch_delete",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.batchDelete(
                     {
@@ -584,11 +608,13 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
-              log.info(`batch_delete: deleted ${p.record_ids.length} records from table ${p.table_id}`);
+              log.info(
+                `batch_delete: deleted ${p.record_ids.length} records from table ${p.table_id}`,
+              );
 
               return json({
                 success: true,
@@ -598,9 +624,9 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // LIST (P0) - 使用 search API（旧 list API 已废弃）
             // -----------------------------------------------------------------
-            case 'list': {
+            case "list": {
               log.info(
-                `list: app_token=${p.app_token}, table_id=${p.table_id}, view_id=${p.view_id ?? 'none'}, field_names=${p.field_names?.length ?? 0}, filter=${p.filter ? 'yes' : 'no'}`,
+                `list: app_token=${p.app_token}, table_id=${p.table_id}, view_id=${p.view_id ?? "none"}, field_names=${p.field_names?.length ?? 0}, filter=${p.filter ? "yes" : "no"}`,
               );
 
               const searchData: any = {};
@@ -612,7 +638,10 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                 const filter = { ...p.filter };
                 if (filter.conditions) {
                   filter.conditions = filter.conditions.map((cond: any) => {
-                    if ((cond.operator === 'isEmpty' || cond.operator === 'isNotEmpty') && !cond.value) {
+                    if (
+                      (cond.operator === "isEmpty" || cond.operator === "isNotEmpty") &&
+                      !cond.value
+                    ) {
                       log.warn(
                         `list: ${cond.operator} operator detected without value. Auto-adding value=[] to avoid API error.`,
                       );
@@ -625,10 +654,11 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
               }
 
               if (p.sort !== undefined) searchData.sort = p.sort;
-              if (p.automatic_fields !== undefined) searchData.automatic_fields = p.automatic_fields;
+              if (p.automatic_fields !== undefined)
+                searchData.automatic_fields = p.automatic_fields;
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_record.list',
+                "feishu_bitable_app_table_record.list",
                 (sdk, opts) =>
                   sdk.bitable.appTableRecord.search(
                     {
@@ -637,7 +667,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                         table_id: p.table_id,
                       },
                       params: {
-                        user_id_type: 'open_id' as any,
+                        user_id_type: "open_id" as any,
                         page_size: p.page_size,
                         page_token: p.page_token,
                       },
@@ -645,7 +675,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -671,7 +701,6 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
         }
       },
     },
-    { name: 'feishu_bitable_app_table_record' },
+    { name: "feishu_bitable_app_table_record" },
   );
-
 }

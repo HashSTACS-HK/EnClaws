@@ -2,8 +2,8 @@
  * Tenant Channel App CRUD — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type { TenantChannelApp, ChannelPolicy } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 
 function rowToApp(row: Record<string, unknown>): TenantChannelApp {
   return {
@@ -60,7 +60,12 @@ export async function listChannelApps(channelId: string): Promise<TenantChannelA
 export async function updateChannelApp(
   appDbId: string,
   tenantId: string,
-  updates: Partial<Pick<TenantChannelApp, "appId" | "appSecret" | "botName" | "groupPolicy" | "agentId" | "isActive">>,
+  updates: Partial<
+    Pick<
+      TenantChannelApp,
+      "appId" | "appSecret" | "botName" | "groupPolicy" | "agentId" | "isActive"
+    >
+  >,
 ): Promise<TenantChannelApp | null> {
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -90,7 +95,9 @@ export async function updateChannelApp(
     values.push(updates.isActive);
   }
 
-  if (sets.length === 0) {return null;}
+  if (sets.length === 0) {
+    return null;
+  }
 
   values.push(tenantId, appDbId);
   sqliteQuery(
@@ -98,7 +105,10 @@ export async function updateChannelApp(
     values,
   );
 
-  const result = sqliteQuery("SELECT * FROM tenant_channel_apps WHERE id = ? AND tenant_id = ?", [appDbId, tenantId]);
+  const result = sqliteQuery("SELECT * FROM tenant_channel_apps WHERE id = ? AND tenant_id = ?", [
+    appDbId,
+    tenantId,
+  ]);
   return result.rows.length > 0 ? rowToApp(result.rows[0]) : null;
 }
 
@@ -120,11 +130,15 @@ export async function findTenantByChannelApp(
      LIMIT 1`,
     [channelType, appId],
   );
-  if (result.rows.length === 0) {return null;}
+  if (result.rows.length === 0) {
+    return null;
+  }
   const row = result.rows[0];
   const tenantId = row.tenant_id as string;
   const userId = row.created_by as string | null;
-  if (!userId) {return null;}
+  if (!userId) {
+    return null;
+  }
   return { tenantId, userId, channelId: row.channel_id as string };
 }
 
@@ -163,7 +177,9 @@ export async function findChannelAppByAgent(
      LIMIT 1`,
     [tenantId, agentId],
   );
-  if (result.rows.length === 0) {return null;}
+  if (result.rows.length === 0) {
+    return null;
+  }
   const row = result.rows[0];
   return {
     channelType: row.channel_type as string,
@@ -174,22 +190,24 @@ export async function findChannelAppByAgent(
 }
 
 export async function deleteChannelApp(appDbId: string, tenantId: string): Promise<boolean> {
-  const result = sqliteQuery(
-    "DELETE FROM tenant_channel_apps WHERE id = ? AND tenant_id = ?",
-    [appDbId, tenantId],
-  );
+  const result = sqliteQuery("DELETE FROM tenant_channel_apps WHERE id = ? AND tenant_id = ?", [
+    appDbId,
+    tenantId,
+  ]);
   return result.rowCount > 0;
 }
 
-export async function listAllTenantChannelApps(tenantId: string): Promise<Array<{
-  id: string;
-  channelId: string;
-  channelType: string;
-  channelName: string | null;
-  appId: string;
-  botName: string;
-  agentId: string | null;
-}>> {
+export async function listAllTenantChannelApps(tenantId: string): Promise<
+  Array<{
+    id: string;
+    channelId: string;
+    channelType: string;
+    channelName: string | null;
+    appId: string;
+    botName: string;
+    agentId: string | null;
+  }>
+> {
   const result = sqliteQuery(
     `SELECT ca.id, ca.channel_id, tc.channel_type, tc.channel_name,
             ca.app_id, ca.bot_name, ca.agent_id

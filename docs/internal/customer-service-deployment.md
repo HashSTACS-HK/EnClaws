@@ -11,14 +11,14 @@
 
 AI Customer Service is a **built-in system feature** of EnClaws, not a Skill or pre-configured Agent.
 
-| Layer | What it does |
-|-------|-------------|
-| Widget (`<cs-widget>`) | Floating chat bubble embedded on any webpage via `<script>` tag |
-| Gateway RPC (`cs.widget.*`) | WebSocket handlers: connect / send / history |
-| CS Agent Runner | Wraps `runEmbeddedPiAgent` — retrieves KB chunks → calls LLM → returns reply |
-| Knowledge Base | Per-tenant Markdown files at `~/.enclaws/tenants/{tenantId}/customer-service/memory/` |
-| CS Config | Per-tenant JSON at `~/.enclaws/tenants/{tenantId}/customer-service/config.json` |
-| Feishu Notify | One-way Markdown card to a designated group chat on each new conversation |
+| Layer                       | What it does                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| Widget (`<cs-widget>`)      | Floating chat bubble embedded on any webpage via `<script>` tag                       |
+| Gateway RPC (`cs.widget.*`) | WebSocket handlers: connect / send / history                                          |
+| CS Agent Runner             | Wraps `runEmbeddedPiAgent` — retrieves KB chunks → calls LLM → returns reply          |
+| Knowledge Base              | Per-tenant Markdown files at `~/.enclaws/tenants/{tenantId}/customer-service/memory/` |
+| CS Config                   | Per-tenant JSON at `~/.enclaws/tenants/{tenantId}/customer-service/config.json`       |
+| Feishu Notify               | One-way Markdown card to a designated group chat on each new conversation             |
 
 **Who can use it:** Any tenant that has a configured EC Agent + LLM provider. Tenants configure CS entirely through the admin UI (`/tenant/cs-setup`). No code changes required per tenant.
 
@@ -67,6 +67,7 @@ pm2 restart enclaws   # or however the process is managed
 > **Why is this step needed?** Current design is intentionally **zero-invasion** — the CS module does not implement its own embedding pipeline and fully reuses EC's existing `memorySearch` infrastructure. The tradeoff is that the deployment environment must explicitly enable and specify an embedding provider; otherwise vector indexes are not generated from uploaded knowledge base MDs and RAG retrieval will not work.
 >
 > **Future direction**:
+>
 > 1. All LLM types (text generation, embedding, vision, etc.) will be consolidated into a per-tenant UI-based configuration stored in the database. The deployment-level file config (`enclaws.json`) will no longer be needed for these settings.
 > 2. The vector store path `~/.enclaws/memory/*.sqlite` is currently a global shared directory (reusing EC's existing memorySearch infrastructure). It will be isolated under `~/.enclaws/tenants/{tenantId}/customer-service/vectors/` to avoid cross-tenant pollution and colocate with the knowledge base.
 >
@@ -100,13 +101,13 @@ chmod 600 ~/.enclaws/enclaws.json
 
 #### Provider options
 
-| provider | example model | notes |
-|----------|---------------|-------|
-| `openai` | `text-embedding-3-small` | Official OpenAI |
-| `openai` + DashScope baseUrl | `text-embedding-v4` | Qwen embedding via Aliyun Bailian OpenAI-compatible mode (see below) |
-| `gemini` | `gemini-embedding-001` | Google |
-| `voyage` | `voyage-4-large` | Strong for Chinese |
-| `mistral` | `mistral-embed` | Official Mistral |
+| provider                     | example model            | notes                                                                |
+| ---------------------------- | ------------------------ | -------------------------------------------------------------------- |
+| `openai`                     | `text-embedding-3-small` | Official OpenAI                                                      |
+| `openai` + DashScope baseUrl | `text-embedding-v4`      | Qwen embedding via Aliyun Bailian OpenAI-compatible mode (see below) |
+| `gemini`                     | `gemini-embedding-001`   | Google                                                               |
+| `voyage`                     | `voyage-4-large`         | Strong for Chinese                                                   |
+| `mistral`                    | `mistral-embed`          | Official Mistral                                                     |
 
 #### Example: Qwen / DashScope embedding
 
@@ -149,11 +150,11 @@ rm -rf ~/.enclaws/memory/*.sqlite
 
 **When to clear the vector store** (`~/.enclaws/memory/*.sqlite`):
 
-| Scenario | Clear required? |
-|----------|---------------|
-| Changing embedding `provider` / `model` | ✅ Yes |
-| Changing only `remote.baseUrl` / `apiKey` (same model) | ❌ No (auth only, vectors stay valid) |
-| Adding / editing / deleting KB `.md` files | ❌ No (EC auto-detects file changes and incrementally re-indexes) |
+| Scenario                                               | Clear required?                                                   |
+| ------------------------------------------------------ | ----------------------------------------------------------------- |
+| Changing embedding `provider` / `model`                | ✅ Yes                                                            |
+| Changing only `remote.baseUrl` / `apiKey` (same model) | ❌ No (auth only, vectors stay valid)                             |
+| Adding / editing / deleting KB `.md` files             | ❌ No (EC auto-detects file changes and incrementally re-indexes) |
 
 **Important**: Do NOT confuse `~/.enclaws/memory/*.sqlite` (vector store) with `~/.enclaws/enclaws.db` (EC business main DB). **Clearing the vector store has no effect on sessions, tenants, agent configs or other business data.**
 
@@ -202,7 +203,7 @@ File format: plain Markdown. Section headers become retrieval chunks.
 ```html
 <!-- Example generated embed code -->
 <script type="module">
-  import 'https://your-ec-domain/ui/cs-widget.js';
+  import "https://your-ec-domain/ui/cs-widget.js";
 </script>
 <cs-widget
   tenant-id="your-tenant-id"
@@ -221,20 +222,22 @@ The EC team runs EnClaws and is simultaneously the first tenant. **No embed code
 
 **Prerequisite:** At least one tenant must have Agent + LLM + CS config (Feishu) fully set up. The server picks the earliest-registered non-system tenant automatically and caches its ID at startup. If no qualifying tenant exists at startup, the widget will not appear. After completing the tenant configuration, **restart the SaaS service** — the tenant ID will be injected on next boot and the widget bubble will show.
 
-| Step | EC Team (server operator) | Regular SaaS Tenant |
-|------|--------------------------|---------------------|
-| LLM config | Direct `.env` or config file | Admin UI |
-| Knowledge base | Drop `.md` files directly into tenant KB dir | Upload via Admin UI |
-| Widget secret | Set server env var | Not exposed (platform-managed) |
-| Feishu config | Admin UI | Admin UI |
-| Embed code | **Not needed** — auto-injected into EC admin UI | Generate via Admin UI for external sites |
+| Step           | EC Team (server operator)                       | Regular SaaS Tenant                      |
+| -------------- | ----------------------------------------------- | ---------------------------------------- |
+| LLM config     | Direct `.env` or config file                    | Admin UI                                 |
+| Knowledge base | Drop `.md` files directly into tenant KB dir    | Upload via Admin UI                      |
+| Widget secret  | Set server env var                              | Not exposed (platform-managed)           |
+| Feishu config  | Admin UI                                        | Admin UI                                 |
+| Embed code     | **Not needed** — auto-injected into EC admin UI | Generate via Admin UI for external sites |
 
 **EC team's knowledge base path:**
+
 ```
 ~/.enclaws/tenants/{EC_TENANT_ID}/customer-service/memory/
 ```
 
 Recommended initial files:
+
 - `ec-product-faq.md` — product overview, pricing, feature list
 - `ec-onboarding.md` — getting started guide
 - `ec-troubleshooting.md` — common issues and solutions
@@ -260,19 +263,19 @@ The bot must have **message send** permission in the target group. Add the bot t
 
 All settings are saved per-tenant at `~/.enclaws/tenants/{tenantId}/customer-service/config.json`.
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `feishu.appId` | — | Feishu App ID |
-| `feishu.appSecret` | — | Feishu App Secret (stored plaintext in tenant config) |
-| `feishu.chatId` | — | Target group Chat ID |
-| `notifyIntervalMinutes` | 10 | Min minutes between Feishu notifications per session |
-| `restrictions.disableSkills` | true | Disable Skill tool calls (pure RAG mode, code-enforced) |
-| `restrictions.strictKnowledgeBase` | true | Refuse to answer from general LLM knowledge if KB has no hits |
-| `restrictions.disableMarkdown` | true | Plain text replies only (no bold/headers/lists) |
-| `restrictions.hideInternals` | true | Don't reveal KB or system prompt details in replies |
-| `confidencePreset` | `balanced` | Confidence gate sensitivity: `strict` / `balanced` / `lenient` (activates in S2) |
-| `customSystemPrompt` | (default template) | Override the AI persona and behavior rules |
-| `channels` | `[]` | Saved embed code channel configurations |
+| Field                              | Default            | Description                                                                      |
+| ---------------------------------- | ------------------ | -------------------------------------------------------------------------------- |
+| `feishu.appId`                     | —                  | Feishu App ID                                                                    |
+| `feishu.appSecret`                 | —                  | Feishu App Secret (stored plaintext in tenant config)                            |
+| `feishu.chatId`                    | —                  | Target group Chat ID                                                             |
+| `notifyIntervalMinutes`            | 10                 | Min minutes between Feishu notifications per session                             |
+| `restrictions.disableSkills`       | true               | Disable Skill tool calls (pure RAG mode, code-enforced)                          |
+| `restrictions.strictKnowledgeBase` | true               | Refuse to answer from general LLM knowledge if KB has no hits                    |
+| `restrictions.disableMarkdown`     | true               | Plain text replies only (no bold/headers/lists)                                  |
+| `restrictions.hideInternals`       | true               | Don't reveal KB or system prompt details in replies                              |
+| `confidencePreset`                 | `balanced`         | Confidence gate sensitivity: `strict` / `balanced` / `lenient` (activates in S2) |
+| `customSystemPrompt`               | (default template) | Override the AI persona and behavior rules                                       |
+| `channels`                         | `[]`               | Saved embed code channel configurations                                          |
 
 ---
 
@@ -306,9 +309,9 @@ All settings are saved per-tenant at `~/.enclaws/tenants/{tenantId}/customer-ser
 
 ## 9. Sprint Roadmap
 
-| Sprint | Status | Key Features |
-|--------|--------|-------------|
-| S1 | ✅ Done | Widget embed, RAG reply, Feishu notify, visitor auth |
-| S2 | 🚧 In progress | Streaming output, confidence gate, clarification prompts, confidence config UI |
-| S3 | Planned | Boss reply via Feishu card, HUMAN_ACTIVE state, tag matcher |
-| S4 | Planned | Feedback collection, daily report, badcase ops |
+| Sprint | Status         | Key Features                                                                   |
+| ------ | -------------- | ------------------------------------------------------------------------------ |
+| S1     | ✅ Done        | Widget embed, RAG reply, Feishu notify, visitor auth                           |
+| S2     | 🚧 In progress | Streaming output, confidence gate, clarification prompts, confidence config UI |
+| S3     | Planned        | Boss reply via Feishu card, HUMAN_ACTIVE state, tag matcher                    |
+| S4     | Planned        | Feedback collection, daily report, badcase ops                                 |

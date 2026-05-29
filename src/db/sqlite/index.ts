@@ -5,10 +5,10 @@
  * Provides a query interface compatible with pg's QueryResult shape.
  */
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import crypto from "node:crypto";
 import { requireNodeSqlite } from "../../memory/sqlite.js";
 import { SQLITE_SCHEMA_SQL } from "./schema-sql.js";
 
@@ -26,7 +26,9 @@ export interface SqliteQueryResult<T = Record<string, unknown>> {
  * Automatically creates the database file and schema if they don't exist.
  */
 export function initSqliteDb(url: string): void {
-  if (db) {return;}
+  if (db) {
+    return;
+  }
 
   // Parse sqlite:///path/to/data.db → /path/to/data.db
   let dbPath: string;
@@ -78,8 +80,16 @@ export function initSqliteDb(url: string): void {
     }
   };
   addColumnIfMissing("plans", "max_cron_jobs", "INTEGER NOT NULL DEFAULT 5");
-  addColumnIfMissing("cs_messages", "source", "TEXT NOT NULL DEFAULT 'agenora-ai' CHECK (source IN ('agenora-ai','upper-app-relay'))");
-  addColumnIfMissing("cs_sessions", "app_object_id", "TEXT REFERENCES cs_api_objects(id) ON DELETE SET NULL");
+  addColumnIfMissing(
+    "cs_messages",
+    "source",
+    "TEXT NOT NULL DEFAULT 'agenora-ai' CHECK (source IN ('agenora-ai','upper-app-relay'))",
+  );
+  addColumnIfMissing(
+    "cs_sessions",
+    "app_object_id",
+    "TEXT REFERENCES cs_api_objects(id) ON DELETE SET NULL",
+  );
 
   // Re-seed plan rows so freshly-added column picks up correct per-plan values.
   // Use INSERT OR REPLACE against the primary key.
@@ -149,12 +159,20 @@ export function sqliteQuery<T = Record<string, unknown>>(
 
   // Convert boolean values to integers for SQLite
   const adaptedParams = params.map((v) => {
-    if (v === true) {return 1;}
-    if (v === false) {return 0;}
-    if (v instanceof Date) {return v.toISOString().replace("T", " ").replace("Z", "");}
-    if (v === undefined) {return null;}
+    if (v === true) {
+      return 1;
+    }
+    if (v === false) {
+      return 0;
+    }
+    if (v instanceof Date) {
+      return v.toISOString().replace("T", " ").replace("Z", "");
+    }
+    if (v === undefined) {
+      return null;
+    }
     return v;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any[];
 
   if (hasReturning) {
@@ -210,9 +228,7 @@ export function sqliteQuery<T = Record<string, unknown>>(
           const selectStmt = database.prepare(
             `SELECT * FROM ${table} WHERE rowid IN (${placeholders})`,
           );
-          const rows = selectStmt.all(
-            ...matchingRowids.map((r) => r.rowid),
-          ) as T[];
+          const rows = selectStmt.all(...matchingRowids.map((r) => r.rowid)) as T[];
           return { rows: rows.map((r) => adaptRow(r) as T), rowCount: rows.length };
         }
         return { rows: [], rowCount: 0 };
@@ -226,10 +242,7 @@ export function sqliteQuery<T = Record<string, unknown>>(
 
   const upperSql = sql.trimStart().toUpperCase();
 
-  if (
-    upperSql.startsWith("SELECT") ||
-    upperSql.startsWith("WITH")
-  ) {
+  if (upperSql.startsWith("SELECT") || upperSql.startsWith("WITH")) {
     const stmt = database.prepare(sql);
     const rows = stmt.all(...adaptedParams) as T[];
     return { rows: rows.map((r) => adaptRow(r) as T), rowCount: rows.length };
@@ -254,7 +267,9 @@ export function sqliteQuery<T = Record<string, unknown>>(
  * 一处修改，全局所有表（含 CS 模块）自动继承。
  */
 function adaptRow(row: unknown): unknown {
-  if (!row || typeof row !== "object") {return row;}
+  if (!row || typeof row !== "object") {
+    return row;
+  }
   const r = row as Record<string, unknown>;
   const adapted: Record<string, unknown> = {};
 
@@ -274,10 +289,15 @@ function adaptRow(row: unknown): unknown {
     // Normalize timestamp strings: "YYYY-MM-DD HH:MM:SS" → "YYYY-MM-DDTHH:MM:SSZ"
     // Matches columns ending in _at, _date, recorded_at, applied_at, etc.
     // 补全时区标记：将 SQLite 无时区时间串转为标准 UTC ISO 格式。
-    else if (isTimestampColumn(key) && typeof value === "string" && value.length >= 19 && !value.endsWith("Z") && !value.includes("+")) {
+    else if (
+      isTimestampColumn(key) &&
+      typeof value === "string" &&
+      value.length >= 19 &&
+      !value.endsWith("Z") &&
+      !value.includes("+")
+    ) {
       adapted[key] = value.slice(0, 19).replace(" ", "T") + "Z";
-    }
-    else {
+    } else {
       adapted[key] = value;
     }
   }
@@ -342,9 +362,7 @@ function isJsonColumn(name: string): boolean {
  * Run a callback within a SQLite transaction (synchronous, since DatabaseSync is sync).
  * The callback receives a thin client-like object with a query method.
  */
-export function withSqliteTransaction<T>(
-  fn: (client: { query: typeof sqliteQuery }) => T,
-): T {
+export function withSqliteTransaction<T>(fn: (client: { query: typeof sqliteQuery }) => T): T {
   const database = getSqliteDb();
   database.exec("BEGIN");
   try {
@@ -363,4 +381,3 @@ export function withSqliteTransaction<T>(
 export function generateUUID(): string {
   return crypto.randomUUID();
 }
-

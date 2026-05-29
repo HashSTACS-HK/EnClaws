@@ -475,8 +475,12 @@ export async function ensureTenantBootstrapFiles(ctx: TenantBootstrapContext): P
     fs.mkdir(ctx.tenantDir, { recursive: true }),
     fs.mkdir(ctx.agentDir, { recursive: true }),
   ];
-  if (ctx.userDir) {mkdirs.push(fs.mkdir(ctx.userDir, { recursive: true }));}
-  if (ctx.workspaceDir) {mkdirs.push(fs.mkdir(ctx.workspaceDir, { recursive: true }));}
+  if (ctx.userDir) {
+    mkdirs.push(fs.mkdir(ctx.userDir, { recursive: true }));
+  }
+  if (ctx.workspaceDir) {
+    mkdirs.push(fs.mkdir(ctx.workspaceDir, { recursive: true }));
+  }
   await Promise.all(mkdirs);
 
   // Tenant-level files
@@ -486,19 +490,19 @@ export async function ensureTenantBootstrapFiles(ctx: TenantBootstrapContext): P
   await writeFileIfMissing(
     tenantIdentityPath,
     "# 企业身份描述\n\n" +
-    "请在此描述企业的身份特征，该内容将作为 AI 助手的企业上下文。\n\n" +
-    "例如：\n" +
-    "- 我们是XX科技有限公司，主营区块链技术开发\n" +
-    "- 核心产品包括：数字资产管理平台、稳定币系统\n" +
-    "- 技术栈：TypeScript, Node.js, React, PostgreSQL\n\n" +
-    "提示：也可通过「企业设置」页面的「企业身份描述」字段编辑此内容。\n",
+      "请在此描述企业的身份特征，该内容将作为 AI 助手的企业上下文。\n\n" +
+      "例如：\n" +
+      "- 我们是XX科技有限公司，主营区块链技术开发\n" +
+      "- 核心产品包括：数字资产管理平台、稳定币系统\n" +
+      "- 技术栈：TypeScript, Node.js, React, PostgreSQL\n\n" +
+      "提示：也可通过「企业设置」页面的「企业身份描述」字段编辑此内容。\n",
   );
   await writeFileIfMissing(
     tenantMemoryPath,
     "# Enterprise Memory\n\n" +
-    "AI 助手会在对话中自动记录重要的企业信息到此文件。\n" +
-    "你也可以手动编辑维护。\n\n" +
-    "格式：每条记忆以 `- ` 开头，保持简洁。\n",
+      "AI 助手会在对话中自动记录重要的企业信息到此文件。\n" +
+      "你也可以手动编辑维护。\n\n" +
+      "格式：每条记忆以 `- ` 开头，保持简洁。\n",
   );
   const tenantToolsTemplate = await loadTemplate(DEFAULT_TOOLS_FILENAME);
   await writeFileIfMissing(tenantToolsPath, tenantToolsTemplate);
@@ -535,16 +539,21 @@ export async function ensureTenantBootstrapFiles(ctx: TenantBootstrapContext): P
       // Leave user-customized content and current defaults (any locale) alone;
       // only overwrite when the file still holds the generic template or a
       // retired legacy default prefix.
-      if (isCurrentEnterpriseDefault(path.basename(target.filePath), current)) { continue; }
+      if (isCurrentEnterpriseDefault(path.basename(target.filePath), current)) {
+        continue;
+      }
       const template = await loadTemplate(path.basename(target.filePath));
       const isTemplate = current === template;
       const { PREVIOUS_ENTERPRISE_DEFAULT_PREFIXES } = await import("./enterprise-defaults.js");
-      const isOldDefault = !isTemplate
-        && PREVIOUS_ENTERPRISE_DEFAULT_PREFIXES.some((prefix: string) => current.startsWith(prefix));
+      const isOldDefault =
+        !isTemplate &&
+        PREVIOUS_ENTERPRISE_DEFAULT_PREFIXES.some((prefix: string) => current.startsWith(prefix));
       if (isTemplate || isOldDefault) {
         await fs.writeFile(target.filePath, target.enterpriseContent, "utf-8");
       }
-    } catch { /* file doesn't exist yet — writeFileIfMissing handled it above */ }
+    } catch {
+      /* file doesn't exist yet — writeFileIfMissing handled it above */
+    }
   }
 
   // Seed BOOTSTRAP.md only if agent dir looks brand new
@@ -592,7 +601,8 @@ export async function seedAgentWorkspaceFiles(
   await fs.mkdir(agentDir, { recursive: true });
 
   const prompt = typeof opts.systemPrompt === "string" ? opts.systemPrompt.trim() : "";
-  const identityContent = prompt || getEnterpriseDefault(DEFAULT_IDENTITY_FILENAME, opts.locale) || "";
+  const identityContent =
+    prompt || getEnterpriseDefault(DEFAULT_IDENTITY_FILENAME, opts.locale) || "";
   const agentsContent = getEnterpriseDefault(DEFAULT_AGENTS_FILENAME, opts.locale) || "";
   const soulContent = getEnterpriseDefault(DEFAULT_SOUL_FILENAME, opts.locale) || "";
   const [heartbeatTemplate, bootstrapTemplate] = await Promise.all([
@@ -621,7 +631,9 @@ export async function removeAgentWorkspaceFiles(agentDir: string): Promise<void>
     DEFAULT_BOOTSTRAP_FILENAME,
     DEFAULT_HEARTBEAT_FILENAME,
   ];
-  await Promise.all(names.map((n) => fs.rm(path.join(agentDir, n), { force: true }).catch(() => {})));
+  await Promise.all(
+    names.map((n) => fs.rm(path.join(agentDir, n), { force: true }).catch(() => {})),
+  );
 }
 
 /**
@@ -643,19 +655,19 @@ export async function ensureTenantDirFiles(tenantDir: string): Promise<void> {
   await writeFileIfMissing(
     tenantIdentityPath,
     "# 企业身份描述\n\n" +
-    "请在此描述企业的身份特征，该内容将作为 AI 助手的企业上下文。\n\n" +
-    "例如：\n" +
-    "- 我们是XX科技有限公司，主营区块链技术开发\n" +
-    "- 核心产品包括：数字资产管理平台、稳定币系统\n" +
-    "- 技术栈：TypeScript, Node.js, React, PostgreSQL\n\n" +
-    "提示：也可通过「企业设置」页面的「企业身份描述」字段编辑此内容。\n",
+      "请在此描述企业的身份特征，该内容将作为 AI 助手的企业上下文。\n\n" +
+      "例如：\n" +
+      "- 我们是XX科技有限公司，主营区块链技术开发\n" +
+      "- 核心产品包括：数字资产管理平台、稳定币系统\n" +
+      "- 技术栈：TypeScript, Node.js, React, PostgreSQL\n\n" +
+      "提示：也可通过「企业设置」页面的「企业身份描述」字段编辑此内容。\n",
   );
   await writeFileIfMissing(
     tenantMemoryPath,
     "# Enterprise Memory\n\n" +
-    "AI 助手会在对话中自动记录重要的企业信息到此文件。\n" +
-    "你也可以手动编辑维护。\n\n" +
-    "格式：每条记忆以 `- ` 开头，保持简洁。\n",
+      "AI 助手会在对话中自动记录重要的企业信息到此文件。\n" +
+      "你也可以手动编辑维护。\n\n" +
+      "格式：每条记忆以 `- ` 开头，保持简洁。\n",
   );
   const tenantToolsTemplate = await loadTemplate(DEFAULT_TOOLS_FILENAME);
   await writeFileIfMissing(tenantToolsPath, tenantToolsTemplate);
@@ -771,10 +783,10 @@ export async function loadWorkspaceBootstrapFiles(
 // ============================================================================
 
 export type TenantBootstrapContext = {
-  tenantId: string;    // tenant UUID
-  tenantDir: string;   // tenants/{tid}/         — enterprise IDENTITY, TOOLS, MEMORY
-  agentDir: string;    // tenants/{tid}/agents/{agentId}/ — AGENT, SOUL, IDENTITY, HEARTBEAT, BOOTSTRAP
-  userDir?: string;     // tenants/{tid}/users/{userId}/   — USER.md
+  tenantId: string; // tenant UUID
+  tenantDir: string; // tenants/{tid}/         — enterprise IDENTITY, TOOLS, MEMORY
+  agentDir: string; // tenants/{tid}/agents/{agentId}/ — AGENT, SOUL, IDENTITY, HEARTBEAT, BOOTSTRAP
+  userDir?: string; // tenants/{tid}/users/{userId}/   — USER.md
   workspaceDir?: string; // tenants/{tid}/users/{userId}/workspace/ — MEMORY, memory/
 };
 
@@ -829,19 +841,51 @@ async function loadTenantBootstrapFiles(
     rootDir: string;
   }> = [
     // Enterprise-level files (tenant IDENTITY.md handled separately below)
-    { name: DEFAULT_MEMORY_FILENAME, filePath: path.join(ctx.tenantDir, DEFAULT_MEMORY_FILENAME), rootDir: ctx.tenantDir },
-    { name: DEFAULT_TOOLS_FILENAME, filePath: path.join(ctx.tenantDir, DEFAULT_TOOLS_FILENAME), rootDir: ctx.tenantDir },
+    {
+      name: DEFAULT_MEMORY_FILENAME,
+      filePath: path.join(ctx.tenantDir, DEFAULT_MEMORY_FILENAME),
+      rootDir: ctx.tenantDir,
+    },
+    {
+      name: DEFAULT_TOOLS_FILENAME,
+      filePath: path.join(ctx.tenantDir, DEFAULT_TOOLS_FILENAME),
+      rootDir: ctx.tenantDir,
+    },
     // Agent-level files
-    { name: DEFAULT_AGENTS_FILENAME, filePath: path.join(ctx.agentDir, DEFAULT_AGENTS_FILENAME), rootDir: ctx.agentDir },
-    { name: DEFAULT_SOUL_FILENAME, filePath: path.join(ctx.agentDir, DEFAULT_SOUL_FILENAME), rootDir: ctx.agentDir },
-    { name: DEFAULT_IDENTITY_FILENAME, filePath: path.join(ctx.agentDir, DEFAULT_IDENTITY_FILENAME), rootDir: ctx.agentDir },
-    { name: DEFAULT_HEARTBEAT_FILENAME, filePath: path.join(ctx.agentDir, DEFAULT_HEARTBEAT_FILENAME), rootDir: ctx.agentDir },
-    { name: DEFAULT_BOOTSTRAP_FILENAME, filePath: path.join(ctx.agentDir, DEFAULT_BOOTSTRAP_FILENAME), rootDir: ctx.agentDir },
+    {
+      name: DEFAULT_AGENTS_FILENAME,
+      filePath: path.join(ctx.agentDir, DEFAULT_AGENTS_FILENAME),
+      rootDir: ctx.agentDir,
+    },
+    {
+      name: DEFAULT_SOUL_FILENAME,
+      filePath: path.join(ctx.agentDir, DEFAULT_SOUL_FILENAME),
+      rootDir: ctx.agentDir,
+    },
+    {
+      name: DEFAULT_IDENTITY_FILENAME,
+      filePath: path.join(ctx.agentDir, DEFAULT_IDENTITY_FILENAME),
+      rootDir: ctx.agentDir,
+    },
+    {
+      name: DEFAULT_HEARTBEAT_FILENAME,
+      filePath: path.join(ctx.agentDir, DEFAULT_HEARTBEAT_FILENAME),
+      rootDir: ctx.agentDir,
+    },
+    {
+      name: DEFAULT_BOOTSTRAP_FILENAME,
+      filePath: path.join(ctx.agentDir, DEFAULT_BOOTSTRAP_FILENAME),
+      rootDir: ctx.agentDir,
+    },
   ];
 
   // User-level files (only when userDir is provided)
   if (ctx.userDir) {
-    entries.push({ name: DEFAULT_USER_FILENAME, filePath: path.join(ctx.userDir, DEFAULT_USER_FILENAME), rootDir: ctx.userDir });
+    entries.push({
+      name: DEFAULT_USER_FILENAME,
+      filePath: path.join(ctx.userDir, DEFAULT_USER_FILENAME),
+      rootDir: ctx.userDir,
+    });
   }
 
   // User memory files from workspace
@@ -865,7 +909,9 @@ async function loadTenantBootstrapFiles(
       const tenant = await getTenantById(ctx.tenantId);
       if (tenant) {
         const lines: string[] = ["# 企业身份", ""];
-        if (tenant.name) {lines.push(`- 企业名称：${tenant.name}`);}
+        if (tenant.name) {
+          lines.push(`- 企业名称：${tenant.name}`);
+        }
         lines.push("");
         lines.push("当用户询问你的身份时，应主动说明你服务于该企业。");
         lines.push("当对话中出现重要的企业级信息时，主动使用 tenant_memory 工具保存。");
@@ -944,10 +990,7 @@ const MINIMAL_BOOTSTRAP_ALLOWLIST = new Set([
   DEFAULT_USER_FILENAME,
 ]);
 
-const WORKER_BOOTSTRAP_ALLOWLIST = new Set([
-  DEFAULT_TOOLS_FILENAME,
-  DEFAULT_IDENTITY_FILENAME,
-]);
+const WORKER_BOOTSTRAP_ALLOWLIST = new Set([DEFAULT_TOOLS_FILENAME, DEFAULT_IDENTITY_FILENAME]);
 
 export function filterBootstrapFilesForSession(
   files: WorkspaceBootstrapFile[],

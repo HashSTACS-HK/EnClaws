@@ -41,7 +41,9 @@ export const LARK_ERROR = {
 } as const;
 
 /** refresh token 端点可重试的错误码集合（服务端瞬时故障）。遇到后重试一次，仍失败则清 token。 */
-export const REFRESH_TOKEN_RETRYABLE: ReadonlySet<number> = new Set([LARK_ERROR.REFRESH_SERVER_ERROR]);
+export const REFRESH_TOKEN_RETRYABLE: ReadonlySet<number> = new Set([
+  LARK_ERROR.REFRESH_SERVER_ERROR,
+]);
 
 /** 消息终止错误码集合（撤回/删除），遇到后应停止对该消息的后续操作。 */
 export const MESSAGE_TERMINAL_CODES: ReadonlySet<number> = new Set([
@@ -50,7 +52,10 @@ export const MESSAGE_TERMINAL_CODES: ReadonlySet<number> = new Set([
 ]);
 
 /** access_token 失效相关的错误码集合，遇到后可尝试刷新重试。 */
-export const TOKEN_RETRY_CODES: ReadonlySet<number> = new Set([LARK_ERROR.TOKEN_INVALID, LARK_ERROR.TOKEN_EXPIRED]);
+export const TOKEN_RETRY_CODES: ReadonlySet<number> = new Set([
+  LARK_ERROR.TOKEN_INVALID,
+  LARK_ERROR.TOKEN_EXPIRED,
+]);
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -74,8 +79,8 @@ export interface AuthHint {
   user_open_id: string;
   message: string;
   next_tool_call: {
-    tool: 'feishu_oauth';
-    params: { action: 'authorize'; scope: string };
+    tool: "feishu_oauth";
+    params: { action: "authorize"; scope: string };
   };
 }
 
@@ -96,8 +101,8 @@ export type TryInvokeResult<T> =
 export class NeedAuthorizationError extends Error {
   readonly userOpenId: string;
   constructor(userOpenId: string) {
-    super('need_user_authorization');
-    this.name = 'NeedAuthorizationError';
+    super("need_user_authorization");
+    this.name = "NeedAuthorizationError";
     this.userOpenId = userOpenId;
   }
 }
@@ -112,8 +117,10 @@ export class AppScopeCheckFailedError extends Error {
   readonly appId?: string;
 
   constructor(appId?: string) {
-    super('应用缺少 application:application:self_manage 权限，无法查询应用权限配置。请管理员在开放平台开通该权限。');
-    this.name = 'AppScopeCheckFailedError';
+    super(
+      "应用缺少 application:application:self_manage 权限，无法查询应用权限配置。请管理员在开放平台开通该权限。",
+    );
+    this.name = "AppScopeCheckFailedError";
     this.appId = appId;
   }
 }
@@ -131,22 +138,22 @@ export class AppScopeMissingError extends Error {
   readonly allRequiredScopes?: string[];
   /** 应用 ID，用于生成开放平台权限管理链接。 */
   readonly appId?: string;
-  readonly scopeNeedType?: 'one' | 'all';
+  readonly scopeNeedType?: "one" | "all";
   /** 触发此错误时使用的 token 类型，用于保持 card action 二次校验一致。 */
-  readonly tokenType?: 'user' | 'tenant';
+  readonly tokenType?: "user" | "tenant";
 
   constructor(
     info: ScopeErrorInfo,
-    scopeNeedType?: 'one' | 'all',
-    tokenType?: 'user' | 'tenant',
+    scopeNeedType?: "one" | "all",
+    tokenType?: "user" | "tenant",
     allRequiredScopes?: string[],
   ) {
-    if (scopeNeedType === 'one') {
-      super(`应用缺少权限 [${info.scopes.join(', ')}](开启任一权限即可)，请管理员在开放平台开通。`);
+    if (scopeNeedType === "one") {
+      super(`应用缺少权限 [${info.scopes.join(", ")}](开启任一权限即可)，请管理员在开放平台开通。`);
     } else {
-      super(`应用缺少权限 [${info.scopes.join(', ')}]，请管理员在开放平台开通。`);
+      super(`应用缺少权限 [${info.scopes.join(", ")}]，请管理员在开放平台开通。`);
     }
-    this.name = 'AppScopeMissingError';
+    this.name = "AppScopeMissingError";
     this.apiName = info.apiName;
     this.missingScopes = info.scopes;
     this.allRequiredScopes = allRequiredScopes;
@@ -174,8 +181,8 @@ export class UserAuthRequiredError extends Error {
   readonly appId?: string;
 
   constructor(userOpenId: string, info: ScopeErrorInfo) {
-    super('need_user_authorization');
-    this.name = 'UserAuthRequiredError';
+    super("need_user_authorization");
+    this.name = "UserAuthRequiredError";
     this.userOpenId = userOpenId;
     this.apiName = info.apiName;
     this.requiredScopes = info.scopes;
@@ -196,8 +203,8 @@ export class UserScopeInsufficientError extends Error {
   readonly missingScopes: string[];
 
   constructor(userOpenId: string, info: ScopeErrorInfo) {
-    super('user_scope_insufficient');
-    this.name = 'UserScopeInsufficientError';
+    super("user_scope_insufficient");
+    this.name = "UserScopeInsufficientError";
     this.userOpenId = userOpenId;
     this.apiName = info.apiName;
     this.missingScopes = info.scopes;

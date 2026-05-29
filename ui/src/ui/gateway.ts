@@ -6,10 +6,10 @@ import {
   type GatewayClientName,
 } from "../../../src/gateway/protocol/client-info.js";
 import { readConnectErrorDetailCode } from "../../../src/gateway/protocol/connect-error-details.js";
+import { getAccessToken, loadAuth, refreshAccessToken } from "./auth-store.ts";
 import { clearDeviceAuthToken, loadDeviceAuthToken, storeDeviceAuthToken } from "./device-auth.ts";
 import { loadOrCreateDeviceIdentity, signDevicePayload } from "./device-identity.ts";
 import { generateUUID } from "./uuid.ts";
-import { getAccessToken, loadAuth, refreshAccessToken } from "./auth-store.ts";
 
 export type GatewayEventFrame = {
   type: "event";

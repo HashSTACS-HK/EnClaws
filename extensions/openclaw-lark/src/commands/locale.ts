@@ -5,4 +5,4 @@
  * Shared locale type for feishu command i18n.
  */
 
-export type FeishuLocale = 'zh_cn' | 'en_us';
+export type FeishuLocale = "zh_cn" | "en_us";

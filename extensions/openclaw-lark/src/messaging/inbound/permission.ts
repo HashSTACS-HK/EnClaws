@@ -8,8 +8,8 @@
  * PERMISSION_ERROR_COOLDOWN_MS, permissionErrorNotifiedAt.
  */
 
-import { extractPermissionGrantUrl } from '../../core/permission-url';
-import { LARK_ERROR } from '../../core/auth-errors';
+import { LARK_ERROR } from "../../core/auth-errors";
+import { extractPermissionGrantUrl } from "../../core/permission-url";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,13 +26,13 @@ export interface PermissionError {
 // ---------------------------------------------------------------------------
 
 export function extractPermissionError(err: unknown): PermissionError | null {
-  if (!err || typeof err !== 'object') {
+  if (!err || typeof err !== "object") {
     return null;
   }
 
   const axiosErr = err as { response?: { data?: unknown } };
   const data = axiosErr.response?.data;
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== "object") {
     return null;
   }
 
@@ -47,7 +47,7 @@ export function extractPermissionError(err: unknown): PermissionError | null {
     return null;
   }
 
-  const msg = feishuErr.msg ?? '';
+  const msg = feishuErr.msg ?? "";
   const grantUrl = extractPermissionGrantUrl(msg);
 
   if (!grantUrl) {

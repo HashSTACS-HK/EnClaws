@@ -71,8 +71,7 @@ export function getAgentTaskOverview(filterAgentId?: string): AgentTaskOverview[
     }
     // Derive agentId from the queue key or first item's run.agentId
     const firstRun = qState.items[0]?.run;
-    const agentId =
-      parseAgentSessionKey(queueKey)?.agentId ?? firstRun?.agentId ?? "main";
+    const agentId = parseAgentSessionKey(queueKey)?.agentId ?? firstRun?.agentId ?? "main";
     if (filterAgentId && agentId !== filterAgentId) {
       continue;
     }

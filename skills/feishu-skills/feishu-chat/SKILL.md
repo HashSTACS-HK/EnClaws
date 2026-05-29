@@ -7,6 +7,7 @@ inline: true
 ---
 
 # feishu-chat
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -47,20 +48,20 @@ node ./chat.js --open-id "SENDER_OPEN_ID" --action list_members --chat-id "oc_xx
 
 ## 权限 scope
 
-| action | scope |
-|--------|--------|
-| `search` | `im:chat:readonly` |
-| `get` | `im:chat:readonly` |
+| action         | scope                                      |
+| -------------- | ------------------------------------------ |
+| `search`       | `im:chat:readonly`                         |
+| `get`          | `im:chat:readonly`                         |
 | `list_members` | `im:chat:readonly`、`im:chat.members:read` |
 
 ## 与其他技能的编排
 
-| 场景 | 建议流程 |
-|------|----------|
+| 场景                                       | 建议流程                                                     |
+| ------------------------------------------ | ------------------------------------------------------------ |
 | 用户说「把消息发到 XX 群」但未给 `chat_id` | `feishu-chat` `search` → 选定 `chat_id` → 使用发消息相关技能 |
-| 用户说「看看 XX 群里有谁」 | `search` → `list_members` |
-| 用户说「把文档发给群里的张三」 | `list_members` → 从结果中取张三的 `open_id` |
-| `feishu-im-read` 需要 `chat_id` | `search` → `get`（可选）→ `feishu-im-read` |
+| 用户说「看看 XX 群里有谁」                 | `search` → `list_members`                                    |
+| 用户说「把文档发给群里的张三」             | `list_members` → 从结果中取张三的 `open_id`                  |
+| `feishu-im-read` 需要 `chat_id`            | `search` → `get`（可选）→ `feishu-im-read`                   |
 
 ## 授权
 

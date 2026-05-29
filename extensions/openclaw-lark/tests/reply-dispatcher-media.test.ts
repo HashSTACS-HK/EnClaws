@@ -5,15 +5,15 @@
  * module level with vi.mock() and only exercise the deliver() path.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('openclaw/plugin-sdk/channel-runtime', () => ({
+vi.mock("openclaw/plugin-sdk/channel-runtime", () => ({
   createReplyPrefixContext: () => ({
-    responsePrefix: '',
+    responsePrefix: "",
     responsePrefixContextProvider: () => null,
     onModelSelected: () => {},
   }),
@@ -23,25 +23,25 @@ vi.mock('openclaw/plugin-sdk/channel-runtime', () => ({
     onCleanup: vi.fn().mockResolvedValue(undefined),
   }),
 }));
-vi.mock('openclaw/plugin-sdk/channel-feedback', () => ({
+vi.mock("openclaw/plugin-sdk/channel-feedback", () => ({
   logTypingFailure: vi.fn(),
 }));
 
-vi.mock('../src/core/accounts', () => ({
+vi.mock("../src/core/accounts", () => ({
   createAccountScopedConfig: vi.fn(),
   getLarkAccount: () => ({ config: {} }),
 }));
-vi.mock('../src/core/footer-config', () => ({
+vi.mock("../src/core/footer-config", () => ({
   resolveFooterConfig: () => null,
 }));
-vi.mock('../src/core/lark-client', () => ({
+vi.mock("../src/core/lark-client", () => ({
   LarkClient: {
     runtime: {
       channel: {
         text: {
           resolveTextChunkLimit: () => 4000,
-          resolveChunkMode: () => 'paragraph',
-          resolveMarkdownTableMode: () => 'plain',
+          resolveChunkMode: () => "paragraph",
+          resolveMarkdownTableMode: () => "plain",
           convertMarkdownTables: (text: string) => text,
           chunkTextWithMode: (text: string) => (text ? [text] : []),
         },
@@ -57,52 +57,56 @@ vi.mock('../src/core/lark-client', () => ({
     },
   },
 }));
-vi.mock('../src/core/lark-logger', () => ({
+vi.mock("../src/core/lark-logger", () => ({
   larkLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 const mockSendMessageFeishu = vi.fn();
 const mockSendMarkdownCardFeishu = vi.fn();
-vi.mock('../src/messaging/outbound/send', () => ({
+vi.mock("../src/messaging/outbound/send", () => ({
   sendMessageFeishu: (...args: unknown[]) => mockSendMessageFeishu(...args),
   sendMarkdownCardFeishu: (...args: unknown[]) => mockSendMarkdownCardFeishu(...args),
 }));
 
-vi.mock('../src/messaging/outbound/typing', () => ({
+vi.mock("../src/messaging/outbound/typing", () => ({
   addTypingIndicator: vi.fn().mockResolvedValue(null),
   removeTypingIndicator: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock('../src/card/card-error', () => ({
+vi.mock("../src/card/card-error", () => ({
   isCardTableLimitError: () => false,
 }));
-vi.mock('../src/card/reply-mode', () => ({
-  resolveReplyMode: () => 'static',
+vi.mock("../src/card/reply-mode", () => ({
+  resolveReplyMode: () => "static",
   expandAutoMode: ({ mode }: { mode: string }) => mode,
   shouldUseCard: () => false,
 }));
-vi.mock('../src/card/streaming-card-controller', () => ({
+vi.mock("../src/card/streaming-card-controller", () => ({
   StreamingCardController: class {},
 }));
 
 let terminateReturn = true;
 const terminateCalls: Array<{ source: string; err: unknown }> = [];
-vi.mock('../src/card/unavailable-guard', () => ({
+vi.mock("../src/card/unavailable-guard", () => ({
   UnavailableGuard: class {
-    shouldSkip() { return false; }
+    shouldSkip() {
+      return false;
+    }
     terminate(source: string, err?: unknown) {
       terminateCalls.push({ source, err });
       return terminateReturn;
     }
-    get isTerminated() { return false; }
+    get isTerminated() {
+      return false;
+    }
   },
 }));
 
 const mockSendMediaLark = vi.fn();
-vi.mock('../src/messaging/outbound/deliver', () => ({
+vi.mock("../src/messaging/outbound/deliver", () => ({
   sendMediaLark: (...args: unknown[]) => mockSendMediaLark(...args),
 }));
 
-import { createFeishuReplyDispatcher } from '../src/card/reply-dispatcher';
+import { createFeishuReplyDispatcher } from "../src/card/reply-dispatcher";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -115,10 +119,12 @@ interface TestContext {
   sentMedia: unknown[];
 }
 
-function createDispatcher(options: {
-  sendMediaImpl?: (payload: unknown) => Promise<void>;
-  terminateReturn?: boolean;
-} = {}): TestContext {
+function createDispatcher(
+  options: {
+    sendMediaImpl?: (payload: unknown) => Promise<void>;
+    terminateReturn?: boolean;
+  } = {},
+): TestContext {
   const sentText: unknown[] = [];
   const sentCards: unknown[] = [];
   const sentMedia: unknown[] = [];
@@ -127,26 +133,34 @@ function createDispatcher(options: {
   terminateReturn = options.terminateReturn ?? true;
   terminateCalls.length = 0;
 
-  mockSendMessageFeishu.mockImplementation(async (payload: unknown) => { sentText.push(payload); });
-  mockSendMarkdownCardFeishu.mockImplementation(async (payload: unknown) => { sentCards.push(payload); });
+  mockSendMessageFeishu.mockImplementation(async (payload: unknown) => {
+    sentText.push(payload);
+  });
+  mockSendMarkdownCardFeishu.mockImplementation(async (payload: unknown) => {
+    sentCards.push(payload);
+  });
 
-  const sendMediaImpl = options.sendMediaImpl ?? (async (payload: unknown) => { sentMedia.push(payload); });
+  const sendMediaImpl =
+    options.sendMediaImpl ??
+    (async (payload: unknown) => {
+      sentMedia.push(payload);
+    });
   mockSendMediaLark.mockImplementation(sendMediaImpl);
 
   const result = createFeishuReplyDispatcher({
     cfg: {} as never,
-    agentId: 'agent-test',
-    sessionKey: 'session-test',
-    chatId: 'chat-test',
-    replyToMessageId: 'om_reply',
-    accountId: 'default',
+    agentId: "agent-test",
+    sessionKey: "session-test",
+    chatId: "chat-test",
+    replyToMessageId: "om_reply",
+    accountId: "default",
     replyInThread: false,
-    chatType: 'p2p',
+    chatType: "p2p",
     skipTyping: true,
   });
 
   return {
-    dispatcher: result.dispatcher as unknown as TestContext['dispatcher'],
+    dispatcher: result.dispatcher as unknown as TestContext["dispatcher"],
     sentText,
     sentCards,
     sentMedia,
@@ -162,51 +176,55 @@ beforeEach(() => {
   terminateCalls.length = 0;
 });
 
-describe('reply-dispatcher media delivery', () => {
-  it('media-only payload does not send empty text message', async () => {
+describe("reply-dispatcher media delivery", () => {
+  it("media-only payload does not send empty text message", async () => {
     const ctx = createDispatcher();
 
-    await ctx.dispatcher.deliver({ text: '', mediaUrl: 'https://example.com/image.png' });
+    await ctx.dispatcher.deliver({ text: "", mediaUrl: "https://example.com/image.png" });
 
     expect(ctx.sentText).toHaveLength(0);
     expect(ctx.sentCards).toHaveLength(0);
     expect(ctx.sentMedia).toHaveLength(1);
-    expect((ctx.sentMedia[0] as { mediaUrl: string }).mediaUrl).toBe('https://example.com/image.png');
+    expect((ctx.sentMedia[0] as { mediaUrl: string }).mediaUrl).toBe(
+      "https://example.com/image.png",
+    );
   });
 
-  it('mixed payload delivers both text and media', async () => {
+  it("mixed payload delivers both text and media", async () => {
     const ctx = createDispatcher();
 
     await ctx.dispatcher.deliver({
-      text: 'hello from feishu',
-      mediaUrls: ['https://example.com/image-a.png', 'https://example.com/image-b.png'],
+      text: "hello from feishu",
+      mediaUrls: ["https://example.com/image-a.png", "https://example.com/image-b.png"],
     });
 
     expect(ctx.sentText).toHaveLength(1);
-    expect((ctx.sentText[0] as { text: string }).text).toBe('hello from feishu');
+    expect((ctx.sentText[0] as { text: string }).text).toBe("hello from feishu");
     expect(ctx.sentMedia.map((item) => (item as { mediaUrl: string }).mediaUrl)).toEqual([
-      'https://example.com/image-a.png',
-      'https://example.com/image-b.png',
+      "https://example.com/image-a.png",
+      "https://example.com/image-b.png",
     ]);
   });
 
-  it('failed media send triggers staticGuard terminate', async () => {
-    const mediaError = new Error('bot removed from chat');
+  it("failed media send triggers staticGuard terminate", async () => {
+    const mediaError = new Error("bot removed from chat");
     const ctx = createDispatcher({
-      sendMediaImpl: async () => { throw mediaError; },
+      sendMediaImpl: async () => {
+        throw mediaError;
+      },
       terminateReturn: true,
     });
 
-    await ctx.dispatcher.deliver({ text: '', mediaUrl: 'https://example.com/image.png' });
+    await ctx.dispatcher.deliver({ text: "", mediaUrl: "https://example.com/image.png" });
 
     expect(terminateCalls).toHaveLength(1);
-    expect(terminateCalls[0].source).toBe('deliver.media');
+    expect(terminateCalls[0].source).toBe("deliver.media");
     expect(terminateCalls[0].err).toBe(mediaError);
   });
 
-  it('terminate on first media aborts remaining media URLs', async () => {
+  it("terminate on first media aborts remaining media URLs", async () => {
     let sendCount = 0;
-    const mediaError = new Error('bot removed from chat');
+    const mediaError = new Error("bot removed from chat");
     createDispatcher({
       sendMediaImpl: async () => {
         sendCount++;
@@ -224,8 +242,12 @@ describe('reply-dispatcher media delivery', () => {
     });
 
     await ctx.dispatcher.deliver({
-      text: '',
-      mediaUrls: ['https://example.com/a.png', 'https://example.com/b.png', 'https://example.com/c.png'],
+      text: "",
+      mediaUrls: [
+        "https://example.com/a.png",
+        "https://example.com/b.png",
+        "https://example.com/c.png",
+      ],
     });
 
     expect(sendCount).toBe(1);
@@ -233,9 +255,9 @@ describe('reply-dispatcher media delivery', () => {
     expect(ctx.sentMedia).toHaveLength(0);
   });
 
-  it('non-terminal media error logs and continues to next URL', async () => {
+  it("non-terminal media error logs and continues to next URL", async () => {
     let sendCount = 0;
-    const mediaError = new Error('transient upload failure');
+    const mediaError = new Error("transient upload failure");
     const sentMedia: unknown[] = [];
     const ctx = createDispatcher({
       sendMediaImpl: async (payload) => {
@@ -247,13 +269,13 @@ describe('reply-dispatcher media delivery', () => {
     });
 
     await ctx.dispatcher.deliver({
-      text: '',
-      mediaUrls: ['https://example.com/a.png', 'https://example.com/b.png'],
+      text: "",
+      mediaUrls: ["https://example.com/a.png", "https://example.com/b.png"],
     });
 
     expect(sendCount).toBe(2);
     expect(terminateCalls).toHaveLength(1);
     expect(sentMedia).toHaveLength(1);
-    expect((sentMedia[0] as { mediaUrl: string }).mediaUrl).toBe('https://example.com/b.png');
+    expect((sentMedia[0] as { mediaUrl: string }).mediaUrl).toBe("https://example.com/b.png");
   });
 });

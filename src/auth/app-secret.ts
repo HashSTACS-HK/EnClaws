@@ -9,8 +9,8 @@
  * 轮换宽限期内新旧密钥均有效。
  */
 
-import bcrypt from "bcryptjs";
 import type { IncomingMessage } from "node:http";
+import bcrypt from "bcryptjs";
 import {
   getCsApiObjectByAppId,
   touchLastUsed,
@@ -43,7 +43,9 @@ export type AppSecretAuthResult =
  */
 function extractBearer(req: IncomingMessage): string | null {
   const h = req.headers.authorization;
-  if (typeof h !== "string") { return null; }
+  if (typeof h !== "string") {
+    return null;
+  }
   const m = h.match(/^Bearer\s+(.+)$/i);
   return m ? m[1].trim() : null;
 }

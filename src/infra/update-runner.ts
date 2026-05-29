@@ -8,11 +8,7 @@ import {
 import { detectPackageManager as detectPackageManagerImpl } from "./detect-package-manager.js";
 import { readPackageName, readPackageVersion } from "./package-json.js";
 import { trimLogTail } from "./restart-sentinel.js";
-import {
-  trackToNpmTag,
-  DEFAULT_PACKAGE_TRACK,
-  type UpdateTrack,
-} from "./update-channels.js";
+import { trackToNpmTag, DEFAULT_PACKAGE_TRACK, type UpdateTrack } from "./update-channels.js";
 import { compareSemverStrings } from "./update-check.js";
 import {
   cleanupGlobalRenameDirs,
@@ -371,15 +367,7 @@ export async function runGatewayUpdate(opts: UpdateRunnerOptions = {}): Promise<
     const upstreamStep = await runStep(
       step(
         "upstream check",
-        [
-          "git",
-          "-C",
-          gitRoot,
-          "rev-parse",
-          "--abbrev-ref",
-          "--symbolic-full-name",
-          "@{upstream}",
-        ],
+        ["git", "-C", gitRoot, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"],
         gitRoot,
       ),
     );
@@ -640,9 +628,9 @@ export async function runGatewayUpdate(opts: UpdateRunnerOptions = {}): Promise<
   // Installer mode (Windows .exe / macOS .dmg) cannot be updated in-place.
   const isInstallerBundle =
     (process.platform === "win32" &&
-      await fileExists(path.join(pkgRoot, "..", "node", "node.exe"))) ||
+      (await fileExists(path.join(pkgRoot, "..", "node", "node.exe")))) ||
     (process.platform === "darwin" &&
-      await fileExists(path.join(pkgRoot, "node", "bin", "node")));
+      (await fileExists(path.join(pkgRoot, "node", "bin", "node"))));
 
   return {
     status: "skipped",

@@ -216,5 +216,4 @@ export function registerChannelsCli(program: Command) {
         await channelsRemoveCommand(opts, defaultRuntime, { hasFlags });
       });
     });
-
 }

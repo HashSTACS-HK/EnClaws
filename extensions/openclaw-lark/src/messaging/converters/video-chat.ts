@@ -5,8 +5,8 @@
  * Converter for "video_chat" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { millisToDatetime, safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { millisToDatetime, safeParse } from "./utils";
 
 export const convertVideoChat: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as
@@ -16,7 +16,7 @@ export const convertVideoChat: ContentConverterFn = (raw) => {
       }
     | undefined;
 
-  const topic = parsed?.topic ?? '';
+  const topic = parsed?.topic ?? "";
   const parts: string[] = [];
 
   if (topic) {
@@ -27,7 +27,7 @@ export const convertVideoChat: ContentConverterFn = (raw) => {
     parts.push(`🕙 ${millisToDatetime(parsed.start_time)}`);
   }
 
-  const inner = parts.join('\n') || '[video chat]';
+  const inner = parts.join("\n") || "[video chat]";
 
   return {
     content: `<meeting>${inner}</meeting>`,

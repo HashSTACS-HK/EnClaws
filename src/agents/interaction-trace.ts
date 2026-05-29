@@ -93,10 +93,18 @@ export function createInteractionTraceRecorder(
       // Capture params like temperature, max_tokens from the model/options
       const modelObj = model as unknown as Record<string, unknown>;
       const requestParams: Record<string, unknown> = {};
-      if (modelObj?.maxTokens) {requestParams.maxTokens = modelObj.maxTokens;}
-      if (modelObj?.contextWindow) {requestParams.contextWindow = modelObj.contextWindow;}
-      if (ctxObj?.temperature !== undefined) {requestParams.temperature = ctxObj.temperature;}
-      if (ctxObj?.max_tokens !== undefined) {requestParams.max_tokens = ctxObj.max_tokens;}
+      if (modelObj?.maxTokens) {
+        requestParams.maxTokens = modelObj.maxTokens;
+      }
+      if (modelObj?.contextWindow) {
+        requestParams.contextWindow = modelObj.contextWindow;
+      }
+      if (ctxObj?.temperature !== undefined) {
+        requestParams.temperature = ctxObj.temperature;
+      }
+      if (ctxObj?.max_tokens !== undefined) {
+        requestParams.max_tokens = ctxObj.max_tokens;
+      }
 
       requestPayloads.push({
         systemPrompt: cachedSystemPrompt,
@@ -141,7 +149,9 @@ export function createInteractionTraceRecorder(
           tenantTraceAllowed = false;
         }
       }
-      if (!tenantTraceAllowed) {return;}
+      if (!tenantTraceAllowed) {
+        return;
+      }
 
       for (let i = 0; i < payloads.length; i += 1) {
         const payload = payloads[i];
@@ -244,15 +254,21 @@ export function createInteractionTraceRecorder(
 
 /** Extract error text from an assistant message response when stopReason is "error". */
 export function extractErrorFromResponse(response: unknown): string | undefined {
-  if (response == null) {return "LLM request failed (no response)";}
+  if (response == null) {
+    return "LLM request failed (no response)";
+  }
   // response is typically content array: [{type: "text", text: "..."}]
   if (Array.isArray(response)) {
     const texts = response
       .filter((c: Record<string, unknown>) => c?.type === "text" && c?.text)
       .map((c: Record<string, unknown>) => c.text as string);
-    if (texts.length > 0) {return texts.join("\n");}
+    if (texts.length > 0) {
+      return texts.join("\n");
+    }
   }
-  if (typeof response === "string" && response) {return response;}
+  if (typeof response === "string" && response) {
+    return response;
+  }
   return "LLM request failed";
 }
 
@@ -260,19 +276,26 @@ export function extractErrorFromResponse(response: unknown): string | undefined 
 export function formatTraceError(error: unknown): string {
   if (error instanceof Error) {
     const msg = error.message;
-    if (msg) {return msg;}
+    if (msg) {
+      return msg;
+    }
     // message is empty — use status or toString() as fallback
     const status = (error as { status?: number }).status;
-    if (status) {return `${error.name || "Error"}: ${status} status code (no body)`;}
+    if (status) {
+      return `${error.name || "Error"}: ${status} status code (no body)`;
+    }
     return error.name || String(error) || "Unknown error";
   }
   return String(error) || "Unknown error";
 }
 
-
 function toInt(val: unknown): number {
-  if (typeof val === "number") {return Math.floor(val);}
-  if (typeof val === "string") {return parseInt(val, 10) || 0;}
+  if (typeof val === "number") {
+    return Math.floor(val);
+  }
+  if (typeof val === "string") {
+    return parseInt(val, 10) || 0;
+  }
   return 0;
 }
 
@@ -282,10 +305,24 @@ function extractUsage(
   cb: (inputTokens: number, outputTokens: number, cacheRead: number, cacheWrite: number) => void,
 ): void {
   const usage = msg.usage as Record<string, unknown> | undefined;
-  if (!usage) {return;}
+  if (!usage) {
+    return;
+  }
   cb(
-    toInt(usage.input ?? usage.inputTokens ?? usage.input_tokens ?? usage.promptTokens ?? usage.prompt_tokens),
-    toInt(usage.output ?? usage.outputTokens ?? usage.output_tokens ?? usage.completionTokens ?? usage.completion_tokens),
+    toInt(
+      usage.input ??
+        usage.inputTokens ??
+        usage.input_tokens ??
+        usage.promptTokens ??
+        usage.prompt_tokens,
+    ),
+    toInt(
+      usage.output ??
+        usage.outputTokens ??
+        usage.output_tokens ??
+        usage.completionTokens ??
+        usage.completion_tokens,
+    ),
     toInt(usage.cacheRead ?? usage.cache_read_input_tokens ?? usage.cached_tokens),
     toInt(usage.cacheWrite ?? usage.cache_creation_input_tokens),
   );

@@ -68,7 +68,9 @@ async function syncAgentKnowledgeIndex(
       defaultStorePath: context.defaultStorePath,
     });
     if (!manager) {
-      console.warn(`[memory] index sync skipped for agent ${context.agentId}: ${error ?? "manager unavailable"}`);
+      console.warn(
+        `[memory] index sync skipped for agent ${context.agentId}: ${error ?? "manager unavailable"}`,
+      );
       return;
     }
     await manager.sync?.({ reason, force: true });

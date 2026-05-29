@@ -4,9 +4,9 @@
  */
 
 import type { DingtalkConfig } from "../types/index.ts";
-import { DINGTALK_API, getAccessToken, getOapiAccessToken } from "../utils/index.ts";
-import { dingtalkHttp, dingtalkOapiHttp } from "../utils/http-client.ts";
 import { MEDIA_MSG_TYPES } from "../utils/constants.ts";
+import { dingtalkHttp, dingtalkOapiHttp } from "../utils/http-client.ts";
+import { DINGTALK_API, getAccessToken, getOapiAccessToken } from "../utils/index.ts";
 import { createLoggerFromConfig } from "../utils/logger.ts";
 import {
   processLocalImages,
@@ -28,12 +28,7 @@ import {
 // 注意：AI Card 相关的类型和函数已移至 ./messaging/card.ts，通过上方 import 引入
 
 /** 消息类型枚举 */
-export type DingTalkMsgType =
-  | "text"
-  | "markdown"
-  | "link"
-  | "actionCard"
-  | "image";
+export type DingTalkMsgType = "text" | "markdown" | "link" | "actionCard" | "image";
 
 /** 主动发送消息的结果 */
 export interface SendResult {
@@ -77,8 +72,7 @@ export async function sendMarkdownMessage(
     msgtype: "markdown",
     markdown: { title: title || "Message", text },
   };
-  if (options.atUserId)
-    body.at = { atUserIds: [options.atUserId], isAtAll: false };
+  if (options.atUserId) body.at = { atUserIds: [options.atUserId], isAtAll: false };
 
   return (
     await dingtalkHttp.post(sessionWebhook, body, {
@@ -101,8 +95,7 @@ export async function sendTextMessage(
 ): Promise<any> {
   const token = await getAccessToken(config);
   const body: any = { msgtype: "text", text: { content: text } };
-  if (options.atUserId)
-    body.at = { atUserIds: [options.atUserId], isAtAll: false };
+  if (options.atUserId) body.at = { atUserIds: [options.atUserId], isAtAll: false };
 
   return (
     await dingtalkHttp.post(sessionWebhook, body, {
@@ -124,10 +117,8 @@ export async function sendMessage(
   options: any = {},
 ): Promise<any> {
   const hasMarkdown =
-    /^[#*>-]|[*_`#\[\]]/.test(text) ||
-    (text && typeof text === "string" && text.includes("\n"));
-  const useMarkdown =
-    options.useMarkdown !== false && (options.useMarkdown || hasMarkdown);
+    /^[#*>-]|[*_`#\[\]]/.test(text) || (text && typeof text === "string" && text.includes("\n"));
+  const useMarkdown = options.useMarkdown !== false && (options.useMarkdown || hasMarkdown);
 
   if (useMarkdown) {
     const title =
@@ -235,26 +226,18 @@ export async function sendNormalToUser(
       msgParam: JSON.stringify(payload.msgParam),
     };
 
-    log?.info?.(
-      `发送单聊消息: userIds=${userIdArray.join(",")}, msgType=${msgType}`,
-    );
+    log?.info?.(`发送单聊消息: userIds=${userIdArray.join(",")}, msgType=${msgType}`);
 
-    const resp = await dingtalkHttp.post(
-      `${DINGTALK_API}/v1.0/robot/oToMessages/batchSend`,
-      body,
-      {
-        headers: {
-          "x-acs-dingtalk-access-token": token,
-          "Content-Type": "application/json",
-        },
-        timeout: 10_000,
+    const resp = await dingtalkHttp.post(`${DINGTALK_API}/v1.0/robot/oToMessages/batchSend`, body, {
+      headers: {
+        "x-acs-dingtalk-access-token": token,
+        "Content-Type": "application/json",
       },
-    );
+      timeout: 10_000,
+    });
 
     if (resp.data?.processQueryKey) {
-      log?.info?.(
-        `发送成功: processQueryKey=${resp.data.processQueryKey}`,
-      );
+      log?.info?.(`发送成功: processQueryKey=${resp.data.processQueryKey}`);
       return {
         ok: true,
         processQueryKey: resp.data.processQueryKey,
@@ -262,9 +245,7 @@ export async function sendNormalToUser(
       };
     }
 
-    log?.warn?.(
-      `发送响应异常: ${JSON.stringify(resp.data)}`,
-    );
+    log?.warn?.(`发送响应异常: ${JSON.stringify(resp.data)}`);
     return {
       ok: false,
       error: resp.data?.message || "Unknown error",
@@ -312,26 +293,18 @@ export async function sendNormalToGroup(
       msgParam: JSON.stringify(payload.msgParam),
     };
 
-    log?.info?.(
-      `发送群聊消息: openConversationId=${openConversationId}, msgType=${msgType}`,
-    );
+    log?.info?.(`发送群聊消息: openConversationId=${openConversationId}, msgType=${msgType}`);
 
-    const resp = await dingtalkHttp.post(
-      `${DINGTALK_API}/v1.0/robot/groupMessages/send`,
-      body,
-      {
-        headers: {
-          "x-acs-dingtalk-access-token": token,
-          "Content-Type": "application/json",
-        },
-        timeout: 10_000,
+    const resp = await dingtalkHttp.post(`${DINGTALK_API}/v1.0/robot/groupMessages/send`, body, {
+      headers: {
+        "x-acs-dingtalk-access-token": token,
+        "Content-Type": "application/json",
       },
-    );
+      timeout: 10_000,
+    });
 
     if (resp.data?.processQueryKey) {
-      log?.info?.(
-        `发送成功: processQueryKey=${resp.data.processQueryKey}`,
-      );
+      log?.info?.(`发送成功: processQueryKey=${resp.data.processQueryKey}`);
       return {
         ok: true,
         processQueryKey: resp.data.processQueryKey,
@@ -339,9 +312,7 @@ export async function sendNormalToGroup(
       };
     }
 
-    log?.warn?.(
-      `发送响应异常: ${JSON.stringify(resp.data)}`,
-    );
+    log?.warn?.(`发送响应异常: ${JSON.stringify(resp.data)}`);
     return {
       ok: false,
       error: resp.data?.message || "Unknown error",
@@ -364,9 +335,7 @@ export async function sendAICardInternal(
   log?: any,
 ): Promise<SendResult> {
   const targetDesc =
-    target.type === "group"
-      ? `群聊 ${target.openConversationId}`
-      : `用户 ${target.userId}`;
+    target.type === "group" ? `群聊 ${target.openConversationId}` : `用户 ${target.userId}`;
 
   try {
     // 0. 获取 oapiToken 用于后处理
@@ -378,9 +347,7 @@ export async function sendAICardInternal(
       log?.info?.(`开始图片后处理`);
       processedContent = await processLocalImages(content, oapiToken, log);
     } else {
-      log?.warn?.(
-        `无法获取 oapiToken，跳过媒体后处理`,
-      );
+      log?.warn?.(`无法获取 oapiToken，跳过媒体后处理`);
     }
 
     // 2. 后处理02：提取视频标记并发送视频消息
@@ -422,9 +389,7 @@ export async function sendAICardInternal(
     // 5. 检查处理后的内容是否为空
     const trimmedContent = processedContent.trim();
     if (!trimmedContent) {
-      log?.info?.(
-        `处理后内容为空（纯文件/视频消息），跳过创建 AI Card`,
-      );
+      log?.info?.(`处理后内容为空（纯文件/视频消息），跳过创建 AI Card`);
       return { ok: true, usedAICard: false };
     }
 
@@ -441,14 +406,10 @@ export async function sendAICardInternal(
     // 7. 使用 finishAICard 设置内容
     await finishAICard(card, processedContent, config, log);
 
-    log?.info?.(
-      `AI Card 发送成功: ${targetDesc}, cardInstanceId=${card.cardInstanceId}`,
-    );
+    log?.info?.(`AI Card 发送成功: ${targetDesc}, cardInstanceId=${card.cardInstanceId}`);
     return { ok: true, cardInstanceId: card.cardInstanceId, usedAICard: true };
   } catch (err: any) {
-    log?.error?.(
-      `AI Card 发送失败 (${targetDesc}): ${err.message}`,
-    );
+    log?.error?.(`AI Card 发送失败 (${targetDesc}): ${err.message}`);
     if (err.response) {
       log?.error?.(
         `错误响应: status=${err.response.status} data=${JSON.stringify(err.response.data)}`,
@@ -483,12 +444,7 @@ export async function sendAICardToGroup(
   content: string,
   log?: any,
 ): Promise<SendResult> {
-  return sendAICardInternal(
-    config,
-    { type: "group", openConversationId },
-    content,
-    log,
-  );
+  return sendAICardInternal(config, { type: "group", openConversationId }, content, log);
 }
 
 /**
@@ -544,7 +500,7 @@ export async function sendTextToDingTalk(params: {
 }): Promise<SendResult> {
   const { config, target, text, replyToId } = params;
 
-  const log = createLoggerFromConfig(config, 'sendTextToDingTalk');
+  const log = createLoggerFromConfig(config, "sendTextToDingTalk");
 
   // 参数校验
   if (!target || typeof target !== "string") {
@@ -580,8 +536,8 @@ export async function sendMediaToDingTalk(params: {
   mediaUrl: string;
   replyToId?: string;
 }): Promise<SendResult> {
-  const log = createLoggerFromConfig(params.config, 'sendMediaToDingTalk');
-  
+  const log = createLoggerFromConfig(params.config, "sendMediaToDingTalk");
+
   log.info(
     "开始处理，params:",
     JSON.stringify({
@@ -648,13 +604,9 @@ export async function sendMediaToDingTalk(params: {
 
     if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext)) {
       mediaType = "image";
-    } else if (
-      ["mp4", "avi", "mov", "mkv", "flv", "wmv", "webm"].includes(ext)
-    ) {
+    } else if (["mp4", "avi", "mov", "mkv", "flv", "wmv", "webm"].includes(ext)) {
       mediaType = "video";
-    } else if (
-      ["mp3", "wav", "aac", "ogg", "m4a", "flac", "wma", "amr"].includes(ext)
-    ) {
+    } else if (["mp3", "wav", "aac", "ogg", "m4a", "flac", "wma", "amr"].includes(ext)) {
       mediaType = "voice";
     }
     log.info("媒体类型判断完成:", mediaType);
@@ -676,24 +628,20 @@ export async function sendMediaToDingTalk(params: {
       default:
         maxSize = 20 * 1024 * 1024; // 默认 20MB
     }
-    
-    log.info("准备调用 uploadMediaToDingTalk，参数:", { mediaUrl, mediaType, maxSizeMB: (maxSize / (1024 * 1024)).toFixed(0) });
-    if (!oapiToken) {
-      log.error("oapiToken 为空，无法上传媒体文件");
-      return sendProactive(
-        config,
-        targetParam,
-        "⚠️ 媒体文件处理失败：缺少 oapiToken",
-        { msgType: "text", replyToId },
-      );
-    }
-    const uploadResult = await uploadMediaToDingTalk(
+
+    log.info("准备调用 uploadMediaToDingTalk，参数:", {
       mediaUrl,
       mediaType,
-      oapiToken,
-      maxSize,
-      log,
-    );
+      maxSizeMB: (maxSize / (1024 * 1024)).toFixed(0),
+    });
+    if (!oapiToken) {
+      log.error("oapiToken 为空，无法上传媒体文件");
+      return sendProactive(config, targetParam, "⚠️ 媒体文件处理失败：缺少 oapiToken", {
+        msgType: "text",
+        replyToId,
+      });
+    }
+    const uploadResult = await uploadMediaToDingTalk(mediaUrl, mediaType, oapiToken, maxSize, log);
     log.info("uploadMediaToDingTalk 返回结果:", uploadResult);
 
     if (!uploadResult) {
@@ -763,10 +711,10 @@ export async function sendMediaToDingTalk(params: {
     // 对于音频、文件，发送真正的文件消息
     const fs = await import("fs");
     const stats = fs.statSync(mediaUrl);
-    
+
     // 获取文件扩展名作为 fileType
     const fileType = ext || "file";
-    
+
     // 构建文件信息（path 字段用于 sendFileProactive 中 fileName 的 fallback）
     const fileInfo = {
       path: mediaUrl,
@@ -787,12 +735,10 @@ export async function sendMediaToDingTalk(params: {
   } catch (err: any) {
     log.error("发送媒体消息失败:", err.message);
     // 发生错误，发送文本消息提示
-    return sendProactive(
-      config,
-      targetParam,
-      `⚠️ 媒体文件处理失败: ${err.message}`,
-      { msgType: "text", replyToId },
-    );
+    return sendProactive(config, targetParam, `⚠️ 媒体文件处理失败: ${err.message}`, {
+      msgType: "text",
+      replyToId,
+    });
   }
 }
 
@@ -805,8 +751,8 @@ export async function sendProactive(
   content: string,
   options: ProactiveSendOptions = {},
 ): Promise<SendResult> {
-  const log = createLoggerFromConfig(config, 'sendProactive');
-  
+  const log = createLoggerFromConfig(config, "sendProactive");
+
   log.info(
     "开始处理，参数:",
     JSON.stringify({
@@ -832,19 +778,11 @@ export async function sendProactive(
     log.info("发送给用户，userId:", userId);
 
     // 构建发送参数
-    return sendProactiveInternal(
-      config,
-      { type: "user", userId },
-      content,
-      options,
-    );
+    return sendProactiveInternal(config, { type: "user", userId }, content, options);
   }
 
   if (target.openConversationId) {
-    log.info(
-      "发送给群聊，openConversationId:",
-      target.openConversationId,
-    );
+    log.info("发送给群聊，openConversationId:", target.openConversationId);
     return sendProactiveInternal(
       config,
       { type: "group", openConversationId: target.openConversationId },
@@ -870,8 +808,8 @@ async function sendProactiveInternal(
   content: string,
   options: ProactiveSendOptions,
 ): Promise<SendResult> {
-  const log = createLoggerFromConfig(config, 'sendProactiveInternal');
-  
+  const log = createLoggerFromConfig(config, "sendProactiveInternal");
+
   log.info(
     "开始处理，参数:",
     JSON.stringify({
@@ -892,8 +830,8 @@ async function sendProactiveInternal(
 
   const {
     msgType = "text",
-    useAICard = true,          // 默认启用 AI Card，让主动发送消息优先使用卡片形式
-    fallbackToNormal = true,   // 默认降级，AI Card 失败时自动回退到普通消息
+    useAICard = true, // 默认启用 AI Card，让主动发送消息优先使用卡片形式
+    fallbackToNormal = true, // 默认降级，AI Card 失败时自动回退到普通消息
     log: externalLog,
   } = options;
 
@@ -929,18 +867,10 @@ async function sendProactiveInternal(
 
   // 发送普通消息
   try {
-    log.info(
-      "准备发送普通消息，target.type:",
-      target.type,
-    );
+    log.info("准备发送普通消息，target.type:", target.type);
     const token = await getAccessToken(config);
     const isUser = target.type === "user";
-    log.info(
-      "isUser:",
-      isUser,
-      "target:",
-      JSON.stringify(target),
-    );
+    log.info("isUser:", isUser, "target:", JSON.stringify(target));
     const targetId = isUser ? target.userId : target.openConversationId;
     log.info("targetId:", targetId);
 
@@ -970,7 +900,7 @@ async function sendProactiveInternal(
     }
 
     externalLog?.info?.(
-      `发送${isUser ? '单聊' : '群聊'}消息：${isUser ? 'userIds=' : 'openConversationId='}${targetId}`,
+      `发送${isUser ? "单聊" : "群聊"}消息：${isUser ? "userIds=" : "openConversationId="}${targetId}`,
     );
 
     const resp = await dingtalkHttp.post(webhookUrl, body, {

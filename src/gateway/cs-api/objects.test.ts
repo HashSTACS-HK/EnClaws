@@ -8,9 +8,9 @@
  * 测试策略：mock 所有外部依赖，直接调用 handler，不启动 HTTP 服务器。
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -45,9 +45,9 @@ vi.mock("bcryptjs", () => ({
 
 // ── Import after mocks ────────────────────────────────────────────────────────
 
-import { createObject, listObjects } from "./objects.js";
 import { tryJwtAuth, type MultiTenantAuthResult } from "../../auth/middleware.js";
 import { createCsApiObject, updateCsApiObject } from "../../db/models/cs-api-object.js";
+import { createObject, listObjects } from "./objects.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -68,11 +68,20 @@ function makeRes(): ServerResponse & { _status: number; _body: string } {
   const headers: Record<string, string> = {};
 
   const res = {
-    get _status() { return status; },
-    get _body() { return body; },
+    get _status() {
+      return status;
+    },
+    get _body() {
+      return body;
+    },
     statusCode: 200,
-    setHeader(k: string, v: string) { headers[k] = v; },
-    end(chunk?: string) { body = chunk ?? ""; status = res.statusCode; },
+    setHeader(k: string, v: string) {
+      headers[k] = v;
+    },
+    end(chunk?: string) {
+      body = chunk ?? "";
+      status = res.statusCode;
+    },
   } as unknown as ServerResponse & { _status: number; _body: string };
 
   return res;
@@ -237,12 +246,21 @@ describe("endpointUrlFor env handling", () => {
   });
 
   afterEach(() => {
-    if (originalBaseUrl === undefined) { delete process.env.AGENORA_BASE_URL; }
-    else { process.env.AGENORA_BASE_URL = originalBaseUrl; }
-    if (originalPublicUrl === undefined) { delete process.env.AGENORA_PUBLIC_URL; }
-    else { process.env.AGENORA_PUBLIC_URL = originalPublicUrl; }
-    if (originalPort === undefined) { delete process.env.ENCLAWS_GATEWAY_PORT; }
-    else { process.env.ENCLAWS_GATEWAY_PORT = originalPort; }
+    if (originalBaseUrl === undefined) {
+      delete process.env.AGENORA_BASE_URL;
+    } else {
+      process.env.AGENORA_BASE_URL = originalBaseUrl;
+    }
+    if (originalPublicUrl === undefined) {
+      delete process.env.AGENORA_PUBLIC_URL;
+    } else {
+      process.env.AGENORA_PUBLIC_URL = originalPublicUrl;
+    }
+    if (originalPort === undefined) {
+      delete process.env.ENCLAWS_GATEWAY_PORT;
+    } else {
+      process.env.ENCLAWS_GATEWAY_PORT = originalPort;
+    }
   });
 
   it("uses AGENORA_BASE_URL when set", async () => {

@@ -182,8 +182,11 @@ async function runSessionResetFromAgent(params: {
 
 export const agentHandlers: GatewayRequestHandlers = {
   agent: async ({ params, respond, context, client, isWebchatConnect }) => {
-    const { cleaned: p, tenantId: paramTenantId, tenantUserId: paramTenantUserId } =
-      stripTenantParams(params);
+    const {
+      cleaned: p,
+      tenantId: paramTenantId,
+      tenantUserId: paramTenantUserId,
+    } = stripTenantParams(params);
     if (!validateAgentParams(p)) {
       respond(
         false,

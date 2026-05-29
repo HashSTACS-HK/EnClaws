@@ -899,9 +899,12 @@ export abstract class MemoryManagerSyncOps {
             if (!this.isIndexSwapBusyError(err)) {
               throw err;
             }
-            log.warn("memory safe reindex hit a locked sqlite file; falling back to in-place reindex", {
-              reason: err instanceof Error ? err.message : String(err),
-            });
+            log.warn(
+              "memory safe reindex hit a locked sqlite file; falling back to in-place reindex",
+              {
+                reason: err instanceof Error ? err.message : String(err),
+              },
+            );
             await this.runUnsafeReindex({
               reason: params?.reason,
               force: params?.force,
@@ -945,9 +948,12 @@ export abstract class MemoryManagerSyncOps {
           if (!this.isIndexSwapBusyError(reindexErr)) {
             throw reindexErr;
           }
-          log.warn("memory fallback reindex hit a locked sqlite file; falling back to in-place reindex", {
-            reason: reindexErr instanceof Error ? reindexErr.message : String(reindexErr),
-          });
+          log.warn(
+            "memory fallback reindex hit a locked sqlite file; falling back to in-place reindex",
+            {
+              reason: reindexErr instanceof Error ? reindexErr.message : String(reindexErr),
+            },
+          );
           await this.runUnsafeReindex({
             reason: params?.reason ?? "fallback",
             force: true,

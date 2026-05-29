@@ -637,20 +637,30 @@ const ENTERPRISE_DEFAULTS_PT_BR: Record<string, string> = {
 };
 
 const LOCALE_DEFAULTS: Record<string, Record<string, string>> = {
-  "en": ENTERPRISE_DEFAULTS,
+  en: ENTERPRISE_DEFAULTS,
   "zh-cn": ENTERPRISE_DEFAULTS_ZH_CN,
   "zh-tw": ENTERPRISE_DEFAULTS_ZH_TW,
-  "de": ENTERPRISE_DEFAULTS_DE,
+  de: ENTERPRISE_DEFAULTS_DE,
   "pt-br": ENTERPRISE_DEFAULTS_PT_BR,
 };
 
 function resolveLocaleKey(locale?: string): string {
-  if (!locale) { return "en"; }
+  if (!locale) {
+    return "en";
+  }
   const lower = locale.toLowerCase();
-  if (lower.startsWith("zh-tw") || lower.startsWith("zh-hk") || lower.startsWith("zh-hant")) { return "zh-tw"; }
-  if (lower.startsWith("zh")) { return "zh-cn"; }
-  if (lower.startsWith("de")) { return "de"; }
-  if (lower.startsWith("pt")) { return "pt-br"; }
+  if (lower.startsWith("zh-tw") || lower.startsWith("zh-hk") || lower.startsWith("zh-hant")) {
+    return "zh-tw";
+  }
+  if (lower.startsWith("zh")) {
+    return "zh-cn";
+  }
+  if (lower.startsWith("de")) {
+    return "de";
+  }
+  if (lower.startsWith("pt")) {
+    return "pt-br";
+  }
   return "en";
 }
 
@@ -670,7 +680,9 @@ export function getEnterpriseDefault(filename: string, locale?: string): string 
  */
 export function isCurrentEnterpriseDefault(filename: string, content: string): boolean {
   for (const defaults of Object.values(LOCALE_DEFAULTS)) {
-    if (defaults[filename] === content) {return true;}
+    if (defaults[filename] === content) {
+      return true;
+    }
   }
   return false;
 }

@@ -8,9 +8,12 @@
  *   tenant.models.delete  - Delete a model config
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import { invalidateTenantConfigCache } from "../../config/tenant-config.js";
 import { isDbInitialized } from "../../db/index.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
+import { listTenantAgents } from "../../db/models/tenant-agent.js";
 import {
   createTenantModel,
   listTenantModels,
@@ -18,19 +21,20 @@ import {
   updateTenantModel,
   deleteTenantModel,
 } from "../../db/models/tenant-model.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
-import { invalidateTenantConfigCache } from "../../config/tenant-config.js";
-import { listTenantAgents } from "../../db/models/tenant-agent.js";
-import type { TenantContext } from "../../auth/middleware.js";
 import type { TenantModelDefinition } from "../../db/types.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 function getTenantCtx(
   client: GatewayRequestHandlerOptions["client"],
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -50,7 +54,9 @@ function sanitizeModel(m: Record<string, unknown>) {
 export const tenantModelsHandlers: GatewayRequestHandlers = {
   "tenant.models.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "model.list");
@@ -64,29 +70,38 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
 
     const models = await listTenantModels(ctx.tenantId, { activeOnly: false, includeShared: true });
     respond(true, {
-      models: models.map((m) => sanitizeModel({
-        id: m.id,
-        providerType: m.providerType,
-        providerName: m.providerName,
-        baseUrl: m.baseUrl,
-        apiProtocol: m.apiProtocol,
-        authMode: m.authMode,
-        apiKeyEncrypted: m.apiKeyEncrypted,
-        extraHeaders: m.extraHeaders,
-        extraConfig: m.extraConfig,
-        models: m.models,
-        visibility: m.visibility,
-        isActive: m.isActive,
-        createdBy: m.createdBy,
-        createdAt: m.createdAt,
-        updatedAt: m.updatedAt,
-      })),
+      models: models.map((m) =>
+        sanitizeModel({
+          id: m.id,
+          providerType: m.providerType,
+          providerName: m.providerName,
+          baseUrl: m.baseUrl,
+          apiProtocol: m.apiProtocol,
+          authMode: m.authMode,
+          apiKeyEncrypted: m.apiKeyEncrypted,
+          extraHeaders: m.extraHeaders,
+          extraConfig: m.extraConfig,
+          models: m.models,
+          visibility: m.visibility,
+          isActive: m.isActive,
+          createdBy: m.createdBy,
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+        }),
+      ),
     });
   },
 
-  "tenant.models.create": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.models.create": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "model.create");
@@ -99,8 +114,15 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
     }
 
     const {
-      providerType, providerName, baseUrl, apiProtocol, authMode,
-      apiKey, extraHeaders, extraConfig, models,
+      providerType,
+      providerName,
+      baseUrl,
+      apiProtocol,
+      authMode,
+      apiKey,
+      extraHeaders,
+      extraConfig,
+      models,
     } = params as {
       providerType: string;
       providerName: string;
@@ -114,7 +136,11 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
     };
 
     if (!providerType || !providerName) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerType or providerName"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing providerType or providerName"),
+      );
       return;
     }
 
@@ -127,15 +153,25 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
       const modelIds = new Set<string>();
       for (const m of models) {
         if (!m.id || !m.name) {
-          respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Each model must have id and name"));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_PARAMS, "Each model must have id and name"),
+          );
           return;
         }
         if (modelIds.has(m.id)) {
-          respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, `Duplicate model id: ${m.id}`));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_PARAMS, `Duplicate model id: ${m.id}`),
+          );
           return;
         }
         modelIds.add(m.id);
-        if (!m.contextWindow) {m.contextWindow = 128000;}
+        if (!m.contextWindow) {
+          m.contextWindow = 128000;
+        }
       }
     }
 
@@ -165,27 +201,37 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
         detail: { providerType, providerName },
       });
 
-      respond(true, sanitizeModel({
-        id: model.id,
-        providerType: model.providerType,
-        providerName: model.providerName,
-        baseUrl: model.baseUrl,
-        apiProtocol: model.apiProtocol,
-        authMode: model.authMode,
-        apiKeyEncrypted: model.apiKeyEncrypted,
-        extraHeaders: model.extraHeaders,
-        extraConfig: model.extraConfig,
-        models: model.models,
-        isActive: model.isActive,
-      }));
+      respond(
+        true,
+        sanitizeModel({
+          id: model.id,
+          providerType: model.providerType,
+          providerName: model.providerName,
+          baseUrl: model.baseUrl,
+          apiProtocol: model.apiProtocol,
+          authMode: model.authMode,
+          apiKeyEncrypted: model.apiKeyEncrypted,
+          extraHeaders: model.extraHeaders,
+          extraConfig: model.extraConfig,
+          models: model.models,
+          isActive: model.isActive,
+        }),
+      );
     } catch (err: unknown) {
       throw err;
     }
   },
 
-  "tenant.models.update": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.models.update": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "model.update");
@@ -198,8 +244,16 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
     }
 
     const {
-      id, providerName, baseUrl, apiProtocol, authMode,
-      apiKey, extraHeaders, extraConfig, models, isActive,
+      id,
+      providerName,
+      baseUrl,
+      apiProtocol,
+      authMode,
+      apiKey,
+      extraHeaders,
+      extraConfig,
+      models,
+      isActive,
     } = params as {
       id: string;
       providerName?: string;
@@ -222,15 +276,25 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
       const modelIds = new Set<string>();
       for (const m of models) {
         if (!m.id || !m.name) {
-          respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Each model must have id and name"));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_PARAMS, "Each model must have id and name"),
+          );
           return;
         }
         if (modelIds.has(m.id)) {
-          respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, `Duplicate model id: ${m.id}`));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_PARAMS, `Duplicate model id: ${m.id}`),
+          );
           return;
         }
         modelIds.add(m.id);
-        if (!m.contextWindow) {m.contextWindow = 128000;}
+        if (!m.contextWindow) {
+          m.contextWindow = 128000;
+        }
       }
     }
 
@@ -256,11 +320,13 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
             }
           }
           if (conflicts.length > 0) {
-            respond(false, undefined, errorShape(
-              ErrorCodes.INVALID_REQUEST,
-              "models.removeModelInUse",
-              { details: { agents: conflicts.join("; ") } },
-            ));
+            respond(
+              false,
+              undefined,
+              errorShape(ErrorCodes.INVALID_REQUEST, "models.removeModelInUse", {
+                details: { agents: conflicts.join("; ") },
+              }),
+            );
             return;
           }
         }
@@ -268,15 +334,33 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
     }
 
     const updates: Record<string, unknown> = {};
-    if (providerName !== undefined) {updates.providerName = providerName;}
-    if (baseUrl !== undefined) {updates.baseUrl = baseUrl;}
-    if (apiProtocol !== undefined) {updates.apiProtocol = apiProtocol;}
-    if (authMode !== undefined) {updates.authMode = authMode;}
-    if (apiKey !== undefined) {updates.apiKeyEncrypted = apiKey;}
-    if (extraHeaders !== undefined) {updates.extraHeaders = extraHeaders;}
-    if (extraConfig !== undefined) {updates.extraConfig = extraConfig;}
-    if (models !== undefined) {updates.models = models;}
-    if (isActive !== undefined) {updates.isActive = isActive;}
+    if (providerName !== undefined) {
+      updates.providerName = providerName;
+    }
+    if (baseUrl !== undefined) {
+      updates.baseUrl = baseUrl;
+    }
+    if (apiProtocol !== undefined) {
+      updates.apiProtocol = apiProtocol;
+    }
+    if (authMode !== undefined) {
+      updates.authMode = authMode;
+    }
+    if (apiKey !== undefined) {
+      updates.apiKeyEncrypted = apiKey;
+    }
+    if (extraHeaders !== undefined) {
+      updates.extraHeaders = extraHeaders;
+    }
+    if (extraConfig !== undefined) {
+      updates.extraConfig = extraConfig;
+    }
+    if (models !== undefined) {
+      updates.models = models;
+    }
+    if (isActive !== undefined) {
+      updates.isActive = isActive;
+    }
 
     const updated = await updateTenantModel(ctx.tenantId, id, updates as any);
     if (!updated) {
@@ -295,24 +379,34 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
       detail: { providerName: updated.providerName },
     });
 
-    respond(true, sanitizeModel({
-      id: updated.id,
-      providerType: updated.providerType,
-      providerName: updated.providerName,
-      baseUrl: updated.baseUrl,
-      apiProtocol: updated.apiProtocol,
-      authMode: updated.authMode,
-      apiKeyEncrypted: updated.apiKeyEncrypted,
-      extraHeaders: updated.extraHeaders,
-      extraConfig: updated.extraConfig,
-      models: updated.models,
-      isActive: updated.isActive,
-    }));
+    respond(
+      true,
+      sanitizeModel({
+        id: updated.id,
+        providerType: updated.providerType,
+        providerName: updated.providerName,
+        baseUrl: updated.baseUrl,
+        apiProtocol: updated.apiProtocol,
+        authMode: updated.authMode,
+        apiKeyEncrypted: updated.apiKeyEncrypted,
+        extraHeaders: updated.extraHeaders,
+        extraConfig: updated.extraConfig,
+        models: updated.models,
+        isActive: updated.isActive,
+      }),
+    );
   },
 
-  "tenant.models.delete": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.models.delete": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "model.delete");
@@ -337,11 +431,13 @@ export const tenantModelsHandlers: GatewayRequestHandlers = {
     );
     if (referencingAgents.length > 0) {
       const names = referencingAgents.map((a) => a.name || a.agentId).join(", ");
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        "models.deleteInUse",
-        { details: { agents: names } },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "models.deleteInUse", {
+          details: { agents: names },
+        }),
+      );
       return;
     }
 

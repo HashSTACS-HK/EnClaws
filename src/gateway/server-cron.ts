@@ -2,13 +2,17 @@ import { resolveDefaultAgentId } from "../agents/agent-scope.js";
 import type { CliDeps } from "../cli/deps.js";
 import { createOutboundSendDeps } from "../cli/outbound-send-deps.js";
 import { loadConfig } from "../config/config.js";
-import { callGateway } from "./call.js";
 import {
   canonicalizeMainSessionAlias,
   resolveAgentIdFromSessionKey,
   resolveAgentMainSessionKey,
 } from "../config/sessions.js";
+import { loadSessionStore } from "../config/sessions.js";
 import { resolveStorePath } from "../config/sessions/paths.js";
+import {
+  resolveTenantSessionStorePath,
+  resolveTenantAgentCronStorePath,
+} from "../config/sessions/tenant-paths.js";
 import { runCronIsolatedAgentTurn } from "../cron/isolated-agent.js";
 import { resolveDeliveryTarget } from "../cron/isolated-agent/delivery-target.js";
 import {
@@ -18,15 +22,9 @@ import {
 } from "../cron/run-log.js";
 import { CronService } from "../cron/service.js";
 import { loadCronStore, resolveCronStorePath, resolveUserCronStorePath } from "../cron/store.js";
-import { loadSessionStore } from "../config/sessions.js";
-import {
-  resolveTenantSessionStorePath,
-  resolveTenantAgentCronStorePath,
-} from "../config/sessions/tenant-paths.js";
 import type { CronJob } from "../cron/types.js";
-import { findChannelAppByAgent } from "../db/models/tenant-channel-app.js";
-import type { TenantContext } from "../types/tenant-context.js";
 import { normalizeHttpWebhookUrl } from "../cron/webhook-url.js";
+import { findChannelAppByAgent } from "../db/models/tenant-channel-app.js";
 import { formatErrorMessage } from "../infra/errors.js";
 import { runHeartbeatOnce } from "../infra/heartbeat-runner.js";
 import { requestHeartbeatNow } from "../infra/heartbeat-wake.js";
@@ -38,6 +36,8 @@ import { getChildLogger } from "../logging.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { normalizeAgentId, toAgentStoreSessionKey } from "../routing/session-key.js";
 import { defaultRuntime } from "../runtime.js";
+import type { TenantContext } from "../types/tenant-context.js";
+import { callGateway } from "./call.js";
 
 export type GatewayCronState = {
   cron: CronService;
@@ -196,7 +196,9 @@ export function buildGatewayCronService(params: {
     },
     runHeartbeatOnce: async (opts) => {
       const { runtimeConfig, agentId, sessionKey } = resolveCronWakeTarget(opts);
-      debugCronLog.info(`[DEBUG-CRON] single-tenant runHeartbeatOnce fired agentId=${agentId} sessionKey=${sessionKey} reason=${opts?.reason}`);
+      debugCronLog.info(
+        `[DEBUG-CRON] single-tenant runHeartbeatOnce fired agentId=${agentId} sessionKey=${sessionKey} reason=${opts?.reason}`,
+      );
       // Merge cron-supplied heartbeat overrides (e.g. target: "last") with the
       // fully resolved agent heartbeat config so cron-triggered heartbeats
       // respect agent-specific overrides (agents.list[].heartbeat) before
@@ -397,16 +399,21 @@ function resolveTenantLastDeliveryTarget(
     let bestAccountId: string | undefined;
     let latestUpdatedAt = 0;
     for (const entry of Object.values(store)) {
-      if (!entry?.lastChannel || !entry?.lastTo) {continue;}
+      if (!entry?.lastChannel || !entry?.lastTo) {
+        continue;
+      }
       const updatedAt = entry.updatedAt ?? 0;
       if (updatedAt >= latestUpdatedAt) {
         latestUpdatedAt = updatedAt;
         bestChannel = entry.lastChannel.trim().toLowerCase();
         bestTo = entry.lastTo.trim();
-        bestAccountId = typeof entry.lastAccountId === "string" ? entry.lastAccountId.trim() : undefined;
+        bestAccountId =
+          typeof entry.lastAccountId === "string" ? entry.lastAccountId.trim() : undefined;
       }
     }
-    return bestChannel && bestTo ? { channel: bestChannel, to: bestTo, accountId: bestAccountId } : undefined;
+    return bestChannel && bestTo
+      ? { channel: bestChannel, to: bestTo, accountId: bestAccountId }
+      : undefined;
   } catch {
     return undefined;
   }
@@ -425,7 +432,11 @@ export function buildTenantCronService(params: {
   broadcast: (event: string, payload: unknown, opts?: { dropIfSlow?: boolean }) => void;
   cronEnabled: boolean;
 }): GatewayCronState {
-  const cronLogger = getChildLogger({ module: "cron", tenantId: params.tenantId, userId: params.userId });
+  const cronLogger = getChildLogger({
+    module: "cron",
+    tenantId: params.tenantId,
+    userId: params.userId,
+  });
   const storePath = params.storePath;
   const cronEnabled = params.cronEnabled;
   const defaultAgentId = resolveDefaultAgentId(params.cfg);
@@ -474,7 +485,9 @@ export function buildTenantCronService(params: {
    */
   async function tenantRunHeartbeat(opts: { sessionKey: string; text: string }): Promise<void> {
     const { sessionKey, text } = opts;
-    debugCronLog.info(`[DEBUG-CRON] tenantRunHeartbeat fired tenantId=${params.tenantId} userId=${params.userId} sessionKey=${sessionKey}`);
+    debugCronLog.info(
+      `[DEBUG-CRON] tenantRunHeartbeat fired tenantId=${params.tenantId} userId=${params.userId} sessionKey=${sessionKey}`,
+    );
     const idempotencyKey = `cron-tenant-announce:${params.tenantId}:${Date.now()}`;
 
     // Step 1: Run agent via gateway WITHOUT delivery so we can control delivery.
@@ -525,7 +538,9 @@ export function buildTenantCronService(params: {
       senderOpenId && channel === "feishu" ? `<at id=${senderOpenId}></at> ` : "";
     const deliveryText = (mentionPrefix + responseText).trim();
 
-    debugCronLog.info(`[DEBUG-CRON] tenant heartbeat: delivering tenantId=${params.tenantId} userId=${params.userId} sessionKey=${sessionKey} channel=${channel} to=${to} accountId=${accountId}`);
+    debugCronLog.info(
+      `[DEBUG-CRON] tenant heartbeat: delivering tenantId=${params.tenantId} userId=${params.userId} sessionKey=${sessionKey} channel=${channel} to=${to} accountId=${accountId}`,
+    );
 
     // Step 4: Deliver directly — bypasses the gateway's agent delivery path
     // which reads from the global session store and cannot resolve tenant sessions.
@@ -558,7 +573,10 @@ export function buildTenantCronService(params: {
         pendingSystemEventText = undefined;
         pendingSystemEventSessionKey = undefined;
         void tenantRunHeartbeat({ sessionKey, text }).catch((err) => {
-          cronLogger.warn({ err: String(err), sessionKey }, "cron: tenant requestHeartbeatNow failed");
+          cronLogger.warn(
+            { err: String(err), sessionKey },
+            "cron: tenant requestHeartbeatNow failed",
+          );
         });
       }
     },
@@ -589,12 +607,23 @@ export function buildTenantCronService(params: {
       try {
         const channelApp = await findChannelAppByAgent(params.tenantId, agentId);
         cronLogger.info(
-          { tenantId: params.tenantId, agentId, channelApp: channelApp ? { channelType: channelApp.channelType, appId: channelApp.appId?.slice(0, 8) + "..." } : null },
+          {
+            tenantId: params.tenantId,
+            agentId,
+            channelApp: channelApp
+              ? {
+                  channelType: channelApp.channelType,
+                  appId: channelApp.appId?.slice(0, 8) + "...",
+                }
+              : null,
+          },
           "cron: resolved agent channel app",
         );
         if (channelApp?.appId && channelApp.appSecret) {
           const channelKey = channelApp.channelType; // e.g. "feishu"
-          const existingChannel = (runtimeConfig.channels as Record<string, Record<string, unknown>> | undefined)?.[channelKey];
+          const existingChannel = (
+            runtimeConfig.channels as Record<string, Record<string, unknown>> | undefined
+          )?.[channelKey];
           effectiveCfg = {
             ...runtimeConfig,
             channels: {
@@ -608,7 +637,10 @@ export function buildTenantCronService(params: {
           } as typeof runtimeConfig;
         }
       } catch (err) {
-        cronLogger.warn({ err: String(err) }, "cron: failed to resolve agent channel app for delivery");
+        cronLogger.warn(
+          { err: String(err) },
+          "cron: failed to resolve agent channel app for delivery",
+        );
       }
       return await runCronIsolatedAgentTurn({
         cfg: effectiveCfg,
@@ -711,7 +743,9 @@ export class MultiTenantCronScheduler {
   /** Register a user for cron scheduling. */
   registerUser(tenantId: string, userId: string): void {
     const key = `${tenantId}:${userId}`;
-    if (this.users.has(key)) {return;}
+    if (this.users.has(key)) {
+      return;
+    }
     this.users.set(key, {
       tenantId,
       userId,
@@ -741,7 +775,9 @@ export class MultiTenantCronScheduler {
   /** Register an agent for cron scheduling. */
   registerAgent(tenantId: string, agentId: string): void {
     const key = `${tenantId}:${agentId}`;
-    if (this.agents.has(key)) {return;}
+    if (this.agents.has(key)) {
+      return;
+    }
     this.agents.set(key, {
       tenantId,
       agentId,
@@ -779,7 +815,9 @@ export class MultiTenantCronScheduler {
 
   /** Start the scheduler. */
   start(): void {
-    if (this.timer) {return;}
+    if (this.timer) {
+      return;
+    }
     this.timer = setInterval(() => void this.tick(), this.pollIntervalMs);
     // Execute immediately on start.
     void this.tick();
@@ -797,7 +835,9 @@ export class MultiTenantCronScheduler {
 
   /** Main tick: iterate all registered users and execute due jobs. */
   private async tick(): Promise<void> {
-    if (this.running) {return;} // skip if previous tick still running
+    if (this.running) {
+      return;
+    } // skip if previous tick still running
     this.running = true;
     const startTime = Date.now();
     let executedCount = 0;
@@ -809,15 +849,24 @@ export class MultiTenantCronScheduler {
         try {
           const store = await loadCronStore(user.storePath);
           for (const job of store.jobs) {
-            if (!job.enabled) {continue;}
-            if (!this.isJobDue(job, startTime)) {continue;}
+            if (!job.enabled) {
+              continue;
+            }
+            if (!this.isJobDue(job, startTime)) {
+              continue;
+            }
             try {
               await this.executeJob(job, user);
               executedCount++;
             } catch (err) {
               errorCount++;
               this.log.warn(
-                { err: formatErrorMessage(err), jobId: job.id, tenantId: user.tenantId, userId: user.userId },
+                {
+                  err: formatErrorMessage(err),
+                  jobId: job.id,
+                  tenantId: user.tenantId,
+                  userId: user.userId,
+                },
                 "cron: job execution failed",
               );
             }
@@ -851,10 +900,16 @@ export class MultiTenantCronScheduler {
           }),
         );
         for (const entry of agentStores) {
-          if (!entry) {continue;}
+          if (!entry) {
+            continue;
+          }
           for (const job of entry.store.jobs) {
-            if (!job.enabled) {continue;}
-            if (!this.isJobDue(job, startTime)) {continue;}
+            if (!job.enabled) {
+              continue;
+            }
+            if (!this.isJobDue(job, startTime)) {
+              continue;
+            }
             try {
               // Wrap agent as a RegisteredCronUser for backward compat with executeJob
               await this.executeJob(job, {
@@ -866,7 +921,12 @@ export class MultiTenantCronScheduler {
             } catch (err) {
               errorCount++;
               this.log.warn(
-                { err: formatErrorMessage(err), jobId: job.id, tenantId: entry.agent.tenantId, agentId: entry.agent.agentId },
+                {
+                  err: formatErrorMessage(err),
+                  jobId: job.id,
+                  tenantId: entry.agent.tenantId,
+                  agentId: entry.agent.agentId,
+                },
                 "cron: agent job execution failed",
               );
             }
@@ -889,8 +949,12 @@ export class MultiTenantCronScheduler {
   /** Check if a cron job is due for execution. */
   private isJobDue(job: CronJob, nowMs: number): boolean {
     const nextRunAtMs = job.state?.nextRunAtMs;
-    if (typeof nextRunAtMs !== "number") {return false;}
-    if (job.state?.runningAtMs) {return false;} // already running
+    if (typeof nextRunAtMs !== "number") {
+      return false;
+    }
+    if (job.state?.runningAtMs) {
+      return false;
+    } // already running
     return nextRunAtMs <= nowMs;
   }
 }

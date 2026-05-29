@@ -8,21 +8,21 @@ import type { AgentsFilesListResult } from "../types.ts";
 const PERSONA_CARDS = [
   {
     id: "IDENTITY.md",
-    icon: "\u{1F4CB}",  // 📋
+    icon: "\u{1F4CB}", // 📋
     titleKey: "agents.persona.identity.title",
     fileKey: "agents.persona.identity.file",
     descKey: "agents.persona.identity.desc",
   },
   {
     id: "SOUL.md",
-    icon: "\u{1F6E1}\uFE0F",  // 🛡️
+    icon: "\u{1F6E1}\uFE0F", // 🛡️
     titleKey: "agents.persona.soul.title",
     fileKey: "agents.persona.soul.file",
     descKey: "agents.persona.soul.desc",
   },
   {
     id: "AGENTS.md",
-    icon: "\u{1F4D0}",  // 📐
+    icon: "\u{1F4D0}", // 📐
     titleKey: "agents.persona.agents.title",
     fileKey: "agents.persona.agents.file",
     descKey: "agents.persona.agents.desc",
@@ -44,8 +44,7 @@ export function renderAgentPersona(params: {
   onFileReset: (name: string) => void;
   onFileSave: (name: string) => void;
 }) {
-  const list =
-    params.agentFilesList?.agentId === params.agentId ? params.agentFilesList : null;
+  const list = params.agentFilesList?.agentId === params.agentId ? params.agentFilesList : null;
   const files = list?.files ?? [];
 
   return html`
@@ -125,7 +124,13 @@ export function renderAgentPersona(params: {
                           <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">
                             ${t(card.titleKey)}
                             <span class="mono" style="font-size: 0.8em; opacity: 0.6; font-weight: normal;">${t(card.fileKey)}</span>
-                            ${isMissing ? html`<span class="agent-pill warn" style="font-size: 0.75em;">missing</span>` : nothing}
+                            ${
+                              isMissing
+                                ? html`
+                                    <span class="agent-pill warn" style="font-size: 0.75em">missing</span>
+                                  `
+                                : nothing
+                            }
                           </div>
                           <div class="muted" style="font-size: 0.85em; margin-top: 2px;">
                             ${t(card.descKey)}
@@ -143,9 +148,11 @@ export function renderAgentPersona(params: {
                                   isMissing
                                     ? html`
                                         <div class="callout info" style="margin-top: 12px; font-size: 0.85em;">
-                                          ${fileEntry?.defaultContent
-                                            ? t("agents.persona.missingHint")
-                                            : t("agents.persona.noDefault")}
+                                          ${
+                                            fileEntry?.defaultContent
+                                              ? t("agents.persona.missingHint")
+                                              : t("agents.persona.noDefault")
+                                          }
                                         </div>
                                       `
                                     : nothing

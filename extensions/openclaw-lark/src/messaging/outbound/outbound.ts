@@ -11,15 +11,15 @@
  * parameters and delegates to standalone sending functions.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { ChannelOutboundAdapter } from 'openclaw/plugin-sdk/channel-send-result';
-import type { FeishuSendResult } from '../types';
-import { LarkClient } from '../../core/lark-client';
-import { larkLogger } from '../../core/lark-logger';
-import { parseFeishuRouteTarget } from '../../core/targets';
-import { sendCardLark, sendMediaLark, sendTextLark } from './deliver';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { ChannelOutboundAdapter } from "openclaw/plugin-sdk/channel-send-result";
+import { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import { parseFeishuRouteTarget } from "../../core/targets";
+import type { FeishuSendResult } from "../types";
+import { sendCardLark, sendMediaLark, sendTextLark } from "./deliver";
 
-const log = larkLogger('outbound/outbound');
+const log = larkLogger("outbound/outbound");
 
 // ---------------------------------------------------------------------------
 // channelData.feishu contract
@@ -133,13 +133,15 @@ function resolveFeishuSendContext(params: {
 }): FeishuSendContext {
   const routeTarget = parseFeishuRouteTarget(params.to);
   const explicitThreadId =
-    params.threadId != null && String(params.threadId).trim() !== '' ? String(params.threadId).trim() : undefined;
+    params.threadId != null && String(params.threadId).trim() !== ""
+      ? String(params.threadId).trim()
+      : undefined;
   const explicitReplyToId = params.replyToId?.trim() || undefined;
   const replyToMessageId = explicitReplyToId ?? routeTarget.replyToMessageId;
   const replyInThread = Boolean(explicitThreadId ?? routeTarget.threadId);
 
   if (!explicitReplyToId && routeTarget.replyToMessageId) {
-    log.info('resolved reply target from encoded originating route');
+    log.info("resolved reply target from encoded originating route");
   }
 
   return {
@@ -156,11 +158,11 @@ function resolveFeishuSendContext(params: {
 // ---------------------------------------------------------------------------
 
 export const feishuOutbound: ChannelOutboundAdapter = {
-  deliveryMode: 'direct',
+  deliveryMode: "direct",
 
   chunker: (text, limit) => LarkClient.runtime.channel.text.chunkMarkdownText(text, limit),
 
-  chunkerMode: 'markdown',
+  chunkerMode: "markdown",
 
   textChunkLimit: 15000,
 
@@ -168,11 +170,23 @@ export const feishuOutbound: ChannelOutboundAdapter = {
     log.info(`sendText: target=${to}, textLength=${text.length}`);
     const ctx = resolveFeishuSendContext({ cfg, to, accountId, replyToId, threadId });
     const result = await sendTextLark({ ...ctx, to: ctx.to, text });
-    return { channel: 'feishu', ...result };
+    return { channel: "feishu", ...result };
   },
 
-  sendMedia: async ({ cfg, to, text, mediaUrl, mediaLocalRoots, accountId, replyToId, threadId }) => {
-    log.info(`sendMedia: target=${to}, ` + `hasText=${Boolean(text?.trim())}, mediaUrl=${mediaUrl ?? '(none)'}`);
+  sendMedia: async ({
+    cfg,
+    to,
+    text,
+    mediaUrl,
+    mediaLocalRoots,
+    accountId,
+    replyToId,
+    threadId,
+  }) => {
+    log.info(
+      `sendMedia: target=${to}, ` +
+        `hasText=${Boolean(text?.trim())}, mediaUrl=${mediaUrl ?? "(none)"}`,
+    );
     const ctx = resolveFeishuSendContext({ cfg, to, accountId, replyToId, threadId });
 
     // Feishu media messages do not support inline captions — send text first.
@@ -182,14 +196,14 @@ export const feishuOutbound: ChannelOutboundAdapter = {
 
     // No mediaUrl — text-only fallback.
     if (!mediaUrl) {
-      log.info('sendMedia: no mediaUrl provided, falling back to text-only');
-      const result = await sendTextLark({ ...ctx, to: ctx.to, text: text ?? '' });
-      return { channel: 'feishu', ...result };
+      log.info("sendMedia: no mediaUrl provided, falling back to text-only");
+      const result = await sendTextLark({ ...ctx, to: ctx.to, text: text ?? "" });
+      return { channel: "feishu", ...result };
     }
 
     const result = await sendMediaLark({ ...ctx, to: ctx.to, mediaUrl, mediaLocalRoots });
     return {
-      channel: 'feishu',
+      channel: "feishu",
       messageId: result.messageId,
       chatId: result.chatId,
       ...(result.warning ? { meta: { warnings: [result.warning] } } : {}),
@@ -203,8 +217,12 @@ export const feishuOutbound: ChannelOutboundAdapter = {
     const feishuData = payload.channelData?.feishu as FeishuChannelData | undefined;
 
     // --- Resolve text + media from payload ---
-    const text = payload.text ?? '';
-    const mediaUrls = payload.mediaUrls?.length ? payload.mediaUrls : payload.mediaUrl ? [payload.mediaUrl] : [];
+    const text = payload.text ?? "";
+    const mediaUrls = payload.mediaUrls?.length
+      ? payload.mediaUrls
+      : payload.mediaUrl
+        ? [payload.mediaUrl]
+        : [];
 
     log.info(
       `sendPayload: target=${to}, ` +
@@ -231,7 +249,7 @@ export const feishuOutbound: ChannelOutboundAdapter = {
       }
 
       return {
-        channel: 'feishu',
+        channel: "feishu",
         messageId: cardResult.messageId,
         chatId: cardResult.chatId,
         ...(warnings.length > 0 ? { meta: { warnings } } : {}),
@@ -243,7 +261,7 @@ export const feishuOutbound: ChannelOutboundAdapter = {
     // No media: text-only
     if (mediaUrls.length === 0) {
       const result = await sendTextLark({ ...ctx, to: ctx.to, text });
-      return { channel: 'feishu', ...result };
+      return { channel: "feishu", ...result };
     }
 
     // Has media: send leading text, then loop media URLs
@@ -261,8 +279,8 @@ export const feishuOutbound: ChannelOutboundAdapter = {
     }
 
     return {
-      channel: 'feishu',
-      ...(lastResult ?? { messageId: '', chatId: '' }),
+      channel: "feishu",
+      ...(lastResult ?? { messageId: "", chatId: "" }),
       ...(warnings.length > 0 ? { meta: { warnings } } : {}),
     };
   },

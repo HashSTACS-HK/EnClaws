@@ -11,18 +11,18 @@
  */
 
 import { generateReqId } from "@wecom/aibot-node-sdk";
-import { DEFAULT_ACCOUNT_ID } from "../openclaw-compat.js";
-import { getWeComWebSocket } from "../state-manager.js";
-import { MCP_GET_CONFIG_CMD, MCP_CONFIG_FETCH_TIMEOUT_MS } from "../const.js";
-import { withTimeout } from "../timeout.js";
-import { PLUGIN_VERSION } from "../version.js";
-import { getWeComRuntime } from "../runtime.js";
+import type { OpenClawConfig } from "openclaw/plugin-sdk";
 import {
   resolveDefaultWeComAccountId,
   listWeComAccountIds,
   resolveWeComAccountMulti,
 } from "../accounts.js";
-import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { MCP_GET_CONFIG_CMD, MCP_CONFIG_FETCH_TIMEOUT_MS } from "../const.js";
+import { DEFAULT_ACCOUNT_ID } from "../openclaw-compat.js";
+import { getWeComRuntime } from "../runtime.js";
+import { getWeComWebSocket } from "../state-manager.js";
+import { withTimeout } from "../timeout.js";
+import { PLUGIN_VERSION } from "../version.js";
 
 // ============================================================================
 // 类型定义
@@ -224,7 +224,7 @@ async function fetchMcpConfig(category: string): Promise<Record<string, unknown>
   const response = await withTimeout(
     wsClient.reply(
       { headers: { req_id: reqId } },
-      { biz_type: category, plugin_version: PLUGIN_VERSION  },
+      { biz_type: category, plugin_version: PLUGIN_VERSION },
       MCP_GET_CONFIG_CMD,
     ),
     MCP_CONFIG_FETCH_TIMEOUT_MS,
@@ -239,9 +239,7 @@ async function fetchMcpConfig(category: string): Promise<Record<string, unknown>
 
   const body = response.body as { url?: string } | undefined;
   if (!body?.url) {
-    throw new Error(
-      `MCP 配置响应缺少 url 字段 (category="${category}")`,
-    );
+    throw new Error(`MCP 配置响应缺少 url 字段 (category="${category}")`);
   }
 
   console.log(`${LOG_TAG} 配置拉取成功 (accountId="${accountId}", category="${category}")`);
@@ -417,7 +415,9 @@ async function initializeSession(url: string, category: string): Promise<McpSess
 
   session.initialized = true;
   mcpSessionCache.set(category, session);
-  console.log(`${LOG_TAG} 有状态 Session 建立成功 (category="${category}", sessionId="${session.sessionId}")`);
+  console.log(
+    `${LOG_TAG} 有状态 Session 建立成功 (category="${category}", sessionId="${session.sessionId}")`,
+  );
   return session;
 }
 
@@ -603,7 +603,9 @@ export async function sendJsonRpc(
     }
 
     // 其他错误记录日志后抛出
-    console.error(`${LOG_TAG} RPC 请求失败 (category="${category}", method="${method}"): ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `${LOG_TAG} RPC 请求失败 (category="${category}", method="${method}"): ${err instanceof Error ? err.message : String(err)}`,
+    );
     throw err;
   }
 }

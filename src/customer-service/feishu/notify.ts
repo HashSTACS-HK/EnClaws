@@ -24,12 +24,15 @@ async function getTenantAccessToken(appId: string, appSecret: string): Promise<s
   }
 
   try {
-    const res = await fetch("https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
-    });
-    const data = await res.json() as {
+    const res = await fetch(
+      "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
+      },
+    );
+    const data = (await res.json()) as {
       code?: number;
       tenant_access_token?: string;
       expire?: number;
@@ -62,7 +65,8 @@ function buildNotificationCard(params: {
   const { customerMessage, aiReply, sessionId, visitorName, channel } = params;
 
   const visitorLabel = visitorName ?? "匿名访客";
-  const truncMsg = customerMessage.length > 200 ? customerMessage.slice(0, 200) + "..." : customerMessage;
+  const truncMsg =
+    customerMessage.length > 200 ? customerMessage.slice(0, 200) + "..." : customerMessage;
   const truncReply = aiReply.length > 300 ? aiReply.slice(0, 300) + "..." : aiReply;
   const channelLabel = channel && channel !== "web_widget" ? ` · 渠道: ${channel}` : "";
 
@@ -107,7 +111,8 @@ export async function sendCSNotification(params: {
   visitorName?: string;
   channel?: string;
 }): Promise<void> {
-  const { appId, appSecret, chatId, customerMessage, aiReply, sessionId, visitorName, channel } = params;
+  const { appId, appSecret, chatId, customerMessage, aiReply, sessionId, visitorName, channel } =
+    params;
 
   const token = await getTenantAccessToken(appId, appSecret);
   if (!token) {
@@ -118,19 +123,22 @@ export async function sendCSNotification(params: {
   const card = buildNotificationCard({ customerMessage, aiReply, sessionId, visitorName, channel });
 
   try {
-    const res = await fetch("https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+    const res = await fetch(
+      "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          receive_id: chatId,
+          msg_type: "interactive",
+          content: JSON.stringify(card),
+        }),
       },
-      body: JSON.stringify({
-        receive_id: chatId,
-        msg_type: "interactive",
-        content: JSON.stringify(card),
-      }),
-    });
-    const data = await res.json() as { code?: number; msg?: string };
+    );
+    const data = (await res.json()) as { code?: number; msg?: string };
     if (data.code !== 0) {
       log.error(`feishu send card failed: code=${data.code} msg=${data.msg}`);
       return;

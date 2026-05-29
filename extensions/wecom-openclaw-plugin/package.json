@@ -1,6 +1,28 @@
 {
   "name": "@wecom/wecom-openclaw-plugin",
   "version": "2026.4.8",
+  "description": "OpenClaw WeCom (企业微信) channel plugin (official by Tencent WeCom team)",
+  "keywords": [
+    "openclaw",
+    "wecom",
+    "wecom-openclaw-plugin"
+  ],
+  "homepage": "https://github.com/WecomTeam/wecom-openclaw-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/WecomTeam/wecom-openclaw-plugin/issues"
+  },
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WecomTeam/wecom-openclaw-plugin.git"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,53 +32,23 @@
       "import": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "skills",
-    "openclaw.plugin.json",
-    "README.md"
-  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "release": "node scripts/publish-all.mjs",
     "release:dry": "node scripts/publish-all.mjs --dry-run"
   },
-  "keywords": [
-    "wecom",
-    "openclaw",
-    "wecom-openclaw-plugin"
-  ],
-  "author": "",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/WecomTeam/wecom-openclaw-plugin.git"
+  "dependencies": {
+    "@wecom/aibot-node-sdk": "^1.0.6",
+    "fast-xml-parser": "^5.5.9",
+    "file-type": "^21.3.0",
+    "undici": "^7.24.6",
+    "zod": "^4.3.6"
   },
-  "homepage": "https://github.com/WecomTeam/wecom-openclaw-plugin#readme",
-  "bugs": {
-    "url": "https://github.com/WecomTeam/wecom-openclaw-plugin/issues"
-  },
-  "description": "OpenClaw WeCom (企业微信) channel plugin (official by Tencent WeCom team)",
-  "openclaw": {
-    "extensions": [
-      "./dist/index.js"
-    ],
-    "channel": {
-      "id": "wecom",
-      "label": "企业微信",
-      "selectionLabel": "企业微信 (WeCom)",
-      "docsPath": "/channels/wecom",
-      "docsLabel": "wecom-openclaw-plugin",
-      "blurb": "企业微信机器人接入插件",
-      "order": 80,
-      "quickstartAllowFrom": true
-    },
-    "install": {
-      "npmSpec": "@wecom/wecom-openclaw-plugin",
-      "localPath": "extensions/wecom-openclaw-plugin",
-      "defaultChoice": "npm"
-    }
+  "devDependencies": {
+    "openclaw": ">=2026.3.28",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.1"
   },
   "enclaws": {
     "extensions": [
@@ -78,16 +70,24 @@
       "defaultChoice": "npm"
     }
   },
-  "dependencies": {
-    "@wecom/aibot-node-sdk": "^1.0.6",
-    "fast-xml-parser": "^5.5.9",
-    "file-type": "^21.3.0",
-    "undici": "^7.24.6",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "openclaw": ">=2026.3.28",
-    "typescript": "^5.3.3",
-    "vitest": "^4.1.1"
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ],
+    "channel": {
+      "id": "wecom",
+      "label": "企业微信",
+      "selectionLabel": "企业微信 (WeCom)",
+      "docsPath": "/channels/wecom",
+      "docsLabel": "wecom-openclaw-plugin",
+      "blurb": "企业微信机器人接入插件",
+      "order": 80,
+      "quickstartAllowFrom": true
+    },
+    "install": {
+      "npmSpec": "@wecom/wecom-openclaw-plugin",
+      "localPath": "extensions/wecom-openclaw-plugin",
+      "defaultChoice": "npm"
+    }
   }
 }

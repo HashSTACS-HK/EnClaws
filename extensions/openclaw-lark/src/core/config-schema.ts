@@ -8,7 +8,7 @@
  * so that every consuming module can rely on well-typed configuration objects.
  */
 
-import { toJSONSchema, z } from 'zod';
+import { toJSONSchema, z } from "zod";
 
 export { z };
 
@@ -16,10 +16,10 @@ export { z };
 // Shared micro-schemas
 // ---------------------------------------------------------------------------
 
-const DmPolicyEnum = z.enum(['open', 'pairing', 'allowlist', 'disabled']);
-const GroupPolicyEnum = z.enum(['open', 'allowlist', 'disabled']);
-const ConnectionModeEnum = z.enum(['websocket', 'webhook']);
-const ReplyModeValue = z.enum(['auto', 'static', 'streaming']);
+const DmPolicyEnum = z.enum(["open", "pairing", "allowlist", "disabled"]);
+const GroupPolicyEnum = z.enum(["open", "allowlist", "disabled"]);
+const ConnectionModeEnum = z.enum(["websocket", "webhook"]);
+const ReplyModeValue = z.enum(["auto", "static", "streaming"]);
 const ReplyModeSchema = z
   .union([
     ReplyModeValue,
@@ -30,9 +30,11 @@ const ReplyModeSchema = z
     }),
   ])
   .optional();
-const ChunkModeEnum = z.enum(['newline', 'paragraph', 'none']);
+const ChunkModeEnum = z.enum(["newline", "paragraph", "none"]);
 
-const DomainSchema = z.union([z.literal('feishu'), z.literal('lark'), z.string().regex(/^https:\/\//)]).optional();
+const DomainSchema = z
+  .union([z.literal("feishu"), z.literal("lark"), z.string().regex(/^https:\/\//)])
+  .optional();
 
 const AllowFromSchema = z
   .union([z.string(), z.array(z.string())])
@@ -80,7 +82,7 @@ const BlockStreamingCoalesceSchema = z
 
 const MarkdownConfigSchema = z
   .object({
-    tables: z.enum(['off', 'bullets', 'code']).optional(),
+    tables: z.enum(["off", "bullets", "code"]).optional(),
   })
   .optional();
 
@@ -116,7 +118,7 @@ const DedupSchema = z
   })
   .optional();
 
-const ReactionNotificationModeSchema = z.enum(['off', 'own', 'all']).optional();
+const ReactionNotificationModeSchema = z.enum(["off", "own", "all"]).optional();
 
 export const UATConfigSchema = z
   .object({
@@ -199,14 +201,14 @@ export const FeishuConfigSchema = FeishuAccountConfigSchema.extend({
   accounts: z.record(z.string(), FeishuAccountConfigSchema).optional(),
 }).superRefine((data, ctx) => {
   // When dmPolicy is "open", allowFrom must contain the wildcard "*".
-  if (data.dmPolicy === 'open') {
+  if (data.dmPolicy === "open") {
     const list = data.allowFrom;
-    const hasWildcard = Array.isArray(list) && list.includes('*');
+    const hasWildcard = Array.isArray(list) && list.includes("*");
 
     if (!hasWildcard) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['allowFrom'],
+        path: ["allowFrom"],
         message: 'When dmPolicy is "open", allowFrom must include "*" to permit all senders.',
       });
     }
@@ -225,7 +227,7 @@ export const FeishuConfigSchema = FeishuAccountConfigSchema.extend({
  * - `target: "draft-07"` matches the plugin system's expected JSON Schema version.
  */
 export const FEISHU_CONFIG_JSON_SCHEMA: Record<string, unknown> = toJSONSchema(FeishuConfigSchema, {
-  target: 'draft-07',
-  io: 'input',
-  unrepresentable: 'any',
+  target: "draft-07",
+  io: "input",
+  unrepresentable: "any",
 });

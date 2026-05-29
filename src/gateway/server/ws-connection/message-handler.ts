@@ -1,7 +1,14 @@
 import type { IncomingMessage } from "node:http";
 import os from "node:os";
 import type { WebSocket } from "ws";
+import { verifyAccessToken } from "../../../auth/jwt.js";
+import type { TenantContext } from "../../../auth/middleware.js";
+import { mapRoleToGatewayScopes } from "../../../auth/rbac.js";
 import { loadConfig } from "../../../config/config.js";
+import { isDbInitialized } from "../../../db/index.js";
+import { getTenantById } from "../../../db/models/tenant.js";
+import { getUserById } from "../../../db/models/user.js";
+import type { UserRole } from "../../../db/types.js";
 import {
   deriveDeviceIdFromPublicKey,
   normalizeDevicePublicKeyBase64Url,
@@ -77,13 +84,6 @@ import {
 } from "../health-state.js";
 import type { GatewayWsClient } from "../ws-types.js";
 import { resolveConnectAuthDecision, resolveConnectAuthState } from "./auth-context.js";
-import { verifyAccessToken } from "../../../auth/jwt.js";
-import { getUserById } from "../../../db/models/user.js";
-import { getTenantById } from "../../../db/models/tenant.js";
-import { isDbInitialized } from "../../../db/index.js";
-import { mapRoleToGatewayScopes } from "../../../auth/rbac.js";
-import type { TenantContext } from "../../../auth/middleware.js";
-import type { UserRole } from "../../../db/types.js";
 import { formatGatewayAuthFailureMessage, type AuthProvidedKind } from "./auth-messages.js";
 import {
   evaluateMissingDeviceIdentity,
@@ -693,8 +693,9 @@ export function attachGatewayWsMessageHandler(params: {
         // and device pairing so that data is read/written in the correct
         // tenant-scoped directory.
         let earlyTenantContext: TenantContext | undefined;
-        const jwtCandidateEarly = connectParams.auth?.jwt
-          ?? (connectParams.auth?.token?.includes(".") ? connectParams.auth.token : undefined);
+        const jwtCandidateEarly =
+          connectParams.auth?.jwt ??
+          (connectParams.auth?.token?.includes(".") ? connectParams.auth.token : undefined);
         if (jwtCandidateEarly && isDbInitialized()) {
           try {
             const jwtPayload = verifyAccessToken(jwtCandidateEarly);
@@ -702,7 +703,12 @@ export function attachGatewayWsMessageHandler(params: {
               getUserById(jwtPayload.sub),
               getTenantById(jwtPayload.tid),
             ]);
-            if (jwtUser && jwtUser.status === "active" && jwtTenant && jwtTenant.status === "active") {
+            if (
+              jwtUser &&
+              jwtUser.status === "active" &&
+              jwtTenant &&
+              jwtTenant.status === "active"
+            ) {
               earlyTenantContext = {
                 tenantId: jwtTenant.id,
                 userId: jwtUser.id,
@@ -732,7 +738,8 @@ export function attachGatewayWsMessageHandler(params: {
           scopes,
           rateLimiter: authRateLimiter,
           clientIp: browserRateLimitClientIp,
-          verifyDeviceToken: (params) => verifyDeviceToken({ ...params, tenantContext: earlyTenantContext }),
+          verifyDeviceToken: (params) =>
+            verifyDeviceToken({ ...params, tenantContext: earlyTenantContext }),
         }));
         if (!authOk) {
           rejectUnauthorized(authResult);
@@ -806,15 +813,23 @@ export function attachGatewayWsMessageHandler(params: {
               isWebchat,
               reason,
             });
-            const pairing = await requestDevicePairing({
-              deviceId: device.id,
-              publicKey: devicePublicKey,
-              ...clientPairingMetadata,
-              silent: allowSilentLocalPairing,
-            }, undefined, earlyTenantContext);
+            const pairing = await requestDevicePairing(
+              {
+                deviceId: device.id,
+                publicKey: devicePublicKey,
+                ...clientPairingMetadata,
+                silent: allowSilentLocalPairing,
+              },
+              undefined,
+              earlyTenantContext,
+            );
             const context = buildRequestContext();
             if (pairing.request.silent === true) {
-              const approved = await approveDevicePairing(pairing.request.requestId, undefined, earlyTenantContext);
+              const approved = await approveDevicePairing(
+                pairing.request.requestId,
+                undefined,
+                earlyTenantContext,
+              );
               if (approved) {
                 logGateway.info(
                   `device pairing auto-approved device=${approved.device.deviceId} role=${approved.device.role ?? "unknown"}`,
@@ -943,12 +958,22 @@ export function attachGatewayWsMessageHandler(params: {
 
             // Metadata pinning is approval-bound. Reconnects can update access metadata,
             // but platform/device family must stay on the approved pairing record.
-            await updatePairedDeviceMetadata(device.id, clientAccessMetadata, undefined, earlyTenantContext);
+            await updatePairedDeviceMetadata(
+              device.id,
+              clientAccessMetadata,
+              undefined,
+              earlyTenantContext,
+            );
           }
         }
 
         const deviceToken = device
-          ? await ensureDeviceToken({ deviceId: device.id, role, scopes, tenantContext: earlyTenantContext })
+          ? await ensureDeviceToken({
+              deviceId: device.id,
+              role,
+              scopes,
+              tenantContext: earlyTenantContext,
+            })
           : null;
 
         if (role === "node") {
@@ -1093,9 +1118,14 @@ export function attachGatewayWsMessageHandler(params: {
             nodeIdsForPairing.add(instanceId);
           }
           for (const nodeId of nodeIdsForPairing) {
-            void updatePairedNodeMetadata(nodeId, {
-              lastConnectedAtMs: nodeSession.connectedAtMs,
-            }, undefined, nextClient.tenant).catch((err) =>
+            void updatePairedNodeMetadata(
+              nodeId,
+              {
+                lastConnectedAtMs: nodeSession.connectedAtMs,
+              },
+              undefined,
+              nextClient.tenant,
+            ).catch((err) =>
               logGateway.warn(`failed to record last connect for ${nodeId}: ${formatForLog(err)}`),
             );
           }

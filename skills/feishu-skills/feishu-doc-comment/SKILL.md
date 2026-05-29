@@ -3,11 +3,12 @@ name: feishu-doc-comment
 description: |
   飞书云文档评论管理。支持获取评论列表（含完整回复）、创建全文评论、解决/恢复评论。
   支持 wiki token 自动转换为实际文档 token。
-overrides: feishu_doc_comments, feishu_pre_auth  
+overrides: feishu_doc_comments, feishu_pre_auth
 inline: true
 ---
 
 # feishu-doc-comment
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -65,19 +66,19 @@ node ./comment.js --open-id "ou_xxx" --action patch \
 
 ## 参数说明
 
-| 参数 | 必填 | 说明 |
-|---|---|---|
-| `--open-id` | 是 | 当前用户 open_id |
-| `--action` | 是 | `list` / `create` / `patch` |
-| `--file-token` | 是 | 文档 token 或 wiki node_token |
-| `--file-type` | 是 | `docx` / `sheet` / `file` / `slides` / `wiki` |
-| `--is-whole` | 可选 | `true`=只看全文评论（list 用） |
-| `--is-solved` | 可选 | `true`=只看已解决 / `false`=只看未解决（list 用） |
-| `--page-size` | 可选 | 分页大小（默认 50） |
-| `--page-token` | 可选 | 翻页 token |
-| `--content` | create 必填 | 评论文本内容 |
-| `--comment-id` | patch 必填 | 评论 ID |
-| `--is-solved-value` | patch 必填 | `true`=解决 / `false`=恢复 |
+| 参数                | 必填        | 说明                                              |
+| ------------------- | ----------- | ------------------------------------------------- |
+| `--open-id`         | 是          | 当前用户 open_id                                  |
+| `--action`          | 是          | `list` / `create` / `patch`                       |
+| `--file-token`      | 是          | 文档 token 或 wiki node_token                     |
+| `--file-type`       | 是          | `docx` / `sheet` / `file` / `slides` / `wiki`     |
+| `--is-whole`        | 可选        | `true`=只看全文评论（list 用）                    |
+| `--is-solved`       | 可选        | `true`=只看已解决 / `false`=只看未解决（list 用） |
+| `--page-size`       | 可选        | 分页大小（默认 50）                               |
+| `--page-token`      | 可选        | 翻页 token                                        |
+| `--content`         | create 必填 | 评论文本内容                                      |
+| `--comment-id`      | patch 必填  | 评论 ID                                           |
+| `--is-solved-value` | patch 必填  | `true`=解决 / `false`=恢复                        |
 
 > **wiki token**：传 `--file-type wiki` 时自动调用 wiki API 将 node_token 转换为实际文档的 obj_token，无需手动转换。
 

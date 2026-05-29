@@ -31,14 +31,14 @@ pnpm vitest run test/feishu-simulator/test-case/feishu-chat.test.ts
 
 ## 环境变量
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `TEST_DATA_DIR` | `test-data/` | 测试数据目录（递归加载 `*.json`） |
-| `TEST_CSV_OUTPUT` | `test-results/{timestamp}.csv` | CSV 报告输出路径 |
-| `TEST_CONCURRENCY` | `2` | 并发执行的测试文件数 |
-| `TEST_REPLY_TIMEOUT` | `60000` | 等待 Bot 回复的超时时间（ms） |
-| `TEST_POLL_INTERVAL` | `1000` | 轮询回复的间隔（ms） |
-| `TEST_COMMAND_TIMEOUT` | `30000` | Layer1 脚本执行超时（ms） |
+| 变量                   | 默认值                         | 说明                              |
+| ---------------------- | ------------------------------ | --------------------------------- |
+| `TEST_DATA_DIR`        | `test-data/`                   | 测试数据目录（递归加载 `*.json`） |
+| `TEST_CSV_OUTPUT`      | `test-results/{timestamp}.csv` | CSV 报告输出路径                  |
+| `TEST_CONCURRENCY`     | `2`                            | 并发执行的测试文件数              |
+| `TEST_REPLY_TIMEOUT`   | `60000`                        | 等待 Bot 回复的超时时间（ms）     |
+| `TEST_POLL_INTERVAL`   | `1000`                         | 轮询回复的间隔（ms）              |
+| `TEST_COMMAND_TIMEOUT` | `30000`                        | Layer1 脚本执行超时（ms）         |
 
 ## 测试数据格式
 
@@ -48,27 +48,30 @@ pnpm vitest run test/feishu-simulator/test-case/feishu-chat.test.ts
 
 ```jsonc
 {
-  "skillsDir": "D:/web3/feishu-skills",  // skill 脚本所在目录
-  "env": {                                 // 环境变量
+  "skillsDir": "D:/web3/feishu-skills", // skill 脚本所在目录
+  "env": {
+    // 环境变量
     "FEISHU_APP_ID": "cli_xxx",
-    "FEISHU_APP_SECRET": "xxx"
+    "FEISHU_APP_SECRET": "xxx",
   },
-  "vars": {                                // 模板变量，用于 {{VAR}} 替换
-    "OPEN_ID": "ou_xxx"
+  "vars": {
+    // 模板变量，用于 {{VAR}} 替换
+    "OPEN_ID": "ou_xxx",
   },
   "cases": [
     {
       "name": "创建文档-正常流程",
       "command": "node ./feishu-create-doc/create-doc.js --open-id {{OPEN_ID}} --title 测试文档",
       "assert": {
-        "exitCode": 0,                     // 期望退出码
-        "jsonPath": {                      // JSON 输出字段断言
+        "exitCode": 0, // 期望退出码
+        "jsonPath": {
+          // JSON 输出字段断言
           "doc_id": { "matches": "^docx_" },
           "doc_url": { "contains": "feishu.cn" },
-          "reply": { "contains": "已创建" }
-        }
+          "reply": { "contains": "已创建" },
+        },
       },
-      "cleanup": "node ./feishu-drive/drive.js --open-id {{OPEN_ID}} --action delete --token {{result.doc_id}}"
+      "cleanup": "node ./feishu-drive/drive.js --open-id {{OPEN_ID}} --action delete --token {{result.doc_id}}",
     },
     {
       "name": "缺少必填参数",
@@ -76,11 +79,11 @@ pnpm vitest run test/feishu-simulator/test-case/feishu-chat.test.ts
       "assert": {
         "exitCode": 1,
         "jsonPath": {
-          "error": { "equals": "missing_param" }
-        }
-      }
-    }
-  ]
+          "error": { "equals": "missing_param" },
+        },
+      },
+    },
+  ],
 }
 ```
 
@@ -90,45 +93,46 @@ pnpm vitest run test/feishu-simulator/test-case/feishu-chat.test.ts
 
 ```jsonc
 {
-  "appId": "cli_xxx",          // 飞书应用 App ID
-  "appSecret": "xxx",          // 飞书应用 App Secret
-  "userOpenId": "ou_xxx",      // 发送消息的用户 Open ID
+  "appId": "cli_xxx", // 飞书应用 App ID
+  "appSecret": "xxx", // 飞书应用 App Secret
+  "userOpenId": "ou_xxx", // 发送消息的用户 Open ID
   "cases": [
     {
-      "name": "基本问候",       // 用例名称（用于日志和报告）
-      "message": "你好！",      // 发送给 Bot 的消息
-      "tags": ["P0"]           // 可选：标签，用于筛选
+      "name": "基本问候", // 用例名称（用于日志和报告）
+      "message": "你好！", // 发送给 Bot 的消息
+      "tags": ["P0"], // 可选：标签，用于筛选
     },
     {
       "name": "文本断言",
       "message": "你是谁？",
-      "assert": {               // 可选：对 Bot 回复进行断言
-        "contains": "助手",     // 回复必须包含该字符串
+      "assert": {
+        // 可选：对 Bot 回复进行断言
+        "contains": "助手", // 回复必须包含该字符串
         "notContains": "error", // 回复不得包含该字符串
         "matches": "AI|机器人", // 回复必须匹配该正则表达式
-        "minLength": 2,         // 回复最小长度
-        "maxLength": 500,       // 回复最大长度
-        "containsAny": ["AI", "助手", "机器人"],  // 包含任意一个即可
-        "containsAll": ["你好", "帮助"]            // 必须全部包含
-      }
+        "minLength": 2, // 回复最小长度
+        "maxLength": 500, // 回复最大长度
+        "containsAny": ["AI", "助手", "机器人"], // 包含任意一个即可
+        "containsAll": ["你好", "帮助"], // 必须全部包含
+      },
     },
     {
       "name": "文件导出",
       "message": "把表格导出为Excel",
       "assert": {
-        "msgType": "file",             // 断言消息类型
-        "hasFile": true,               // 断言包含文件
-        "fileNameMatches": "\\.(xlsx|xls|csv)$"   // 断言文件名匹配正则
-      }
+        "msgType": "file", // 断言消息类型
+        "hasFile": true, // 断言包含文件
+        "fileNameMatches": "\\.(xlsx|xls|csv)$", // 断言文件名匹配正则
+      },
     },
     {
       "name": "图片生成",
       "message": "画一只猫",
       "assert": {
-        "hasImage": true               // 断言包含图片
-      }
-    }
-  ]
+        "hasImage": true, // 断言包含图片
+      },
+    },
+  ],
 }
 ```
 
@@ -136,41 +140,41 @@ pnpm vitest run test/feishu-simulator/test-case/feishu-chat.test.ts
 
 **Layer 1 — assert 对象**
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `exitCode` | `number` | 期望退出码（默认 0） |
-| `jsonPath` | `object` | JSON 输出字段断言（支持 equals/contains/matches/notContains/exists） |
-| `stdoutContains` | `string` | stdout 包含指定文本 |
-| `stdoutNotContains` | `string` | stdout 不包含指定文本 |
-| `stderrContains` | `string` | stderr 包含指定文本 |
+| 字段                | 类型     | 说明                                                                 |
+| ------------------- | -------- | -------------------------------------------------------------------- |
+| `exitCode`          | `number` | 期望退出码（默认 0）                                                 |
+| `jsonPath`          | `object` | JSON 输出字段断言（支持 equals/contains/matches/notContains/exists） |
+| `stdoutContains`    | `string` | stdout 包含指定文本                                                  |
+| `stdoutNotContains` | `string` | stdout 不包含指定文本                                                |
+| `stderrContains`    | `string` | stderr 包含指定文本                                                  |
 
 **Layer 2 — assert 对象**
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `contains` | `string` | 回复必须包含该子串 |
-| `notContains` | `string` | 回复不得包含该子串 |
-| `matches` | `string` | 回复必须匹配的正则表达式 |
-| `minLength` | `number` | 回复文本最小长度 |
-| `maxLength` | `number` | 回复文本最大长度 |
-| `msgType` | `string` | 断言消息类型 |
-| `hasFile` | `boolean` | 断言包含文件 |
-| `hasImage` | `boolean` | 断言包含图片 |
-| `fileNameMatches` | `string` | 文件名匹配正则 |
-| `containsAny` | `string[]` | 包含列表中任意一个即通过 |
-| `containsAll` | `string[]` | 必须包含列表中全部 |
+| 字段              | 类型       | 说明                     |
+| ----------------- | ---------- | ------------------------ |
+| `contains`        | `string`   | 回复必须包含该子串       |
+| `notContains`     | `string`   | 回复不得包含该子串       |
+| `matches`         | `string`   | 回复必须匹配的正则表达式 |
+| `minLength`       | `number`   | 回复文本最小长度         |
+| `maxLength`       | `number`   | 回复文本最大长度         |
+| `msgType`         | `string`   | 断言消息类型             |
+| `hasFile`         | `boolean`  | 断言包含文件             |
+| `hasImage`        | `boolean`  | 断言包含图片             |
+| `fileNameMatches` | `string`   | 文件名匹配正则           |
+| `containsAny`     | `string[]` | 包含列表中任意一个即通过 |
+| `containsAll`     | `string[]` | 必须包含列表中全部       |
 
 ## 支持的消息类型
 
-| msgType | 提取的 text | 额外元数据 |
-|---------|------------|-----------|
-| `text` | 消息文本 | — |
-| `post` | 富文本中的纯文本 | — |
-| `interactive` | CardKit v2 卡片的 summary 或元素文本 | — |
-| `file` | 文件名 | `fileKey`、`fileName` |
-| `image` | （空） | `imageKey` |
-| `media` | 文件名 | `fileKey`、`fileName`、`imageKey` |
-| `audio` | （空） | — |
+| msgType       | 提取的 text                          | 额外元数据                        |
+| ------------- | ------------------------------------ | --------------------------------- |
+| `text`        | 消息文本                             | —                                 |
+| `post`        | 富文本中的纯文本                     | —                                 |
+| `interactive` | CardKit v2 卡片的 summary 或元素文本 | —                                 |
+| `file`        | 文件名                               | `fileKey`、`fileName`             |
+| `image`       | （空）                               | `imageKey`                        |
+| `media`       | 文件名                               | `fileKey`、`fileName`、`imageKey` |
+| `audio`       | （空）                               | —                                 |
 
 ## 目录结构
 
@@ -259,19 +263,20 @@ token 缓存在 `.token-cache/` 目录，按 `{appId}_{userOpenId}.json` 命名�
 
 每次运行自动生成 CSV 报告，包含以下列：
 
-| 列 | 说明 |
-|----|------|
-| File Name | 测试文件名 |
-| Case Name | 用例名称 |
-| Message Input | 发送的消息 / 执行的命令 |
-| Expected Output | 断言规则描述 |
-| Actual Output | Bot 实际回复 / 脚本输出 |
-| Result | PASS / FAIL |
-| Duration | 耗时（ms） |
+| 列              | 说明                    |
+| --------------- | ----------------------- |
+| File Name       | 测试文件名              |
+| Case Name       | 用例名称                |
+| Message Input   | 发送的消息 / 执行的命令 |
+| Expected Output | 断言规则描述            |
+| Actual Output   | Bot 实际回复 / 脚本输出 |
+| Result          | PASS / FAIL             |
+| Duration        | 耗时（ms）              |
 
 ## 快速开始
 
 1. 复制测试数据模板，填入真实凭据：
+
    ```bash
    # 编辑各层目录下每个 JSON 文件，替换 appId、appSecret、userOpenId
    cd test/feishu-simulator/test-data/feishu-skills-layer1/
@@ -280,11 +285,13 @@ token 缓存在 `.token-cache/` 目录，按 `{appId}_{userOpenId}.json` 命名�
    ```
 
 2. 运行 Layer 1（不需要 Gateway）：
+
    ```bash
    pnpm vitest run test/feishu-simulator/test-case/feishu-skills-layer1.test.ts
    ```
 
 3. 运行 Layer 2（需要 Gateway + Lark 连接）：
+
    ```bash
    pnpm vitest run test/feishu-simulator/test-case/feishu-skills-layer2.test.ts
    ```

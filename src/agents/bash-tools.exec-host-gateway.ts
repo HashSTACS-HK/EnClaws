@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import type { AgentToolResult } from "@mariozechner/pi-agent-core";
+import { evaluateDenylist, getExecDenylist } from "../infra/exec-approvals-denylist.js";
 import {
   addAllowlistEntry,
   type ExecAsk,
@@ -13,7 +14,6 @@ import {
   resolveAllowAlwaysPatterns,
   resolveExecApprovals,
 } from "../infra/exec-approvals.js";
-import { evaluateDenylist, getExecDenylist } from "../infra/exec-approvals-denylist.js";
 import { detectCommandObfuscation } from "../infra/exec-obfuscation-detect.js";
 import type { SafeBinProfile } from "../infra/exec-safe-bin-policy.js";
 import { logInfo } from "../logger.js";

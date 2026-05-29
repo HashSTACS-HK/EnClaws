@@ -3,14 +3,14 @@ import { loadConfig } from "../config/config.js";
 import { callGateway } from "../gateway/call.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { normalizeDeliveryContext } from "../utils/delivery-context.js";
+import { AGENT_LANE_SUBAGENT } from "./lanes.js";
+import { resolveSubagentSpawnModelSelection } from "./model-selection.js";
 import { extractTaskResult, type TaskResult } from "./subagent-announce.js";
 import { readLatestSubagentOutput } from "./subagent-announce.js";
-import { resolveSubagentSpawnModelSelection } from "./model-selection.js";
 import { buildSubagentSystemPrompt } from "./subagent-announce.js";
-import { registerSubagentRun } from "./subagent-registry.js";
-import { AGENT_LANE_SUBAGENT } from "./lanes.js";
-import type { SubagentRunRecord } from "./subagent-registry.types.js";
 import type { SubagentRunOutcome } from "./subagent-announce.js";
+import { registerSubagentRun } from "./subagent-registry.js";
+import type { SubagentRunRecord } from "./subagent-registry.types.js";
 
 const log = createSubsystemLogger("subagent-retry");
 
@@ -49,12 +49,11 @@ export function resolveRetryPolicy(cfg?: ReturnType<typeof loadConfig>): RetryPo
         : DEFAULT_RETRY_POLICY.maxRetries,
     retryOnStatus: Array.isArray(raw.retryOnStatus)
       ? (raw.retryOnStatus.filter(
-          (s: unknown) =>
-            typeof s === "string" && ["success", "partial", "failed"].includes(s),
+          (s: unknown) => typeof s === "string" && ["success", "partial", "failed"].includes(s),
         ) as TaskResult["status"][])
       : DEFAULT_RETRY_POLICY.retryOnStatus,
     modelFallback: Array.isArray(raw.modelFallback)
-      ? raw.modelFallback.filter((m: unknown) => typeof m === "string" && m.trim()) as string[]
+      ? (raw.modelFallback.filter((m: unknown) => typeof m === "string" && m.trim()) as string[])
       : undefined,
   };
 }
@@ -71,7 +70,9 @@ export function shouldRetrySubagentRun(params: {
   const { entry, taskResult, outcome, policy } = params;
 
   // Never retry if retries are disabled.
-  if (policy.maxRetries <= 0) {return false;}
+  if (policy.maxRetries <= 0) {
+    return false;
+  }
 
   // Check retry count.
   const currentRetryCount = entry.retryCount ?? 0;
@@ -92,9 +93,7 @@ export function shouldRetrySubagentRun(params: {
 
   // Also retry on lifecycle errors/timeouts even without a task_result.
   if (!taskResult && (outcome?.status === "error" || outcome?.status === "timeout")) {
-    log.info(
-      `[retry] run ${entry.runId} outcome="${outcome.status}" (no task_result), retrying`,
-    );
+    log.info(`[retry] run ${entry.runId} outcome="${outcome.status}" (no task_result), retrying`);
     return true;
   }
 
@@ -142,8 +141,7 @@ export async function retrySubagentRun(params: {
     },
   };
 
-  const targetAgentId =
-    originalEntry.childSessionKey.split(":")[1] ?? "main";
+  const targetAgentId = originalEntry.childSessionKey.split(":")[1] ?? "main";
   const childSessionKey = `agent:${targetAgentId}:subagent:${crypto.randomUUID()}`;
   const requesterOrigin = normalizeDeliveryContext(originalEntry.requesterOrigin);
 
@@ -208,10 +206,7 @@ export async function retrySubagentRun(params: {
         channel: requesterOrigin?.channel,
         to: requesterOrigin?.to ?? undefined,
         accountId: requesterOrigin?.accountId ?? undefined,
-        threadId:
-          requesterOrigin?.threadId != null
-            ? String(requesterOrigin.threadId)
-            : undefined,
+        threadId: requesterOrigin?.threadId != null ? String(requesterOrigin.threadId) : undefined,
         idempotencyKey: childIdem,
         deliver: false,
         lane: AGENT_LANE_SUBAGENT,
@@ -274,7 +269,9 @@ export async function evaluateAndRetryIfNeeded(params: {
   const policy = resolveRetryPolicy(cfg);
 
   // Skip retry logic for session-mode subagents (they persist).
-  if (entry.spawnMode === "session") {return false;}
+  if (entry.spawnMode === "session") {
+    return false;
+  }
 
   const taskResult = extractTaskResult(output);
 

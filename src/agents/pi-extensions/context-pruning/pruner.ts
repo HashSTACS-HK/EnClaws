@@ -1,9 +1,9 @@
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { ImageContent, TextContent, ToolResultMessage } from "@mariozechner/pi-ai";
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
+import { isOptEnabled } from "../../../config/token-optimization.js";
 import type { EffectiveContextPruningSettings } from "./settings.js";
 import { makeToolPrunablePredicate } from "./tools.js";
-import { isOptEnabled } from "../../../config/token-optimization.js";
 
 const CHARS_PER_TOKEN_ESTIMATE = 4;
 // We currently skip pruning tool results that contain images. Still, we count them (approx.) so
@@ -15,9 +15,8 @@ const IMAGE_CHAR_ESTIMATE = 8_000;
  * CJK characters encode at ~1.5-2 chars/token vs ~4 for ASCII.
  */
 export function estimateCharsPerToken(text: string): number {
-  const cjkCount = (
-    text.match(/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/g) || []
-  ).length;
+  const cjkCount = (text.match(/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/g) || [])
+    .length;
   const cjkRatio = text.length > 0 ? cjkCount / text.length : 0;
   return cjkRatio > 0.3 ? 2 : 4;
 }

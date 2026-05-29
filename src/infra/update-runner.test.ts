@@ -259,10 +259,9 @@ describe("runGatewayUpdate", () => {
       "pnpm install": { stdout: "" },
       "pnpm build": { stdout: "" },
       "pnpm ui:build": { stdout: "" },
-      [`${process.execPath} ${path.join(tempDir, "enclaws.mjs")} doctor --non-interactive --fix`]:
-        {
-          stdout: "",
-        },
+      [`${process.execPath} ${path.join(tempDir, "enclaws.mjs")} doctor --non-interactive --fix`]: {
+        stdout: "",
+      },
     });
 
     const result = await runWithRunner(runner, { channel: "beta" });
@@ -438,9 +437,7 @@ describe("runGatewayUpdate", () => {
         firstAttempt = false;
         return { stdout: "", stderr: "node-gyp failed", code: 1 };
       }
-      if (
-        key === "npm i -g enclaws@latest --omit=optional --no-fund --no-audit --loglevel=error"
-      ) {
+      if (key === "npm i -g enclaws@latest --omit=optional --no-fund --no-audit --loglevel=error") {
         await fs.writeFile(
           path.join(pkgRoot, "package.json"),
           JSON.stringify({ name: "enclaws", version: "2.0.0" }),

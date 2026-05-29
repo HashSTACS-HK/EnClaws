@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveStateDir } from "../config/paths.js";
-import { normalizeUpdateTrack, type UpdateTrack } from "./update-channels.js";
 import { resolveOpenClawPackageRoot } from "./openclaw-root.js";
+import { normalizeUpdateTrack, type UpdateTrack } from "./update-channels.js";
 
 const UPDATE_SETTINGS_FILENAME = "update-settings.json";
 
@@ -58,15 +58,21 @@ async function detectInstallKind(): Promise<InstallKind> {
     argv1: process.argv[1],
     cwd: process.cwd(),
   });
-  if (!root) {return "unknown";}
+  if (!root) {
+    return "unknown";
+  }
 
   // Check git checkout
-  const isGit = (await fileExists(path.join(root, ".git")));
-  if (isGit) {return "git";}
+  const isGit = await fileExists(path.join(root, ".git"));
+  if (isGit) {
+    return "git";
+  }
 
   // Check npm/pnpm global install — package root lives inside node_modules
   const normalized = root.replace(/\\/g, "/");
-  if (normalized.includes("/node_modules/")) {return "package";}
+  if (normalized.includes("/node_modules/")) {
+    return "package";
+  }
 
   // Not git, not npm package → must be bundled installer (Windows .exe / macOS .dmg)
   return "installer";

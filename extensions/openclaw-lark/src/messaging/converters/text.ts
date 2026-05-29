@@ -5,9 +5,9 @@
  * Converter for "text" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { resolveMentions } from './content-converter-helpers';
-import { safeParse } from './utils';
+import { resolveMentions } from "./content-converter-helpers";
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertText: ContentConverterFn = (raw, ctx) => {
   const parsed = safeParse(raw) as { text?: string } | undefined;

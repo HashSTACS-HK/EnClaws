@@ -5,9 +5,9 @@
  * The file is loaded into the LLM context via loadTenantBootstrapFiles().
  */
 
-import { Type } from "@sinclair/typebox";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Type } from "@sinclair/typebox";
 import { resolveTenantDir } from "../../config/sessions/tenant-paths.js";
 import { stringEnum } from "../schema/typebox.js";
 import type { AnyAgentTool } from "./common.js";
@@ -62,7 +62,9 @@ export function createTenantMemoryTool(options: TenantMemoryToolOptions): AnyAge
       "Keep entries concise and factual.",
     parameters: TenantMemorySchema,
     execute: async (_toolCallId, params) => {
-      const action = readStringParam(params, "action", { required: true }) as (typeof MEMORY_ACTIONS)[number];
+      const action = readStringParam(params, "action", {
+        required: true,
+      }) as (typeof MEMORY_ACTIONS)[number];
       const tenantDir = resolveTenantDir(tenantId);
       const memoryPath = path.join(tenantDir, MEMORY_FILENAME);
 
@@ -100,7 +102,8 @@ export function createTenantMemoryTool(options: TenantMemoryToolOptions): AnyAge
         // Size check
         if (newContent.length > MAX_MEMORY_SIZE) {
           return jsonResult({
-            error: "Memory file would exceed size limit (8KB). Consider removing outdated entries first.",
+            error:
+              "Memory file would exceed size limit (8KB). Consider removing outdated entries first.",
           });
         }
 
@@ -124,7 +127,10 @@ export function createTenantMemoryTool(options: TenantMemoryToolOptions): AnyAge
         );
         const removed = lines.length - remaining.length;
         if (removed === 0) {
-          return jsonResult({ status: "not_found", message: `No entries matching "${keyword}" found` });
+          return jsonResult({
+            status: "not_found",
+            message: `No entries matching "${keyword}" found`,
+          });
         }
         await writeMemoryFile(memoryPath, remaining.join("\n"));
         return jsonResult({ status: "deleted", removed, keyword: keyword.trim() });

@@ -31,7 +31,9 @@ describe("buildControlUiCspHeader", () => {
 
   it("defaults frame-ancestors to 'self' + jiumi prod + local dev when env unset", () => {
     const csp = buildControlUiCspHeader();
-    expect(csp).toContain("frame-ancestors 'self' https://jiumi-demo.enclaws.com http://localhost:5001");
+    expect(csp).toContain(
+      "frame-ancestors 'self' https://jiumi-demo.enclaws.com http://localhost:5001",
+    );
   });
 
   it("uses AGENORA_FRAME_ANCESTORS env var when set (comma-separated)", () => {

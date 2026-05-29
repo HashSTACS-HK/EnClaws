@@ -168,18 +168,18 @@ EnClaws 中的每条数据都归属于特定租户：
 
 PostgreSQL 按租户分区的表结构：
 
-| 表名 | 用途 | 关键字段 |
-|------|------|----------|
-| `tenants` | 租户注册表 | id, name, plan, quotas |
-| `tenant_users` | 用户成员关系 | tenant_id, user_id, role |
-| `tenant_agents` | Agent 配置 | tenant_id, agent_id, config |
-| `tenant_channels` | 通道绑定 | tenant_id, channel_type, policy |
-| `tenant_channel_apps` | Bot 实例 | channel_id, app_config |
-| `tenant_models` | LLM 提供商 | tenant_id, provider, api_key |
-| `tenant_stats` | 用量指标 | tenant_id, tokens, cost |
-| `tenant_traces` | 交互日志 | tenant_id, prompt, completion |
-| `tenant_audit_logs` | 合规审计 | tenant_id, action, actor |
-| `_migrations` | Schema 版本 | version, applied_at |
+| 表名                  | 用途         | 关键字段                        |
+| --------------------- | ------------ | ------------------------------- |
+| `tenants`             | 租户注册表   | id, name, plan, quotas          |
+| `tenant_users`        | 用户成员关系 | tenant_id, user_id, role        |
+| `tenant_agents`       | Agent 配置   | tenant_id, agent_id, config     |
+| `tenant_channels`     | 通道绑定     | tenant_id, channel_type, policy |
+| `tenant_channel_apps` | Bot 实例     | channel_id, app_config          |
+| `tenant_models`       | LLM 提供商   | tenant_id, provider, api_key    |
+| `tenant_stats`        | 用量指标     | tenant_id, tokens, cost         |
+| `tenant_traces`       | 交互日志     | tenant_id, prompt, completion   |
+| `tenant_audit_logs`   | 合规审计     | tenant_id, action, actor        |
+| `_migrations`         | Schema 版本  | version, applied_at             |
 
 ---
 
@@ -291,6 +291,7 @@ skills/
 ```
 
 **Skill 覆盖链：**
+
 ```
 内置 Skill（默认）
       │
@@ -302,12 +303,14 @@ Agent 级覆盖（单 Agent 专属）
 ```
 
 **Inline Frontmatter：** Skill 支持 YAML 元数据实现条件执行：
+
 ```markdown
 ---
 name: my-skill
 when: message contains "创建文档"
 requires: feishu-token
 ---
+
 给 Agent 的指令...
 ```
 
@@ -361,18 +364,18 @@ requires: feishu-token
 
 每次 LLM 调用记录以下信息：
 
-| 字段 | 说明 |
-|------|------|
-| `trace_id` | 唯一标识 |
-| `tenant_id` | 所属租户 |
-| `agent_id` | 执行 Agent |
-| `user_id` | 请求用户 |
-| `model` | 使用的 LLM 模型 |
-| `prompt_tokens` | 输入 Token 数 |
-| `completion_tokens` | 输出 Token 数 |
-| `cost` | 预估成本（USD） |
-| `duration_ms` | 响应时间 |
-| `timestamp` | 发生时间 |
+| 字段                | 说明            |
+| ------------------- | --------------- |
+| `trace_id`          | 唯一标识        |
+| `tenant_id`         | 所属租户        |
+| `agent_id`          | 执行 Agent      |
+| `user_id`           | 请求用户        |
+| `model`             | 使用的 LLM 模型 |
+| `prompt_tokens`     | 输入 Token 数   |
+| `completion_tokens` | 输出 Token 数   |
+| `cost`              | 预估成本（USD） |
+| `duration_ms`       | 响应时间        |
+| `timestamp`         | 发生时间        |
 
 ### Token 用量分析
 
@@ -434,15 +437,15 @@ Cron 服务（运行在 Gateway 进程内）
 
 插件通过 Plugin SDK 接入多个扩展点：
 
-| 扩展点 | 用途 |
-|--------|------|
-| `setup` | Gateway 启动时初始化插件 |
-| `channel` | 添加新的消息通道 |
-| `reply` | 修改回复行为 |
-| `config` | 扩展配置 Schema |
-| `security` | 添加认证/授权逻辑 |
-| `memory` | 自定义记忆后端 |
-| `tool` | 注册新工具 |
+| 扩展点     | 用途                     |
+| ---------- | ------------------------ |
+| `setup`    | Gateway 启动时初始化插件 |
+| `channel`  | 添加新的消息通道         |
+| `reply`    | 修改回复行为             |
+| `config`   | 扩展配置 Schema          |
+| `security` | 添加认证/授权逻辑        |
+| `memory`   | 自定义记忆后端           |
+| `tool`     | 注册新工具               |
 
 ### 插件生命周期
 
@@ -466,16 +469,16 @@ Gateway 启动
 
 ## 关键源码文件
 
-| 文件 | 用途 |
-|------|------|
-| `src/entry.ts` | CLI 入口 |
-| `src/index.ts` | 主模块导出 |
-| `src/gateway/boot.ts` | Gateway 启动序列 |
-| `src/cli/gateway-cli/run.ts` | Gateway 运行命令 |
-| `src/db/index.ts` | 数据库连接（PG/SQLite） |
-| `src/db/migrate.ts` | Schema 迁移执行器 |
-| `src/gateway/server-methods/` | RPC 方法处理器 |
-| `src/acp/` | 并发执行引擎 |
-| `src/auth/` | JWT + RBAC 实现 |
-| `src/cron/` | 定时任务引擎 |
-| `extensions/openclaw-lark/` | 飞书集成插件 |
+| 文件                          | 用途                    |
+| ----------------------------- | ----------------------- |
+| `src/entry.ts`                | CLI 入口                |
+| `src/index.ts`                | 主模块导出              |
+| `src/gateway/boot.ts`         | Gateway 启动序列        |
+| `src/cli/gateway-cli/run.ts`  | Gateway 运行命令        |
+| `src/db/index.ts`             | 数据库连接（PG/SQLite） |
+| `src/db/migrate.ts`           | Schema 迁移执行器       |
+| `src/gateway/server-methods/` | RPC 方法处理器          |
+| `src/acp/`                    | 并发执行引擎            |
+| `src/auth/`                   | JWT + RBAC 实现         |
+| `src/cron/`                   | 定时任务引擎            |
+| `extensions/openclaw-lark/`   | 飞书集成插件            |

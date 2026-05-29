@@ -18,13 +18,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, beforeAll } from "vitest";
-import { isTruthyEnvValue } from "../../infra/env.js";
 import type { OpenClawConfig } from "../../config/config.js";
+import { isTruthyEnvValue } from "../../infra/env.js";
 
 // -- Gate: skip unless LIVE or ENCLAWS_CS_LIVE is set --
-const LIVE =
-  isTruthyEnvValue(process.env.LIVE) ||
-  isTruthyEnvValue(process.env.ENCLAWS_CS_LIVE);
+const LIVE = isTruthyEnvValue(process.env.LIVE) || isTruthyEnvValue(process.env.ENCLAWS_CS_LIVE);
 
 const describeLive = LIVE ? describe : describe.skip;
 
@@ -79,8 +77,7 @@ describeLive("CS Agent golden-set (live, requires LIVE=true)", async () => {
     }
 
     // Use env override or first tenant
-    tenantId =
-      process.env.ENCLAWS_CS_TENANT_ID ?? tenants[0].id;
+    tenantId = process.env.ENCLAWS_CS_TENANT_ID ?? tenants[0].id;
 
     // Load tenant config (reads agents, channels, models from DB)
     const { loadTenantConfig } = await import("../../config/tenant-config.js");
@@ -97,89 +94,90 @@ describeLive("CS Agent golden-set (live, requires LIVE=true)", async () => {
   // -- Individual case runner --
   // We load + iterate cases dynamically since describe callbacks can't be async.
   // Pattern: one outer test that loads the file, then one sub-assertion per case.
-  it("all golden cases pass", async () => {
-    const raw = await fs.readFile(GOLDEN_SET_PATH, "utf8");
-    const data = JSON.parse(raw) as GoldenSet;
+  it(
+    "all golden cases pass",
+    async () => {
+      const raw = await fs.readFile(GOLDEN_SET_PATH, "utf8");
+      const data = JSON.parse(raw) as GoldenSet;
 
-    const { runCSAgentReply } = await import("./cs-agent-runner.js");
+      const { runCSAgentReply } = await import("./cs-agent-runner.js");
 
-    const results: { name: string; passed: boolean; reason?: string; reply?: string }[] = [];
+      const results: { name: string; passed: boolean; reason?: string; reply?: string }[] = [];
 
-    for (const tc of data.cases) {
-      let reply = "";
-      let passed = true;
-      let reason = "";
+      for (const tc of data.cases) {
+        let reply = "";
+        let passed = true;
+        let reason = "";
 
-      try {
-        const result = await runCSAgentReply({
-          tenantId,
-          sessionId: `golden-test-${Date.now()}`,
-          customerMessage: tc.message,
-          cfg,
-        });
-        reply = result.reply;
+        try {
+          const result = await runCSAgentReply({
+            tenantId,
+            sessionId: `golden-test-${Date.now()}`,
+            customerMessage: tc.message,
+            cfg,
+          });
+          reply = result.reply;
 
-        // Check notContains
-        const notContainsList = Array.isArray(tc.assert.notContains)
-          ? tc.assert.notContains
-          : tc.assert.notContains
-            ? [tc.assert.notContains]
-            : [];
-        for (const forbidden of notContainsList) {
-          if (reply.toLowerCase().includes(forbidden.toLowerCase())) {
-            passed = false;
-            reason = `reply contains forbidden string: "${forbidden}"`;
-            break;
+          // Check notContains
+          const notContainsList = Array.isArray(tc.assert.notContains)
+            ? tc.assert.notContains
+            : tc.assert.notContains
+              ? [tc.assert.notContains]
+              : [];
+          for (const forbidden of notContainsList) {
+            if (reply.toLowerCase().includes(forbidden.toLowerCase())) {
+              passed = false;
+              reason = `reply contains forbidden string: "${forbidden}"`;
+              break;
+            }
           }
+
+          // Check containsAny
+          if (passed && tc.assert.containsAny !== undefined) {
+            const containsList = Array.isArray(tc.assert.containsAny)
+              ? tc.assert.containsAny
+              : [tc.assert.containsAny];
+            const anyFound = containsList.some((kw) =>
+              reply.toLowerCase().includes(kw.toLowerCase()),
+            );
+            if (!anyFound) {
+              passed = false;
+              reason = `reply missing any of [${containsList.join(", ")}]`;
+            }
+          }
+        } catch (err) {
+          passed = false;
+          reason = `threw: ${err instanceof Error ? err.message : String(err)}`;
         }
 
-        // Check containsAny
-        if (passed && tc.assert.containsAny !== undefined) {
-          const containsList = Array.isArray(tc.assert.containsAny)
-            ? tc.assert.containsAny
-            : [tc.assert.containsAny];
-          const anyFound = containsList.some((kw) =>
-            reply.toLowerCase().includes(kw.toLowerCase()),
-          );
-          if (!anyFound) {
-            passed = false;
-            reason = `reply missing any of [${containsList.join(", ")}]`;
-          }
+        results.push({ name: tc.name, passed, reason, reply });
+
+        // Log for visibility (vitest captures stdout)
+        // 打印每条用例结果，方便调试
+        if (passed) {
+          console.log(`  ✓ ${tc.name}`);
+        } else {
+          console.error(`  ✗ ${tc.name}: ${reason}`);
+          console.error(`    message: ${tc.message}`);
+          console.error(`    reply:   ${reply.slice(0, 120)}`);
         }
-      } catch (err) {
-        passed = false;
-        reason = `threw: ${err instanceof Error ? err.message : String(err)}`;
       }
 
-      results.push({ name: tc.name, passed, reason, reply });
-
-      // Log for visibility (vitest captures stdout)
-      // 打印每条用例结果，方便调试
-      if (passed) {
-        console.log(`  ✓ ${tc.name}`);
-      } else {
-        console.error(`  ✗ ${tc.name}: ${reason}`);
-        console.error(`    message: ${tc.message}`);
-        console.error(`    reply:   ${reply.slice(0, 120)}`);
+      const failed = results.filter((r) => !r.passed);
+      if (failed.length > 0) {
+        const summary = failed.map((r) => `  [${r.name}] ${r.reason}`).join("\n");
+        throw new Error(`${failed.length}/${results.length} golden cases failed:\n${summary}`);
       }
-    }
 
-    const failed = results.filter((r) => !r.passed);
-    if (failed.length > 0) {
-      const summary = failed
-        .map((r) => `  [${r.name}] ${r.reason}`)
-        .join("\n");
-      throw new Error(`${failed.length}/${results.length} golden cases failed:\n${summary}`);
-    }
-
-    console.log(`\n✓ All ${results.length} golden cases passed.`);
-  }, CASE_TIMEOUT_MS * 30); // total budget for all cases
+      console.log(`\n✓ All ${results.length} golden cases passed.`);
+    },
+    CASE_TIMEOUT_MS * 30,
+  ); // total budget for all cases
 });
 
 // -- Per-case describe variant: easier to see which case failed in vitest output --
 // Runs only when LIVE=true AND ENCLAWS_CS_PER_CASE=true to keep CI fast.
-const PER_CASE =
-  LIVE && isTruthyEnvValue(process.env.ENCLAWS_CS_PER_CASE);
+const PER_CASE = LIVE && isTruthyEnvValue(process.env.ENCLAWS_CS_PER_CASE);
 
 if (PER_CASE) {
   describe("CS Agent golden-set per-case (LIVE + ENCLAWS_CS_PER_CASE=true)", async () => {
@@ -187,7 +185,9 @@ if (PER_CASE) {
 
     beforeAll(async () => {
       const dbUrl = process.env.ENCLAWS_DB_URL;
-      if (!dbUrl) {throw new Error("ENCLAWS_DB_URL not set");}
+      if (!dbUrl) {
+        throw new Error("ENCLAWS_DB_URL not set");
+      }
 
       const { initDb } = await import("../../db/index.js");
       initDb();

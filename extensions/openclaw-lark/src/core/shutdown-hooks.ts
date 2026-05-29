@@ -64,5 +64,8 @@ export async function drainShutdownHooks(opts?: {
     timer = setTimeout(resolve, deadline);
   });
 
-  await Promise.race([Promise.allSettled(promises).then(() => clearTimeout(timer)), timeoutPromise]);
+  await Promise.race([
+    Promise.allSettled(promises).then(() => clearTimeout(timer)),
+    timeoutPromise,
+  ]);
 }

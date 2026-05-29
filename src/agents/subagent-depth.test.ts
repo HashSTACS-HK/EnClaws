@@ -109,9 +109,9 @@ describe("resolveAgentTimeoutMs", () => {
   });
 
   it("explicit overrideSeconds wins over agentTimeoutSeconds", () => {
-    expect(
-      resolveAgentTimeoutMs({ agentTimeoutSeconds: 1200, overrideSeconds: 300 }),
-    ).toBe(300_000);
+    expect(resolveAgentTimeoutMs({ agentTimeoutSeconds: 1200, overrideSeconds: 300 })).toBe(
+      300_000,
+    );
   });
 
   it("falls back to global default when agentTimeoutSeconds is undefined", () => {

@@ -169,14 +169,10 @@ export function routeProgressiveIndex(
   const scored = parsed.sections
     .map((section) => {
       const sectionText = `${section.title} ${section.summary} ${section.keywords.join(" ")}`;
-      const sectionScore = scoreText(
-        sectionText,
-        queryTerms,
-        {
-          title: section.title,
-          keywords: section.keywords,
-        },
-      );
+      const sectionScore = scoreText(sectionText, queryTerms, {
+        title: section.title,
+        keywords: section.keywords,
+      });
       const blocks = parsed.blocks
         .filter((block) => block.sectionId === section.id)
         .map((block) => ({
@@ -246,7 +242,10 @@ function buildBlocks(params: {
   let current: Array<{ line: string; lineNo: number }> = [];
 
   const flush = () => {
-    const text = current.map((entry) => entry.line).join("\n").trim();
+    const text = current
+      .map((entry) => entry.line)
+      .join("\n")
+      .trim();
     if (!text) {
       current = [];
       return;
@@ -270,7 +269,8 @@ function buildBlocks(params: {
     current = [];
   };
 
-  const bodyStart = params.section.title === "Document" ? params.section.startLine : params.section.startLine + 1;
+  const bodyStart =
+    params.section.title === "Document" ? params.section.startLine : params.section.startLine + 1;
   for (let i = bodyStart; i <= params.section.endLine; i += 1) {
     const line = params.lines[i - 1] ?? "";
     const trimmed = line.trim();

@@ -4,13 +4,13 @@
  * 框架通过 plugin.setupWizard 字段识别并驱动 channel 的引导配置流程。
  */
 
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { ChannelSetupWizard, ChannelSetupDmPolicy } from "openclaw/plugin-sdk/setup";
 import type { ChannelSetupAdapter } from "openclaw/plugin-sdk/setup";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
-import { addWildcardAllowFrom } from "./openclaw-compat.js";
-import type { WeComConfig } from "./utils.js";
 import { resolveWeComAccountMulti, setWeComAccountMulti } from "./accounts.js";
 import { CHANNEL_ID } from "./const.js";
+import { addWildcardAllowFrom } from "./openclaw-compat.js";
+import type { WeComConfig } from "./utils.js";
 
 // ============================================================================
 // ChannelSetupAdapter — 框架用于应用配置输入的适配器
@@ -185,10 +185,7 @@ export const wecomSetupWizard: ChannelSetupWizard = {
   // ── 完成提示 ──────────────────────────────────────────────────────────
   completionNote: {
     title: "企业微信配置完成",
-    lines: [
-      "企业微信机器人已配置完成。",
-      "运行 `openclaw start` 启动服务。",
-    ],
+    lines: ["企业微信机器人已配置完成。", "运行 `openclaw start` 启动服务。"],
     shouldShow: ({ cfg }) => {
       const account = resolveWeComAccountMulti({ cfg });
       return Boolean(account.botId?.trim() && account.secret?.trim());

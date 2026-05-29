@@ -16,30 +16,33 @@ export class ResizableDivider extends LitElement {
   private startX = 0;
   private startRatio = 0;
 
-  static styles = [caretFix, css`
-    :host {
-      width: 4px;
-      cursor: col-resize;
-      background: var(--border, #333);
-      transition: background 150ms ease-out;
-      flex-shrink: 0;
-      position: relative;
-    }
-    :host::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -4px;
-      right: -4px;
-      bottom: 0;
-    }
-    :host(:hover) {
-      background: var(--accent, #007bff);
-    }
-    :host(.dragging) {
-      background: var(--accent, #007bff);
-    }
-  `];
+  static styles = [
+    caretFix,
+    css`
+      :host {
+        width: 4px;
+        cursor: col-resize;
+        background: var(--border, #333);
+        transition: background 150ms ease-out;
+        flex-shrink: 0;
+        position: relative;
+      }
+      :host::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -4px;
+        right: -4px;
+        bottom: 0;
+      }
+      :host(:hover) {
+        background: var(--accent, #007bff);
+      }
+      :host(.dragging) {
+        background: var(--accent, #007bff);
+      }
+    `,
+  ];
 
   render() {
     return nothing;

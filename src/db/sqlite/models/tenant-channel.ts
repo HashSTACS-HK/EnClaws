@@ -2,14 +2,20 @@
  * Tenant Channel CRUD — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type { TenantChannel, TenantChannelConfig, ChannelPolicy } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 import { listChannelApps } from "./tenant-channel-app.js";
 
 function parseConfig(raw: unknown): TenantChannelConfig {
-  if (!raw) {return {} as TenantChannelConfig;}
+  if (!raw) {
+    return {} as TenantChannelConfig;
+  }
   if (typeof raw === "string") {
-    try { return JSON.parse(raw); } catch { return {} as TenantChannelConfig; }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {} as TenantChannelConfig;
+    }
   }
   return raw as TenantChannelConfig;
 }
@@ -59,10 +65,10 @@ export async function getTenantChannelById(
   tenantId: string,
   channelId: string,
 ): Promise<TenantChannel | null> {
-  const result = sqliteQuery(
-    "SELECT * FROM tenant_channels WHERE tenant_id = ? AND id = ?",
-    [tenantId, channelId],
-  );
+  const result = sqliteQuery("SELECT * FROM tenant_channels WHERE tenant_id = ? AND id = ?", [
+    tenantId,
+    channelId,
+  ]);
   return result.rows.length > 0 ? rowToChannel(result.rows[0]) : null;
 }
 
@@ -113,7 +119,9 @@ export async function updateTenantChannel(
     values.push(JSON.stringify(updates.config));
   }
 
-  if (sets.length === 0) {return null;}
+  if (sets.length === 0) {
+    return null;
+  }
 
   values.push(tenantId, channelId);
   sqliteQuery(
@@ -124,14 +132,16 @@ export async function updateTenantChannel(
 }
 
 export async function deleteTenantChannel(tenantId: string, channelId: string): Promise<boolean> {
-  const result = sqliteQuery(
-    "DELETE FROM tenant_channels WHERE tenant_id = ? AND id = ?",
-    [tenantId, channelId],
-  );
+  const result = sqliteQuery("DELETE FROM tenant_channels WHERE tenant_id = ? AND id = ?", [
+    tenantId,
+    channelId,
+  ]);
   return result.rowCount > 0;
 }
 
-export async function toConfigChannels(channels: TenantChannel[]): Promise<Record<string, unknown>> {
+export async function toConfigChannels(
+  channels: TenantChannel[],
+): Promise<Record<string, unknown>> {
   const result: Record<string, unknown> = {};
   for (const ch of channels) {
     const key = ch.channelName ? `${ch.channelType}:${ch.channelName}` : ch.channelType;

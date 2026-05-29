@@ -13,7 +13,10 @@ import { createSubsystemLogger } from "../logging/subsystem.js";
 const roleTraceLog = createSubsystemLogger("infra/channel-auto-provision");
 
 /** In-memory cache to avoid repeated DB lookups within the same process. */
-const provisionedCache = new Map<string, { userId: string; unionId: string; role: string; displayName?: string; channelId?: string }>(); // key → result
+const provisionedCache = new Map<
+  string,
+  { userId: string; unionId: string; role: string; displayName?: string; channelId?: string }
+>(); // key → result
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const provisionedExpiry = new Map<string, number>();
 
@@ -68,7 +71,9 @@ export async function autoProvisionTenantUser(params: {
   displayName?: string;
   channelId?: string;
 }): Promise<AutoProvisionResult | AutoProvisionQuotaExceeded | AutoProvisionUserSuspended | null> {
-  if (!isDbInitialized()) {return null;}
+  if (!isDbInitialized()) {
+    return null;
+  }
 
   const { tenantId, openId, unionId, displayName, channelId } = params;
   const key = cacheKey(tenantId, openId, channelId);
@@ -80,7 +85,14 @@ export async function autoProvisionTenantUser(params: {
     roleTraceLog.warn(
       `[role-trace] auto-provision.cacheHit key=${key} userId=${cached.userId} role=${cached.role} ttlLeft=${Math.round((expiry - Date.now()) / 1000)}s`,
     );
-    return { userId: cached.userId, unionId: cached.unionId, userCreated: false, role: cached.role, displayName: cached.displayName, channelId: cached.channelId };
+    return {
+      userId: cached.userId,
+      unionId: cached.unionId,
+      userCreated: false,
+      role: cached.role,
+      displayName: cached.displayName,
+      channelId: cached.channelId,
+    };
   }
   roleTraceLog.warn(`[role-trace] auto-provision.cacheMiss key=${key}`);
 
@@ -116,10 +128,23 @@ export async function autoProvisionTenantUser(params: {
   // Update cache
   const resolvedDisplayName = user.displayName ?? undefined;
   const resolvedChannelId = user.channelId ?? channelId;
-  provisionedCache.set(key, { userId: user.id, unionId: effectiveUnionId, role: user.role, displayName: resolvedDisplayName, channelId: resolvedChannelId });
+  provisionedCache.set(key, {
+    userId: user.id,
+    unionId: effectiveUnionId,
+    role: user.role,
+    displayName: resolvedDisplayName,
+    channelId: resolvedChannelId,
+  });
   provisionedExpiry.set(key, Date.now() + CACHE_TTL_MS);
 
-  return { userId: user.id, unionId: effectiveUnionId, userCreated, role: user.role, displayName: resolvedDisplayName, channelId: resolvedChannelId };
+  return {
+    userId: user.id,
+    unionId: effectiveUnionId,
+    userCreated,
+    role: user.role,
+    displayName: resolvedDisplayName,
+    channelId: resolvedChannelId,
+  };
 }
 
 /**

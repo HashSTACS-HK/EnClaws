@@ -168,18 +168,18 @@ Tenant (company/team/department)
 
 PostgreSQL with tenant-scoped tables:
 
-| Table | Purpose | Key Fields |
-|-------|---------|------------|
-| `tenants` | Tenant registry | id, name, plan, quotas |
-| `tenant_users` | User membership | tenant_id, user_id, role |
-| `tenant_agents` | Agent configs | tenant_id, agent_id, config |
-| `tenant_channels` | Channel bindings | tenant_id, channel_type, policy |
-| `tenant_channel_apps` | Bot instances | channel_id, app_config |
-| `tenant_models` | LLM providers | tenant_id, provider, api_key |
-| `tenant_stats` | Usage metrics | tenant_id, tokens, cost |
-| `tenant_traces` | Interaction logs | tenant_id, prompt, completion |
-| `tenant_audit_logs` | Compliance trail | tenant_id, action, actor |
-| `_migrations` | Schema versioning | version, applied_at |
+| Table                 | Purpose           | Key Fields                      |
+| --------------------- | ----------------- | ------------------------------- |
+| `tenants`             | Tenant registry   | id, name, plan, quotas          |
+| `tenant_users`        | User membership   | tenant_id, user_id, role        |
+| `tenant_agents`       | Agent configs     | tenant_id, agent_id, config     |
+| `tenant_channels`     | Channel bindings  | tenant_id, channel_type, policy |
+| `tenant_channel_apps` | Bot instances     | channel_id, app_config          |
+| `tenant_models`       | LLM providers     | tenant_id, provider, api_key    |
+| `tenant_stats`        | Usage metrics     | tenant_id, tokens, cost         |
+| `tenant_traces`       | Interaction logs  | tenant_id, prompt, completion   |
+| `tenant_audit_logs`   | Compliance trail  | tenant_id, action, actor        |
+| `_migrations`         | Schema versioning | version, applied_at             |
 
 ---
 
@@ -291,6 +291,7 @@ skills/
 ```
 
 **Skill Override Chain:**
+
 ```
 Built-in Skill (default)
       │
@@ -302,12 +303,14 @@ Agent-level Override (per-agent specialization)
 ```
 
 **Inline Frontmatter:** Skills support YAML metadata for conditional execution:
+
 ```markdown
 ---
 name: my-skill
 when: message contains "create doc"
 requires: feishu-token
 ---
+
 Instructions for the agent...
 ```
 
@@ -361,18 +364,18 @@ Company-wide knowledge base
 
 Every LLM call is recorded with:
 
-| Field | Description |
-|-------|-------------|
-| `trace_id` | Unique identifier |
-| `tenant_id` | Owning tenant |
-| `agent_id` | Executing agent |
-| `user_id` | Requesting user |
-| `model` | LLM model used |
-| `prompt_tokens` | Input token count |
-| `completion_tokens` | Output token count |
-| `cost` | Estimated cost (USD) |
-| `duration_ms` | Response time |
-| `timestamp` | When the call happened |
+| Field               | Description            |
+| ------------------- | ---------------------- |
+| `trace_id`          | Unique identifier      |
+| `tenant_id`         | Owning tenant          |
+| `agent_id`          | Executing agent        |
+| `user_id`           | Requesting user        |
+| `model`             | LLM model used         |
+| `prompt_tokens`     | Input token count      |
+| `completion_tokens` | Output token count     |
+| `cost`              | Estimated cost (USD)   |
+| `duration_ms`       | Response time          |
+| `timestamp`         | When the call happened |
 
 ### Token Usage Analytics
 
@@ -434,15 +437,15 @@ Each cron job has a delivery plan specifying:
 
 Plugins can hook into multiple extension points via the Plugin SDK:
 
-| Extension Point | Purpose |
-|-----------------|---------|
-| `setup` | Initialize plugin on gateway startup |
-| `channel` | Add new messaging channel |
-| `reply` | Modify reply behavior |
-| `config` | Extend configuration schema |
-| `security` | Add auth/authorization logic |
-| `memory` | Custom memory backend |
-| `tool` | Register new tools |
+| Extension Point | Purpose                              |
+| --------------- | ------------------------------------ |
+| `setup`         | Initialize plugin on gateway startup |
+| `channel`       | Add new messaging channel            |
+| `reply`         | Modify reply behavior                |
+| `config`        | Extend configuration schema          |
+| `security`      | Add auth/authorization logic         |
+| `memory`        | Custom memory backend                |
+| `tool`          | Register new tools                   |
 
 ### Plugin Lifecycle
 
@@ -466,16 +469,16 @@ Plugin Active (hooks registered, ready to process)
 
 ## Key Source Files
 
-| File | Purpose |
-|------|---------|
-| `src/entry.ts` | CLI entry point |
-| `src/index.ts` | Main module exports |
-| `src/gateway/boot.ts` | Gateway boot sequence |
-| `src/cli/gateway-cli/run.ts` | Gateway run command |
-| `src/db/index.ts` | Database connection (PG/SQLite) |
-| `src/db/migrate.ts` | Schema migration runner |
-| `src/gateway/server-methods/` | RPC method handlers |
-| `src/acp/` | Concurrent execution engine |
-| `src/auth/` | JWT + RBAC implementation |
-| `src/cron/` | Scheduled task engine |
-| `extensions/openclaw-lark/` | Feishu integration plugin |
+| File                          | Purpose                         |
+| ----------------------------- | ------------------------------- |
+| `src/entry.ts`                | CLI entry point                 |
+| `src/index.ts`                | Main module exports             |
+| `src/gateway/boot.ts`         | Gateway boot sequence           |
+| `src/cli/gateway-cli/run.ts`  | Gateway run command             |
+| `src/db/index.ts`             | Database connection (PG/SQLite) |
+| `src/db/migrate.ts`           | Schema migration runner         |
+| `src/gateway/server-methods/` | RPC method handlers             |
+| `src/acp/`                    | Concurrent execution engine     |
+| `src/auth/`                   | JWT + RBAC implementation       |
+| `src/cron/`                   | Scheduled task engine           |
+| `extensions/openclaw-lark/`   | Feishu integration plugin       |

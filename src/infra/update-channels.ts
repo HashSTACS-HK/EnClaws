@@ -85,9 +85,7 @@ export function formatUpdateTrackLabel(params: {
     return params.gitTag ? `${params.track} (${params.gitTag})` : `${params.track} (tag)`;
   }
   if (params.source === "git-branch") {
-    return params.gitBranch
-      ? `${params.track} (${params.gitBranch})`
-      : `${params.track} (branch)`;
+    return params.gitBranch ? `${params.track} (${params.gitBranch})` : `${params.track} (branch)`;
   }
   return `${params.track} (default)`;
 }

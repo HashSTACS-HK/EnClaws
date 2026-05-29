@@ -19,6 +19,7 @@ import {
   ensureAgentWorkspace,
   isWorkspaceOnboardingCompleted,
 } from "../../agents/workspace.js";
+import type { TenantContext } from "../../auth/middleware.js";
 import { movePathToTrash } from "../../browser/trash.js";
 import {
   applyAgentConfig,
@@ -27,10 +28,8 @@ import {
   pruneAgentConfig,
 } from "../../commands/agents.config.js";
 import { loadConfig, writeConfigFile } from "../../config/config.js";
-import { resolveRequestConfig } from "../tenant-session-utils.js";
 import { resolveSessionTranscriptsDirForAgent } from "../../config/sessions/paths.js";
 import { resolveTenantAgentDir } from "../../config/sessions/tenant-paths.js";
-import type { TenantContext } from "../../auth/middleware.js";
 import { sameFileIdentity } from "../../infra/file-identity.js";
 import { SafeOpenError, readLocalFileSafely, writeFileWithinRoot } from "../../infra/fs-safe.js";
 import { assertNoPathAliasEscape } from "../../infra/path-alias-guards.js";
@@ -50,6 +49,7 @@ import {
   validateAgentsUpdateParams,
 } from "../protocol/index.js";
 import { listAgentsForGateway } from "../session-utils.js";
+import { resolveRequestConfig } from "../tenant-session-utils.js";
 import type { GatewayRequestHandlers, RespondFn } from "./types.js";
 
 const BOOTSTRAP_FILE_NAMES = [

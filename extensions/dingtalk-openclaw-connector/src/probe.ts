@@ -1,5 +1,5 @@
-import { raceWithTimeoutAndAbort } from "./utils/async.ts";
 import type { DingtalkProbeResult } from "./types/index.ts";
+import { raceWithTimeoutAndAbort } from "./utils/async.ts";
 
 /** LRU Cache for probe results to reduce repeated health-check calls. */
 class LRUCache<K, V> {
@@ -25,9 +25,9 @@ class LRUCache<K, V> {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     }
-    
+
     this.cache.set(key, value);
-    
+
     // 超过大小限制时删除最旧的（最少使用的）
     if (this.cache.size > this.maxSize) {
       const oldest = this.cache.keys().next().value;
@@ -127,7 +127,7 @@ export async function probeDingtalk(
       );
     }
 
-    const tokenData = await tokenResponse.value.json() as { accessToken?: string };
+    const tokenData = (await tokenResponse.value.json()) as { accessToken?: string };
     if (!tokenData.accessToken) {
       return setCachedProbeResult(
         cacheKey,
@@ -171,7 +171,7 @@ export async function probeDingtalk(
       );
     }
 
-    const botData = await botResponse.value.json() as DingtalkBotInfoResponse;
+    const botData = (await botResponse.value.json()) as DingtalkBotInfoResponse;
     if (botData.errcode && botData.errcode !== 0) {
       return setCachedProbeResult(
         cacheKey,

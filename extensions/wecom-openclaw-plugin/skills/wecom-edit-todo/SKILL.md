@@ -29,12 +29,11 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 需要遵循 “注意事项”中的格式要求：
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `content` | string | ✅ | 待办内容 |
-| `follower_list` | object | ❌ | 分派人列表，格式见注意事项第 7 条 |
-| `remind_time` | string | ❌ | 提醒时间，格式：`YYYY-MM-DD HH:mm:ss` |
-
+| 参数            | 类型   | 必填 | 说明                                  |
+| --------------- | ------ | ---- | ------------------------------------- |
+| `content`       | string | ✅   | 待办内容                              |
+| `follower_list` | object | ❌   | 分派人列表，格式见注意事项第 7 条     |
+| `remind_time`   | string | ❌   | 提醒时间，格式：`YYYY-MM-DD HH:mm:ss` |
 
 **调用示例：**
 
@@ -44,9 +43,9 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok",
-    "todo_id": "TODO_ID"
+  "errcode": 0,
+  "errmsg": "ok",
+  "todo_id": "TODO_ID"
 }
 ```
 
@@ -62,13 +61,13 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 需要遵循 “注意事项”中的格式要求：
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `todo_id` | string | ✅ | 待办 ID |
-| `content` | string | ❌ | 新的待办内容 |
-| `follower_list` | object | ❌ | 新的分派人列表（全量替换，非追加），格式见注意事项第 7 条。若要新增分派人，需先查出现有分派人，合并后一起提交 |
-| `todo_status` | number | ❌ | 新的待办状态：`0`-已完成，`1`-进行中。删除请使用 `delete_todo` |
-| `remind_time` | string | ❌ | 新的提醒时间 |
+| 参数            | 类型   | 必填 | 说明                                                                                                          |
+| --------------- | ------ | ---- | ------------------------------------------------------------------------------------------------------------- |
+| `todo_id`       | string | ✅   | 待办 ID                                                                                                       |
+| `content`       | string | ❌   | 新的待办内容                                                                                                  |
+| `follower_list` | object | ❌   | 新的分派人列表（全量替换，非追加），格式见注意事项第 7 条。若要新增分派人，需先查出现有分派人，合并后一起提交 |
+| `todo_status`   | number | ❌   | 新的待办状态：`0`-已完成，`1`-进行中。删除请使用 `delete_todo`                                                |
+| `remind_time`   | string | ❌   | 新的提醒时间                                                                                                  |
 
 **调用示例：**
 
@@ -78,8 +77,8 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok"
+  "errcode": 0,
+  "errmsg": "ok"
 }
 ```
 
@@ -95,9 +94,9 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 需要遵循 “注意事项”中的格式要求：
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `todo_id` | string | ✅ | 待办 ID |
+| 参数      | 类型   | 必填 | 说明    |
+| --------- | ------ | ---- | ------- |
+| `todo_id` | string | ✅   | 待办 ID |
 
 **调用示例：**
 
@@ -107,8 +106,8 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok"
+  "errcode": 0,
+  "errmsg": "ok"
 }
 ```
 
@@ -127,10 +126,10 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 需要遵循 “注意事项”中的格式要求：
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `todo_id` | string | ✅ | 待办 ID |
-| `user_status` | number | ✅ | 用户状态：`0`-拒绝，`1`-接受，`2`-已完成 |
+| 参数          | 类型   | 必填 | 说明                                     |
+| ------------- | ------ | ---- | ---------------------------------------- |
+| `todo_id`     | string | ✅   | 待办 ID                                  |
+| `user_status` | number | ✅   | 用户状态：`0`-拒绝，`1`-接受，`2`-已完成 |
 
 **调用示例：**
 
@@ -140,8 +139,8 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 ```json
 {
-    "errcode": 0,
-    "errmsg": "ok"
+  "errcode": 0,
+  "errmsg": "ok"
 }
 ```
 
@@ -230,17 +229,18 @@ description: 企业微信待办事项编辑技能，支持创建、更新、删�
 
 7. **follower_list** 的格式（作为输入参数的时候）
 
-    ```json
-    "follower_list": {                    // 分派人列表
-        "followers": [                    // 注意里面还有一层是 "followers"，它的value才是真正的列表数组
-            {
-                "follower_id": "FOLLOWER_ID",      // 分派人id
-                "follower_status": 1              // 分派人状态：0-拒绝, 1-接受, 2-已完成
-            }
-        ]
-    }
-    ```
-    > `follower_id` 即 userid，需要通过 `wecom-contact-lookup` 查询获取，禁止自行猜测或构造。
+   ```json
+   "follower_list": {                    // 分派人列表
+       "followers": [                    // 注意里面还有一层是 "followers"，它的value才是真正的列表数组
+           {
+               "follower_id": "FOLLOWER_ID",      // 分派人id
+               "follower_status": 1              // 分派人状态：0-拒绝, 1-接受, 2-已完成
+           }
+       ]
+   }
+   ```
+
+   > `follower_id` 即 userid，需要通过 `wecom-contact-lookup` 查询获取，禁止自行猜测或构造。
 
 ## 相关技能
 

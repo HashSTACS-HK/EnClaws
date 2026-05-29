@@ -9,5 +9,5 @@
  * - `getChatTypeFeishu` → `../../core/chat-info-cache.ts`
  */
 
-export { getMessageFeishu, type FeishuMessageInfo } from '../shared/message-lookup';
-export { getChatTypeFeishu } from '../../core/chat-info-cache';
+export { getMessageFeishu, type FeishuMessageInfo } from "../shared/message-lookup";
+export { getChatTypeFeishu } from "../../core/chat-info-cache";

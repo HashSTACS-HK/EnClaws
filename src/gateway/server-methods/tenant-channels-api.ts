@@ -12,10 +12,28 @@
  *   tenant.channels.apps.delete - Remove an app from a channel
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape, getPlanUpgradeLink } from "../protocol/index.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { ensureTenantBootstrapFiles } from "../../agents/workspace.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import type { ChannelId } from "../../channels/plugins/types.js";
+import { resolveTenantDir, resolveTenantAgentDir } from "../../config/sessions/tenant-paths.js";
+import { invalidateTenantConfigCache } from "../../config/tenant-config.js";
 import { isDbInitialized } from "../../db/index.js";
-import { checkTenantQuota } from "../../db/models/tenant.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
+import {
+  createTenantAgent,
+  listTenantAgents,
+  updateTenantAgent,
+  deleteTenantAgent,
+} from "../../db/models/tenant-agent.js";
+import {
+  createChannelApp,
+  listChannelApps,
+  updateChannelApp,
+  deleteChannelApp,
+} from "../../db/models/tenant-channel-app.js";
 import {
   createTenantChannel,
   listTenantChannels,
@@ -23,35 +41,21 @@ import {
   updateTenantChannel,
   deleteTenantChannel,
 } from "../../db/models/tenant-channel.js";
-import {
-  createChannelApp,
-  listChannelApps,
-  updateChannelApp,
-  deleteChannelApp,
-} from "../../db/models/tenant-channel-app.js";
-import { createTenantAgent, listTenantAgents, updateTenantAgent, deleteTenantAgent } from "../../db/models/tenant-agent.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
-import { invalidateTenantConfigCache } from "../../config/tenant-config.js";
-import {
-  resolveTenantDir,
-  resolveTenantAgentDir,
-} from "../../config/sessions/tenant-paths.js";
-import {
-  ensureTenantBootstrapFiles,
-} from "../../agents/workspace.js";
-import type { TenantContext } from "../../auth/middleware.js";
+import { checkTenantQuota } from "../../db/models/tenant.js";
 import type { ChannelPolicy, TenantChannelConfig, ModelConfigEntry } from "../../db/types.js";
-import type { ChannelId } from "../../channels/plugins/types.js";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { ErrorCodes, errorShape, getPlanUpgradeLink } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 function getTenantCtx(
   client: GatewayRequestHandlerOptions["client"],
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -78,12 +82,16 @@ async function findConflictingAppId(
   excludeAppDbId?: string,
 ): Promise<{ channelId: string; channelName: string | null; appId: string } | null> {
   const target = appId.trim().toLowerCase();
-  if (!target) {return null;}
+  if (!target) {
+    return null;
+  }
   const sameTypeChannels = await listTenantChannels(tenantId, { activeOnly: false, channelType });
   for (const ch of sameTypeChannels) {
     const apps = await listChannelApps(ch.id);
     for (const a of apps) {
-      if (excludeAppDbId && a.id === excludeAppDbId) {continue;}
+      if (excludeAppDbId && a.id === excludeAppDbId) {
+        continue;
+      }
       if (a.appId.trim().toLowerCase() === target) {
         return { channelId: ch.id, channelName: ch.channelName, appId: a.appId };
       }
@@ -109,16 +117,29 @@ function resolveConnectionState(snapshot: {
   running?: boolean;
   connected?: boolean;
 }): ConnectionState {
-  if (snapshot.running !== true) {return "offline";}
-  if (snapshot.connected === true) {return "online";}
-  if (snapshot.connected === false) {return "offline";}
+  if (snapshot.running !== true) {
+    return "offline";
+  }
+  if (snapshot.connected === true) {
+    return "online";
+  }
+  if (snapshot.connected === false) {
+    return "offline";
+  }
   return "connecting";
 }
 
 export const tenantChannelsHandlers: GatewayRequestHandlers = {
-  "tenant.channels.list": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.list": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.list");
@@ -152,15 +173,12 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
           updatedAt: ch.updatedAt,
           apps: apps.map((a) => {
             // Find the agent linked to this app via app.agentId
-            const linkedAgent = a.agentId
-              ? allAgents.find((ag) => ag.agentId === a.agentId)
-              : null;
+            const linkedAgent = a.agentId ? allAgents.find((ag) => ag.agentId === a.agentId) : null;
             // Resolve connection status from runtime snapshot.
             // Some plugins (e.g. WeCom) normalize account keys to lowercase in
             // their snapshot while DB stores the original-case appId — try the
             // exact key first, then fall back to a case-insensitive scan.
-            const accountsForChannel =
-              runtimeSnapshot.channelAccounts[ch.channelType as ChannelId];
+            const accountsForChannel = runtimeSnapshot.channelAccounts[ch.channelType as ChannelId];
             let accountSnapshot = accountsForChannel?.[a.appId];
             if (!accountSnapshot && accountsForChannel) {
               const lowerAppId = a.appId.toLowerCase();
@@ -178,20 +196,24 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
               botName: a.botName,
               groupPolicy: a.groupPolicy,
               isActive: a.isActive,
-              connectionStatus: accountSnapshot ? {
-                state: resolveConnectionState(accountSnapshot),
-                connected: accountSnapshot.connected === true,
-                lastConnectedAt: accountSnapshot.lastStartAt ?? null,
-                lastDisconnectedAt: accountSnapshot.lastStopAt ?? null,
-                lastError: accountSnapshot.lastError ?? null,
-              } : null,
-              agent: linkedAgent ? {
-                agentId: linkedAgent.agentId,
-                name: linkedAgent.name,
-                config: linkedAgent.config,
-                modelConfig: linkedAgent.modelConfig,
-                isActive: linkedAgent.isActive,
-              } : null,
+              connectionStatus: accountSnapshot
+                ? {
+                    state: resolveConnectionState(accountSnapshot),
+                    connected: accountSnapshot.connected === true,
+                    lastConnectedAt: accountSnapshot.lastStartAt ?? null,
+                    lastDisconnectedAt: accountSnapshot.lastStopAt ?? null,
+                    lastError: accountSnapshot.lastError ?? null,
+                  }
+                : null,
+              agent: linkedAgent
+                ? {
+                    agentId: linkedAgent.agentId,
+                    name: linkedAgent.name,
+                    config: linkedAgent.config,
+                    modelConfig: linkedAgent.modelConfig,
+                    isActive: linkedAgent.isActive,
+                  }
+                : null,
             };
           }),
         };
@@ -210,9 +232,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
    *   channelPolicy?: "open" | "allowlist" | "disabled"
    *   apps?: Array<{ appId, appSecret?, groupPolicy? }>
    */
-  "tenant.channels.create": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.create": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -252,7 +281,14 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     }
 
     if (channelPolicy && !isValidPolicy(channelPolicy)) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "channelPolicy must be one of: open, allowlist, disabled"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_PARAMS,
+          "channelPolicy must be one of: open, allowlist, disabled",
+        ),
+      );
       return;
     }
 
@@ -260,11 +296,22 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     if (apps) {
       for (const app of apps) {
         if (!app.appId) {
-          respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Each app must have an appId"));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_PARAMS, "Each app must have an appId"),
+          );
           return;
         }
         if (app.groupPolicy && !isValidPolicy(app.groupPolicy)) {
-          respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "App groupPolicy must be one of: open, allowlist, disabled"));
+          respond(
+            false,
+            undefined,
+            errorShape(
+              ErrorCodes.INVALID_PARAMS,
+              "App groupPolicy must be one of: open, allowlist, disabled",
+            ),
+          );
           return;
         }
       }
@@ -274,11 +321,13 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       for (const app of apps) {
         const key = app.appId.trim().toLowerCase();
         if (seen.has(key)) {
-          respond(false, undefined, errorShape(
-            ErrorCodes.INVALID_REQUEST,
-            DUPLICATE_APP_ID_IN_PAYLOAD,
-            { details: { appId: app.appId } },
-          ));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_REQUEST, DUPLICATE_APP_ID_IN_PAYLOAD, {
+              details: { appId: app.appId },
+            }),
+          );
           return;
         }
         seen.set(key, app.appId);
@@ -288,11 +337,13 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       for (const app of apps) {
         const conflict = await findConflictingAppId(ctx.tenantId, channelType, app.appId);
         if (conflict) {
-          respond(false, undefined, errorShape(
-            ErrorCodes.INVALID_REQUEST,
-            DUPLICATE_APP_ID_ACROSS_CHANNELS,
-            { details: { appId: app.appId, channelName: conflict.channelName } },
-          ));
+          respond(
+            false,
+            undefined,
+            errorShape(ErrorCodes.INVALID_REQUEST, DUPLICATE_APP_ID_ACROSS_CHANNELS, {
+              details: { appId: app.appId, channelName: conflict.channelName },
+            }),
+          );
           return;
         }
       }
@@ -301,11 +352,22 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     // Check quota
     const quota = await checkTenantQuota(ctx.tenantId, "channels");
     if (!quota.allowed) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.QUOTA_EXCEEDED,
-        `Channel quota reached (${quota.current}/${quota.max}). Upgrade your plan.`,
-        { details: { resource: "channels", current: quota.current, max: quota.max, contactLink: getPlanUpgradeLink() } },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.QUOTA_EXCEEDED,
+          `Channel quota reached (${quota.current}/${quota.max}). Upgrade your plan.`,
+          {
+            details: {
+              resource: "channels",
+              current: quota.current,
+              max: quota.max,
+              contactLink: getPlanUpgradeLink(),
+            },
+          },
+        ),
+      );
       return;
     }
 
@@ -374,7 +436,9 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
             await updateChannelApp(app.id, ctx.tenantId, { agentId: appInput.agentId });
             createdAgents.push({ agentId: appInput.agentId, name: null });
           } catch (bindErr: unknown) {
-            console.warn(`[tenant.channels.create] Bind agent ${appInput.agentId} failed: ${bindErr instanceof Error ? bindErr.message : "unknown"}`);
+            console.warn(
+              `[tenant.channels.create] Bind agent ${appInput.agentId} failed: ${bindErr instanceof Error ? bindErr.message : "unknown"}`,
+            );
           }
           continue;
         }
@@ -428,12 +492,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
             }
           } catch (dirErr: unknown) {
             const dirMsg = dirErr instanceof Error ? dirErr.message : "unknown";
-            console.warn(`[tenant.channels.create] Bootstrap dir failed for agent ${agent.agentId}: ${dirMsg}`);
+            console.warn(
+              `[tenant.channels.create] Bootstrap dir failed for agent ${agent.agentId}: ${dirMsg}`,
+            );
           }
         } catch (agentErr: unknown) {
           // Agent creation failure should not block channel creation
           const agentMsg = agentErr instanceof Error ? agentErr.message : "unknown";
-          console.warn(`[tenant.channels.create] Auto-create agent failed for app ${app.appId}: ${agentMsg}`);
+          console.warn(
+            `[tenant.channels.create] Auto-create agent failed for app ${app.appId}: ${agentMsg}`,
+          );
         }
       }
 
@@ -461,8 +529,7 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       // the first list refresh picks up the started runtime.
       const snapshotAfterStart = context.getRuntimeSnapshot();
       const appsWithStatus = createdApps.map((app) => {
-        const accountsForChannel =
-          snapshotAfterStart.channelAccounts[channelType as ChannelId];
+        const accountsForChannel = snapshotAfterStart.channelAccounts[channelType as ChannelId];
         let accountSnapshot = accountsForChannel?.[app.appId];
         if (!accountSnapshot && accountsForChannel) {
           const lowerAppId = app.appId.toLowerCase();
@@ -475,13 +542,15 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
         }
         return {
           ...app,
-          connectionStatus: accountSnapshot ? {
-            state: resolveConnectionState(accountSnapshot),
-            connected: accountSnapshot.connected === true,
-            lastConnectedAt: accountSnapshot.lastStartAt ?? null,
-            lastDisconnectedAt: accountSnapshot.lastStopAt ?? null,
-            lastError: accountSnapshot.lastError ?? null,
-          } : null,
+          connectionStatus: accountSnapshot
+            ? {
+                state: resolveConnectionState(accountSnapshot),
+                connected: accountSnapshot.connected === true,
+                lastConnectedAt: accountSnapshot.lastStartAt ?? null,
+                lastDisconnectedAt: accountSnapshot.lastStopAt ?? null,
+                lastError: accountSnapshot.lastError ?? null,
+              }
+            : null,
         };
       });
 
@@ -499,11 +568,18 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       const msg = err instanceof Error ? err.message : "Failed to create channel";
       const msgLower = msg.toLowerCase();
       const errCode = (err as { code?: string })?.code;
-      if (msgLower.includes("duplicate key") || msgLower.includes("unique constraint") || msgLower.includes("重复键") || msgLower.includes("唯一约束") || errCode === "23505") {
-        respond(false, undefined, errorShape(
-          ErrorCodes.INVALID_REQUEST,
-          "频道名称已存在，请更换名称",
-        ));
+      if (
+        msgLower.includes("duplicate key") ||
+        msgLower.includes("unique constraint") ||
+        msgLower.includes("重复键") ||
+        msgLower.includes("唯一约束") ||
+        errCode === "23505"
+      ) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "频道名称已存在，请更换名称"),
+        );
       } else {
         respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, msg));
       }
@@ -519,9 +595,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
    *   channelPolicy?: "open" | "allowlist" | "disabled"
    *   isActive?: boolean
    */
-  "tenant.channels.update": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.update": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.update");
@@ -552,7 +635,14 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     }
 
     if (channelPolicy !== undefined && !isValidPolicy(channelPolicy)) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "channelPolicy must be one of: open, allowlist, disabled"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_PARAMS,
+          "channelPolicy must be one of: open, allowlist, disabled",
+        ),
+      );
       return;
     }
 
@@ -600,7 +690,9 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     // Update linked agents if provided
     if (agentUpdates && agentUpdates.length > 0) {
       for (const au of agentUpdates) {
-        if (!au.agentId) {continue;}
+        if (!au.agentId) {
+          continue;
+        }
         try {
           await updateTenantAgent(ctx.tenantId, au.agentId, {
             name: au.name,
@@ -609,7 +701,11 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
           if (au.config?.systemPrompt !== undefined) {
             const agentDir = resolveTenantAgentDir(ctx.tenantId, au.agentId);
             await fs.mkdir(agentDir, { recursive: true });
-            await fs.writeFile(path.join(agentDir, "IDENTITY.md"), String(au.config.systemPrompt).trim(), "utf-8");
+            await fs.writeFile(
+              path.join(agentDir, "IDENTITY.md"),
+              String(au.config.systemPrompt).trim(),
+              "utf-8",
+            );
           }
         } catch (agentErr: unknown) {
           const msg = agentErr instanceof Error ? agentErr.message : "unknown";
@@ -640,9 +736,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
   /**
    * Delete a channel (and cascade-delete its apps).
    */
-  "tenant.channels.delete": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.delete": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.delete");
@@ -695,9 +798,15 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
    * List apps for a channel.
    * Params: { channelId: string }
    */
-  "tenant.channels.apps.list": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.apps.list": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.list");
@@ -740,9 +849,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
    * Add an app to a channel.
    * Params: { channelId, appId, appSecret?, groupPolicy? }
    */
-  "tenant.channels.apps.add": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.apps.add": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -754,7 +870,15 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       throw err;
     }
 
-    const { channelId, appId, appSecret, botName, groupPolicy, agentConfig, agentId: bindAgentId } = params as {
+    const {
+      channelId,
+      appId,
+      appSecret,
+      botName,
+      groupPolicy,
+      agentConfig,
+      agentId: bindAgentId,
+    } = params as {
       channelId: string;
       appId: string;
       appSecret?: string;
@@ -772,12 +896,23 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     };
 
     if (!channelId || !appId) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing channelId or appId"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Missing channelId or appId"),
+      );
       return;
     }
 
     if (groupPolicy && !isValidPolicy(groupPolicy)) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "groupPolicy must be one of: open, allowlist, disabled"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_PARAMS,
+          "groupPolicy must be one of: open, allowlist, disabled",
+        ),
+      );
       return;
     }
 
@@ -791,11 +926,13 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     // Reject duplicate appId across all channels of the same type under this tenant.
     const conflict = await findConflictingAppId(ctx.tenantId, channel.channelType, appId);
     if (conflict) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.INVALID_REQUEST,
-        DUPLICATE_APP_ID_ACROSS_CHANNELS,
-        { details: { appId, channelName: conflict.channelName } },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, DUPLICATE_APP_ID_ACROSS_CHANNELS, {
+          details: { appId, channelName: conflict.channelName },
+        }),
+      );
       return;
     }
 
@@ -816,7 +953,9 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
           await updateChannelApp(app.id, ctx.tenantId, { agentId: bindAgentId });
           createdAgent = { agentId: bindAgentId, name: null };
         } catch (bindErr: unknown) {
-          console.warn(`[apps.add] Bind agent ${bindAgentId} failed: ${bindErr instanceof Error ? bindErr.message : "unknown"}`);
+          console.warn(
+            `[apps.add] Bind agent ${bindAgentId} failed: ${bindErr instanceof Error ? bindErr.message : "unknown"}`,
+          );
         }
       } else if (agentConfig) {
         let finalAgentId: string;
@@ -853,20 +992,33 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
             const bootstrapCtx = { tenantDir, agentDir };
             await ensureTenantBootstrapFiles(bootstrapCtx);
             if (agentConfig.systemPrompt) {
-              await fs.writeFile(path.join(agentDir, "IDENTITY.md"), String(agentConfig.systemPrompt).trim(), "utf-8");
+              await fs.writeFile(
+                path.join(agentDir, "IDENTITY.md"),
+                String(agentConfig.systemPrompt).trim(),
+                "utf-8",
+              );
             }
           } catch (dirErr: unknown) {
-            console.warn(`[apps.add] Bootstrap dir failed for agent ${agent.agentId}: ${dirErr instanceof Error ? dirErr.message : "unknown"}`);
+            console.warn(
+              `[apps.add] Bootstrap dir failed for agent ${agent.agentId}: ${dirErr instanceof Error ? dirErr.message : "unknown"}`,
+            );
           }
         } catch (agentErr: unknown) {
-          console.warn(`[apps.add] Auto-create agent failed: ${agentErr instanceof Error ? agentErr.message : "unknown"}`);
+          console.warn(
+            `[apps.add] Auto-create agent failed: ${agentErr instanceof Error ? agentErr.message : "unknown"}`,
+          );
         }
       }
 
       invalidateTenantConfigCache(ctx.tenantId);
 
       // Start connection for the new app if channel and app are both effectively active
-      if (channel.isActive && channel.channelPolicy !== "disabled" && app.isActive && app.groupPolicy !== "disabled") {
+      if (
+        channel.isActive &&
+        channel.channelPolicy !== "disabled" &&
+        app.isActive &&
+        app.groupPolicy !== "disabled"
+      ) {
         await context.reloadDbChannels();
         await context.startChannel(channel.channelType as ChannelId, app.appId);
       }
@@ -892,8 +1044,18 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       const msg = err instanceof Error ? err.message : "Failed to add app";
       const msgLower = msg.toLowerCase();
       const errCode = (err as { code?: string })?.code;
-      if (msgLower.includes("duplicate key") || msgLower.includes("unique constraint") || msgLower.includes("重复键") || msgLower.includes("唯一约束") || errCode === "23505") {
-        respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "该频道下已存在相同 App ID 的应用"));
+      if (
+        msgLower.includes("duplicate key") ||
+        msgLower.includes("unique constraint") ||
+        msgLower.includes("重复键") ||
+        msgLower.includes("唯一约束") ||
+        errCode === "23505"
+      ) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "该频道下已存在相同 App ID 的应用"),
+        );
       } else {
         respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, msg));
       }
@@ -904,9 +1066,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
    * Update a channel app.
    * Params: { appDbId, appId?, appSecret?, groupPolicy?, isActive? }
    */
-  "tenant.channels.apps.update": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.apps.update": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.update");
@@ -918,7 +1087,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       throw err;
     }
 
-    const { appDbId, appId, appSecret, botName, groupPolicy, isActive, agentConfig, agentId: bindAgentId } = params as {
+    const {
+      appDbId,
+      appId,
+      appSecret,
+      botName,
+      groupPolicy,
+      isActive,
+      agentConfig,
+      agentId: bindAgentId,
+    } = params as {
       appDbId: string;
       appId?: string;
       appSecret?: string;
@@ -942,12 +1120,21 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
     }
 
     if (groupPolicy !== undefined && !isValidPolicy(groupPolicy)) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "groupPolicy must be one of: open, allowlist, disabled"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_PARAMS,
+          "groupPolicy must be one of: open, allowlist, disabled",
+        ),
+      );
       return;
     }
 
     // Find old app info to track changes for connection lifecycle
-    let oldApp: { appId: string; appSecret: string; isActive: boolean; groupPolicy: string } | undefined;
+    let oldApp:
+      | { appId: string; appSecret: string; isActive: boolean; groupPolicy: string }
+      | undefined;
     let channelForApp: Awaited<ReturnType<typeof getTenantChannelById>> = null;
     {
       const allChannels = await listTenantChannels(ctx.tenantId);
@@ -955,7 +1142,12 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
         const apps = await listChannelApps(ch.id);
         const found = apps.find((a) => a.id === appDbId);
         if (found) {
-          oldApp = { appId: found.appId, appSecret: found.appSecret, isActive: found.isActive, groupPolicy: found.groupPolicy };
+          oldApp = {
+            appId: found.appId,
+            appSecret: found.appSecret,
+            isActive: found.isActive,
+            groupPolicy: found.groupPolicy,
+          };
           channelForApp = ch;
           break;
         }
@@ -972,11 +1164,13 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
         appDbId,
       );
       if (conflict) {
-        respond(false, undefined, errorShape(
-          ErrorCodes.INVALID_REQUEST,
-          DUPLICATE_APP_ID_ACROSS_CHANNELS,
-          { details: { appId, channelName: conflict.channelName } },
-        ));
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, DUPLICATE_APP_ID_ACROSS_CHANNELS, {
+            details: { appId, channelName: conflict.channelName },
+          }),
+        );
         return;
       }
     }
@@ -1013,7 +1207,8 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
         // Nothing connection-relevant changed — just reload config
         await context.reloadDbChannels();
       } else {
-        const channelEffectivelyActive = channelForApp.isActive && channelForApp.channelPolicy !== "disabled";
+        const channelEffectivelyActive =
+          channelForApp.isActive && channelForApp.channelPolicy !== "disabled";
         // App is effectively enabled when active and groupPolicy is not "disabled"
         const appEffectivelyActive = updated.isActive && updated.groupPolicy !== "disabled";
 
@@ -1043,7 +1238,9 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
       // Legacy: Update linked agent if agentConfig provided (backward compat)
       const currentApp = (await listChannelApps(channelForApp.id)).find((a) => a.id === appDbId);
       const allAgents = await listTenantAgents(ctx.tenantId, { activeOnly: false });
-      const linkedAgent = currentApp?.agentId ? allAgents.find((ag) => ag.agentId === currentApp.agentId) : null;
+      const linkedAgent = currentApp?.agentId
+        ? allAgents.find((ag) => ag.agentId === currentApp.agentId)
+        : null;
       if (linkedAgent) {
         try {
           await updateTenantAgent(ctx.tenantId, linkedAgent.agentId, {
@@ -1055,15 +1252,23 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
               ...(agentConfig.feishuOpenId ? { feishuOpenId: agentConfig.feishuOpenId } : {}),
               ...(agentConfig.tools !== undefined ? { tools: agentConfig.tools } : {}),
             },
-            ...(agentConfig.modelConfig !== undefined ? { modelConfig: agentConfig.modelConfig } : {}),
+            ...(agentConfig.modelConfig !== undefined
+              ? { modelConfig: agentConfig.modelConfig }
+              : {}),
           });
           if (agentConfig.systemPrompt !== undefined) {
             const agentDir = resolveTenantAgentDir(ctx.tenantId, linkedAgent.agentId);
             await fs.mkdir(agentDir, { recursive: true });
-            await fs.writeFile(path.join(agentDir, "IDENTITY.md"), String(agentConfig.systemPrompt).trim(), "utf-8");
+            await fs.writeFile(
+              path.join(agentDir, "IDENTITY.md"),
+              String(agentConfig.systemPrompt).trim(),
+              "utf-8",
+            );
           }
         } catch (agentErr: unknown) {
-          console.warn(`[apps.update] Agent update failed: ${agentErr instanceof Error ? agentErr.message : "unknown"}`);
+          console.warn(
+            `[apps.update] Agent update failed: ${agentErr instanceof Error ? agentErr.message : "unknown"}`,
+          );
         }
       }
       invalidateTenantConfigCache(ctx.tenantId);
@@ -1091,9 +1296,16 @@ export const tenantChannelsHandlers: GatewayRequestHandlers = {
    * Delete a channel app.
    * Params: { appDbId: string }
    */
-  "tenant.channels.apps.delete": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.channels.apps.delete": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.delete");

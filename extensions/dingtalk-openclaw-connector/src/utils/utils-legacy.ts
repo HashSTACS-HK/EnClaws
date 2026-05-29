@@ -2,23 +2,23 @@
  * 钉钉插件工具函数
  */
 
-import type { DingtalkConfig, ResolvedDingtalkAccount } from '../types/index.ts';
+import type { DingtalkConfig, ResolvedDingtalkAccount } from "../types/index.ts";
 
 // SessionContext 和 buildSessionContext 统一由 session.ts 维护
-export type { SessionContext } from './session.ts';
-export { buildSessionContext } from './session.ts';
+export type { SessionContext } from "./session.ts";
+export { buildSessionContext } from "./session.ts";
 
 // ============ 常量 ============
 
 /** 默认账号 ID，用于标记单账号模式（无 accounts 配置）时的内部标识 */
-export const DEFAULT_ACCOUNT_ID = '__default__';
+export const DEFAULT_ACCOUNT_ID = "__default__";
 
 /** 新会话触发命令 */
-export const NEW_SESSION_COMMANDS = ['/new', '/reset', '/clear', '新会话', '重新开始', '清空对话'];
+export const NEW_SESSION_COMMANDS = ["/new", "/reset", "/clear", "新会话", "重新开始", "清空对话"];
 
 /** 钉钉 API 常量 */
-export const DINGTALK_API = 'https://api.dingtalk.com';
-export const DINGTALK_OAPI = 'https://oapi.dingtalk.com';
+export const DINGTALK_API = "https://api.dingtalk.com";
+export const DINGTALK_OAPI = "https://oapi.dingtalk.com";
 
 // ============ 会话管理 ============
 
@@ -29,7 +29,7 @@ export function normalizeSlashCommand(text: string): string {
   const trimmed = text.trim();
   const lower = trimmed.toLowerCase();
   if (NEW_SESSION_COMMANDS.some((cmd) => lower === cmd.toLowerCase())) {
-    return '/new';
+    return "/new";
   }
   return text;
 }
@@ -46,16 +46,16 @@ const apiTokenCache = new Map<string, CachedToken>();
 const oapiTokenCache = new Map<string, CachedToken>();
 
 function cacheKey(config: DingtalkConfig): string {
-  const clientId = String((config as any)?.clientId ?? '').trim();
-  
+  const clientId = String((config as any)?.clientId ?? "").trim();
+
   // 添加校验
   if (!clientId) {
     throw new Error(
-      'Invalid DingtalkConfig: clientId is required for token caching. ' +
-      'Please ensure your configuration includes a valid clientId.'
+      "Invalid DingtalkConfig: clientId is required for token caching. " +
+        "Please ensure your configuration includes a valid clientId.",
     );
   }
-  
+
   return clientId;
 }
 
@@ -70,7 +70,7 @@ export async function getAccessToken(config: DingtalkConfig): Promise<string> {
     return cached.token;
   }
 
-  const { dingtalkHttp } = await import('./http-client.ts');
+  const { dingtalkHttp } = await import("./http-client.ts");
   const response = await dingtalkHttp.post(`${DINGTALK_API}/v1.0/oauth2/accessToken`, {
     appKey: config.clientId,
     appSecret: config.clientSecret,
@@ -94,7 +94,7 @@ export async function getOapiAccessToken(config: DingtalkConfig): Promise<string
       return cached.token;
     }
 
-    const { dingtalkOapiHttp } = await import('./http-client.ts');
+    const { dingtalkOapiHttp } = await import("./http-client.ts");
     const resp = await dingtalkOapiHttp.get(`${DINGTALK_OAPI}/gettoken`, {
       params: { appkey: config.clientId, appsecret: config.clientSecret },
     });
@@ -140,10 +140,10 @@ export async function getUnionId(
   try {
     const token = await getOapiAccessToken(config);
     if (!token) {
-      log?.error?.('[DingTalk] getUnionId: 无法获取 oapi access_token');
+      log?.error?.("[DingTalk] getUnionId: 无法获取 oapi access_token");
       return null;
     }
-    const { dingtalkOapiHttp } = await import('./http-client.ts');
+    const { dingtalkOapiHttp } = await import("./http-client.ts");
     const resp = await dingtalkOapiHttp.get(`${DINGTALK_OAPI}/user/get`, {
       params: { access_token: token, userid: staffId },
       timeout: 10_000,
@@ -155,19 +155,19 @@ export async function getUnionId(
         // 删除最旧的条目
         let oldestKey: string | null = null;
         let oldestTime = Date.now();
-        
+
         for (const [key, entry] of unionIdCache.entries()) {
           if (entry.timestamp < oldestTime) {
             oldestTime = entry.timestamp;
             oldestKey = key;
           }
         }
-        
+
         if (oldestKey) {
           unionIdCache.delete(oldestKey);
         }
       }
-      
+
       unionIdCache.set(staffId, { unionId, timestamp: Date.now() });
       log?.info?.(`[DingTalk] getUnionId: ${staffId} → ${unionId}`);
       return unionId;
@@ -208,11 +208,14 @@ export function cleanupProcessedMessages(): void {
  */
 export function startMessageCleanup(): void {
   if (cleanupTimer) return; // 防止重复启动
-  
+
   // 每 5 分钟清理一次
-  cleanupTimer = setInterval(() => {
-    cleanupProcessedMessages();
-  }, 5 * 60 * 1000);
+  cleanupTimer = setInterval(
+    () => {
+      cleanupProcessedMessages();
+    },
+    5 * 60 * 1000,
+  );
 }
 
 /**
@@ -297,7 +300,7 @@ export function checkAndMarkDingtalkMessage(
  * 获取钉钉配置
  */
 export function getDingtalkConfig(cfg: any): DingtalkConfig {
-  return (cfg?.channels as any)?.['dingtalk'] || {};
+  return (cfg?.channels as any)?.["dingtalk"] || {};
 }
 
 /**
@@ -400,23 +403,27 @@ export async function addEmotionReply(config: DingtalkConfig, data: any, log?: a
   if (!data.msgId || !data.conversationId) return;
   try {
     const token = await getAccessToken(config);
-    const { dingtalkHttp } = await import('./http-client.ts');
-    await dingtalkHttp.post(`${DINGTALK_API}/v1.0/robot/emotion/reply`, {
-      robotCode: data.robotCode ?? config.clientId,
-      openMsgId: data.msgId,
-      openConversationId: data.conversationId,
-      emotionType: 2,
-      emotionName: '🤔思考中',
-      textEmotion: {
-        emotionId: '2659900',
-        emotionName: '🤔思考中',
-        text: '🤔思考中',
-        backgroundId: 'im_bg_1',
+    const { dingtalkHttp } = await import("./http-client.ts");
+    await dingtalkHttp.post(
+      `${DINGTALK_API}/v1.0/robot/emotion/reply`,
+      {
+        robotCode: data.robotCode ?? config.clientId,
+        openMsgId: data.msgId,
+        openConversationId: data.conversationId,
+        emotionType: 2,
+        emotionName: "🤔思考中",
+        textEmotion: {
+          emotionId: "2659900",
+          emotionName: "🤔思考中",
+          text: "🤔思考中",
+          backgroundId: "im_bg_1",
+        },
       },
-    }, {
-      headers: { 'x-acs-dingtalk-access-token': token, 'Content-Type': 'application/json' },
-      timeout: 5_000,
-    });
+      {
+        headers: { "x-acs-dingtalk-access-token": token, "Content-Type": "application/json" },
+        timeout: 5_000,
+      },
+    );
     log?.info?.(`[DingTalk][Emotion] 贴表情成功: msgId=${data.msgId}`);
   } catch (err: any) {
     log?.warn?.(`[DingTalk][Emotion] 贴表情失败（不影响主流程）: ${err.message}`);
@@ -426,27 +433,35 @@ export async function addEmotionReply(config: DingtalkConfig, data: any, log?: a
 /**
  * 撤回用户消息上的 🤔思考中 表情
  */
-export async function recallEmotionReply(config: DingtalkConfig, data: any, log?: any): Promise<void> {
+export async function recallEmotionReply(
+  config: DingtalkConfig,
+  data: any,
+  log?: any,
+): Promise<void> {
   if (!data.msgId || !data.conversationId) return;
   try {
     const token = await getAccessToken(config);
-    const { dingtalkHttp } = await import('./http-client.ts');
-    await dingtalkHttp.post(`${DINGTALK_API}/v1.0/robot/emotion/recall`, {
-      robotCode: data.robotCode ?? config.clientId,
-      openMsgId: data.msgId,
-      openConversationId: data.conversationId,
-      emotionType: 2,
-      emotionName: '🤔思考中',
-      textEmotion: {
-        emotionId: '2659900',
-        emotionName: '🤔思考中',
-        text: '🤔思考中',
-        backgroundId: 'im_bg_1',
+    const { dingtalkHttp } = await import("./http-client.ts");
+    await dingtalkHttp.post(
+      `${DINGTALK_API}/v1.0/robot/emotion/recall`,
+      {
+        robotCode: data.robotCode ?? config.clientId,
+        openMsgId: data.msgId,
+        openConversationId: data.conversationId,
+        emotionType: 2,
+        emotionName: "🤔思考中",
+        textEmotion: {
+          emotionId: "2659900",
+          emotionName: "🤔思考中",
+          text: "🤔思考中",
+          backgroundId: "im_bg_1",
+        },
       },
-    }, {
-      headers: { 'x-acs-dingtalk-access-token': token, 'Content-Type': 'application/json' },
-      timeout: 5_000,
-    });
+      {
+        headers: { "x-acs-dingtalk-access-token": token, "Content-Type": "application/json" },
+        timeout: 5_000,
+      },
+    );
     log?.info?.(`[DingTalk][Emotion] 撤回表情成功: msgId=${data.msgId}`);
   } catch (err: any) {
     log?.warn?.(`[DingTalk][Emotion] 撤回表情失败（不影响主流程）: ${err.message}`);

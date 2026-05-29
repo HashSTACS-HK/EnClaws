@@ -5,8 +5,8 @@
  * Converter for "file" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertFile: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as
@@ -18,14 +18,14 @@ export const convertFile: ContentConverterFn = (raw) => {
 
   const fileKey = parsed?.file_key;
   if (!fileKey) {
-    return { content: '[file]', resources: [] };
+    return { content: "[file]", resources: [] };
   }
 
-  const fileName = parsed?.file_name ?? '';
-  const nameAttr = fileName ? ` name="${fileName}"` : '';
+  const fileName = parsed?.file_name ?? "";
+  const nameAttr = fileName ? ` name="${fileName}"` : "";
 
   return {
     content: `<file key="${fileKey}"${nameAttr}/>`,
-    resources: [{ type: 'file', fileKey, fileName: fileName || undefined }],
+    resources: [{ type: "file", fileKey, fileName: fileName || undefined }],
   };
 };

@@ -3,9 +3,9 @@
  * 支持音频消息发送
  */
 
-import type { DingtalkConfig } from '../../types/index.ts';
-import { AUDIO_MARKER_PATTERN, toLocalPath, uploadMediaToDingTalk } from './common.ts';
-import * as fs from 'fs';
+import * as fs from "fs";
+import type { DingtalkConfig } from "../../types/index.ts";
+import { AUDIO_MARKER_PATTERN, toLocalPath, uploadMediaToDingTalk } from "./common.ts";
 
 /**
  * 提取音频标记并发送音频消息
@@ -19,7 +19,7 @@ export async function processAudioMarkers(
   useProactiveApi: boolean = false,
   target?: any,
 ): Promise<string> {
-  const logPrefix = useProactiveApi ? '[DingTalk][Audio][Proactive]' : '[DingTalk][Audio]';
+  const logPrefix = useProactiveApi ? "[DingTalk][Audio][Proactive]" : "[DingTalk][Audio]";
 
   if (!oapiToken) {
     log?.warn?.(`${logPrefix} 无 oapiToken，跳过音频处理`);
@@ -39,14 +39,23 @@ export async function processAudioMarkers(
       const absPath = toLocalPath(audioData.path);
       if (!fs.existsSync(absPath)) {
         log?.warn?.(`${logPrefix} 音频文件不存在：${absPath}`);
-        result = result.replace(full, '⚠️ 音频文件不存在');
+        result = result.replace(full, "⚠️ 音频文件不存在");
         continue;
       }
-      const uploadResult = await uploadMediaToDingTalk(absPath, 'voice', oapiToken, 20 * 1024 * 1024, log);
-      result = result.replace(full, uploadResult ? `[音频已上传：${uploadResult}]` : '⚠️ 音频上传失败');
+      const uploadResult = await uploadMediaToDingTalk(
+        absPath,
+        "voice",
+        oapiToken,
+        20 * 1024 * 1024,
+        log,
+      );
+      result = result.replace(
+        full,
+        uploadResult ? `[音频已上传：${uploadResult}]` : "⚠️ 音频上传失败",
+      );
     } catch {
       log?.warn?.(`${logPrefix} 解析音频标记失败：${match[1]}`);
-      result = result.replace(full, '');
+      result = result.replace(full, "");
     }
   }
 

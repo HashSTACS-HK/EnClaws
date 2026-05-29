@@ -23,7 +23,9 @@ export class TenantKnowledgeView extends LitElement {
   static styles = [
     caretFix,
     css`
-      :host { display: block; }
+      :host {
+        display: block;
+      }
       .toolbar {
         display: flex;
         justify-content: space-between;
@@ -31,9 +33,21 @@ export class TenantKnowledgeView extends LitElement {
         gap: 16px;
         margin-bottom: 16px;
       }
-      .title { font-size: 16px; font-weight: 650; }
-      .sub { color: var(--color-text-secondary, #6a737d); font-size: 13px; margin-top: 4px; }
-      .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      .title {
+        font-size: 16px;
+        font-weight: 650;
+      }
+      .sub {
+        color: var(--color-text-secondary, #6a737d);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
       .btn {
         border: 1px solid var(--color-border, #d0d7de);
         background: var(--color-bg, #fff);
@@ -44,14 +58,21 @@ export class TenantKnowledgeView extends LitElement {
         font-weight: 500;
         cursor: pointer;
       }
-      .btn:hover { background: var(--color-bg-secondary, #f6f8fa); }
+      .btn:hover {
+        background: var(--color-bg-secondary, #f6f8fa);
+      }
       .btn.primary {
         background: var(--color-accent, #0969da);
         border-color: var(--color-accent, #0969da);
         color: #fff;
       }
-      .btn.danger { color: var(--color-danger, #cf222e); }
-      .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+      .btn.danger {
+        color: var(--color-danger, #cf222e);
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
       .layout {
         display: grid;
         grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
@@ -72,7 +93,9 @@ export class TenantKnowledgeView extends LitElement {
         align-items: center;
         gap: 12px;
       }
-      .panel-title { font-weight: 650; }
+      .panel-title {
+        font-weight: 650;
+      }
       .drop {
         margin: 14px 16px 0;
         border: 1px dashed var(--color-border, #d0d7de);
@@ -87,20 +110,34 @@ export class TenantKnowledgeView extends LitElement {
         border-color: var(--color-accent, #0969da);
         background: var(--color-accent-muted, #ddf4ff);
       }
-      .list { padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+      .list {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
       .file {
         border: 1px solid transparent;
         border-radius: 6px;
         padding: 10px;
         cursor: pointer;
       }
-      .file:hover { background: var(--color-bg-secondary, #f6f8fa); }
+      .file:hover {
+        background: var(--color-bg-secondary, #f6f8fa);
+      }
       .file.active {
         background: var(--color-accent-muted, #ddf4ff);
         border-color: var(--color-accent, #0969da);
       }
-      .file-name { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
-      .file-meta { color: var(--color-text-secondary, #6a737d); font-size: 12px; margin-top: 4px; }
+      .file-name {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+      .file-meta {
+        color: var(--color-text-secondary, #6a737d);
+        font-size: 12px;
+        margin-top: 4px;
+      }
       textarea {
         width: 100%;
         min-height: 430px;
@@ -108,7 +145,12 @@ export class TenantKnowledgeView extends LitElement {
         border: 0;
         resize: vertical;
         padding: 16px;
-        font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font:
+          13px/1.55 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
         background: var(--color-bg, #fff);
         color: var(--color-text, #24292f);
       }
@@ -119,11 +161,22 @@ export class TenantKnowledgeView extends LitElement {
         justify-content: flex-end;
         gap: 8px;
       }
-      .empty, .message { color: var(--color-text-secondary, #6a737d); font-size: 13px; padding: 20px; }
-      .error { color: var(--color-danger, #cf222e); }
-      input[type="file"] { display: none; }
+      .empty,
+      .message {
+        color: var(--color-text-secondary, #6a737d);
+        font-size: 13px;
+        padding: 20px;
+      }
+      .error {
+        color: var(--color-danger, #cf222e);
+      }
+      input[type="file"] {
+        display: none;
+      }
       @media (max-width: 900px) {
-        .layout { grid-template-columns: 1fr; }
+        .layout {
+          grid-template-columns: 1fr;
+        }
       }
     `,
   ];
@@ -145,8 +198,12 @@ export class TenantKnowledgeView extends LitElement {
 
   private normalizeName(raw: string): string | null {
     const clean = raw.trim().replace(/\\/g, "/");
-    if (!clean) {return null;}
-    if (clean === "MEMORY.md" || clean === "memory.md") {return clean;}
+    if (!clean) {
+      return null;
+    }
+    if (clean === "MEMORY.md" || clean === "memory.md") {
+      return clean;
+    }
     const withoutPrefix = clean.startsWith("memory/") ? clean.slice("memory/".length) : clean;
     const safeName = withoutPrefix
       .split("/")
@@ -154,7 +211,9 @@ export class TenantKnowledgeView extends LitElement {
       .map((part) => part.replace(/[^a-zA-Z0-9\-_.]/g, ""))
       .filter(Boolean)
       .join("/");
-    if (!safeName) {return null;}
+    if (!safeName) {
+      return null;
+    }
     const hasSupportedExt = this.supportedExtensions.some((ext) =>
       safeName.toLowerCase().endsWith(ext),
     );
@@ -176,9 +235,15 @@ export class TenantKnowledgeView extends LitElement {
   }
 
   private formatSize(bytes?: number): string {
-    if (bytes == null) {return "";}
-    if (bytes < 1024) {return `${bytes} B`;}
-    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
+    if (bytes == null) {
+      return "";
+    }
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
@@ -186,7 +251,7 @@ export class TenantKnowledgeView extends LitElement {
     this.loading = true;
     this.error = null;
     try {
-      this.list = await tenantRpc("tenant.memory.list") as KnowledgeListResult;
+      this.list = (await tenantRpc("tenant.memory.list")) as KnowledgeListResult;
       if (this.active && !this.list.files.some((file) => file.name === this.active)) {
         this.active = null;
       }
@@ -199,11 +264,13 @@ export class TenantKnowledgeView extends LitElement {
 
   private async selectFile(name: string) {
     this.active = name;
-    if (Object.hasOwn(this.contents, name)) {return;}
+    if (Object.hasOwn(this.contents, name)) {
+      return;
+    }
     this.loading = true;
     this.error = null;
     try {
-      const result = await tenantRpc("tenant.memory.file.get", { name }) as {
+      const result = (await tenantRpc("tenant.memory.file.get", { name })) as {
         file?: KnowledgeFile;
       };
       const content = result.file?.content ?? "";
@@ -221,7 +288,7 @@ export class TenantKnowledgeView extends LitElement {
     this.saving = true;
     this.error = null;
     try {
-      const result = await tenantRpc("tenant.memory.file.set", { name, content }) as {
+      const result = (await tenantRpc("tenant.memory.file.set", { name, content })) as {
         file?: KnowledgeFile;
       };
       this.contents = { ...this.contents, [name]: content };
@@ -241,7 +308,9 @@ export class TenantKnowledgeView extends LitElement {
   }
 
   private async deleteFile(name: string) {
-    if (!confirm(`确认删除企业知识库文件 "${name}"？`)) {return;}
+    if (!confirm(`确认删除企业知识库文件 "${name}"？`)) {
+      return;
+    }
     this.saving = true;
     this.error = null;
     try {
@@ -250,7 +319,9 @@ export class TenantKnowledgeView extends LitElement {
         workspace: this.list?.workspace ?? "",
         files: (this.list?.files ?? []).filter((file) => file.name !== name),
       };
-      if (this.active === name) {this.active = null;}
+      if (this.active === name) {
+        this.active = null;
+      }
     } catch (err) {
       this.error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -286,7 +357,9 @@ export class TenantKnowledgeView extends LitElement {
     try {
       for (const file of files) {
         const name = this.normalizeName(file.name);
-        if (!name) {continue;}
+        if (!name) {
+          continue;
+        }
         if (this.isEditable(name)) {
           await tenantRpc("tenant.memory.file.set", { name, content: await file.text() });
         } else {
@@ -303,7 +376,9 @@ export class TenantKnowledgeView extends LitElement {
     } finally {
       this.saving = false;
       const input = this.shadowRoot?.querySelector<HTMLInputElement>("#tenant-kb-upload");
-      if (input) {input.value = "";}
+      if (input) {
+        input.value = "";
+      }
     }
   }
 
@@ -325,7 +400,9 @@ export class TenantKnowledgeView extends LitElement {
           <input id="tenant-kb-upload" type="file" accept=".md,.txt,.csv,.docx,.xlsx,.pdf,text/markdown,text/plain,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple
             @change=${(e: Event) => {
               const input = e.target as HTMLInputElement;
-              if (input.files?.length) {void this.uploadFiles(input.files);}
+              if (input.files?.length) {
+                void this.uploadFiles(input.files);
+              }
             }}
           />
         </div>
@@ -338,31 +415,48 @@ export class TenantKnowledgeView extends LitElement {
             <button class="btn" @click=${() => {
               const name = window.prompt("新建文件名", "memory/product.md");
               const normalized = name ? this.normalizeName(name) : null;
-              if (normalized) {void this.selectFile(normalized);}
+              if (normalized) {
+                void this.selectFile(normalized);
+              }
             }}>新建</button>
           </div>
           <div class="drop ${this.dragover ? "active" : ""}"
             @click=${this.triggerUpload}
-            @dragover=${(e: DragEvent) => { e.preventDefault(); this.dragover = true; }}
-            @dragleave=${() => { this.dragover = false; }}
+            @dragover=${(e: DragEvent) => {
+              e.preventDefault();
+              this.dragover = true;
+            }}
+            @dragleave=${() => {
+              this.dragover = false;
+            }}
             @drop=${(e: DragEvent) => {
               e.preventDefault();
               this.dragover = false;
-              if (e.dataTransfer?.files?.length) {void this.uploadFiles(e.dataTransfer.files);}
+              if (e.dataTransfer?.files?.length) {
+                void this.uploadFiles(e.dataTransfer.files);
+              }
             }}
           >点击或拖放 .md 文件上传</div>
-          ${this.loading && files.length === 0
-            ? html`<div class="empty">加载中...</div>`
-            : files.length === 0
-              ? html`<div class="empty">暂无企业知识库文件。</div>`
-              : html`<div class="list">
-                  ${files.map((file) => html`
+          ${
+            this.loading && files.length === 0
+              ? html`
+                  <div class="empty">加载中...</div>
+                `
+              : files.length === 0
+                ? html`
+                    <div class="empty">暂无企业知识库文件。</div>
+                  `
+                : html`<div class="list">
+                  ${files.map(
+                    (file) => html`
                     <div class="file ${file.name === active ? "active" : ""}" @click=${() => void this.selectFile(file.name)}>
                       <div class="file-name">${file.name}</div>
                       <div class="file-meta">${this.formatSize(file.size)}${file.updatedAtMs ? ` · ${new Date(file.updatedAtMs).toLocaleString()}` : ""}</div>
                     </div>
-                  `)}
-                </div>`}
+                  `,
+                  )}
+                </div>`
+          }
         </section>
         <section class="panel">
           <div class="panel-head">
@@ -370,20 +464,28 @@ export class TenantKnowledgeView extends LitElement {
               <div class="panel-title">${active ?? "选择文件"}</div>
               ${/* workspace 路径已隐藏（租户视角无用） */ nothing}
             </div>
-            ${active ? html`
+            ${
+              active
+                ? html`
               <div class="actions">
                 <button class="btn" @click=${() => this.downloadFile(active)}>下载</button>
                 <button class="btn danger" ?disabled=${this.saving} @click=${() => void this.deleteFile(active)}>删除</button>
               </div>
-            ` : nothing}
+            `
+                : nothing
+            }
           </div>
-          ${active
-            ? html`
+          ${
+            active
+              ? html`
                 <textarea
                   .value=${draft}
                   ?disabled=${this.loading || this.saving || !editable}
                   @input=${(e: Event) => {
-                    this.drafts = { ...this.drafts, [active]: (e.target as HTMLTextAreaElement).value };
+                    this.drafts = {
+                      ...this.drafts,
+                      [active]: (e.target as HTMLTextAreaElement).value,
+                    };
                   }}
                 ></textarea>
                 <div class="editor-actions">
@@ -395,7 +497,10 @@ export class TenantKnowledgeView extends LitElement {
                   </button>
                 </div>
               `
-            : html`<div class="empty">选择、新建或上传一个 Markdown 文件后编辑。</div>`}
+              : html`
+                  <div class="empty">选择、新建或上传一个 Markdown 文件后编辑。</div>
+                `
+          }
         </section>
       </div>
     `;

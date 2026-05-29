@@ -50,9 +50,7 @@ const MAX_TOTAL_FILE_SIZE = 20 * 1024 * 1024;
  * - 单文件 > 10MB → 报错
  * - 所有文件累计 > 20MB → 报错
  */
-async function validateFileSize(
-  pages: Record<string, unknown>[],
-): Promise<void> {
+async function validateFileSize(pages: Record<string, unknown>[]): Promise<void> {
   let totalSize = 0;
 
   for (let i = 0; i < pages.length; i++) {
@@ -70,7 +68,7 @@ async function validateFileSize(
     if (stat.size > MAX_SINGLE_FILE_SIZE) {
       console.error(
         `[mcp] smartpage_create: pages[${i}] 文件 "${filePath}" ` +
-        `大小 ${(stat.size / 1024 / 1024).toFixed(1)}MB 超过单文件上限 10MB`,
+          `大小 ${(stat.size / 1024 / 1024).toFixed(1)}MB 超过单文件上限 10MB`,
       );
       throw new Error("内容大小超出限制，无法创建");
     }
@@ -79,7 +77,7 @@ async function validateFileSize(
     if (totalSize > MAX_TOTAL_FILE_SIZE) {
       console.error(
         `[mcp] smartpage_create: 累计文件大小 ${(totalSize / 1024 / 1024).toFixed(1)}MB ` +
-        `超过总上限 20MB（在 pages[${i}] "${filePath}" 处超出）`,
+          `超过总上限 20MB（在 pages[${i}] "${filePath}" 处超出）`,
       );
       throw new Error("内容大小超出限制，无法创建");
     }

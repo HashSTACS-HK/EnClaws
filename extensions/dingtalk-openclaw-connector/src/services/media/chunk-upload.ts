@@ -1,22 +1,22 @@
 /**
  * 钉钉文件分块上传模块
  * 支持大文件（>20MB）的分块上传
- * 
+ *
  * API 文档：
  * - 开启事务：https://open.dingtalk.com/document/development/enable-upload-transaction
  * - 上传块：https://open.dingtalk.com/document/development/upload-file-blocks
  * - 提交事务：https://open.dingtalk.com/document/development/submit-a-file-upload-transaction
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import { createLogger } from '../../utils/logger.ts';
-import { dingtalkOapiHttp, dingtalkUploadHttp } from '../../utils/http-client.ts';
+import * as fs from "fs";
+import * as path from "path";
 // form-data 是 CJS 模块，静态 import 可确保 jiti/ESM 环境下 CJS 互操作行为稳定，
 // 避免动态 import 时 .default 偶发为 undefined 导致 "Cannot read properties of undefined (reading 'registry')"
-import FormData from 'form-data';
+import FormData from "form-data";
+import { dingtalkOapiHttp, dingtalkUploadHttp } from "../../utils/http-client.ts";
+import { createLogger } from "../../utils/logger.ts";
 
-const DINGTALK_OAPI = 'https://oapi.dingtalk.com';
+const DINGTALK_OAPI = "https://oapi.dingtalk.com";
 
 /** 分块上传配置 */
 export const CHUNK_CONFIG = {
@@ -60,14 +60,14 @@ export async function enableUploadTransaction(
   fileSize: number,
   debug: boolean = false,
 ): Promise<string | null> {
-  const log = createLogger(debug, 'DingTalk][ChunkUpload');
-  
+  const log = createLogger(debug, "DingTalk][ChunkUpload");
+
   try {
     log.info(`开启上传事务：${fileName}, 大小：${(fileSize / 1024 / 1024).toFixed(2)}MB`);
 
     const form = new FormData();
-    form.append('file_name', fileName);
-    form.append('file_size', fileSize.toString());
+    form.append("file_name", fileName);
+    form.append("file_size", fileSize.toString());
 
     const resp = await dingtalkOapiHttp.post<UploadTransactionResponse>(
       `${DINGTALK_OAPI}/file/upload/transaction/enable`,
@@ -76,7 +76,7 @@ export async function enableUploadTransaction(
         params: { access_token: oapiToken },
         headers: form.getHeaders(),
         timeout: 60_000,
-      }
+      },
     );
 
     if (resp.data.errcode === 0) {
@@ -110,18 +110,20 @@ export async function uploadFileBlock(
   totalChunks: number,
   debug: boolean = false,
 ): Promise<boolean> {
-  const log = createLogger(debug, 'DingTalk][ChunkUpload');
-  
+  const log = createLogger(debug, "DingTalk][ChunkUpload");
+
   try {
-    log.info(`上传块 ${chunkNumber}/${totalChunks}, 大小：${(chunkData.length / 1024).toFixed(2)}KB`);
+    log.info(
+      `上传块 ${chunkNumber}/${totalChunks}, 大小：${(chunkData.length / 1024).toFixed(2)}KB`,
+    );
 
     const form = new FormData();
-    form.append('upload_id', uploadId);
-    form.append('chunk_number', chunkNumber.toString());
-    form.append('total_chunks', totalChunks.toString());
-    form.append('file', chunkData, {
+    form.append("upload_id", uploadId);
+    form.append("chunk_number", chunkNumber.toString());
+    form.append("total_chunks", totalChunks.toString());
+    form.append("file", chunkData, {
       filename: `chunk_${chunkNumber}`,
-      contentType: 'application/octet-stream',
+      contentType: "application/octet-stream",
     });
 
     const resp = await dingtalkOapiHttp.post<UploadBlockResponse>(
@@ -131,7 +133,7 @@ export async function uploadFileBlock(
         params: { access_token: oapiToken },
         headers: form.getHeaders(),
         timeout: 60_000,
-      }
+      },
     );
 
     if (resp.data.errcode === 0) {
@@ -160,8 +162,8 @@ export async function submitUploadTransaction(
   fileName: string,
   debug: boolean = false,
 ): Promise<{ fileId?: string; downloadCode?: string } | null> {
-  const log = createLogger(debug, 'DingTalk][ChunkUpload');
-  
+  const log = createLogger(debug, "DingTalk][ChunkUpload");
+
   try {
     log.info(`提交上传事务：${uploadId}`);
 
@@ -174,11 +176,13 @@ export async function submitUploadTransaction(
           file_name: fileName,
         },
         timeout: 60_000,
-      }
+      },
     );
 
     if (resp.data.errcode === 0) {
-      log.info(`事务提交成功，file_id: ${resp.data.file_id}, download_code: ${resp.data.download_code}`);
+      log.info(
+        `事务提交成功，file_id: ${resp.data.file_id}, download_code: ${resp.data.download_code}`,
+      );
       return {
         fileId: resp.data.file_id,
         downloadCode: resp.data.download_code,
@@ -199,7 +203,7 @@ export async function submitUploadTransaction(
 function calculateChunkParams(fileSize: number): { chunkSize: number; totalChunks: number } {
   // 根据文件大小动态调整分块大小
   let chunkSize = CHUNK_CONFIG.DEFAULT_CHUNK_SIZE;
-  
+
   if (fileSize > 100 * 1024 * 1024) {
     // >100MB，使用最大分块 8MB
     chunkSize = CHUNK_CONFIG.MAX_CHUNK_SIZE;
@@ -207,7 +211,7 @@ function calculateChunkParams(fileSize: number): { chunkSize: number; totalChunk
     // >50MB，使用 6MB 分块
     chunkSize = 6 * 1024 * 1024;
   }
-  
+
   const totalChunks = Math.ceil(fileSize / chunkSize);
   return { chunkSize, totalChunks };
 }
@@ -222,12 +226,12 @@ function calculateChunkParams(fileSize: number): { chunkSize: number; totalChunk
  */
 export async function uploadLargeFileByChunks(
   filePath: string,
-  mediaType: 'video' | 'file',
+  mediaType: "video" | "file",
   oapiToken: string,
   debug: boolean = false,
 ): Promise<string | null> {
-  const log = createLogger(debug, 'DingTalk][ChunkUpload');
-  
+  const log = createLogger(debug, "DingTalk][ChunkUpload");
+
   try {
     const absPath = path.resolve(filePath);
     if (!fs.existsSync(absPath)) {
@@ -251,7 +255,9 @@ export async function uploadLargeFileByChunks(
 
     // 计算分块参数
     const { chunkSize, totalChunks } = calculateChunkParams(fileSize);
-    log.info(`分块参数：chunkSize=${(chunkSize / 1024 / 1024).toFixed(2)}MB, totalChunks=${totalChunks}`);
+    log.info(
+      `分块参数：chunkSize=${(chunkSize / 1024 / 1024).toFixed(2)}MB, totalChunks=${totalChunks}`,
+    );
 
     // 步骤二：分块上传
     const fileBuffer = fs.readFileSync(absPath);
@@ -268,7 +274,7 @@ export async function uploadLargeFileByChunks(
         chunkData,
         i + 1, // chunkNumber 从 1 开始
         totalChunks,
-        debug
+        debug,
       );
 
       if (!success) {
@@ -277,7 +283,9 @@ export async function uploadLargeFileByChunks(
       }
 
       successCount++;
-      log.info(`进度：${successCount}/${totalChunks} (${((successCount / totalChunks) * 100).toFixed(1)}%)`);
+      log.info(
+        `进度：${successCount}/${totalChunks} (${((successCount / totalChunks) * 100).toFixed(1)}%)`,
+      );
     }
 
     // 步骤三：提交上传事务

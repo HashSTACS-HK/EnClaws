@@ -14,8 +14,8 @@
 
 import { html, css, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { caretFix } from "../shared-styles.ts";
 import { t, I18nController } from "../../i18n/index.ts";
+import { caretFix } from "../shared-styles.ts";
 
 export interface SecretRevealOptions {
   appId: string;
@@ -29,25 +29,35 @@ export class SecretRevealDialog extends LitElement {
     caretFix,
     css`
       .overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.65);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 10100; animation: fadeIn 0.15s ease;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10100;
+        animation: fadeIn 0.15s ease;
       }
       .card {
         background: var(--card, #141414);
         border: 1px solid var(--border, #262626);
         border-radius: var(--radius-lg, 8px);
-        padding: 1.75rem; width: 520px;
+        padding: 1.75rem;
+        width: 520px;
         max-width: 94vw;
         animation: slideUp 0.15s ease;
       }
       .title {
-        margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600;
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
         color: var(--text, #e5e5e5);
       }
       .warning {
-        display: flex; align-items: flex-start; gap: 0.5rem;
-        background: rgba(127,29,29,0.25);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        background: rgba(127, 29, 29, 0.25);
         border: 1px solid var(--bg-destructive, #7f1d1d);
         border-radius: var(--radius-md, 6px);
         padding: 0.75rem 1rem;
@@ -56,49 +66,100 @@ export class SecretRevealDialog extends LitElement {
         color: var(--text-destructive, #fca5a5);
         line-height: 1.5;
       }
-      .warning-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-      .fields { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.5rem; }
-      .field-label {
-        font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, #a3a3a3);
-        margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;
+      .warning-icon {
+        font-size: 1rem;
+        flex-shrink: 0;
+        margin-top: 1px;
       }
-      .field-row { display: flex; gap: 0.5rem; align-items: center; }
+      .fields {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        margin-bottom: 1.5rem;
+      }
+      .field-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary, #a3a3a3);
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .field-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
       .field-value {
         flex: 1;
-        font-family: monospace; font-size: 0.8rem;
+        font-family: monospace;
+        font-size: 0.8rem;
         color: var(--text, #e5e5e5);
         background: var(--bg-input, #1c1c1c);
         border: 1px solid var(--border, #262626);
         border-radius: var(--radius-md, 6px);
         padding: 0.45rem 0.7rem;
-        word-break: break-all; line-height: 1.5;
+        word-break: break-all;
+        line-height: 1.5;
         user-select: all;
       }
       .btn-copy {
         padding: 0.4rem 0.75rem;
         border: 1px solid var(--border, #262626);
         border-radius: var(--radius-md, 6px);
-        font-size: 0.78rem; cursor: pointer;
-        background: transparent; color: var(--text, #e5e5e5);
-        white-space: nowrap; flex-shrink: 0;
-        transition: background 0.12s, color 0.12s;
+        font-size: 0.78rem;
+        cursor: pointer;
+        background: transparent;
+        color: var(--text, #e5e5e5);
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition:
+          background 0.12s,
+          color 0.12s;
       }
-      .btn-copy:hover { background: var(--border, #262626); }
+      .btn-copy:hover {
+        background: var(--border, #262626);
+      }
       .btn-copy.copied {
         border-color: var(--color-success, #1a7f37);
         color: var(--color-success, #1a7f37);
       }
-      .footer { display: flex; justify-content: flex-end; }
+      .footer {
+        display: flex;
+        justify-content: flex-end;
+      }
       .btn-done {
         padding: 0.5rem 1.25rem;
-        border: none; border-radius: var(--radius-md, 6px);
-        font-size: 0.85rem; cursor: pointer;
-        background: var(--accent, #3b82f6); color: white;
-        font-weight: 500; transition: opacity 0.15s;
+        border: none;
+        border-radius: var(--radius-md, 6px);
+        font-size: 0.85rem;
+        cursor: pointer;
+        background: var(--accent, #3b82f6);
+        color: white;
+        font-weight: 500;
+        transition: opacity 0.15s;
       }
-      .btn-done:hover { opacity: 0.85; }
-      @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-      @keyframes slideUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+      .btn-done:hover {
+        opacity: 0.85;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
     `,
   ];
 
@@ -130,7 +191,9 @@ export class SecretRevealDialog extends LitElement {
       await navigator.clipboard.writeText(value);
       this._copied = field;
       clearTimeout(this._copyTimer);
-      this._copyTimer = setTimeout(() => { this._copied = null; }, 2000);
+      this._copyTimer = setTimeout(() => {
+        this._copied = null;
+      }, 2000);
     } catch {
       // Clipboard not available in non-secure context — ignore.
     }

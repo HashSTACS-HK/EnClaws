@@ -2,7 +2,7 @@
 name: feishu-doc-media
 description: |
   飞书文档媒体管理。支持在文档末尾插入本地图片或文件附件，以及下载文档素材或画板缩略图。
-overrides: feishu_doc_media, feishu_pre_auth  
+overrides: feishu_doc_media, feishu_pre_auth
 inline: true
 ---
 
@@ -66,20 +66,20 @@ node ./media.js --open-id "ou_xxx" --action download \
 
 ## 参数说明
 
-| 参数 | 必填 | 说明 |
-|---|---|---|
-| `--open-id` | 是 | 当前用户 open_id |
-| `--action` | 是 | `insert` / `download` |
-| **insert 参数** | | |
-| `--doc-id` | insert 必填 | 文档 ID 或 URL |
-| `--file-path` | insert 必填 | 本地文件绝对路径（≤20MB），必须在允许目录内 |
-| `--type` | 可选 | `image`（默认）/ `file` |
-| `--align` | 可选 | `left` / `center`（默认）/ `right`，仅图片 |
-| `--caption` | 可选 | 图片描述文字 |
-| **download 参数** | | |
-| `--resource-token` | download 必填 | file_token（媒体）或 whiteboard_id（画板） |
-| `--resource-type` | download 必填 | `media` / `whiteboard` |
-| `--output-path` | 可选 | 本地保存路径（默认：`$ENCLAWS_USER_WORKSPACE/download/<resource_token>` 或 `./download/<resource_token>`），必须在允许目录内 |
+| 参数               | 必填          | 说明                                                                                                                         |
+| ------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--open-id`        | 是            | 当前用户 open_id                                                                                                             |
+| `--action`         | 是            | `insert` / `download`                                                                                                        |
+| **insert 参数**    |               |                                                                                                                              |
+| `--doc-id`         | insert 必填   | 文档 ID 或 URL                                                                                                               |
+| `--file-path`      | insert 必填   | 本地文件绝对路径（≤20MB），必须在允许目录内                                                                                  |
+| `--type`           | 可选          | `image`（默认）/ `file`                                                                                                      |
+| `--align`          | 可选          | `left` / `center`（默认）/ `right`，仅图片                                                                                   |
+| `--caption`        | 可选          | 图片描述文字                                                                                                                 |
+| **download 参数**  |               |                                                                                                                              |
+| `--resource-token` | download 必填 | file_token（媒体）或 whiteboard_id（画板）                                                                                   |
+| `--resource-type`  | download 必填 | `media` / `whiteboard`                                                                                                       |
+| `--output-path`    | 可选          | 本地保存路径（默认：`$ENCLAWS_USER_WORKSPACE/download/<resource_token>` 或 `./download/<resource_token>`），必须在允许目录内 |
 
 ---
 

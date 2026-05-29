@@ -233,7 +233,9 @@ async function loadValidConfig(runtime: RuntimeEnv = defaultRuntime) {
   for (const issue of snapshot.issues) {
     runtime.error(`- ${issue.path || "<root>"}: ${issue.message}`);
   }
-  runtime.error(`Run \`${formatCliCommand(`${PRODUCT_NAME_LOWER} doctor`)}\` to repair, then retry.`);
+  runtime.error(
+    `Run \`${formatCliCommand(`${PRODUCT_NAME_LOWER} doctor`)}\` to repair, then retry.`,
+  );
   runtime.exit(1);
   return snapshot;
 }

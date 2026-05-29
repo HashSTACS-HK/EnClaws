@@ -2,21 +2,37 @@
  * 媒体处理公共工具和常量
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 // form-data 是 CJS 模块，静态 import 可确保 jiti/ESM 环境下 CJS 互操作行为稳定，
 // 避免动态 import 时 .default 偶发为 undefined 导致 "Cannot read properties of undefined (reading 'registry')"
-import FormData from 'form-data';
-import { createLogger } from '../../utils/logger.ts';
-import { CHUNK_CONFIG } from './chunk-upload.ts';
-import { dingtalkOapiHttp, dingtalkUploadHttp } from '../../utils/http-client.ts';
+import FormData from "form-data";
+import { dingtalkOapiHttp, dingtalkUploadHttp } from "../../utils/http-client.ts";
+import { createLogger } from "../../utils/logger.ts";
+import { CHUNK_CONFIG } from "./chunk-upload.ts";
 
 // ============ 常量 ============
 
 /** 文本文件扩展名 */
 export const TEXT_FILE_EXTENSIONS = new Set([
-  '.txt', '.md', '.json', '.yaml', '.yml', '.xml', '.html', '.css',
-  '.js', '.ts', '.py', '.java', '.c', '.cpp', '.h', '.sh', '.bat', '.csv',
+  ".txt",
+  ".md",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".xml",
+  ".html",
+  ".css",
+  ".js",
+  ".ts",
+  ".py",
+  ".java",
+  ".c",
+  ".cpp",
+  ".h",
+  ".sh",
+  ".bat",
+  ".csv",
 ]);
 
 /** 图片文件扩展名 */
@@ -46,9 +62,9 @@ export const FILE_MARKER_PATTERN = /\[DINGTALK_FILE\](.*?)\[\/DINGTALK_FILE\]/gs
  */
 export function toLocalPath(raw: string): string {
   let filePath = raw;
-  if (filePath.startsWith('file://')) filePath = filePath.replace('file://', '');
-  else if (filePath.startsWith('MEDIA:')) filePath = filePath.replace('MEDIA:', '');
-  else if (filePath.startsWith('attachment://')) filePath = filePath.replace('attachment://', '');
+  if (filePath.startsWith("file://")) filePath = filePath.replace("file://", "");
+  else if (filePath.startsWith("MEDIA:")) filePath = filePath.replace("MEDIA:", "");
+  else if (filePath.startsWith("attachment://")) filePath = filePath.replace("attachment://", "");
 
   try {
     filePath = decodeURIComponent(filePath);
@@ -64,21 +80,20 @@ export function toLocalPath(raw: string): string {
  */
 export async function uploadMediaToDingTalk(
   filePath: string,
-  mediaType: 'image' | 'file' | 'video' | 'voice',
+  mediaType: "image" | "file" | "video" | "voice",
   oapiToken: string,
   maxSize: number = 20 * 1024 * 1024,
   logOrDebug?: any,
   debug?: boolean,
 ): Promise<string | null> {
-  const debugEnabled =
-    typeof logOrDebug === 'boolean' ? logOrDebug === true : debug === true;
-  const externalLog = typeof logOrDebug === 'boolean' ? undefined : logOrDebug;
+  const debugEnabled = typeof logOrDebug === "boolean" ? logOrDebug === true : debug === true;
+  const externalLog = typeof logOrDebug === "boolean" ? undefined : logOrDebug;
   const log = externalLog ?? createLogger(debugEnabled, `DingTalk][${mediaType}`);
-  
+
   log?.info?.(
     `[uploadMediaToDingTalk] 开始上传，filePath: ${filePath}, mediaType: ${mediaType}, debug: ${debugEnabled}`,
   );
-  
+
   try {
     const absPath = toLocalPath(filePath);
     log?.info?.(`检查文件是否存在：${absPath}`);
@@ -92,11 +107,16 @@ export async function uploadMediaToDingTalk(
     const fileSize = stats.size;
 
     // ✅ 对于视频和文件类型，如果超过 20MB，使用分块上传
-    if ((mediaType === 'video' || mediaType === 'file') && fileSize > CHUNK_CONFIG.SIZE_THRESHOLD) {
+    if ((mediaType === "video" || mediaType === "file") && fileSize > CHUNK_CONFIG.SIZE_THRESHOLD) {
       log?.info?.(`文件超过 20MB，使用分块上传：${absPath} (${fileSizeMB}MB)`);
       try {
-        const { uploadLargeFileByChunks } = await import('./chunk-upload');
-        const downloadCode = await uploadLargeFileByChunks(absPath, mediaType, oapiToken, debugEnabled);
+        const { uploadLargeFileByChunks } = await import("./chunk-upload");
+        const downloadCode = await uploadLargeFileByChunks(
+          absPath,
+          mediaType,
+          oapiToken,
+          debugEnabled,
+        );
         if (downloadCode) {
           log?.info?.(`分块上传成功：${absPath}, download_code: ${downloadCode}`);
           return downloadCode;
@@ -111,35 +131,29 @@ export async function uploadMediaToDingTalk(
     // 检查文件大小（对于小于 20MB 的文件）
     if (stats.size > maxSize) {
       const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(0);
-      log?.warn?.(
-        `文件过大：${absPath}, 大小：${fileSizeMB}MB, 超过限制 ${maxSizeMB}MB`,
-      );
+      log?.warn?.(`文件过大：${absPath}, 大小：${fileSizeMB}MB, 超过限制 ${maxSizeMB}MB`);
       return null;
     }
 
     const form = new FormData();
-    form.append('media', fs.createReadStream(absPath), {
+    form.append("media", fs.createReadStream(absPath), {
       filename: path.basename(absPath),
-      contentType: mediaType === 'image' ? 'image/jpeg' : 'application/octet-stream',
+      contentType: mediaType === "image" ? "image/jpeg" : "application/octet-stream",
     });
 
     const uploadType = mediaType;
 
     log?.info?.(`上传文件：${absPath} (${fileSizeMB}MB), uploadType=${uploadType}`);
-    const resp = await dingtalkUploadHttp.post(
-      `${DINGTALK_OAPI}/media/upload`,
-      form,
-      {
-        params: { access_token: oapiToken, type: mediaType },
-        headers: form.getHeaders(),
-        timeout: 60_000,
-        maxBodyLength: Infinity,
-      },
-    );
+    const resp = await dingtalkUploadHttp.post(`${DINGTALK_OAPI}/media/upload`, form, {
+      params: { access_token: oapiToken, type: mediaType },
+      headers: form.getHeaders(),
+      timeout: 60_000,
+      maxBodyLength: Infinity,
+    });
 
     const mediaId = resp.data?.media_id;
     if (mediaId) {
-      const cleanMediaId = mediaId.startsWith('@') ? mediaId.substring(1) : mediaId;
+      const cleanMediaId = mediaId.startsWith("@") ? mediaId.substring(1) : mediaId;
       log?.info?.(`上传成功：mediaId=${cleanMediaId}`);
       return cleanMediaId;
     }
@@ -152,4 +166,4 @@ export async function uploadMediaToDingTalk(
 }
 
 /** 钉钉 OAPI 常量 */
-export const DINGTALK_OAPI = 'https://oapi.dingtalk.com';
+export const DINGTALK_OAPI = "https://oapi.dingtalk.com";

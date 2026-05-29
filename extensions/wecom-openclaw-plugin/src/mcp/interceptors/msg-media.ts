@@ -10,9 +10,9 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { MEDIA_DOWNLOAD_TIMEOUT_MS } from "../transport.js";
-import { getWeComRuntime } from "../../runtime.js";
 import { detectMime } from "../../openclaw-compat.js";
+import { getWeComRuntime } from "../../runtime.js";
+import { MEDIA_DOWNLOAD_TIMEOUT_MS } from "../transport.js";
 import type { CallInterceptor, CallContext } from "./types.js";
 
 // ============================================================================
@@ -89,7 +89,8 @@ async function interceptMediaResponse(result: unknown): Promise<unknown> {
   const tDecoded = performance.now();
 
   // 5. 检测 contentType，并通过 saveMediaBuffer 保存到本地媒体目录
-  const contentType = await detectMime({ buffer, filePath: mediaName }) ?? "application/octet-stream";
+  const contentType =
+    (await detectMime({ buffer, filePath: mediaName })) ?? "application/octet-stream";
   const tMimeDetected = performance.now();
 
   // 企业微信聊天记录附件可达 20MB（文件消息上限），
@@ -102,8 +103,8 @@ async function interceptMediaResponse(result: unknown): Promise<unknown> {
     buffer,
     contentType,
     "inbound",
-    INBOUND_MAX_BYTES,   // maxBytes: 放宽到 20MB，匹配企业微信文件消息上限
-    mediaName,           // originalFilename: 保留原始文件名
+    INBOUND_MAX_BYTES, // maxBytes: 放宽到 20MB，匹配企业微信文件消息上限
+    mediaName, // originalFilename: 保留原始文件名
   );
 
   // 5.1 补偿：核心库 EXT_BY_MIME 可能缺少某些格式映射（如 audio/amr），
@@ -143,20 +144,22 @@ async function interceptMediaResponse(result: unknown): Promise<unknown> {
   // 耗时日志：各环节耗时（ms）
   console.log(
     `[mcp] get_msg_media 拦截成功: media_id=${mediaId ?? "unknown"}, ` +
-    `type=${mediaType ?? "unknown"}, size=${buffer.length}, saved=${saved.path}\n` +
-    `  ⏱ 耗时明细 (总 ${(tEnd - t0).toFixed(1)}ms):\n` +
-    `    解析响应 JSON:   ${(tParsed - t0).toFixed(1)}ms\n` +
-    `    base64 解码:     ${(tDecoded - tParsed).toFixed(1)}ms  (${(base64Data.length / 1024).toFixed(0)}KB base64 → ${(buffer.length / 1024).toFixed(0)}KB buffer)\n` +
-    `    MIME 检测:       ${(tMimeDetected - tDecoded).toFixed(1)}ms  (${contentType})\n` +
-    `    saveMediaBuffer: ${(tSaved - tMimeDetected).toFixed(1)}ms\n` +
-    `    构造响应:        ${(tEnd - tSaved).toFixed(1)}ms`,
+      `type=${mediaType ?? "unknown"}, size=${buffer.length}, saved=${saved.path}\n` +
+      `  ⏱ 耗时明细 (总 ${(tEnd - t0).toFixed(1)}ms):\n` +
+      `    解析响应 JSON:   ${(tParsed - t0).toFixed(1)}ms\n` +
+      `    base64 解码:     ${(tDecoded - tParsed).toFixed(1)}ms  (${(base64Data.length / 1024).toFixed(0)}KB base64 → ${(buffer.length / 1024).toFixed(0)}KB buffer)\n` +
+      `    MIME 检测:       ${(tMimeDetected - tDecoded).toFixed(1)}ms  (${contentType})\n` +
+      `    saveMediaBuffer: ${(tSaved - tMimeDetected).toFixed(1)}ms\n` +
+      `    构造响应:        ${(tEnd - tSaved).toFixed(1)}ms`,
   );
 
   // 7. 返回修改后的 MCP result 结构
   return {
-    content: [{
-      type: "text" as const,
-      text: JSON.stringify(newBizData),
-    }],
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify(newBizData),
+      },
+    ],
   };
 }

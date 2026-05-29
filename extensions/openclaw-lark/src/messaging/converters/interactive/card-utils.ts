@@ -6,17 +6,17 @@
  */
 
 export function escapeAttr(s: string): string {
-  return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+  return s.replace(/"/g, '\\"').replace(/\n/g, "\\n");
 }
 
 export function formatMillisecondsToISO8601(milliseconds: string): string {
   const ms = parseInt(milliseconds, 10);
-  if (isNaN(ms)) return '';
+  if (isNaN(ms)) return "";
   return new Date(ms).toISOString();
 }
 
 export function normalizeTimeFormat(input: string): string {
-  if (!input) return '';
+  if (!input) return "";
 
   const num = parseInt(input, 10);
   if (!isNaN(num) && String(num) === input.trim()) {

@@ -37,11 +37,11 @@ export function resolveSkillNameFromPath(
   changedPath: string,
   entries: SkillEntry[],
 ): string | null {
-  if (!changedPath.endsWith("SKILL.md")) {return null;}
+  if (!changedPath.endsWith("SKILL.md")) {
+    return null;
+  }
   const changedDir = path.normalize(path.resolve(changedPath, ".."));
-  const match = entries.find(
-    (e) => path.normalize(path.resolve(e.skill.baseDir)) === changedDir,
-  );
+  const match = entries.find((e) => path.normalize(path.resolve(e.skill.baseDir)) === changedDir);
   return match?.skill.name ?? null;
 }
 
@@ -67,7 +67,9 @@ export function formatPrecheckMessage(
     lines.push(`  - 操作系统: ${missing.os.join(", ")}`);
   }
 
-  if (lines.length === 0) {return null;}
+  if (lines.length === 0) {
+    return null;
+  }
 
   const parts = [`技能 "${name}" 缺少以下依赖:`, ...lines];
 
@@ -115,8 +117,12 @@ export async function precheckSkill(params: PrecheckParams): Promise<PrecheckRes
       const installId = status.install[0].id;
       const doInstall =
         params._installSkill ??
-        ((p: { workspaceDir: string; skillName: string; installId: string; config?: OpenClawConfig }) =>
-          installSkill({ ...p, installId: p.installId }));
+        ((p: {
+          workspaceDir: string;
+          skillName: string;
+          installId: string;
+          config?: OpenClawConfig;
+        }) => installSkill({ ...p, installId: p.installId }));
       const result = await doInstall({ workspaceDir, skillName, installId, config });
       if (result.ok) {
         await notify("安装成功。");

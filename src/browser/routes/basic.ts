@@ -1,12 +1,12 @@
 import { resolveBrowserExecutableForPlatform } from "../chrome.executables.js";
 import { createBrowserProfilesService } from "../profiles-service.js";
+import type { BrowserRouteContext, ProfileContext } from "../server-context.js";
 import {
   listSessionProfiles,
   removeSessionProfile,
   sessionKeyToProfileName,
   setSessionProfile,
 } from "../session-profile-map.js";
-import type { BrowserRouteContext, ProfileContext } from "../server-context.js";
 import { resolveProfileContext } from "./agent.shared.js";
 import type { BrowserRequest, BrowserResponse, BrowserRouteRegistrar } from "./types.js";
 import { getProfileContext, jsonError, toStringOrEmpty } from "./utils.js";

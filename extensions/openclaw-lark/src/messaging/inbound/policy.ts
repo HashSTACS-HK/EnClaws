@@ -8,10 +8,10 @@
  * extraction, and group access checks.
  */
 
-import type { ChannelGroupContext } from 'openclaw/plugin-sdk/channel-contract';
-import type { GroupToolPolicyConfig } from 'openclaw/plugin-sdk/channel-policy';
-import type { FeishuConfig, FeishuGroupConfig } from '../../core/types';
-import { getLarkAccount } from '../../core/accounts';
+import type { ChannelGroupContext } from "openclaw/plugin-sdk/channel-contract";
+import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk/channel-policy";
+import { getLarkAccount } from "../../core/accounts";
+import type { FeishuConfig, FeishuGroupConfig } from "../../core/types";
 
 // ---------------------------------------------------------------------------
 // Allowlist matching
@@ -20,7 +20,7 @@ import { getLarkAccount } from '../../core/accounts';
 export interface FeishuAllowlistMatch {
   allowed: boolean;
   matchKey?: string;
-  matchSource?: 'wildcard' | 'id' | 'name';
+  matchSource?: "wildcard" | "id" | "name";
 }
 
 /**
@@ -35,24 +35,26 @@ export function resolveFeishuAllowlistMatch(params: {
   senderId: string;
   senderName?: string | null;
 }): FeishuAllowlistMatch {
-  const allowFrom = params.allowFrom.map((entry) => String(entry).trim().toLowerCase()).filter(Boolean);
+  const allowFrom = params.allowFrom
+    .map((entry) => String(entry).trim().toLowerCase())
+    .filter(Boolean);
 
   if (allowFrom.length === 0) {
     return { allowed: false };
   }
 
   // Wildcard: allow everyone
-  if (allowFrom.includes('*')) {
-    return { allowed: true, matchKey: '*', matchSource: 'wildcard' };
+  if (allowFrom.includes("*")) {
+    return { allowed: true, matchKey: "*", matchSource: "wildcard" };
   }
 
   // Match by sender ID
   const senderId = params.senderId.toLowerCase();
   if (allowFrom.includes(senderId)) {
-    return { allowed: true, matchKey: senderId, matchSource: 'id' };
+    return { allowed: true, matchKey: senderId, matchSource: "id" };
   }
 
-/*  // Match by sender display name
+  /*  // Match by sender display name
   const senderName = params.senderName?.toLowerCase();
   if (senderName && allowFrom.includes(senderName)) {
     return { allowed: true, matchKey: senderName, matchSource: 'name' };
@@ -106,7 +108,9 @@ export function resolveFeishuGroupConfig(params: {
  *   这里通过 getLarkAccount() 获取当前 account 合并后的配置，
  *   确保每个账号的 groups / tool policy 配置独立生效。
  */
-export function resolveFeishuGroupToolPolicy(params: ChannelGroupContext): GroupToolPolicyConfig | undefined {
+export function resolveFeishuGroupToolPolicy(
+  params: ChannelGroupContext,
+): GroupToolPolicyConfig | undefined {
   // 使用 getLarkAccount 获取 per-account 合并后的飞书渠道配置，
   // 而非直接读取 cfg.channels.feishu（顶层全局配置）。
   const account = getLarkAccount(params.cfg, params.accountId ?? undefined);
@@ -135,16 +139,16 @@ export function resolveFeishuGroupToolPolicy(params: ChannelGroupContext): Group
  * - `allowlist` --> allowed only when the sender matches the allowlist
  */
 export function isFeishuGroupAllowed(params: {
-  groupPolicy: 'open' | 'allowlist' | 'disabled';
+  groupPolicy: "open" | "allowlist" | "disabled";
   allowFrom: Array<string | number>;
   senderId: string;
   senderName?: string | null;
 }): boolean {
   const { groupPolicy } = params;
-  if (groupPolicy === 'disabled') {
+  if (groupPolicy === "disabled") {
     return false;
   }
-  if (groupPolicy === 'open') {
+  if (groupPolicy === "open") {
     return true;
   }
   // allowlist
@@ -172,7 +176,7 @@ export function splitLegacyGroupAllowFrom(rawGroupAllowFrom: Array<string | numb
   const senderAllowFrom: string[] = [];
   for (const entry of rawGroupAllowFrom) {
     const str = String(entry);
-    if (str.startsWith('oc_')) {
+    if (str.startsWith("oc_")) {
       legacyChatIds.push(str);
     } else {
       senderAllowFrom.push(str);
@@ -202,13 +206,16 @@ export function resolveGroupSenderPolicyContext(params: {
   accountFeishuCfg?: FeishuConfig;
   senderGroupAllowFrom: Array<string | number>;
 }): {
-  senderPolicy: 'open' | 'allowlist' | 'disabled';
+  senderPolicy: "open" | "allowlist" | "disabled";
   senderAllowFrom: Array<string | number>;
 } {
   const { groupConfig, defaultConfig, accountFeishuCfg, senderGroupAllowFrom } = params;
 
-  const senderPolicy: 'open' | 'allowlist' | 'disabled' =
-    groupConfig?.groupPolicy ?? defaultConfig?.groupPolicy ?? accountFeishuCfg?.groupPolicy ?? 'open';
+  const senderPolicy: "open" | "allowlist" | "disabled" =
+    groupConfig?.groupPolicy ??
+    defaultConfig?.groupPolicy ??
+    accountFeishuCfg?.groupPolicy ??
+    "open";
 
   const senderAllowFrom: Array<string | number> = [
     ...senderGroupAllowFrom,

@@ -5,14 +5,14 @@
  * Fallback converter for unsupported message types.
  */
 
-import type { ContentConverterFn } from './types';
-import { safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertUnknown: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw);
-  if (parsed != null && typeof parsed === 'object' && 'text' in parsed) {
+  if (parsed != null && typeof parsed === "object" && "text" in parsed) {
     const text = (parsed as Record<string, unknown>).text;
-    if (typeof text === 'string') return { content: text, resources: [] };
+    if (typeof text === "string") return { content: text, resources: [] };
   }
-  return { content: '[unsupported message]', resources: [] };
+  return { content: "[unsupported message]", resources: [] };
 };

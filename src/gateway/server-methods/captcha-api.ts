@@ -35,7 +35,9 @@ function allowed(ip: string): boolean {
     ipWindows.set(ip, { windowStart: now, count: 1 });
     return true;
   }
-  if (w.count >= MAX_PER_WINDOW) {return false;}
+  if (w.count >= MAX_PER_WINDOW) {
+    return false;
+  }
   w.count += 1;
   return true;
 }
@@ -44,11 +46,15 @@ export const captchaHandlers: GatewayRequestHandlers = {
   "captcha.challenge": ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ip = resolveIp(client);
     if (!allowed(ip)) {
-      respond(false, undefined, errorShape(
-        ErrorCodes.RATE_LIMITED,
-        "Too many captcha requests. Please wait a few seconds.",
-        { retryable: true, retryAfterMs: WINDOW_MS },
-      ));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.RATE_LIMITED,
+          "Too many captcha requests. Please wait a few seconds.",
+          { retryable: true, retryAfterMs: WINDOW_MS },
+        ),
+      );
       return;
     }
     const challenge = generateCaptcha();

@@ -17,11 +17,7 @@ vi.mock("svg-captcha", () => {
 });
 
 // Import after mock so the module picks up the mocked svg-captcha.
-const {
-  __resetCaptchaStoreForTest,
-  generateCaptcha,
-  verifyCaptcha,
-} = await import("./captcha.js");
+const { __resetCaptchaStoreForTest, generateCaptcha, verifyCaptcha } = await import("./captcha.js");
 
 describe("captcha", () => {
   beforeEach(() => {
@@ -81,6 +77,8 @@ describe("captcha", () => {
 
 function answerFromMockSvg(svg: string): string {
   const match = svg.match(/data-mock="([^"]+)"/);
-  if (!match) {throw new Error("mock svg missing data-mock attribute");}
+  if (!match) {
+    throw new Error("mock svg missing data-mock attribute");
+  }
   return match[1];
 }

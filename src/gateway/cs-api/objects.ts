@@ -14,16 +14,23 @@
 
 import { randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import bcrypt from "bcryptjs";
 import { Value } from "@sinclair/typebox/value";
+import bcrypt from "bcryptjs";
 import { tryJwtAuth } from "../../auth/middleware.js";
-import { createCsApiObject, getCsApiObjectById, listCsApiObjects, updateCsApiObject, rotateCsApiObjectSecret, deleteCsApiObject } from "../../db/models/cs-api-object.js";
+import type { TenantContext } from "../../auth/middleware.js";
 import { createAuditLog } from "../../db/models/audit-log.js";
+import {
+  createCsApiObject,
+  getCsApiObjectById,
+  listCsApiObjects,
+  updateCsApiObject,
+  rotateCsApiObjectSecret,
+  deleteCsApiObject,
+} from "../../db/models/cs-api-object.js";
 import { countActiveSessionsForApiObject } from "../../db/models/cs-session.js";
 import { CreateObjectInput, UpdateObjectInput } from "../protocol/schema/cs-api.js";
 import { ErrorCodes } from "../protocol/schema/error-codes.js";
 import { sendJson, sendError, readJsonBody } from "./http-helpers.js";
-import type { TenantContext } from "../../auth/middleware.js";
 
 // ── Secret helpers ────────────────────────────────────────────────────────────
 
@@ -81,7 +88,9 @@ async function requireAdmin(
  */
 export async function createObject(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const tenant = await requireAdmin(req, res);
-  if (!tenant) { return; }
+  if (!tenant) {
+    return;
+  }
 
   const body = await readJsonBody(req);
   if (!Value.Check(CreateObjectInput, body)) {
@@ -132,7 +141,9 @@ export async function createObject(req: IncomingMessage, res: ServerResponse): P
  */
 export async function listObjects(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const tenant = await requireAdmin(req, res);
-  if (!tenant) { return; }
+  if (!tenant) {
+    return;
+  }
 
   const objects = await listCsApiObjects(tenant.tenantId);
   sendJson(res, 200, {
@@ -144,9 +155,7 @@ export async function listObjects(req: IncomingMessage, res: ServerResponse): Pr
       isActive: o.isActive,
       createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
       lastUsedAt:
-        o.lastUsedAt instanceof Date
-          ? o.lastUsedAt.toISOString()
-          : (o.lastUsedAt ?? null),
+        o.lastUsedAt instanceof Date ? o.lastUsedAt.toISOString() : (o.lastUsedAt ?? null),
     })),
   });
 }
@@ -162,7 +171,9 @@ export async function getObject(
   id: string,
 ): Promise<void> {
   const tenant = await requireAdmin(req, res);
-  if (!tenant) { return; }
+  if (!tenant) {
+    return;
+  }
 
   const obj = await getCsApiObjectById(id, tenant.tenantId);
   if (!obj) {
@@ -180,9 +191,7 @@ export async function getObject(
     endpointUrl: endpointUrlFor(obj.appId),
     appSecretMask: "agnr_secret_****", // static mask — real secret not stored plaintext, only bcrypt hash
     lastUsedAt:
-      obj.lastUsedAt instanceof Date
-        ? obj.lastUsedAt.toISOString()
-        : (obj.lastUsedAt ?? null),
+      obj.lastUsedAt instanceof Date ? obj.lastUsedAt.toISOString() : (obj.lastUsedAt ?? null),
   });
 }
 
@@ -197,7 +206,9 @@ export async function patchObject(
   id: string,
 ): Promise<void> {
   const tenant = await requireAdmin(req, res);
-  if (!tenant) { return; }
+  if (!tenant) {
+    return;
+  }
 
   const body = await readJsonBody(req);
   if (!Value.Check(UpdateObjectInput, body)) {
@@ -248,7 +259,9 @@ export async function regenerateSecret(
   id: string,
 ): Promise<void> {
   const tenant = await requireAdmin(req, res);
-  if (!tenant) { return; }
+  if (!tenant) {
+    return;
+  }
 
   const { tenantId, userId } = tenant;
 
@@ -291,7 +304,9 @@ export async function deleteObject(
   id: string,
 ): Promise<void> {
   const tenant = await requireAdmin(req, res);
-  if (!tenant) { return; }
+  if (!tenant) {
+    return;
+  }
 
   const { tenantId, userId } = tenant;
 

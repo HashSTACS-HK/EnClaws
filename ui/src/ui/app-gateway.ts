@@ -3,7 +3,6 @@ import {
   type GatewayUpdateAvailableEventPayload,
 } from "../../../src/gateway/events.js";
 import { CHAT_SESSIONS_ACTIVE_MINUTES, flushChatQueueForEvent } from "./app-chat.ts";
-import { loadSandboxTaskPlan } from "./controllers/sandbox.ts";
 import type { EventLogEntry } from "./app-events.ts";
 import {
   applySettings,
@@ -28,6 +27,7 @@ import {
   removeExecApproval,
 } from "./controllers/exec-approval.ts";
 import { loadNodes } from "./controllers/nodes.ts";
+import { loadSandboxTaskPlan } from "./controllers/sandbox.ts";
 import { loadSessions } from "./controllers/sessions.ts";
 import {
   resolveGatewayErrorDetailCode,

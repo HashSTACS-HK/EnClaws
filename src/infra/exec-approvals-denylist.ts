@@ -165,17 +165,25 @@ export function evaluateDenylist(params: {
   const segmentExecNames: string[] = [];
   for (const segment of params.segments ?? []) {
     const argv0 = segment.argv[0];
-    if (typeof argv0 !== "string" || !argv0) {continue;}
+    if (typeof argv0 !== "string" || !argv0) {
+      continue;
+    }
     const base = argv0.toLowerCase().split(/[/\\]/).pop() ?? "";
-    if (base) {segmentExecNames.push(base);}
+    if (base) {
+      segmentExecNames.push(base);
+    }
   }
 
   for (const entry of denylist) {
     const binInCommand = entry.binRegex.test(command);
     const binInSegments = segmentExecNames.includes(entry.bin);
-    if (!binInCommand && !binInSegments) {continue;}
+    if (!binInCommand && !binInSegments) {
+      continue;
+    }
 
-    if (entry.pattern && !entry.pattern.test(command)) {continue;}
+    if (entry.pattern && !entry.pattern.test(command)) {
+      continue;
+    }
 
     const reason = entry.pattern
       ? `denylist: '${entry.bin}' matching /${entry.pattern.source}/ (rule='${entry.source}')`

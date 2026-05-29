@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { LarkClient, type LarkClientCredentials } from '../core/lark-client';
-import type { FeishuProbeResult } from './types';
+import { LarkClient, type LarkClientCredentials } from "../core/lark-client";
+import type { FeishuProbeResult } from "./types";
 
 /**
  * Probe the Feishu bot connection by calling the bot/v3/info API.
@@ -17,7 +17,7 @@ export async function probeFeishu(credentials?: LarkClientCredentials): Promise<
   if (!credentials?.appId || !credentials?.appSecret) {
     return {
       ok: false,
-      error: 'missing credentials (appId, appSecret)',
+      error: "missing credentials (appId, appSecret)",
     };
   }
 

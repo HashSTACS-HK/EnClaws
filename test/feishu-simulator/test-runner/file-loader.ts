@@ -2,8 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import type { TestFile } from "../types.js";
 
-export function loadTestFiles(dirOrFile: string, prefix = ""): Array<{ fileName: string; data: TestFile }> {
-  if (!fs.existsSync(dirOrFile)) {return [];}
+export function loadTestFiles(
+  dirOrFile: string,
+  prefix = "",
+): Array<{ fileName: string; data: TestFile }> {
+  if (!fs.existsSync(dirOrFile)) {
+    return [];
+  }
   // Support passing a single .json file directly
   if (!prefix && fs.statSync(dirOrFile).isFile() && dirOrFile.endsWith(".json")) {
     const raw = fs.readFileSync(dirOrFile, "utf-8");

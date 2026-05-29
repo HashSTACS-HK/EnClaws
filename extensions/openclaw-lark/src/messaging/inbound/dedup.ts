@@ -41,7 +41,10 @@ const DEFAULT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
  * messages may be redelivered — this function lets callers discard them
  * before entering the full handling pipeline.
  */
-export function isMessageExpired(createTimeStr: string | undefined, expiryMs: number = DEFAULT_EXPIRY_MS): boolean {
+export function isMessageExpired(
+  createTimeStr: string | undefined,
+  expiryMs: number = DEFAULT_EXPIRY_MS,
+): boolean {
   if (!createTimeStr) return false;
   const createTime = parseInt(createTimeStr, 10);
   if (Number.isNaN(createTime)) return false;

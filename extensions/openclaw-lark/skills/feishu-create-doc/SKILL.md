@@ -16,10 +16,10 @@ description: |
 - **`doc_url`**（string）：文档的访问链接，可直接在浏览器中打开，格式如 `https://www.feishu.cn/docx/doxcnXXXXXXXXXXXXXXXXXXX`
 - **`message`**（string）：操作结果消息，如"文档创建成功"
 
-
 # 参数
 
 ## markdown（必填）
+
 文档的 Markdown 内容，使用 Lark-flavored Markdown 格式。
 
 调用本工具的markdown内容应当尽量结构清晰,样式丰富, 有很高的可读性. 合理的使用callout高亮块, 分栏,表格等能力,并合理的运用插入图片与mermaid的能力,做到图文并茂..
@@ -33,25 +33,30 @@ description: |
 当用户有明确的样式,风格需求时,应当以用户的需求为准!!
 
 **重要提示**：
+
 - **禁止重复标题**：markdown 内容开头不要写与 title 相同的一级标题！title 参数已经是文档标题，markdown 应直接从正文内容开始
 - **目录**：飞书自动生成，无需手动添加
 - Markdown 语法必须符合 Lark-flavored Markdown 规范，详见下方"内容格式"章节
 - 创建较长的文档时,强烈建议配合update-doc中的append mode, 进行分段的创建,提高成功率.
 
 ## title（可选）
+
 文档标题。
 
 ## folder_token（可选）
+
 父文件夹的 token。如果不提供，文档将创建在用户的个人空间根目录。
 
 folder_token 可以从飞书文件夹 URL 中获取，格式如：`https://xxx.feishu.cn/drive/folder/fldcnXXXX`，其中 `fldcnXXXX` 即为 folder_token。
 
 ## wiki_node（可选）
+
 知识库节点 token 或 URL（可选，传入则在该节点下创建文档，与 folder_token 和 wiki_space 互斥）
 
 wiki_node 可以从飞书知识库页面 URL 中获取，格式如：`https://xxx.feishu.cn/wiki/wikcnXXXX`，其中 `wikcnXXXX` 即为 wiki_node token。
 
 ## wiki_space（可选）
+
 知识空间 ID（可选，传入则在该空间根目录下创建文档。特殊值 `my_library` 表示用户的个人知识库。与 wiki_node 和 folder_token 互斥）
 
 wiki_space 可以从知识空间设置页面 URL 中获取，格式如：`https://xxx.feishu.cn/wiki/settings/7448000000000009300`，其中 `7448000000000009300` 即为 wiki_space ID。
@@ -155,25 +160,36 @@ wiki_space 可以从知识空间设置页面 URL 中获取，格式如：`https:
 
 ```markdown
 # 一级标题
+
 ## 二级标题
+
 ### 三级标题
+
 #### 四级标题
+
 ##### 五级标题
+
 ###### 六级标题
+
 <h7>七级标题</h7>
 <h8>八级标题</h8>
 <h9>九级标题</h9>
 
 # 带颜色的标题 {color="blue"}
+
 ## 红色标题 {color="red"}
+
 # 居中标题 {align="center"}
+
 ## 蓝色居中标题 {color="blue" align="center"}
 ```
 
 **标题属性**：支持 `{color="颜色名"}` 和 `{align="left|center|right"}` 语法，可组合使用。颜色值：red, orange, yellow, green, blue, purple, gray。请谨慎使用该能力.
 
 ### 列表
+
 有序列表,无序列表嵌套使用tab或者 2 空格缩进
+
 ```markdown
 - 无序项1（
   - 无序项1.a
@@ -243,7 +259,7 @@ print("Hello")
 
 ```html
 <callout emoji="✅" background-color="light-green" border-color="green">
-支持**格式化**的内容，可包含多个块
+  支持**格式化**的内容，可包含多个块
 </callout>
 ```
 
@@ -258,28 +274,23 @@ print("Hello")
 ### 分栏（Grid）
 
 适合对比、并列展示场景。支持 2-5 列：
+
 #### 两栏（等宽）
 
 ```html
 <grid cols="2">
-<column>
-
-左栏内容
-
-</column>
-<column>
-
-右栏内容
-
-</column>
+  <column> 左栏内容 </column>
+  <column> 右栏内容 </column>
 </grid>
 ```
+
 #### 三栏自定义宽度
+
 ```html
 <grid cols="3">
-<column width="20">左栏(20%)</column>
-<column width="60">中栏(60%)</column>
-<column width="20">右栏(20%)</column>
+  <column width="20">左栏(20%)</column>
+  <column width="60">中栏(60%)</column>
+  <column width="20">右栏(20%)</column>
 </grid>
 ```
 
@@ -290,8 +301,8 @@ print("Hello")
 #### 标准 Markdown 表格
 
 ```markdown
-| 列 1 | 列 2 | 列 3 |
-|------|------|------|
+| 列 1     | 列 2     | 列 3     |
+| -------- | -------- | -------- |
 | 单元格 1 | 单元格 2 | 单元格 3 |
 | 单元格 4 | 单元格 5 | 单元格 6 |
 ```
@@ -301,6 +312,7 @@ print("Hello")
 当单元格需要复杂内容（列表、代码块、高亮块等）时使用。
 
 **层级结构**（必须严格遵守）：
+
 ```
 <lark-table>                    ← 表格容器
   <lark-tr>                     ← 行（直接子元素只能是 lark-tr）
@@ -311,57 +323,31 @@ print("Hello")
 ```
 
 **属性**：
+
 - `column-widths`：列宽，逗号分隔像素值，总宽≈730
 - `header-row`：首行是否为表头（`"true"` 或 `"false"`）
 - `header-column`：首列是否为表头（`"true"` 或 `"false"`）
 
 **单元格写法**：内容前后必须空行
+
 ```html
-<lark-td>
-
-这里写内容
-
-</lark-td>
+<lark-td> 这里写内容 </lark-td>
 ```
 
 **完整示例**（2行3列）：
+
 ```html
 <lark-table column-widths="200,250,280" header-row="true">
-<lark-tr>
-<lark-td>
-
-**表头1**
-
-</lark-td>
-<lark-td>
-
-**表头2**
-
-</lark-td>
-<lark-td>
-
-**表头3**
-
-</lark-td>
-</lark-tr>
-<lark-tr>
-<lark-td>
-
-普通文本
-
-</lark-td>
-<lark-td>
-
-- 列表项1
-- 列表项2
-
-</lark-td>
-<lark-td>
-
-代码内容
-
-</lark-td>
-</lark-tr>
+  <lark-tr>
+    <lark-td> **表头1** </lark-td>
+    <lark-td> **表头2** </lark-td>
+    <lark-td> **表头3** </lark-td>
+  </lark-tr>
+  <lark-tr>
+    <lark-td> 普通文本 </lark-td>
+    <lark-td> - 列表项1 - 列表项2 </lark-td>
+    <lark-td> 代码内容 </lark-td>
+  </lark-tr>
 </lark-table>
 ```
 
@@ -370,15 +356,21 @@ print("Hello")
 **合并单元格**：读取时返回 `rowspan/colspan` 属性，创建暂不支持
 
 **禁止**：
+
 - 混用 Markdown 表格语法（`|---|`）
 - 使用 `<br/>` 换行
 - 遗漏 `<lark-td>` 标签
 
-
 ### 图片
 
 ```html
-<image url="https://example.com/image.png" width="800" height="600" align="center" caption="图片描述文字"/>
+<image
+  url="https://example.com/image.png"
+  width="800"
+  height="600"
+  align="center"
+  caption="图片描述文字"
+/>
 ```
 
 **属性**: url (必需，系统会自动下载并上传), width, height, align (left/center/right), caption
@@ -388,6 +380,7 @@ print("Hello")
 支持 PNG/JPG/GIF/WebP/BMP，最大 10MB
 
 **图片/文件插入方式选择**：
+
 - **有公开可访问的图片 URL** → 直接在 create-doc / update-doc 的 markdown 中使用 `<image url="..."/>` 一步到位
 
 - **本地图片或文件**（如用户在聊天中发送的图片/文件） → 先用 create-doc / update-doc 创建或更新文档文本内容，再用 `feishu_doc_media` 工具将本地图片或文件追加到文档末尾。如需媒体出现在文档中间特定位置，可先用 create-doc 写好之前的内容，调用 `feishu_doc_media` 追加图片/文件，最后用 update-doc 的 **append** 模式追加后续内容
@@ -395,16 +388,16 @@ print("Hello")
 ### 文件
 
 ```html
-<file url="https://example.com/document.pdf" name="文档.pdf" view-type="1"/>
+<file url="https://example.com/document.pdf" name="文档.pdf" view-type="1" />
 ```
 
 **属性**:
+
 - url (文件 URL，必需，系统会自动下载并上传)
 - name (文件名，必需)
 - view-type (1=卡片视图, 2=预览视图，可选)
 
 **⚠️ 重要**: 不支持直接使用 `token` 属性（如 `<file token="xxx"/>`）
-
 
 ### 画板（Mermaid / PlantUML 图表）
 
@@ -445,20 +438,20 @@ Bob --> Alice: Hi!
 读取时返回 `<whiteboard>` 标签：
 
 ```html
-<whiteboard token="xxx" align="center" width="800" height="600"/>
+<whiteboard token="xxx" align="center" width="800" height="600" />
 ```
 
 **属性**: token (画板标识), align (left/center/right), width, height
 
 **重要说明**：
+
 - create-doc时用 Mermaid/PlantUML 代码块，系统自动转换为画板; 禁止以`<whiteboard>`的方式写入!!
 - 读取时只能获取 token，可通过fetch-file工具进行查看内容。无法获取原始源码
 
 ### 多维表格（Bitable）
 
 ```html
-<bitable view="table"/>
-<bitable view="kanban"/>
+<bitable view="table" /> <bitable view="kanban" />
 ```
 
 **属性**: view (table/kanban，默认 table)
@@ -468,7 +461,7 @@ Bob --> Alice: Hi!
 ### 会话卡片（ChatCard）
 
 ```html
-<chat-card id="oc_xxx" align="center"/>
+<chat-card id="oc_xxx" align="center" />
 ```
 
 **属性**: id (格式 oc_xxx, 必需), align (left/center/right)
@@ -476,7 +469,7 @@ Bob --> Alice: Hi!
 ### 内嵌网页（Iframe）
 
 ```html
-<iframe url="https://example.com/survey?id=123" type="12"/>
+<iframe url="https://example.com/survey?id=123" type="12" />
 ```
 
 **属性**: url (必需), type (组件类型数字, 必需)
@@ -488,7 +481,7 @@ Bob --> Alice: Hi!
 ### 链接预览（LinkPreview）
 
 ```html
-<link-preview url="消息链接" type="message"/>
+<link-preview url="消息链接" type="message" />
 ```
 
 **属性**: url (必需, 只写属性), type (message=消息链接)
@@ -498,9 +491,7 @@ Bob --> Alice: Hi!
 ### 引用容器（QuoteContainer）
 
 ```html
-<quote-container>
-引用容器内容
-</quote-container>
+<quote-container> 引用容器内容 </quote-container>
 ```
 
 与 quote 引用块不同，引用容器是容器类型，可包含多个子块
@@ -512,8 +503,7 @@ Bob --> Alice: Hi!
 ### 电子表格（Sheet）
 
 ```html
-<sheet rows="5" cols="5"/>
-<sheet/>
+<sheet rows="5" cols="5" /> <sheet />
 ```
 
 **属性**: rows (行数，默认 3，最大 9), cols (列数，默认 3)
@@ -524,11 +514,11 @@ Bob --> Alice: Hi!
 
 以下块类型仅支持读取，不支持创建：
 
-| 块类型 | 标签 | 说明 |
-|--------|------|------|
-| 思维笔记 | `<mindnote token="xxx"/>` | 仅获取占位信息 |
-| 流程图/UML | `<diagram type="1"/>` | type: 1=流程图, 2=UML |
-| AI 模板 | `<ai-template/>` | 无内容占位块 |
+| 块类型     | 标签                      | 说明                  |
+| ---------- | ------------------------- | --------------------- |
+| 思维笔记   | `<mindnote token="xxx"/>` | 仅获取占位信息        |
+| 流程图/UML | `<diagram type="1"/>`     | type: 1=流程图, 2=UML |
+| AI 模板    | `<ai-template/>`          | 无内容占位块          |
 
 ### 任务块
 
@@ -553,7 +543,7 @@ Bob --> Alice: Hi!
 ### 文档小组件（AddOns）
 
 ```html
-<add-ons component-type-id="blk_xxx" record='{"key":"value"}'/>
+<add-ons component-type-id="blk_xxx" record='{"key":"value"}' />
 ```
 
 **属性**: component-type-id (小组件类型ID), record (JSON数据)
@@ -563,7 +553,7 @@ Bob --> Alice: Hi!
 ### 旧版小组件（ISV）
 
 ```html
-<isv id="comp_xxx" type="type_xxx"/>
+<isv id="comp_xxx" type="type_xxx" />
 ```
 
 **属性**: component_id, component_type_id
@@ -573,7 +563,7 @@ Bob --> Alice: Hi!
 ### Wiki 子目录（WikiCatalog）🕰️
 
 ```html
-<wiki-catalog token="wiki_xxx"/>
+<wiki-catalog token="wiki_xxx" />
 ```
 
 **属性**: wiki_token (知识库节点token)
@@ -583,7 +573,7 @@ Bob --> Alice: Hi!
 ### Wiki 子页面列表（SubPageList）
 
 ```html
-<sub-page-list wiki="wiki_xxx"/>
+<sub-page-list wiki="wiki_xxx" />
 ```
 
 **属性**: wiki_token (当前页面的wiki token)
@@ -606,7 +596,7 @@ Bob --> Alice: Hi!
 ### Jira 问题（JiraIssue）
 
 ```html
-<jira-issue id="xxx" key="PROJECT-123"/>
+<jira-issue id="xxx" key="PROJECT-123" />
 ```
 
 **属性**: id (Jira问题ID), key (Jira问题Key)
@@ -616,7 +606,7 @@ Bob --> Alice: Hi!
 ```html
 <okr id="okr_xxx">
   <objective id="obj_1">
-    <kr id="kr_1"/>
+    <kr id="kr_1" />
   </objective>
 </okr>
 ```
@@ -632,7 +622,7 @@ Bob --> Alice: Hi!
 ### 提及用户
 
 ```html
-<mention-user id="ou_xxx"/>
+<mention-user id="ou_xxx" />
 ```
 
 **属性**: id (用户 open_id，格式 ou_xxx)
@@ -654,10 +644,11 @@ Bob --> Alice: Hi!
 ### 日期提醒（Reminder）
 
 ```html
-<reminder date="2025-12-31T18:00+08:00" notify="true" user-id="ou_xxx"/>
+<reminder date="2025-12-31T18:00+08:00" notify="true" user-id="ou_xxx" />
 ```
 
 **属性**:
+
 - date (必需): `YYYY-MM-DDTHH:mm+HH:MM`, ISO 8601 带时区偏移
 - notify (true/false): 是否发送通知
 - user-id (必需): 创建者用户 ID
@@ -668,11 +659,11 @@ Bob --> Alice: Hi!
 
 ### 块级公式（LaTeX）
 
-````markdown
+```markdown
 $$
 \int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
 $$
-````
+```
 
 ### 行内公式
 
@@ -686,17 +677,17 @@ $$
 
 ### 场景速查
 
-| 场景 | 推荐组件 | 说明 |
-|------|----------|------|
-| 重点提示/警告 | Callout | 蓝色提示、黄色警告、红色危险 |
-| 对比/并列展示 | Grid 分栏 | 2-3 列最佳，配合 Callout 更醒目 |
-| 数据汇总 | 表格 | 简单用 Markdown，复杂嵌套用 lark-table |
-| 步骤说明 | 有序列表 | 可嵌套子步骤 |
-| 时间线/版本 | 有序列表 + 加粗日期 | 或用 Mermaid timeline |
-| 代码展示 | 代码块 | 标注语言，适当添加注释 |
-| 知识卡片 | Callout + emoji | 用于概念解释、小贴士 |
-| 引用说明 | 引用块 > | 引用原文、名言 |
-| 术语对照 | 两列表格 | 中英文、缩写全称等 |
+| 场景          | 推荐组件            | 说明                                   |
+| ------------- | ------------------- | -------------------------------------- |
+| 重点提示/警告 | Callout             | 蓝色提示、黄色警告、红色危险           |
+| 对比/并列展示 | Grid 分栏           | 2-3 列最佳，配合 Callout 更醒目        |
+| 数据汇总      | 表格                | 简单用 Markdown，复杂嵌套用 lark-table |
+| 步骤说明      | 有序列表            | 可嵌套子步骤                           |
+| 时间线/版本   | 有序列表 + 加粗日期 | 或用 Mermaid timeline                  |
+| 代码展示      | 代码块              | 标注语言，适当添加注释                 |
+| 知识卡片      | Callout + emoji     | 用于概念解释、小贴士                   |
+| 引用说明      | 引用块 >            | 引用原文、名言                         |
+| 术语对照      | 两列表格            | 中英文、缩写全称等                     |
 
 ---
 

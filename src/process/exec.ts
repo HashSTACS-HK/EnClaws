@@ -139,12 +139,9 @@ export async function runCommandWithTimeout(
   // through cmd.exe. Wrapping explicitly here avoids EINVAL from spawn and
   // keeps shell:true disabled (no injection risk since args are fully controlled).
   const isCmdFile =
-    process.platform === "win32" &&
-    /\.(cmd|bat)$/i.test(path.basename(resolvedCommand));
+    process.platform === "win32" && /\.(cmd|bat)$/i.test(path.basename(resolvedCommand));
   const spawnCommand = isCmdFile ? "cmd.exe" : resolvedCommand;
-  const spawnArgs = isCmdFile
-    ? ["/c", resolvedCommand, ...argv.slice(1)]
-    : argv.slice(1);
+  const spawnArgs = isCmdFile ? ["/c", resolvedCommand, ...argv.slice(1)] : argv.slice(1);
   const child = spawn(spawnCommand, spawnArgs, {
     stdio,
     cwd,

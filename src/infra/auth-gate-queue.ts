@@ -31,9 +31,9 @@
  *     via dynamic `import()`.
  */
 
-import { createSubsystemLogger } from "../logging/subsystem.js";
 import type { FinalizedMsgContext } from "../auto-reply/templating.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
 
 const log = createSubsystemLogger("auth-gate-queue");
 

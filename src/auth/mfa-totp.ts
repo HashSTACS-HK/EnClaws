@@ -43,7 +43,9 @@ export function base32Decode(encoded: string): Buffer {
   const bytes: number[] = [];
   for (const ch of cleaned) {
     const idx = BASE32_ALPHABET.indexOf(ch);
-    if (idx < 0) {throw new Error(`Invalid base32 character: ${ch}`);}
+    if (idx < 0) {
+      throw new Error(`Invalid base32 character: ${ch}`);
+    }
     value = (value << 5) | idx;
     bits += 5;
     if (bits >= 8) {
@@ -131,11 +133,7 @@ export function generateTOTPSecret(): string {
  * @param email   account identifier (shown in authenticator apps)
  * @param issuer  display label (typically "EnClaws")
  */
-export function buildOtpauthUri(
-  secret: string,
-  email: string,
-  issuer = "EnClaws",
-): string {
+export function buildOtpauthUri(secret: string, email: string, issuer = "EnClaws"): string {
   const label = `${encodeURIComponent(issuer)}:${encodeURIComponent(email)}`;
   return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=${TOTP_DIGITS}&period=${TOTP_STEP}`;
 }
@@ -159,7 +157,11 @@ export function generateBackupCodes(): {
   const hashed: string[] = [];
   for (let i = 0; i < BACKUP_CODE_COUNT; i++) {
     // 8 alphanumeric chars, easy to type on mobile
-    const code = crypto.randomBytes(6).toString("base64url").slice(0, BACKUP_CODE_LENGTH).toUpperCase();
+    const code = crypto
+      .randomBytes(6)
+      .toString("base64url")
+      .slice(0, BACKUP_CODE_LENGTH)
+      .toUpperCase();
     plain.push(code);
     hashed.push(crypto.createHash("sha256").update(code).digest("hex"));
   }
@@ -172,10 +174,7 @@ export function generateBackupCodes(): {
  * The caller should splice the matched hash out of the array after a
  * successful use so the code cannot be replayed.
  */
-export function verifyBackupCode(
-  code: string,
-  hashedCodes: string[],
-): number {
+export function verifyBackupCode(code: string, hashedCodes: string[]): number {
   const hash = crypto.createHash("sha256").update(code.trim().toUpperCase()).digest("hex");
   return hashedCodes.indexOf(hash);
 }

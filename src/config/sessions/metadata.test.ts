@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { deriveGroupSessionPatch } from "./metadata.js";
 import type { MsgContext } from "../../auto-reply/templating.js";
+import { deriveGroupSessionPatch } from "./metadata.js";
 
 function makeCtx(overrides: Partial<MsgContext> = {}): MsgContext {
   return {

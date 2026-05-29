@@ -9,12 +9,14 @@
  * 2) 后续针对该 message_id 的 API 调用直接短路，避免持续报错刷屏。
  */
 
-import type { LARK_ERROR } from './auth-errors';
-import { MESSAGE_TERMINAL_CODES } from './auth-errors';
-import { extractLarkApiCode } from './api-error';
-import { normalizeMessageId } from './targets';
+import { extractLarkApiCode } from "./api-error";
+import type { LARK_ERROR } from "./auth-errors";
+import { MESSAGE_TERMINAL_CODES } from "./auth-errors";
+import { normalizeMessageId } from "./targets";
 
-export type TerminalMessageApiCode = typeof LARK_ERROR.MESSAGE_RECALLED | typeof LARK_ERROR.MESSAGE_DELETED;
+export type TerminalMessageApiCode =
+  | typeof LARK_ERROR.MESSAGE_RECALLED
+  | typeof LARK_ERROR.MESSAGE_DELETED;
 
 export interface MessageUnavailableState {
   apiCode: TerminalMessageApiCode;
@@ -36,7 +38,7 @@ function pruneExpired(nowMs = Date.now()): void {
 }
 
 export function isTerminalMessageApiCode(code: unknown): code is TerminalMessageApiCode {
-  return typeof code === 'number' && MESSAGE_TERMINAL_CODES.has(code);
+  return typeof code === "number" && MESSAGE_TERMINAL_CODES.has(code);
 }
 
 export function markMessageUnavailable(params: {
@@ -58,7 +60,9 @@ export function markMessageUnavailable(params: {
   });
 }
 
-export function getMessageUnavailableState(messageId: string | undefined): MessageUnavailableState | undefined {
+export function getMessageUnavailableState(
+  messageId: string | undefined,
+): MessageUnavailableState | undefined {
   const normalizedId = normalizeMessageId(messageId);
   if (!normalizedId) return undefined;
 
@@ -102,11 +106,11 @@ export class MessageUnavailableError extends Error {
   readonly operation?: string;
 
   constructor(params: { messageId: string; apiCode: TerminalMessageApiCode; operation?: string }) {
-    const operationText = params.operation ? `, op=${params.operation}` : '';
+    const operationText = params.operation ? `, op=${params.operation}` : "";
     super(
       `[feishu-message-unavailable] message ${params.messageId} unavailable (code=${params.apiCode}${operationText})`,
     );
-    this.name = 'MessageUnavailableError';
+    this.name = "MessageUnavailableError";
     this.messageId = params.messageId;
     this.apiCode = params.apiCode;
     this.operation = params.operation;
@@ -116,7 +120,9 @@ export class MessageUnavailableError extends Error {
 export function isMessageUnavailableError(error: unknown): error is MessageUnavailableError {
   return (
     error instanceof MessageUnavailableError ||
-    (typeof error === 'object' && error != null && (error as { name?: string }).name === 'MessageUnavailableError')
+    (typeof error === "object" &&
+      error != null &&
+      (error as { name?: string }).name === "MessageUnavailableError")
   );
 }
 

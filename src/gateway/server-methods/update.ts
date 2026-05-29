@@ -1,12 +1,15 @@
-import { extractDeliveryInfo } from "../../config/sessions.js";
 import { resolveGatewayPort } from "../../config/paths.js";
+import { extractDeliveryInfo } from "../../config/sessions.js";
 import { resolveOpenClawPackageRoot } from "../../infra/openclaw-root.js";
+import { readPackageName } from "../../infra/package-json.js";
 import {
   formatDoctorNonInteractiveHint,
   type RestartSentinelPayload,
   writeRestartSentinel,
 } from "../../infra/restart-sentinel.js";
 import { scheduleGatewaySigusr1Restart } from "../../infra/restart.js";
+import { trackToNpmTag } from "../../infra/update-channels.js";
+import { checkUpdateStatus, type InstallKind } from "../../infra/update-check.js";
 import { spawnDeferredUpdate } from "../../infra/update-deferred.js";
 import {
   detectGlobalInstallManagerForRoot,
@@ -14,9 +17,6 @@ import {
 } from "../../infra/update-global.js";
 import { runGatewayUpdate } from "../../infra/update-runner.js";
 import { getStoredUpdateTrack } from "../../infra/update-settings.js";
-import { trackToNpmTag } from "../../infra/update-channels.js";
-import { checkUpdateStatus, type InstallKind } from "../../infra/update-check.js";
-import { readPackageName } from "../../infra/package-json.js";
 import { runCommandWithTimeout } from "../../process/exec.js";
 import { formatControlPlaneActor, resolveControlPlaneActor } from "../control-plane-audit.js";
 import { validateUpdateRunParams } from "../protocol/index.js";
@@ -48,13 +48,22 @@ export const updateHandlers: GatewayRequestHandlers = {
     storedTrack = await getStoredUpdateTrack();
 
     // Detect install kind to decide update strategy
-    const status = await checkUpdateStatus({ root, timeoutMs: 2500, fetchGit: false, includeRegistry: false });
+    const status = await checkUpdateStatus({
+      root,
+      timeoutMs: 2500,
+      fetchGit: false,
+      includeRegistry: false,
+    });
     const installKind: InstallKind = status.installKind;
 
     // Windows package mode: use deferred update to avoid EBUSY
-    if (process.platform === "win32" && (installKind === "package" || installKind === "installer")) {
+    if (
+      process.platform === "win32" &&
+      (installKind === "package" || installKind === "installer")
+    ) {
       const globalManager = await detectGlobalInstallManagerForRoot(
-        (argv, opts) => runCommandWithTimeout(argv, { timeoutMs: opts?.timeoutMs ?? 5000, cwd: opts?.cwd }),
+        (argv, opts) =>
+          runCommandWithTimeout(argv, { timeoutMs: opts?.timeoutMs ?? 5000, cwd: opts?.cwd }),
         root,
         5000,
       );
@@ -75,11 +84,15 @@ export const updateHandlers: GatewayRequestHandlers = {
         });
 
         // Respond first, then exit after a short delay so the response is sent
-        respond(true, {
-          ok: true,
-          result: { status: "ok", mode: "deferred", reason: "windows-deferred-update" },
-          restart: null,
-        }, undefined);
+        respond(
+          true,
+          {
+            ok: true,
+            result: { status: "ok", mode: "deferred", reason: "windows-deferred-update" },
+            restart: null,
+          },
+          undefined,
+        );
 
         // Exit the process so file locks are released and the deferred script can run npm install.
         // The deferred script will restart the gateway after npm install completes.

@@ -165,7 +165,9 @@ export function deriveGroupSessionPatch(params: {
 }
 
 function isPlaceholderSenderName(name: string | undefined): boolean {
-  if (!name) {return true;}
+  if (!name) {
+    return true;
+  }
   return name.startsWith("ou_") || name.startsWith("on_") || name.startsWith("oc_");
 }
 

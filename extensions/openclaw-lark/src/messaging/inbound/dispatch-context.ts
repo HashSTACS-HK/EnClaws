@@ -9,15 +9,15 @@
  * event emission.
  */
 
-import type { ClawdbotConfig, RuntimeEnv } from 'openclaw/plugin-sdk';
-import { resolveThreadSessionKeys } from 'openclaw/plugin-sdk/routing';
-import type { MessageContext } from '../types';
-import type { LarkAccount } from '../../core/types';
-import { LarkClient } from '../../core/lark-client';
-import { larkLogger } from '../../core/lark-logger';
-import { getChatInfo, isThreadCapableGroup } from '../../core/chat-info-cache';
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import { resolveThreadSessionKeys } from "openclaw/plugin-sdk/routing";
+import { getChatInfo, isThreadCapableGroup } from "../../core/chat-info-cache";
+import { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import type { LarkAccount } from "../../core/types";
+import type { MessageContext } from "../types";
 
-const log = larkLogger('inbound/dispatch-context');
+const log = larkLogger("inbound/dispatch-context");
 
 // ---------------------------------------------------------------------------
 // DispatchContext type
@@ -56,8 +56,8 @@ export interface DispatchContext {
 export function ensureRuntime(runtime: RuntimeEnv | undefined): RuntimeEnv {
   if (runtime) return runtime;
   return {
-    log: (...args: unknown[]) => log.info(args.map(String).join(' ')),
-    error: (...args: unknown[]) => log.error(args.map(String).join(' ')),
+    log: (...args: unknown[]) => log.info(args.map(String).join(" ")),
+    error: (...args: unknown[]) => log.error(args.map(String).join(" ")),
     exit: (code: number) => process.exit(code) as never,
   };
 }
@@ -82,7 +82,7 @@ export function buildDispatchContext(params: {
   const runtime = ensureRuntime(params.runtime);
   const log = runtime.log;
   const error = runtime.error;
-  const isGroup = ctx.chatType === 'group';
+  const isGroup = ctx.chatType === "group";
   const isThread = isGroup && Boolean(ctx.threadId);
   const core = LarkClient.runtime;
 
@@ -96,28 +96,28 @@ export function buildDispatchContext(params: {
   // ---- Route resolution ----
   const route = core.channel.routing.resolveAgentRoute({
     cfg: accountScopedCfg,
-    channel: 'feishu',
+    channel: "feishu",
     accountId: account.accountId,
     peer: {
-      kind: isGroup ? 'group' : 'direct',
+      kind: isGroup ? "group" : "direct",
       id: isGroup ? `${ctx.chatId}:sender:${ctx.senderId}` : ctx.senderId,
     },
   });
 
   // ---- System event ----
   const sender = ctx.senderName ? `${ctx.senderName} (${ctx.senderId})` : ctx.senderId;
-  const location = isGroup ? `group ${ctx.chatId}` : 'DM';
+  const location = isGroup ? `group ${ctx.chatId}` : "DM";
 
   const tags: string[] = [];
   tags.push(`msg:${ctx.messageId}`);
   if (ctx.parentId) tags.push(`reply_to:${ctx.parentId}`);
-  if (ctx.contentType !== 'text') tags.push(ctx.contentType);
-  if (ctx.mentions.some((m) => m.isBot)) tags.push('@bot');
+  if (ctx.contentType !== "text") tags.push(ctx.contentType);
+  if (ctx.mentions.some((m) => m.isBot)) tags.push("@bot");
   if (ctx.threadId) tags.push(`thread:${ctx.threadId}`);
   if (ctx.resources.length > 0) {
     tags.push(`${ctx.resources.length} attachment(s)`);
   }
-  const tagStr = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
+  const tagStr = tags.length > 0 ? ` [${tags.join(", ")}]` : "";
 
   core.system.enqueueSystemEvent(`Feishu[${account.accountId}] ${location} | ${sender}${tagStr}`, {
     sessionKey: route.sessionKey,

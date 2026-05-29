@@ -17,7 +17,6 @@ import {
   DEFAULT_PACKAGE_TRACK,
   normalizeUpdateTrack,
 } from "../../infra/update-channels.js";
-import { getStoredUpdateTrack, patchUpdateSettings } from "../../infra/update-settings.js";
 import {
   compareSemverStrings,
   resolveNpmChannelTag,
@@ -29,6 +28,7 @@ import {
   resolveGlobalPackageRoot,
 } from "../../infra/update-global.js";
 import { runGatewayUpdate, type UpdateRunResult } from "../../infra/update-runner.js";
+import { getStoredUpdateTrack, patchUpdateSettings } from "../../infra/update-settings.js";
 import { syncPluginsForUpdateChannel, updateNpmInstalledPlugins } from "../../plugins/update.js";
 import { runCommandWithTimeout } from "../../process/exec.js";
 import { defaultRuntime } from "../../runtime.js";
@@ -659,8 +659,7 @@ export async function updateCommand(opts: UpdateCommandOptions): Promise<void> {
   const switchToPackage =
     requestedTrack !== null && requestedTrack !== "dev" && installKind === "git";
   const updateInstallKind = switchToGit ? "git" : switchToPackage ? "package" : installKind;
-  const defaultTrack =
-    updateInstallKind === "git" ? DEFAULT_GIT_TRACK : DEFAULT_PACKAGE_TRACK;
+  const defaultTrack = updateInstallKind === "git" ? DEFAULT_GIT_TRACK : DEFAULT_PACKAGE_TRACK;
   const track = requestedTrack ?? storedTrack ?? defaultTrack;
 
   const explicitTag = normalizeTag(opts.tag);
@@ -802,7 +801,9 @@ export async function updateCommand(opts: UpdateCommandOptions): Promise<void> {
   // Windows npm mode: CLI process itself locks node_modules, so always use deferred script
   if (process.platform === "win32" && updateInstallKind !== "git") {
     if (!opts.json) {
-      defaultRuntime.log(theme.muted("Windows detected. Using deferred update to avoid file locks..."));
+      defaultRuntime.log(
+        theme.muted("Windows detected. Using deferred update to avoid file locks..."),
+      );
     }
     const { spawnDeferredUpdate } = await import("../../infra/update-deferred.js");
     const { readPackageName } = await import("../../infra/package-json.js");
@@ -818,7 +819,11 @@ export async function updateCommand(opts: UpdateCommandOptions): Promise<void> {
       cwd: process.cwd(),
     });
     if (!opts.json) {
-      defaultRuntime.log(theme.success("Update will run after this process exits. Check ~/.enclaws/update-deferred.log for progress."));
+      defaultRuntime.log(
+        theme.success(
+          "Update will run after this process exits. Check ~/.enclaws/update-deferred.log for progress.",
+        ),
+      );
     }
     defaultRuntime.exit(0);
     return;

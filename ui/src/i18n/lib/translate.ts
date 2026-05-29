@@ -1,8 +1,8 @@
+import { de } from "../locales/de.ts";
 import { en } from "../locales/en.ts";
+import { pt_BR } from "../locales/pt-BR.ts";
 import { zh_CN } from "../locales/zh-CN.ts";
 import { zh_TW } from "../locales/zh-TW.ts";
-import { pt_BR } from "../locales/pt-BR.ts";
-import { de } from "../locales/de.ts";
 import type { Locale, TranslationMap } from "./types.ts";
 
 type Subscriber = (locale: Locale) => void;
@@ -55,10 +55,14 @@ class I18nManager {
   }
 
   public async setLocale(locale: Locale) {
-    if (this.locale === locale) {return;}
+    if (this.locale === locale) {
+      return;
+    }
     // All locales are statically imported in `translations` above, so the
     // map is always populated — no dynamic import path is needed.
-    if (!this.translations[locale]) {return;}
+    if (!this.translations[locale]) {
+      return;
+    }
 
     this.locale = locale;
     localStorage.setItem("enclaws.i18n.locale", locale);

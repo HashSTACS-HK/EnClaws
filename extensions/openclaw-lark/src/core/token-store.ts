@@ -18,15 +18,15 @@
  *   Password = JSON-serialised StoredUAToken
  */
 
-import { execFile as execFileCb } from 'node:child_process';
-import { promisify } from 'node:util';
-import { chmod, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { larkLogger } from './lark-logger';
+import { execFile as execFileCb } from "node:child_process";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { chmod, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
+import { larkLogger } from "./lark-logger";
 
-const log = larkLogger('core/token-store');
+const log = larkLogger("core/token-store");
 
 const execFile = promisify(execFileCb);
 
@@ -49,7 +49,7 @@ export interface StoredUAToken {
 // Constants
 // ---------------------------------------------------------------------------
 
-const KEYCHAIN_SERVICE = 'openclaw-feishu-uat';
+const KEYCHAIN_SERVICE = "openclaw-feishu-uat";
 
 /** Refresh proactively when access_token expires within this window. */
 const REFRESH_AHEAD_MS = 5 * 60 * 1000; // 5 minutes
@@ -64,7 +64,7 @@ function accountKey(appId: string, userOpenId: string): string {
 
 /** Mask a token for safe logging: only the last 4 chars are visible. */
 export function maskToken(token: string): string {
-  if (token.length <= 8) return '****';
+  if (token.length <= 8) return "****";
   return `****${token.slice(-4)}`;
 }
 
@@ -85,7 +85,14 @@ interface KeychainBackend {
 const darwinBackend: KeychainBackend = {
   async get(service, account) {
     try {
-      const { stdout } = await execFile('security', ['find-generic-password', '-s', service, '-a', account, '-w']);
+      const { stdout } = await execFile("security", [
+        "find-generic-password",
+        "-s",
+        service,
+        "-a",
+        account,
+        "-w",
+      ]);
       return stdout.trim() || null;
     } catch {
       return null;
@@ -95,16 +102,16 @@ const darwinBackend: KeychainBackend = {
   async set(service, account, data) {
     // Delete first – `add-generic-password` fails if the item already exists.
     try {
-      await execFile('security', ['delete-generic-password', '-s', service, '-a', account]);
+      await execFile("security", ["delete-generic-password", "-s", service, "-a", account]);
     } catch {
       // Not found – fine.
     }
-    await execFile('security', ['add-generic-password', '-s', service, '-a', account, '-w', data]);
+    await execFile("security", ["add-generic-password", "-s", service, "-a", account, "-w", data]);
   },
 
   async remove(service, account) {
     try {
-      await execFile('security', ['delete-generic-password', '-s', service, '-a', account]);
+      await execFile("security", ["delete-generic-password", "-s", service, "-a", account]);
     } catch {
       // Already absent – fine.
     }
@@ -120,15 +127,18 @@ const darwinBackend: KeychainBackend = {
 // Storage path: ${XDG_DATA_HOME:-~/.local/share}/openclaw-feishu-uat/
 // ---------------------------------------------------------------------------
 
-const LINUX_UAT_DIR = join(process.env.XDG_DATA_HOME || join(homedir(), '.local', 'share'), 'openclaw-feishu-uat');
-const MASTER_KEY_PATH = join(LINUX_UAT_DIR, 'master.key');
+const LINUX_UAT_DIR = join(
+  process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"),
+  "openclaw-feishu-uat",
+);
+const MASTER_KEY_PATH = join(LINUX_UAT_DIR, "master.key");
 const MASTER_KEY_BYTES = 32; // AES-256
 const IV_BYTES = 12; // GCM recommended
 const TAG_BYTES = 16; // GCM auth tag
 
 /** Convert account key to a filesystem-safe filename. */
 function linuxSafeFileName(account: string): string {
-  return account.replace(/[^a-zA-Z0-9._-]/g, '_') + '.enc';
+  return account.replace(/[^a-zA-Z0-9._-]/g, "_") + ".enc";
 }
 
 /** Ensure the credentials directory exists with mode 0700. */
@@ -146,9 +156,9 @@ async function getMasterKey(): Promise<Buffer> {
   try {
     const key = await readFile(MASTER_KEY_PATH);
     if (key.length === MASTER_KEY_BYTES) return key;
-    log.warn('master key has unexpected length, regenerating');
+    log.warn("master key has unexpected length, regenerating");
   } catch (err: unknown) {
-    if (!(err instanceof Error) || (err as NodeJS.ErrnoException).code !== 'ENOENT') {
+    if (!(err instanceof Error) || (err as NodeJS.ErrnoException).code !== "ENOENT") {
       log.warn(`failed to read master key: ${err instanceof Error ? err.message : err}`);
     }
   }
@@ -157,15 +167,15 @@ async function getMasterKey(): Promise<Buffer> {
   const key = randomBytes(MASTER_KEY_BYTES);
   await writeFile(MASTER_KEY_PATH, key, { mode: 0o600 });
   await chmod(MASTER_KEY_PATH, 0o600);
-  log.info('generated new master key for encrypted file storage');
+  log.info("generated new master key for encrypted file storage");
   return key;
 }
 
 /** AES-256-GCM encrypt. Returns [12-byte IV][16-byte tag][ciphertext]. */
 function encryptData(plaintext: string, key: Buffer): Buffer {
   const iv = randomBytes(IV_BYTES);
-  const cipher = createCipheriv('aes-256-gcm', key, iv);
-  const enc = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   return Buffer.concat([iv, cipher.getAuthTag(), enc]);
 }
 
@@ -176,9 +186,9 @@ function decryptData(data: Buffer, key: Buffer): string | null {
     const iv = data.subarray(0, IV_BYTES);
     const tag = data.subarray(IV_BYTES, IV_BYTES + TAG_BYTES);
     const enc = data.subarray(IV_BYTES + TAG_BYTES);
-    const decipher = createDecipheriv('aes-256-gcm', key, iv);
+    const decipher = createDecipheriv("aes-256-gcm", key, iv);
     decipher.setAuthTag(tag);
-    return Buffer.concat([decipher.update(enc), decipher.final()]).toString('utf8');
+    return Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8");
   } catch {
     return null;
   }
@@ -227,14 +237,14 @@ const linuxBackend: KeychainBackend = {
 // ---------------------------------------------------------------------------
 
 const WIN32_UAT_DIR = join(
-  process.env.LOCALAPPDATA ?? join(process.env.USERPROFILE ?? homedir(), 'AppData', 'Local'),
+  process.env.LOCALAPPDATA ?? join(process.env.USERPROFILE ?? homedir(), "AppData", "Local"),
   KEYCHAIN_SERVICE,
 );
-const WIN32_MASTER_KEY_PATH = join(WIN32_UAT_DIR, 'master.key');
+const WIN32_MASTER_KEY_PATH = join(WIN32_UAT_DIR, "master.key");
 
 /** Convert account key to a filesystem-safe filename (whitelist approach). */
 function win32SafeFileName(account: string): string {
-  return account.replace(/[^a-zA-Z0-9._-]/g, '_') + '.enc';
+  return account.replace(/[^a-zA-Z0-9._-]/g, "_") + ".enc";
 }
 
 async function ensureWin32CredDir(): Promise<void> {
@@ -245,9 +255,9 @@ async function getWin32MasterKey(): Promise<Buffer> {
   try {
     const key = await readFile(WIN32_MASTER_KEY_PATH);
     if (key.length === MASTER_KEY_BYTES) return key;
-    log.warn('win32 master key has unexpected length, regenerating');
+    log.warn("win32 master key has unexpected length, regenerating");
   } catch (err: unknown) {
-    if (!(err instanceof Error) || (err as NodeJS.ErrnoException).code !== 'ENOENT') {
+    if (!(err instanceof Error) || (err as NodeJS.ErrnoException).code !== "ENOENT") {
       log.warn(`failed to read win32 master key: ${err instanceof Error ? err.message : err}`);
     }
   }
@@ -255,7 +265,7 @@ async function getWin32MasterKey(): Promise<Buffer> {
   await ensureWin32CredDir();
   const key = randomBytes(MASTER_KEY_BYTES);
   await writeFile(WIN32_MASTER_KEY_PATH, key);
-  log.info('generated new master key for win32 encrypted file storage');
+  log.info("generated new master key for win32 encrypted file storage");
   return key;
 }
 
@@ -293,11 +303,11 @@ const win32Backend: KeychainBackend = {
 
 function createBackend(): KeychainBackend {
   switch (process.platform) {
-    case 'darwin':
+    case "darwin":
       return darwinBackend;
-    case 'linux':
+    case "linux":
       return linuxBackend;
-    case 'win32':
+    case "win32":
       return win32Backend;
     default:
       log.warn(`unsupported platform "${process.platform}", falling back to macOS backend`);
@@ -315,7 +325,10 @@ const backend = createBackend();
  * Read the stored UAT for a given (appId, userOpenId) pair.
  * Returns `null` when no entry exists or the payload is unparseable.
  */
-export async function getStoredToken(appId: string, userOpenId: string): Promise<StoredUAToken | null> {
+export async function getStoredToken(
+  appId: string,
+  userOpenId: string,
+): Promise<StoredUAToken | null> {
   try {
     const json = await backend.get(KEYCHAIN_SERVICE, accountKey(appId, userOpenId));
     if (!json) return null;
@@ -356,13 +369,13 @@ export async function removeStoredToken(appId: string, userOpenId: string): Prom
  * - `"needs_refresh"` – access_token expired/expiring but refresh_token is valid
  * - `"expired"`       – both tokens are expired; re-authorization required
  */
-export function tokenStatus(token: StoredUAToken): 'valid' | 'needs_refresh' | 'expired' {
+export function tokenStatus(token: StoredUAToken): "valid" | "needs_refresh" | "expired" {
   const now = Date.now();
   if (now < token.expiresAt - REFRESH_AHEAD_MS) {
-    return 'valid';
+    return "valid";
   }
   if (now < token.refreshExpiresAt) {
-    return 'needs_refresh';
+    return "needs_refresh";
   }
-  return 'expired';
+  return "expired";
 }

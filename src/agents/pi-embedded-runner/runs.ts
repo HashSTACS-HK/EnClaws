@@ -158,7 +158,9 @@ export function setActiveEmbeddedRun(
     reason: wasActive ? "run_replaced" : "run_started",
   });
   if (!sessionId.startsWith("probe-")) {
-    diag.debug(`run registered: sessionId=${sessionId} sessionKey=${sessionKey} totalActive=${ACTIVE_EMBEDDED_RUNS.size}`);
+    diag.debug(
+      `run registered: sessionId=${sessionId} sessionKey=${sessionKey} totalActive=${ACTIVE_EMBEDDED_RUNS.size}`,
+    );
   }
 }
 

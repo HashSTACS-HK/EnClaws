@@ -26,6 +26,8 @@
 
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { t, I18nController } from "../../i18n/index.ts";
+import "../components/captcha-field.ts";
 import {
   callAuthRpc,
   changePasswordAuthed,
@@ -36,9 +38,7 @@ import {
   viewTempPassword,
   clearAuth,
 } from "../auth-store.ts";
-import "../components/captcha-field.ts";
 import type { CaptchaField } from "../components/captcha-field.ts";
-import { t, I18nController } from "../../i18n/index.ts";
 
 // ---------------------------------------------------------------------------
 // Shared password policy mirror — keep aligned with src/auth/password-policy.ts.
@@ -48,18 +48,34 @@ import { t, I18nController } from "../../i18n/index.ts";
 
 function classCount(p: string): number {
   let n = 0;
-  if (/[a-z]/.test(p)) {n++;}
-  if (/[A-Z]/.test(p)) {n++;}
-  if (/[0-9]/.test(p)) {n++;}
-  if (/[^a-zA-Z0-9]/.test(p)) {n++;}
+  if (/[a-z]/.test(p)) {
+    n++;
+  }
+  if (/[A-Z]/.test(p)) {
+    n++;
+  }
+  if (/[0-9]/.test(p)) {
+    n++;
+  }
+  if (/[^a-zA-Z0-9]/.test(p)) {
+    n++;
+  }
   return n;
 }
 
 function clientValidatePasswordKey(pw: string): string | null {
-  if (!pw || pw.length < 8) {return "auth.policy.tooShort";}
-  if (pw.length > 128) {return "auth.policy.tooLong";}
-  if (classCount(pw) < 3) {return "auth.policy.missingClasses";}
-  if (/(.)\1\1/.test(pw)) {return "auth.policy.repeatedChars";}
+  if (!pw || pw.length < 8) {
+    return "auth.policy.tooShort";
+  }
+  if (pw.length > 128) {
+    return "auth.policy.tooLong";
+  }
+  if (classCount(pw) < 3) {
+    return "auth.policy.missingClasses";
+  }
+  if (/(.)\1\1/.test(pw)) {
+    return "auth.policy.repeatedChars";
+  }
   return null;
 }
 
@@ -114,7 +130,9 @@ const baseStyles = css`
     outline: none;
     box-sizing: border-box;
   }
-  input:focus { border-color: var(--accent, #3b82f6); }
+  input:focus {
+    border-color: var(--accent, #3b82f6);
+  }
   button.primary {
     margin-top: 1.25rem;
     width: 100%;
@@ -127,7 +145,10 @@ const baseStyles = css`
     font-weight: 500;
     cursor: pointer;
   }
-  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   .error {
     margin-top: 0.75rem;
     font-size: 0.78rem;
@@ -187,25 +208,45 @@ const baseStyles = css`
     align-items: center;
     justify-content: center;
   }
-  .eye-btn:hover { color: var(--text, #e5e5e5); }
-  .eye-btn svg { pointer-events: none; }
+  .eye-btn:hover {
+    color: var(--text, #e5e5e5);
+  }
+  .eye-btn svg {
+    pointer-events: none;
+  }
 `;
 
 // Eye-open / eye-off SVG icons (16px, stroke-based, match login.ts style).
 const eyeOpenSvg = html`
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 `;
 const eyeOffSvg = html`
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.9 20.9 0 0 1 5.17-6.17"/>
-    <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a20.9 20.9 0 0 1-3.11 4.38"/>
-    <path d="M9.17 9.17a3 3 0 0 0 4.24 4.24"/>
-    <line x1="1" y1="1" x2="23" y2="23"/>
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.9 20.9 0 0 1 5.17-6.17" />
+    <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a20.9 20.9 0 0 1-3.11 4.38" />
+    <path d="M9.17 9.17a3 3 0 0 0 4.24 4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 `;
 
@@ -308,7 +349,9 @@ export class EnClawsForgotPassword extends LitElement {
 
   private async submit(e: Event) {
     e.preventDefault();
-    if (!this.email) {return;}
+    if (!this.email) {
+      return;
+    }
     const captcha = this.getCaptcha();
     if (!captcha?.captchaId || !captcha.value) {
       this.error = t("captcha.errRequired");
@@ -368,7 +411,9 @@ export class EnClawsForgotPassword extends LitElement {
             type="email"
             placeholder=${t("auth.forgot.emailPlaceholder")}
             .value=${this.email}
-            @input=${(e: InputEvent) => { this.email = (e.target as HTMLInputElement).value; }}
+            @input=${(e: InputEvent) => {
+              this.email = (e.target as HTMLInputElement).value;
+            }}
             required
           />
           <label>${t("captcha.label")}</label>
@@ -391,7 +436,9 @@ export class EnClawsForgotPassword extends LitElement {
 function readHashParam(name: string): string {
   const hash = window.location.hash || "";
   const qIndex = hash.indexOf("?");
-  if (qIndex < 0) {return "";}
+  if (qIndex < 0) {
+    return "";
+  }
   const params = new URLSearchParams(hash.slice(qIndex + 1));
   return params.get(name) ?? "";
 }
@@ -418,7 +465,10 @@ export class EnClawsResetPassword extends LitElement {
     e.preventDefault();
     this.error = "";
     const policyKey = clientValidatePasswordKey(this.newPassword);
-    if (policyKey) { this.error = t(policyKey); return; }
+    if (policyKey) {
+      this.error = t(policyKey);
+      return;
+    }
     if (this.newPassword !== this.confirmPassword) {
       this.error = t("auth.reset.mismatch");
       return;
@@ -457,9 +507,13 @@ export class EnClawsResetPassword extends LitElement {
           <label>${t("auth.reset.newPasswordLabel")}</label>
           ${renderPasswordField({
             value: this.newPassword,
-            onInput: (v) => { this.newPassword = v; },
+            onInput: (v) => {
+              this.newPassword = v;
+            },
             visible: this.showNew,
-            onToggle: () => { this.showNew = !this.showNew; },
+            onToggle: () => {
+              this.showNew = !this.showNew;
+            },
             required: true,
             label: t("auth.reset.newPasswordLabel"),
           })}
@@ -467,9 +521,13 @@ export class EnClawsResetPassword extends LitElement {
           <label>${t("auth.reset.confirmLabel")}</label>
           ${renderPasswordField({
             value: this.confirmPassword,
-            onInput: (v) => { this.confirmPassword = v; },
+            onInput: (v) => {
+              this.confirmPassword = v;
+            },
             visible: this.showConfirm,
-            onToggle: () => { this.showConfirm = !this.showConfirm; },
+            onToggle: () => {
+              this.showConfirm = !this.showConfirm;
+            },
             required: true,
             label: t("auth.reset.confirmLabel"),
           })}
@@ -517,7 +575,9 @@ export class EnClawsTempPasswordView extends LitElement {
   }
 
   private copy() {
-    if (!this.tempPassword) {return;}
+    if (!this.tempPassword) {
+      return;
+    }
     void navigator.clipboard?.writeText(this.tempPassword).catch(() => undefined);
   }
 
@@ -586,7 +646,10 @@ abstract class ChangePasswordFormBase extends LitElement {
       return;
     }
     const policyKey = clientValidatePasswordKey(this.newPassword);
-    if (policyKey) { this.error = t(policyKey); return; }
+    if (policyKey) {
+      this.error = t(policyKey);
+      return;
+    }
     if (this.newPassword !== this.confirmPassword) {
       this.error = t("auth.reset.mismatch");
       return;
@@ -625,18 +688,26 @@ abstract class ChangePasswordFormBase extends LitElement {
           <label>${t("auth.change.currentLabel")}</label>
           ${renderPasswordField({
             value: this.currentPassword,
-            onInput: (v) => { this.currentPassword = v; },
+            onInput: (v) => {
+              this.currentPassword = v;
+            },
             visible: this.showCurrent,
-            onToggle: () => { this.showCurrent = !this.showCurrent; },
+            onToggle: () => {
+              this.showCurrent = !this.showCurrent;
+            },
             required: true,
             label: t("auth.change.currentLabel"),
           })}
           <label>${t("auth.reset.newPasswordLabel")}</label>
           ${renderPasswordField({
             value: this.newPassword,
-            onInput: (v) => { this.newPassword = v; },
+            onInput: (v) => {
+              this.newPassword = v;
+            },
             visible: this.showNew,
-            onToggle: () => { this.showNew = !this.showNew; },
+            onToggle: () => {
+              this.showNew = !this.showNew;
+            },
             required: true,
             label: t("auth.reset.newPasswordLabel"),
           })}
@@ -644,9 +715,13 @@ abstract class ChangePasswordFormBase extends LitElement {
           <label>${t("auth.reset.confirmLabel")}</label>
           ${renderPasswordField({
             value: this.confirmPassword,
-            onInput: (v) => { this.confirmPassword = v; },
+            onInput: (v) => {
+              this.confirmPassword = v;
+            },
             visible: this.showConfirm,
-            onToggle: () => { this.showConfirm = !this.showConfirm; },
+            onToggle: () => {
+              this.showConfirm = !this.showConfirm;
+            },
             required: true,
             label: t("auth.reset.confirmLabel"),
           })}
@@ -667,9 +742,15 @@ abstract class ChangePasswordFormBase extends LitElement {
 
 @customElement("enclaws-force-change-password")
 export class EnClawsForceChangePassword extends ChangePasswordFormBase {
-  protected getTitle() { return t("auth.change.forcedTitle"); }
-  protected getSubtitle() { return t("auth.change.forcedSubtitle"); }
-  protected getDoneMessage() { return t("auth.change.doneRedirect"); }
+  protected getTitle() {
+    return t("auth.change.forcedTitle");
+  }
+  protected getSubtitle() {
+    return t("auth.change.forcedSubtitle");
+  }
+  protected getDoneMessage() {
+    return t("auth.change.doneRedirect");
+  }
 
   protected onAfterSuccess() {
     clearAuth();
@@ -697,9 +778,15 @@ export class EnClawsForceChangePassword extends ChangePasswordFormBase {
 
 @customElement("enclaws-change-password")
 export class EnClawsChangePassword extends ChangePasswordFormBase {
-  protected getTitle() { return t("auth.change.title"); }
-  protected getSubtitle() { return ""; }
-  protected getDoneMessage() { return t("auth.change.doneRelogin"); }
+  protected getTitle() {
+    return t("auth.change.title");
+  }
+  protected getSubtitle() {
+    return "";
+  }
+  protected getDoneMessage() {
+    return t("auth.change.doneRelogin");
+  }
 
   protected onAfterSuccess() {
     // changePasswordAuthed already cleared auth — hard-navigate to login.

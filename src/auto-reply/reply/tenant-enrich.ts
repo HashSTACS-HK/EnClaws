@@ -16,9 +16,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { OpenClawConfig } from "../../config/config.js";
-import type { FinalizedMsgContext } from "../templating.js";
 import { logVerbose } from "../../globals.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
+import type { FinalizedMsgContext } from "../templating.js";
 
 const roleTraceLog = createSubsystemLogger("auto-reply/tenant-enrich");
 
@@ -49,9 +49,10 @@ export async function enrichTenantContext(
         // Resolve channelId from tenant context when available
         const ctxProvider = (ctx.Provider ?? ctx.Surface ?? "").toLowerCase();
         const ctxAccountId = (ctx as Record<string, unknown>).AccountId as string | undefined;
-        const tenantCtx = ctxProvider && ctxAccountId
-          ? await resolveChannelTenantContext(ctxProvider, ctxAccountId)
-          : undefined;
+        const tenantCtx =
+          ctxProvider && ctxAccountId
+            ? await resolveChannelTenantContext(ctxProvider, ctxAccountId)
+            : undefined;
         const provisioned = await autoProvisionTenantUser({
           tenantId: ctx.TenantId,
           openId: senderId,
@@ -71,7 +72,11 @@ export async function enrichTenantContext(
             `[role-trace] tenant-enrich.branchA tenantId=${ctx.TenantId} userId=${ctx.TenantUserId} role=${provisioned.role}`,
           );
           // Backfill sender name from DB if plugin didn't resolve it
-          if (isMissingSenderName(ctx) && provisioned.displayName && !isPlaceholderName(provisioned.displayName)) {
+          if (
+            isMissingSenderName(ctx) &&
+            provisioned.displayName &&
+            !isPlaceholderName(provisioned.displayName)
+          ) {
             ctx.SenderName = provisioned.displayName;
             logVerbose(`[tenant-enrich] backfilled SenderName from DB: ${provisioned.displayName}`);
           }
@@ -88,21 +93,29 @@ export async function enrichTenantContext(
   }
 
   // Skip if the plugin already injected tenant info (e.g. the old built-in feishu plugin)
-  if (ctx.TenantId) {return;}
+  if (ctx.TenantId) {
+    return;
+  }
 
   const provider = (ctx.Provider ?? ctx.Surface ?? "").toLowerCase();
-  if (!provider) {return;}
+  if (!provider) {
+    return;
+  }
 
   // Read tenantId from the account-scoped channel config.
   // In multi-tenant mode, server-channels.ts merges DB tenant data into the
   // account config: cfg.channels[provider].accounts[accountId].tenantId = "<tenant-uuid>"
-  const channelCfg = (cfg.channels as Record<string, Record<string, unknown> | undefined>)?.[provider];
+  const channelCfg = (cfg.channels as Record<string, Record<string, unknown> | undefined>)?.[
+    provider
+  ];
   let tenantId = channelCfg?.tenantId as string | undefined;
   // Fall back to the per-account tenantId when the channel top-level doesn't carry one.
   if (!tenantId) {
     const accountId = (ctx as Record<string, unknown>).AccountId as string | undefined;
     if (accountId) {
-      const accounts = channelCfg?.accounts as Record<string, Record<string, unknown> | undefined> | undefined;
+      const accounts = channelCfg?.accounts as
+        | Record<string, Record<string, unknown> | undefined>
+        | undefined;
       // Some channels (e.g. wecom) normalize accountId to lowercase on ctx while
       // the accounts map is keyed by the original-case credential id. Try exact
       // match first, then fall back to a case-insensitive scan.
@@ -119,10 +132,14 @@ export async function enrichTenantContext(
       tenantId = accountEntry?.tenantId as string | undefined;
     }
   }
-  if (!tenantId) {return;}
+  if (!tenantId) {
+    return;
+  }
 
   const senderId = ctx.SenderId;
-  if (!senderId) {return;}
+  if (!senderId) {
+    return;
+  }
 
   try {
     const { autoProvisionTenantUser } = await import("../../infra/channel-auto-provision.js");
@@ -139,8 +156,8 @@ export async function enrichTenantContext(
     // 这里按 provider 做兜底，保证 DB 的 union_id 列能被填上，
     // 下游 autoProvisionTenantUser 的 union_id 优先查找也能命中。
     const unionIdFallbackProviders = new Set(["wecom", "dingtalk"]);
-    const resolvedUnionId = ctx.SenderUnionId
-      ?? (unionIdFallbackProviders.has(provider) ? senderId : undefined);
+    const resolvedUnionId =
+      ctx.SenderUnionId ?? (unionIdFallbackProviders.has(provider) ? senderId : undefined);
 
     const provisioned = await autoProvisionTenantUser({
       tenantId,
@@ -161,7 +178,7 @@ export async function enrichTenantContext(
       ctx.TenantUserQuotaExceeded = true;
       logVerbose(
         `[tenant-enrich] user quota exceeded for ${provider}/${senderId} ` +
-        `(${provisioned.current}/${provisioned.max}) — sender will receive upgrade message`,
+          `(${provisioned.current}/${provisioned.max}) — sender will receive upgrade message`,
       );
     } else if (provisioned) {
       ctx.TenantId = tenantId;
@@ -171,13 +188,17 @@ export async function enrichTenantContext(
         `[role-trace] tenant-enrich.branchB tenantId=${tenantId} userId=${provisioned.unionId} role=${provisioned.role} userCreated=${provisioned.userCreated}`,
       );
       // Backfill sender name from DB if plugin didn't resolve it
-      if (isMissingSenderName(ctx) && provisioned.displayName && !isPlaceholderName(provisioned.displayName)) {
+      if (
+        isMissingSenderName(ctx) &&
+        provisioned.displayName &&
+        !isPlaceholderName(provisioned.displayName)
+      ) {
         ctx.SenderName = provisioned.displayName;
         logVerbose(`[tenant-enrich] backfilled SenderName from DB: ${provisioned.displayName}`);
       }
       logVerbose(
         `[tenant-enrich] auto-provisioned: provider=${provider} senderId=${senderId} ` +
-        `userId=${provisioned.userId} unionId=${provisioned.unionId} role=${provisioned.role} created=${provisioned.userCreated}`,
+          `userId=${provisioned.userId} unionId=${provisioned.unionId} role=${provisioned.role} created=${provisioned.userCreated}`,
       );
     }
   } catch (err) {
@@ -245,10 +266,14 @@ function syncFeishuSkillConfig(
       provider,
       accountId,
     ) as { appId: string; appSecret: string } | null;
-    if (!creds?.appId || !creds?.appSecret) {return;}
+    if (!creds?.appId || !creds?.appSecret) {
+      return;
+    }
 
     const cacheKey = `${tenantId}:${creds.appId}`;
-    if (skillConfigSynced.has(cacheKey)) {return;}
+    if (skillConfigSynced.has(cacheKey)) {
+      return;
+    }
 
     const { resolveTenantSkillsDir } = require("../../config/sessions/tenant-paths.js");
     const sharedDir = path.join(resolveTenantSkillsDir(tenantId), "feishu-auth");
@@ -290,8 +315,12 @@ function syncFeishuSkillConfig(
  */
 function extractChatId(ctx: FinalizedMsgContext): string | undefined {
   const to = (ctx as Record<string, unknown>).To as string | undefined;
-  if (!to) {return undefined;}
-  if (to.startsWith("chat:")) {return to.slice(5);}
+  if (!to) {
+    return undefined;
+  }
+  if (to.startsWith("chat:")) {
+    return to.slice(5);
+  }
   return undefined;
 }
 
@@ -304,19 +333,30 @@ async function resolveFeishuSenderName(
   cfg: OpenClawConfig,
 ): Promise<void> {
   const provider = (ctx.Provider ?? ctx.Surface ?? "").toLowerCase();
-  if (provider !== "feishu") {return;}
+  if (provider !== "feishu") {
+    return;
+  }
 
   const senderId = ctx.SenderId;
-  if (!senderId) {return;}
+  if (!senderId) {
+    return;
+  }
 
   const chatId = extractChatId(ctx);
 
   try {
-    const { resolveFeishuUserName, extractFeishuCredentials } = await import("../../infra/feishu-user-resolve.js");
+    const { resolveFeishuUserName, extractFeishuCredentials } =
+      await import("../../infra/feishu-user-resolve.js");
 
     const accountId = (ctx as Record<string, unknown>).AccountId as string | undefined;
-    const creds = extractFeishuCredentials(cfg as unknown as Record<string, unknown>, provider, accountId);
-    if (!creds) {return;}
+    const creds = extractFeishuCredentials(
+      cfg as unknown as Record<string, unknown>,
+      provider,
+      accountId,
+    );
+    if (!creds) {
+      return;
+    }
 
     const messageId = (ctx as Record<string, unknown>).MessageSid as string | undefined;
     const name = await resolveFeishuUserName({

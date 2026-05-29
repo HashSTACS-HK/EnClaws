@@ -2,8 +2,8 @@
  * Audit log operations — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type { AuditLog } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 
 export interface CreateAuditLogInput {
   tenantId: string;
@@ -22,7 +22,9 @@ function rowToAuditLog(row: Record<string, unknown>): AuditLog {
     userId: (row.user_id as string) ?? null,
     action: row.action as string,
     resource: (row.resource as string) ?? null,
-    detail: (typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail ?? {}) as Record<string, unknown>,
+    detail: (typeof row.detail === "string"
+      ? JSON.parse(row.detail)
+      : (row.detail ?? {})) as Record<string, unknown>,
     ipAddress: (row.ip_address as string) ?? null,
     userAgent: (row.user_agent as string) ?? null,
     createdAt: new Date(row.created_at as string),
@@ -85,10 +87,7 @@ export async function listAuditLogs(
     `SELECT * FROM audit_logs ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [...values, limit, offset],
   );
-  const countResult = sqliteQuery(
-    `SELECT COUNT(*) as count FROM audit_logs ${where}`,
-    values,
-  );
+  const countResult = sqliteQuery(`SELECT COUNT(*) as count FROM audit_logs ${where}`, values);
 
   return {
     logs: dataResult.rows.map(rowToAuditLog),

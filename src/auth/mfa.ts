@@ -33,7 +33,9 @@ let ephemeralKey: Buffer | null = null;
 function getEncryptionKey(): Buffer {
   const explicit = process.env.ENCLAWS_TEMP_PW_KEY;
   if (explicit) {
-    if (/^[0-9a-fA-F]{64}$/.test(explicit)) {return Buffer.from(explicit, "hex");}
+    if (/^[0-9a-fA-F]{64}$/.test(explicit)) {
+      return Buffer.from(explicit, "hex");
+    }
     return crypto.createHash("sha256").update(explicit).digest();
   }
   if (!ephemeralKey) {
@@ -69,9 +71,9 @@ function decrypt(b64: string): string | null {
 // ---------------------------------------------------------------------------
 
 export interface MfaSetupResult {
-  secret: string;          // base32, shown to user once (they scan QR)
-  otpauthUri: string;      // otpauth://totp/... for QR
-  backupCodes: string[];   // plain, shown once
+  secret: string; // base32, shown to user once (they scan QR)
+  otpauthUri: string; // otpauth://totp/... for QR
+  backupCodes: string[]; // plain, shown once
 }
 
 /**
@@ -123,9 +125,13 @@ export async function disableMfa(userId: string): Promise<void> {
  * Verify a TOTP code for a user.  Returns true on success.
  */
 export function verifyUserTotp(user: { mfaSecret: string | null }, code: string): boolean {
-  if (!user.mfaSecret) {return false;}
+  if (!user.mfaSecret) {
+    return false;
+  }
   const plainSecret = decrypt(user.mfaSecret);
-  if (!plainSecret) {return false;}
+  if (!plainSecret) {
+    return false;
+  }
   return verifyTOTP(plainSecret, code);
 }
 
@@ -138,26 +144,32 @@ export async function tryBackupCode(
   mfaBackupCodes: string | null,
   code: string,
 ): Promise<boolean> {
-  if (!mfaBackupCodes) {return false;}
+  if (!mfaBackupCodes) {
+    return false;
+  }
   let hashes: string[];
   try {
     hashes = JSON.parse(mfaBackupCodes);
-    if (!Array.isArray(hashes)) {return false;}
+    if (!Array.isArray(hashes)) {
+      return false;
+    }
   } catch {
     return false;
   }
 
   const idx = verifyBackupCode(code, hashes);
-  if (idx < 0) {return false;}
+  if (idx < 0) {
+    return false;
+  }
 
   // Remove the consumed code
   hashes.splice(idx, 1);
   const isSqlite = getDbType() === DB_SQLITE;
   const nowExpr = isSqlite ? "datetime('now')" : "NOW()";
-  await query(
-    `UPDATE users SET mfa_backup_codes = $1, updated_at = ${nowExpr} WHERE id = $2`,
-    [JSON.stringify(hashes), userId],
-  );
+  await query(`UPDATE users SET mfa_backup_codes = $1, updated_at = ${nowExpr} WHERE id = $2`, [
+    JSON.stringify(hashes),
+    userId,
+  ]);
   return true;
 }
 
@@ -181,10 +193,14 @@ const challengeStore = new Map<string, ChallengeEntry>();
 const pruneTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of challengeStore) {
-    if (entry.expiresAt <= now) {challengeStore.delete(key);}
+    if (entry.expiresAt <= now) {
+      challengeStore.delete(key);
+    }
   }
 }, 60_000);
-if (pruneTimer.unref) {pruneTimer.unref();}
+if (pruneTimer.unref) {
+  pruneTimer.unref();
+}
 
 /**
  * Issue a challenge token after password-only login succeeds for an
@@ -213,8 +229,12 @@ export function issueMfaChallenge(params: {
  */
 export function consumeMfaChallenge(token: string): ChallengeEntry | null {
   const entry = challengeStore.get(token);
-  if (!entry) {return null;}
+  if (!entry) {
+    return null;
+  }
   challengeStore.delete(token);
-  if (entry.expiresAt <= Date.now()) {return null;}
+  if (entry.expiresAt <= Date.now()) {
+    return null;
+  }
   return entry;
 }

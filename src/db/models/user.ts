@@ -4,6 +4,13 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { hashPassword } from "../../auth/password.js";
+import {
+  resolveTenantDevicesDir,
+  resolveTenantCredentialsDir,
+  resolveTenantCronDir,
+  resolveTenantAgentWorkspaceDir,
+} from "../../config/sessions/tenant-paths.js";
 import { query, getDbType, DB_SQLITE } from "../index.js";
 import * as sqliteUser from "../sqlite/models/user.js";
 import type {
@@ -14,15 +21,8 @@ import type {
   UserRole,
   UserStatus,
 } from "../types.js";
-import { hashPassword } from "../../auth/password.js";
 import { checkTenantQuota } from "./tenant.js";
 import { UserQuotaExceededError } from "./user-quota-error.js";
-import {
-  resolveTenantDevicesDir,
-  resolveTenantCredentialsDir,
-  resolveTenantCronDir,
-  resolveTenantAgentWorkspaceDir,
-} from "../../config/sessions/tenant-paths.js";
 
 // Re-export for convenience so callers can `import { UserQuotaExceededError } from "../../db/models/user.js"`.
 export { UserQuotaExceededError } from "./user-quota-error.js";
@@ -87,7 +87,9 @@ export async function createUser(
   input: CreateUserInput & { forceChangePassword?: boolean },
   opts?: { skipDirInit?: boolean },
 ): Promise<SafeUser> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.createUser(input, opts);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.createUser(input, opts);
+  }
   const passwordHash = input.password ? await hashPassword(input.password) : null;
   const fcp = input.forceChangePassword ? 1 : 0;
   const result = await query(
@@ -130,7 +132,9 @@ export async function createUser(
 }
 
 export async function getUserById(id: string): Promise<User | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.getUserById(id);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.getUserById(id);
+  }
   const result = await query("SELECT * FROM users WHERE id = $1", [id]);
   return result.rows.length > 0 ? rowToUser(result.rows[0]) : null;
 }
@@ -141,7 +145,9 @@ export async function getUserById(id: string): Promise<User | null> {
  * without a tenantId and need to resolve the owning tenant.
  */
 export async function getUserByUnionId(unionId: string): Promise<User | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.getUserByUnionId(unionId);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.getUserByUnionId(unionId);
+  }
   const result = await query(
     `SELECT * FROM users WHERE union_id = $1 AND status = 'active'
      ORDER BY last_login_at DESC NULLS LAST
@@ -154,16 +160,18 @@ export async function getUserByUnionId(unionId: string): Promise<User | null> {
 /**
  * Batch-fetch display names by user IDs. Returns a map of id → displayName.
  */
-export async function getUserDisplayNamesByIds(
-  ids: string[],
-): Promise<Map<string, string>> {
+export async function getUserDisplayNamesByIds(ids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
-  if (ids.length === 0) {return map;}
+  if (ids.length === 0) {
+    return map;
+  }
   const unique = [...new Set(ids)];
   await Promise.all(
     unique.map(async (id) => {
       const user = await getUserById(id);
-      if (user?.displayName) {map.set(id, user.displayName);}
+      if (user?.displayName) {
+        map.set(id, user.displayName);
+      }
     }),
   );
   return map;
@@ -177,7 +185,9 @@ export async function getUserDisplayNamesByOpenIds(
   openIds: string[],
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
-  if (openIds.length === 0) {return map;}
+  if (openIds.length === 0) {
+    return map;
+  }
   const unique = [...new Set(openIds)];
   const isSqlite = getDbType() === DB_SQLITE;
   await Promise.all(
@@ -199,21 +209,22 @@ export async function getUserDisplayNamesByOpenIds(
         );
         name = (result.rows[0]?.display_name as string) ?? null;
       }
-      if (name) {map.set(oid, name);}
+      if (name) {
+        map.set(oid, name);
+      }
     }),
   );
   return map;
 }
 
-export async function getUserByEmail(
-  tenantId: string,
-  email: string,
-): Promise<User | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.getUserByEmail(tenantId, email);}
-  const result = await query(
-    "SELECT * FROM users WHERE tenant_id = $1 AND email = $2",
-    [tenantId, email.toLowerCase().trim()],
-  );
+export async function getUserByEmail(tenantId: string, email: string): Promise<User | null> {
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.getUserByEmail(tenantId, email);
+  }
+  const result = await query("SELECT * FROM users WHERE tenant_id = $1 AND email = $2", [
+    tenantId,
+    email.toLowerCase().trim(),
+  ]);
   return result.rows.length > 0 ? rowToUser(result.rows[0]) : null;
 }
 
@@ -222,7 +233,9 @@ export async function getUserByEmail(
  * Returns the first active match. If ambiguous, caller should require tenant slug.
  */
 export async function findUserByEmail(email: string): Promise<User | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.findUserByEmail(email);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.findUserByEmail(email);
+  }
   const result = await query(
     `SELECT u.* FROM users u
      JOIN tenants t ON u.tenant_id = t.id
@@ -239,7 +252,9 @@ export async function findUserByEmail(email: string): Promise<User | null> {
  * Used to detect whether a login failure is due to tenant suspension.
  */
 export async function findUserByEmailAnyTenant(email: string): Promise<User | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.findUserByEmailAnyTenant(email);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.findUserByEmailAnyTenant(email);
+  }
   const result = await query(
     `SELECT u.* FROM users u
      WHERE u.email = $1 AND u.status = 'active'
@@ -259,9 +274,17 @@ export type ListedUser = SafeUser & { channelName: string | null; channelType: s
 
 export async function listUsers(
   tenantId: string,
-  opts?: { status?: UserStatus; role?: UserRole; channelId?: string; limit?: number; offset?: number },
+  opts?: {
+    status?: UserStatus;
+    role?: UserRole;
+    channelId?: string;
+    limit?: number;
+    offset?: number;
+  },
 ): Promise<{ users: ListedUser[]; total: number }> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.listUsers(tenantId, opts);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.listUsers(tenantId, opts);
+  }
   const conditions: string[] = ["u.tenant_id = $1"];
   const values: unknown[] = [tenantId];
   let idx = 2;
@@ -301,17 +324,20 @@ export async function listUsers(
   return {
     users: dataResult.rows.map((row) => {
       const safe = toSafeUser(rowToUser(row));
-      return { ...safe, channelName: (row.channel_name as string) ?? null, channelType: (row.channel_type as string) ?? null };
+      return {
+        ...safe,
+        channelName: (row.channel_name as string) ?? null,
+        channelType: (row.channel_type as string) ?? null,
+      };
     }),
     total: parseInt(countResult.rows[0].count as string, 10),
   };
 }
 
-export async function updateUser(
-  id: string,
-  updates: UpdateUserInput,
-): Promise<SafeUser | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.updateUser(id, updates);}
+export async function updateUser(id: string, updates: UpdateUserInput): Promise<SafeUser | null> {
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.updateUser(id, updates);
+  }
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -351,7 +377,9 @@ export async function updateUser(
 }
 
 export async function updateLastLogin(userId: string): Promise<void> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.updateLastLogin(userId);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.updateLastLogin(userId);
+  }
   await query("UPDATE users SET last_login_at = NOW() WHERE id = $1", [userId]);
 }
 
@@ -382,14 +410,13 @@ export async function setForceChangePassword(userId: string, force: boolean): Pr
   if (getDbType() === DB_SQLITE) {
     return sqliteUser.setForceChangePassword(userId, force);
   }
-  await query(
-    "UPDATE users SET force_change_password = $1 WHERE id = $2",
-    [force ? 1 : 0, userId],
-  );
+  await query("UPDATE users SET force_change_password = $1 WHERE id = $2", [force ? 1 : 0, userId]);
 }
 
 export async function deleteUser(id: string): Promise<boolean> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.deleteUser(id);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.deleteUser(id);
+  }
   const result = await query(
     "UPDATE users SET status = 'deleted' WHERE id = $1 AND status != 'deleted'",
     [id],
@@ -401,7 +428,10 @@ export async function deleteUser(id: string): Promise<boolean> {
  * Update display_name for a user identified by open_id, but only if the
  * current display_name looks like a placeholder (ou_/on_ prefix or empty).
  */
-export async function updateDisplayNameByOpenId(openId: string, displayName: string): Promise<void> {
+export async function updateDisplayNameByOpenId(
+  openId: string,
+  displayName: string,
+): Promise<void> {
   if (getDbType() === DB_SQLITE) {
     return sqliteUser.updateDisplayNameByOpenId(openId, displayName);
   }
@@ -430,7 +460,9 @@ export async function findOrCreateUserByOpenId(
   unionId?: string,
   channelId?: string,
 ): Promise<{ user: User; created: boolean }> {
-  if (getDbType() === DB_SQLITE) {return sqliteUser.findOrCreateUserByOpenId(tenantId, openId, displayName, unionId, channelId);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteUser.findOrCreateUserByOpenId(tenantId, openId, displayName, unionId, channelId);
+  }
 
   // Helper: lazily backfill channel_id on legacy records (NULL → current channel)
   async function backfillChannelId(user: User): Promise<void> {
@@ -457,16 +489,23 @@ export async function findOrCreateUserByOpenId(
       await backfillChannelId(user);
       // Append open_id to array if not already present
       if (openId && !user.openIds.includes(openId)) {
-        await query(
-          "UPDATE users SET open_ids = array_append(open_ids, $1) WHERE id = $2",
-          [openId, user.id],
-        );
+        await query("UPDATE users SET open_ids = array_append(open_ids, $1) WHERE id = $2", [
+          openId,
+          user.id,
+        ]);
         user.openIds.push(openId);
       }
       // Update display_name if a real name is now available
       if (displayName && displayName !== user.displayName && !displayName.startsWith("ou_")) {
-        if (!user.displayName || user.displayName.startsWith("ou_") || user.displayName.startsWith("on_")) {
-          await query("UPDATE users SET display_name = $1, updated_at = NOW() WHERE id = $2", [displayName, user.id]);
+        if (
+          !user.displayName ||
+          user.displayName.startsWith("ou_") ||
+          user.displayName.startsWith("on_")
+        ) {
+          await query("UPDATE users SET display_name = $1, updated_at = NOW() WHERE id = $2", [
+            displayName,
+            user.id,
+          ]);
           user.displayName = displayName;
         }
       }
@@ -495,8 +534,15 @@ export async function findOrCreateUserByOpenId(
     }
     // Update display_name if a real name is now available
     if (displayName && displayName !== user.displayName && !displayName.startsWith("ou_")) {
-      if (!user.displayName || user.displayName.startsWith("ou_") || user.displayName.startsWith("on_")) {
-        await query("UPDATE users SET display_name = $1, updated_at = NOW() WHERE id = $2", [displayName, user.id]);
+      if (
+        !user.displayName ||
+        user.displayName.startsWith("ou_") ||
+        user.displayName.startsWith("on_")
+      ) {
+        await query("UPDATE users SET display_name = $1, updated_at = NOW() WHERE id = $2", [
+          displayName,
+          user.id,
+        ]);
         user.displayName = displayName;
       }
     }

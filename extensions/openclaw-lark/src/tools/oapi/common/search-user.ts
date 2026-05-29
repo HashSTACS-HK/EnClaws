@@ -8,10 +8,16 @@
  * 使用搜索接口（/open-apis/search/v1/user）
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json , registerTool } from '../helpers';
-import type { SearchUserData } from '../sdk-types';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import {
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
+import type { SearchUserData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -19,18 +25,19 @@ import type { SearchUserData } from '../sdk-types';
 
 const SearchUserSchema = Type.Object({
   query: Type.String({
-    description: '搜索关键词，用于匹配用户名（必填）',
+    description: "搜索关键词，用于匹配用户名（必填）",
   }),
   page_size: Type.Optional(
     Type.Integer({
-      description: '分页大小，控制每次返回的用户数量（默认20，最大200）',
+      description: "分页大小，控制每次返回的用户数量（默认20，最大200）",
       minimum: 1,
       maximum: 200,
     }),
   ),
   page_token: Type.Optional(
     Type.String({
-      description: '分页标识。首次请求无需填写；当返回结果中包含 page_token 时，可传入该值继续请求下一页',
+      description:
+        "分页标识。首次请求无需填写；当返回结果中包含 page_token 时，可传入该值继续请求下一页",
     }),
   ),
 });
@@ -53,15 +60,16 @@ export function registerSearchUserTool(api: OpenClawPluginApi): void {
   if (!api.config) return;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_search_user');
+  const { toolClient, log } = createToolContext(api, "feishu_search_user");
 
   registerTool(
     api,
     {
-      name: 'feishu_search_user',
-      label: 'Feishu: Search User',
+      name: "feishu_search_user",
+      label: "Feishu: Search User",
       description:
-        '搜索员工信息（通过关键词搜索姓名、手机号、邮箱）。' + '返回匹配的员工列表，包含姓名、部门、open_id 等信息。',
+        "搜索员工信息（通过关键词搜索姓名、手机号、邮箱）。" +
+        "返回匹配的员工列表，包含姓名、部门、open_id 等信息。",
       parameters: SearchUserSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as SearchUserParams;
@@ -76,11 +84,15 @@ export function registerSearchUserTool(api: OpenClawPluginApi): void {
           };
           if (p.page_token) requestQuery.page_token = p.page_token;
 
-          const res = await client.invokeByPath('feishu_search_user.default', '/open-apis/search/v1/user', {
-            method: 'GET',
-            query: requestQuery,
-            as: 'user',
-          });
+          const res = await client.invokeByPath(
+            "feishu_search_user.default",
+            "/open-apis/search/v1/user",
+            {
+              method: "GET",
+              query: requestQuery,
+              as: "user",
+            },
+          );
           assertLarkOk(res);
 
           const data = res.data as SearchUserData | undefined;
@@ -98,7 +110,6 @@ export function registerSearchUserTool(api: OpenClawPluginApi): void {
         }
       },
     },
-    { name: 'feishu_search_user' },
+    { name: "feishu_search_user" },
   );
-
 }

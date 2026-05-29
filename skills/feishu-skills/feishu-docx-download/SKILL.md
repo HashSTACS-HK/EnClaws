@@ -8,18 +8,19 @@ inline: true
 ---
 
 # feishu-docx-download
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 ⚠️ **读完本文件后，不要检查文件是否存在、不要检查环境、不要列目录。脚本文件已就绪，直接用 `exec` 工具执行下方命令。**
 
 ## 判断是否使用本技能
 
-| URL 特征 | 文档形式 | 处理方式 |
-|---------|---------|---------|
-| 含 `/docx/` 或 `/docs/` | 在线云文档 | 用 **feishu-fetch-doc** |
+| URL 特征                                | 文档形式    | 处理方式                |
+| --------------------------------------- | ----------- | ----------------------- |
+| 含 `/docx/` 或 `/docs/`                 | 在线云文档  | 用 **feishu-fetch-doc** |
 | 含 `/wiki/`，`obj_type` 为 `doc`/`docx` | Wiki 云文档 | 用 **feishu-fetch-doc** |
-| 含 `/wiki/`，`obj_type` 为 `file` | Wiki 附件 | **使用本技能** ✓ |
-| 含 `/file/` | 云盘文件 | **使用本技能** ✓ |
+| 含 `/wiki/`，`obj_type` 为 `file`       | Wiki 附件   | **使用本技能** ✓        |
+| 含 `/file/`                             | 云盘文件    | **使用本技能** ✓        |
 
 ## 上下游工作流
 
@@ -50,8 +51,8 @@ node ../feishu-search-doc/search-doc.js --open-id "SENDER_OPEN_ID" --query "文�
 
 **以下参数缺失或含糊时，必须先向用户询问，不得猜测或使用默认值：**
 
-| 参数 | 何时需要询问 |
-|---|---|
+| 参数                     | 何时需要询问                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
 | `--url` / `--file-token` | 用户未提供飞书链接或 file token，**且通过 feishu-drive / feishu-search-doc 也无法定位**时 |
 
 ## 步骤 1 — 下载文件
@@ -61,6 +62,7 @@ node ./download-doc.js --open-id "SENDER_OPEN_ID" --url "FEISHU_URL"
 ```
 
 支持的 URL 格式：
+
 - Wiki 附件：`https://xxx.feishu.cn/wiki/TOKEN`
 - 云盘文件：`https://xxx.feishu.cn/file/TOKEN`
 
@@ -108,6 +110,7 @@ node ./extract.js "<filepath>"
 提取结果中如果包含 `[图片]` 或 `[文档包含 N 张图片]` 标记，说明文档中嵌入了图片，但图片内容未被提取为文字。
 
 **你必须主动告知用户：**
+
 > 文档中包含 X 张图片，图片内容暂未识别。如需识别图片中的文字，我可以使用 OCR 技能为您进一步处理。
 
 **用户确认后**，必须且只能使用 `feishu-image-ocr` 技能来识别图片文字：

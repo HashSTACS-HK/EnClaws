@@ -7,9 +7,9 @@
  * 与 PG model 接口对称，使用同步 SQLiteQuery，保持 async 签名供统一调用。
  */
 
-import { sqliteQuery } from "../index.js";
-import type { CsApiObject } from "../../types.js";
 import type { CreateCsApiObjectInput } from "../../models/cs-api-object.js";
+import type { CsApiObject } from "../../types.js";
+import { sqliteQuery } from "../index.js";
 
 // ── Row mapper ────────────────────────────────────────────────────────────────
 
@@ -27,7 +27,9 @@ import type { CreateCsApiObjectInput } from "../../models/cs-api-object.js";
 function parseSqliteDate(val: unknown): Date {
   const s = val as string;
   // Already has timezone info (e.g. contains + or Z) — parse as-is
-  if (s.includes("Z") || s.includes("+")) { return new Date(s); }
+  if (s.includes("Z") || s.includes("+")) {
+    return new Date(s);
+  }
   // Convert "YYYY-MM-DD HH:MM:SS[.SSS]" → "YYYY-MM-DDTHH:MM:SS[.SSS]Z"
   return new Date(s.replace(" ", "T") + "Z");
 }
@@ -61,7 +63,16 @@ export async function createCsApiObject(
   sqliteQuery(
     `INSERT INTO cs_api_objects (id, tenant_id, name, description, agent_id, app_id, app_secret_hash, endpoint_url)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, input.tenantId, input.name, input.description ?? null, input.agentId, appId, input.appSecretHash, input.endpointUrl],
+    [
+      id,
+      input.tenantId,
+      input.name,
+      input.description ?? null,
+      input.agentId,
+      appId,
+      input.appSecretHash,
+      input.endpointUrl,
+    ],
   );
   const r = sqliteQuery(`SELECT * FROM cs_api_objects WHERE id = ?`, [id]);
   return rowToCsApiObject(r.rows[0]);
@@ -72,11 +83,14 @@ export async function getCsApiObjectByAppId(appId: string): Promise<CsApiObject 
   return r.rows[0] ? rowToCsApiObject(r.rows[0]) : null;
 }
 
-export async function getCsApiObjectById(id: string, tenantId: string): Promise<CsApiObject | null> {
-  const r = sqliteQuery(
-    `SELECT * FROM cs_api_objects WHERE id = ? AND tenant_id = ?`,
-    [id, tenantId],
-  );
+export async function getCsApiObjectById(
+  id: string,
+  tenantId: string,
+): Promise<CsApiObject | null> {
+  const r = sqliteQuery(`SELECT * FROM cs_api_objects WHERE id = ? AND tenant_id = ?`, [
+    id,
+    tenantId,
+  ]);
   return r.rows[0] ? rowToCsApiObject(r.rows[0]) : null;
 }
 
@@ -95,19 +109,28 @@ export async function updateCsApiObject(
 ): Promise<CsApiObject | null> {
   const sets: string[] = [];
   const vals: unknown[] = [];
-  if (fields.name !== undefined) { sets.push("name = ?"); vals.push(fields.name); }
-  if (fields.description !== undefined) { sets.push("description = ?"); vals.push(fields.description); }
-  if (fields.agentId !== undefined) { sets.push("agent_id = ?"); vals.push(fields.agentId); }
-  if (fields.isActive !== undefined) { sets.push("is_active = ?"); vals.push(fields.isActive ? 1 : 0); }
+  if (fields.name !== undefined) {
+    sets.push("name = ?");
+    vals.push(fields.name);
+  }
+  if (fields.description !== undefined) {
+    sets.push("description = ?");
+    vals.push(fields.description);
+  }
+  if (fields.agentId !== undefined) {
+    sets.push("agent_id = ?");
+    vals.push(fields.agentId);
+  }
+  if (fields.isActive !== undefined) {
+    sets.push("is_active = ?");
+    vals.push(fields.isActive ? 1 : 0);
+  }
   if (sets.length === 0) {
     return getCsApiObjectById(id, tenantId);
   }
   sets.push("updated_at = datetime('now')");
   vals.push(id, tenantId);
-  sqliteQuery(
-    `UPDATE cs_api_objects SET ${sets.join(", ")} WHERE id = ? AND tenant_id = ?`,
-    vals,
-  );
+  sqliteQuery(`UPDATE cs_api_objects SET ${sets.join(", ")} WHERE id = ? AND tenant_id = ?`, vals);
   return getCsApiObjectById(id, tenantId);
 }
 
@@ -128,7 +151,9 @@ export async function rotateCsApiObjectSecret(
      RETURNING *`,
     [newHash, rotatingUntil.toISOString().replace("T", " ").replace("Z", ""), id, tenantId],
   );
-  if (!r.rows[0]) { throw new Error(`cs_api_object not found: ${id}`); }
+  if (!r.rows[0]) {
+    throw new Error(`cs_api_object not found: ${id}`);
+  }
   return rowToCsApiObject(r.rows[0]);
 }
 
@@ -143,17 +168,14 @@ export async function clearExpiredRotation(id: string): Promise<void> {
 }
 
 export async function deleteCsApiObject(id: string, tenantId: string): Promise<boolean> {
-  const r = sqliteQuery(
-    `DELETE FROM cs_api_objects WHERE id = ? AND tenant_id = ?`,
-    [id, tenantId],
-  );
+  const r = sqliteQuery(`DELETE FROM cs_api_objects WHERE id = ? AND tenant_id = ?`, [
+    id,
+    tenantId,
+  ]);
   return r.rowCount > 0;
 }
 
 /** No tenantId scoping — caller guarantees id authority (looked up via getCsApiObjectByAppId which doesn't tenant-scope). */
 export async function touchLastUsed(id: string): Promise<void> {
-  sqliteQuery(
-    `UPDATE cs_api_objects SET last_used_at = datetime('now') WHERE id = ?`,
-    [id],
-  );
+  sqliteQuery(`UPDATE cs_api_objects SET last_used_at = datetime('now') WHERE id = ?`, [id]);
 }

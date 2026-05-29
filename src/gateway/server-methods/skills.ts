@@ -8,10 +8,11 @@ import { precheckSkill } from "../../agents/skills-precheck.js";
 import { buildWorkspaceSkillStatus } from "../../agents/skills-status.js";
 import { loadWorkspaceSkillEntries, type SkillEntry } from "../../agents/skills.js";
 import { listAgentWorkspaceDirs } from "../../agents/workspace-dirs.js";
+import type { TenantContext } from "../../auth/middleware.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import { loadConfig, writeConfigFile } from "../../config/config.js";
-import { loadTenantConfig } from "../../config/tenant-config.js";
 import { resolveTenantSkillsDir } from "../../config/sessions/tenant-paths.js";
+import { loadTenantConfig } from "../../config/tenant-config.js";
 import { isDbInitialized } from "../../db/index.js";
 import { getRemoteSkillEligibility } from "../../infra/skills-remote.js";
 import { normalizeAgentId } from "../../routing/session-key.js";
@@ -25,7 +26,6 @@ import {
   validateSkillsStatusParams,
   validateSkillsUpdateParams,
 } from "../protocol/index.js";
-import type { TenantContext } from "../../auth/middleware.js";
 import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 /**
@@ -190,7 +190,9 @@ export const skillsHandlers: GatewayRequestHandlers = {
         workspaceDir: workspaceDirRaw,
         skillName: p.name,
         config: cfg,
-        notify: (msg) => { precheckWarnings.push(msg); },
+        notify: (msg) => {
+          precheckWarnings.push(msg);
+        },
         _entries: entries,
       });
       if (!precheck.ok && precheckWarnings.length > 0) {

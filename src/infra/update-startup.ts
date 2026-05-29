@@ -381,11 +381,17 @@ export async function runGatewayUpdateCheck(params: {
       argv1: process.argv[1],
       cwd: process.cwd(),
     });
-    const outcome = await runAuto({ channel: retryTag as "stable" | "beta", timeoutMs: AUTO_UPDATE_COMMAND_TIMEOUT_MS, root: root ?? undefined });
+    const outcome = await runAuto({
+      channel: retryTag as "stable" | "beta",
+      timeoutMs: AUTO_UPDATE_COMMAND_TIMEOUT_MS,
+      root: root ?? undefined,
+    });
     if (outcome.ok) {
       params.log.info(`pending update retry succeeded for v${retryVersion}`);
     } else {
-      params.log.info(`pending update retry failed for v${retryVersion}: ${outcome.reason ?? `exit:${outcome.code}`}`);
+      params.log.info(
+        `pending update retry failed for v${retryVersion}: ${outcome.reason ?? `exit:${outcome.code}`}`,
+      );
     }
     return;
   }
@@ -487,9 +493,7 @@ export async function runGatewayUpdateCheck(params: {
 
   const cmp = compareSemverStrings(VERSION, resolved.version);
   if (cmp != null && cmp < 0) {
-    const downloadUrl = isInstallerMode
-      ? resolveInstallerDownloadUrl(resolved.version)
-      : undefined;
+    const downloadUrl = isInstallerMode ? resolveInstallerDownloadUrl(resolved.version) : undefined;
     const nextAvailable: UpdateAvailable = {
       currentVersion: VERSION,
       latestVersion: resolved.version,

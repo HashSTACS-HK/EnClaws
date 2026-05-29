@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { normalizeDeviceAuthScopes } from "../shared/device-auth.js";
 import { roleScopesAllow } from "../shared/operator-scope-compat.js";
+import type { TenantContext } from "../types/tenant-context.js";
 import {
   createAsyncLock,
   pruneExpiredPending,
@@ -10,7 +11,6 @@ import {
 } from "./pairing-files.js";
 import { rejectPendingPairingRequest } from "./pairing-pending.js";
 import { generatePairingToken, verifyPairingToken } from "./pairing-token.js";
-import type { TenantContext } from "../types/tenant-context.js";
 
 export type DevicePairingPendingRequest = {
   requestId: string;
@@ -81,7 +81,10 @@ const PENDING_TTL_MS = 5 * 60 * 1000;
 
 const withLock = createAsyncLock();
 
-async function loadState(baseDir?: string, tenantContext?: TenantContext): Promise<DevicePairingStateFile> {
+async function loadState(
+  baseDir?: string,
+  tenantContext?: TenantContext,
+): Promise<DevicePairingStateFile> {
   const { pendingPath, pairedPath } = resolvePairingPaths(baseDir, "devices", tenantContext);
   const [pending, paired] = await Promise.all([
     readJsonFile<Record<string, DevicePairingPendingRequest>>(pendingPath),
@@ -95,7 +98,11 @@ async function loadState(baseDir?: string, tenantContext?: TenantContext): Promi
   return state;
 }
 
-async function persistState(state: DevicePairingStateFile, baseDir?: string, tenantContext?: TenantContext) {
+async function persistState(
+  state: DevicePairingStateFile,
+  baseDir?: string,
+  tenantContext?: TenantContext,
+) {
   const { pendingPath, pairedPath } = resolvePairingPaths(baseDir, "devices", tenantContext);
   await Promise.all([
     writeJsonAtomic(pendingPath, state.pendingById),
@@ -253,7 +260,10 @@ function buildDeviceAuthToken(params: {
   };
 }
 
-export async function listDevicePairing(baseDir?: string, tenantContext?: TenantContext): Promise<DevicePairingList> {
+export async function listDevicePairing(
+  baseDir?: string,
+  tenantContext?: TenantContext,
+): Promise<DevicePairingList> {
   const state = await loadState(baseDir, tenantContext);
   const pending = Object.values(state.pendingById).toSorted((a, b) => b.ts - a.ts);
   const paired = Object.values(state.pairedByDeviceId).toSorted(
@@ -650,7 +660,11 @@ export async function revokeDeviceToken(params: {
   });
 }
 
-export async function clearDevicePairing(deviceId: string, baseDir?: string, tenantContext?: TenantContext): Promise<boolean> {
+export async function clearDevicePairing(
+  deviceId: string,
+  baseDir?: string,
+  tenantContext?: TenantContext,
+): Promise<boolean> {
   return await withLock(async () => {
     const state = await loadState(baseDir, tenantContext);
     const normalizedId = normalizeDeviceId(deviceId);

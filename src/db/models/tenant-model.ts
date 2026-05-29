@@ -42,7 +42,9 @@ export async function createTenantModel(params: {
   visibility?: ModelVisibility;
   createdBy?: string;
 }): Promise<TenantModel> {
-  if (getDbType() === DB_SQLITE) {return sqliteTenantModel.createTenantModel(params);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteTenantModel.createTenantModel(params);
+  }
   const result = await query(
     `INSERT INTO tenant_models
        (tenant_id, provider_type, provider_name, base_url, api_protocol, auth_mode,
@@ -68,11 +70,13 @@ export async function createTenantModel(params: {
 }
 
 export async function getTenantModel(tenantId: string, id: string): Promise<TenantModel | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteTenantModel.getTenantModel(tenantId, id);}
-  const result = await query(
-    "SELECT * FROM tenant_models WHERE tenant_id = $1 AND id = $2",
-    [tenantId, id],
-  );
+  if (getDbType() === DB_SQLITE) {
+    return sqliteTenantModel.getTenantModel(tenantId, id);
+  }
+  const result = await query("SELECT * FROM tenant_models WHERE tenant_id = $1 AND id = $2", [
+    tenantId,
+    id,
+  ]);
   return result.rows.length > 0 ? rowToModel(result.rows[0]) : null;
 }
 
@@ -80,14 +84,17 @@ export async function listTenantModels(
   tenantId: string,
   opts?: { activeOnly?: boolean; includeShared?: boolean },
 ): Promise<TenantModel[]> {
-  if (getDbType() === DB_SQLITE) {return sqliteTenantModel.listTenantModels(tenantId, opts);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteTenantModel.listTenantModels(tenantId, opts);
+  }
   const values: unknown[] = [tenantId];
   const activeFilter = opts?.activeOnly !== false ? " AND is_active = true" : "";
 
   // Include shared models from other tenants alongside tenant's own
-  const where = opts?.includeShared !== false
-    ? `(tenant_id = $1${activeFilter}) OR (visibility = 'shared'${activeFilter})`
-    : `tenant_id = $1${activeFilter}`;
+  const where =
+    opts?.includeShared !== false
+      ? `(tenant_id = $1${activeFilter}) OR (visibility = 'shared'${activeFilter})`
+      : `tenant_id = $1${activeFilter}`;
 
   const result = await query(
     `SELECT * FROM tenant_models WHERE ${where} ORDER BY visibility DESC, created_at ASC`,
@@ -97,9 +104,7 @@ export async function listTenantModels(
 }
 
 /** List all shared models (platform-admin view). */
-export async function listSharedModels(
-  opts?: { activeOnly?: boolean },
-): Promise<TenantModel[]> {
+export async function listSharedModels(opts?: { activeOnly?: boolean }): Promise<TenantModel[]> {
   if (getDbType() === DB_SQLITE) {
     const activeFilter = opts?.activeOnly !== false ? " AND is_active = 1" : "";
     const result = sqliteQuery(
@@ -127,7 +132,21 @@ export async function getModelById(id: string): Promise<TenantModel | null> {
 /** Update a model by ID without tenant scope (for platform-admin). */
 export async function updateModelById(
   id: string,
-  updates: Partial<Pick<TenantModel, "providerName" | "baseUrl" | "apiProtocol" | "authMode" | "apiKeyEncrypted" | "extraHeaders" | "extraConfig" | "models" | "visibility" | "isActive">>,
+  updates: Partial<
+    Pick<
+      TenantModel,
+      | "providerName"
+      | "baseUrl"
+      | "apiProtocol"
+      | "authMode"
+      | "apiKeyEncrypted"
+      | "extraHeaders"
+      | "extraConfig"
+      | "models"
+      | "visibility"
+      | "isActive"
+    >
+  >,
 ): Promise<TenantModel | null> {
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -156,13 +175,20 @@ export async function updateModelById(
   for (const key of jsonFields) {
     const val = (updates as Record<string, unknown>)[key];
     if (val !== undefined) {
-      const col = key === "extraHeaders" ? "extra_headers" : key === "extraConfig" ? "extra_config" : "models";
+      const col =
+        key === "extraHeaders"
+          ? "extra_headers"
+          : key === "extraConfig"
+            ? "extra_config"
+            : "models";
       sets.push(isSqlite ? `${col} = ?` : `${col} = $${idx++}`);
       values.push(JSON.stringify(val));
     }
   }
 
-  if (sets.length === 0) {return getModelById(id);}
+  if (sets.length === 0) {
+    return getModelById(id);
+  }
 
   values.push(id);
   if (isSqlite) {
@@ -189,9 +215,25 @@ export async function deleteModelById(id: string): Promise<boolean> {
 export async function updateTenantModel(
   tenantId: string,
   id: string,
-  updates: Partial<Pick<TenantModel, "providerName" | "baseUrl" | "apiProtocol" | "authMode" | "apiKeyEncrypted" | "extraHeaders" | "extraConfig" | "models" | "visibility" | "isActive">>,
+  updates: Partial<
+    Pick<
+      TenantModel,
+      | "providerName"
+      | "baseUrl"
+      | "apiProtocol"
+      | "authMode"
+      | "apiKeyEncrypted"
+      | "extraHeaders"
+      | "extraConfig"
+      | "models"
+      | "visibility"
+      | "isActive"
+    >
+  >,
 ): Promise<TenantModel | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteTenantModel.updateTenantModel(tenantId, id, updates);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteTenantModel.updateTenantModel(tenantId, id, updates);
+  }
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -237,7 +279,9 @@ export async function updateTenantModel(
     values.push(updates.isActive);
   }
 
-  if (sets.length === 0) {return getTenantModel(tenantId, id);}
+  if (sets.length === 0) {
+    return getTenantModel(tenantId, id);
+  }
 
   values.push(tenantId, id);
   const result = await query(
@@ -249,10 +293,12 @@ export async function updateTenantModel(
 }
 
 export async function deleteTenantModel(tenantId: string, id: string): Promise<boolean> {
-  if (getDbType() === DB_SQLITE) {return sqliteTenantModel.deleteTenantModel(tenantId, id);}
-  const result = await query(
-    "DELETE FROM tenant_models WHERE tenant_id = $1 AND id = $2",
-    [tenantId, id],
-  );
+  if (getDbType() === DB_SQLITE) {
+    return sqliteTenantModel.deleteTenantModel(tenantId, id);
+  }
+  const result = await query("DELETE FROM tenant_models WHERE tenant_id = $1 AND id = $2", [
+    tenantId,
+    id,
+  ]);
   return (result.rowCount ?? 0) > 0;
 }

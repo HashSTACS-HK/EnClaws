@@ -5,9 +5,7 @@
   "description": "DingTalk (钉钉) messaging channel via Stream mode with AI Card streaming",
   "author": "DingTalk Real Team",
   "main": "index.ts",
-  "channels": [
-    "dingtalk"
-  ],
+  "channels": ["dingtalk"],
   "configSchema": {
     "type": "object",
     "additionalProperties": true
@@ -45,11 +43,7 @@
                 "properties": {
                   "source": {
                     "type": "string",
-                    "enum": [
-                      "env",
-                      "file",
-                      "exec"
-                    ]
+                    "enum": ["env", "file", "exec"]
                   },
                   "provider": {
                     "type": "string",
@@ -60,11 +54,7 @@
                     "minLength": 1
                   }
                 },
-                "required": [
-                  "source",
-                  "provider",
-                  "id"
-                ],
+                "required": ["source", "provider", "id"],
                 "additionalProperties": false
               }
             ]
@@ -78,11 +68,7 @@
           "dmPolicy": {
             "default": "open",
             "type": "string",
-            "enum": [
-              "open",
-              "pairing",
-              "allowlist"
-            ]
+            "enum": ["open", "pairing", "allowlist"]
           },
           "allowFrom": {
             "type": "array",
@@ -100,11 +86,7 @@
           "groupPolicy": {
             "default": "open",
             "type": "string",
-            "enum": [
-              "open",
-              "allowlist",
-              "disabled"
-            ]
+            "enum": ["open", "allowlist", "disabled"]
           },
           "groupAllowFrom": {
             "type": "array",
@@ -170,10 +152,7 @@
                 },
                 "groupSessionScope": {
                   "type": "string",
-                  "enum": [
-                    "group",
-                    "group_sender"
-                  ]
+                  "enum": ["group", "group_sender"]
                 }
               },
               "additionalProperties": false
@@ -220,10 +199,7 @@
           "groupSessionScope": {
             "default": "group",
             "type": "string",
-            "enum": [
-              "group",
-              "group_sender"
-            ]
+            "enum": ["group", "group_sender"]
           },
           "asyncMode": {
             "type": "boolean"
@@ -268,11 +244,7 @@
                       "properties": {
                         "source": {
                           "type": "string",
-                          "enum": [
-                            "env",
-                            "file",
-                            "exec"
-                          ]
+                          "enum": ["env", "file", "exec"]
                         },
                         "provider": {
                           "type": "string",
@@ -283,22 +255,14 @@
                           "minLength": 1
                         }
                       },
-                      "required": [
-                        "source",
-                        "provider",
-                        "id"
-                      ],
+                      "required": ["source", "provider", "id"],
                       "additionalProperties": false
                     }
                   ]
                 },
                 "dmPolicy": {
                   "type": "string",
-                  "enum": [
-                    "open",
-                    "pairing",
-                    "allowlist"
-                  ]
+                  "enum": ["open", "pairing", "allowlist"]
                 },
                 "allowFrom": {
                   "type": "array",
@@ -315,11 +279,7 @@
                 },
                 "groupPolicy": {
                   "type": "string",
-                  "enum": [
-                    "open",
-                    "allowlist",
-                    "disabled"
-                  ]
+                  "enum": ["open", "allowlist", "disabled"]
                 },
                 "groupAllowFrom": {
                   "type": "array",
@@ -384,10 +344,7 @@
                       },
                       "groupSessionScope": {
                         "type": "string",
-                        "enum": [
-                          "group",
-                          "group_sender"
-                        ]
+                        "enum": ["group", "group_sender"]
                       }
                     },
                     "additionalProperties": false
@@ -431,10 +388,7 @@
                 },
                 "groupSessionScope": {
                   "type": "string",
-                  "enum": [
-                    "group",
-                    "group_sender"
-                  ]
+                  "enum": ["group", "group_sender"]
                 },
                 "asyncMode": {
                   "type": "boolean"

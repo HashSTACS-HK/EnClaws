@@ -14,9 +14,9 @@
  * Output: single-line JSON
  */
 
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { getConfig, getValidToken } from '../feishu-auth/token-utils.mjs';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { getConfig, getValidToken } from "../feishu-auth/token-utils.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -41,24 +41,51 @@ function parseArgs() {
   };
   for (let i = 0; i < argv.length; i++) {
     switch (argv[i]) {
-      case '--open-id':       r.openId        = argv[++i]; break;
-      case '--action':        r.action        = argv[++i]; break;
-      case '--file-token':    r.fileToken     = argv[++i]; break;
-      case '--file-type':     r.fileType      = argv[++i]; break;
-      case '--is-whole':      r.isWhole       = argv[++i]; break;
-      case '--is-solved':     r.isSolved      = argv[++i]; break;
-      case '--page-size':     r.pageSize      = parseInt(argv[++i], 10); break;
-      case '--page-token':    r.pageToken     = argv[++i]; break;
-      case '--content':       r.content       = argv[++i]; break;
-      case '--comment-id':    r.commentId     = argv[++i]; break;
-      case '--is-solved-value': r.isSolvedValue = argv[++i]; break;
+      case "--open-id":
+        r.openId = argv[++i];
+        break;
+      case "--action":
+        r.action = argv[++i];
+        break;
+      case "--file-token":
+        r.fileToken = argv[++i];
+        break;
+      case "--file-type":
+        r.fileType = argv[++i];
+        break;
+      case "--is-whole":
+        r.isWhole = argv[++i];
+        break;
+      case "--is-solved":
+        r.isSolved = argv[++i];
+        break;
+      case "--page-size":
+        r.pageSize = parseInt(argv[++i], 10);
+        break;
+      case "--page-token":
+        r.pageToken = argv[++i];
+        break;
+      case "--content":
+        r.content = argv[++i];
+        break;
+      case "--comment-id":
+        r.commentId = argv[++i];
+        break;
+      case "--is-solved-value":
+        r.isSolvedValue = argv[++i];
+        break;
     }
   }
   return r;
 }
 
-function out(obj) { process.stdout.write(JSON.stringify(obj) + '\n'); }
-function die(obj) { out(obj); process.exit(1); }
+function out(obj) {
+  process.stdout.write(JSON.stringify(obj) + "\n");
+}
+function die(obj) {
+  out(obj);
+  process.exit(1);
+}
 
 // ---------------------------------------------------------------------------
 // API helper
@@ -68,15 +95,16 @@ async function apiCall(method, urlPath, accessToken, { body, query } = {}) {
   let url = `https://open.feishu.cn/open-apis${urlPath}`;
   if (query) {
     const entries = Object.entries(query).filter(([, v]) => v != null);
-    if (entries.length > 0) url += '?' + new URLSearchParams(Object.fromEntries(entries)).toString();
+    if (entries.length > 0)
+      url += "?" + new URLSearchParams(Object.fromEntries(entries)).toString();
   }
   const res = await fetch(url, {
     method,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const ct = res.headers.get('content-type') || '';
-  if (!ct.includes('application/json')) throw new Error(`API 返回非 JSON (HTTP ${res.status})`);
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) throw new Error(`API 返回非 JSON (HTTP ${res.status})`);
   return res.json();
 }
 
@@ -86,20 +114,20 @@ async function apiCall(method, urlPath, accessToken, { body, query } = {}) {
 
 const DOC_TYPE_URL = {
   docx: (token) => `https://www.feishu.cn/docx/${token}`,
-  doc:  (token) => `https://www.feishu.cn/docs/${token}`,
+  doc: (token) => `https://www.feishu.cn/docs/${token}`,
   sheet: (token) => `https://www.feishu.cn/sheets/${token}`,
   bitable: (token) => `https://www.feishu.cn/base/${token}`,
 };
 
 async function resolveFileToken(fileToken, fileType, accessToken) {
-  if (fileType !== 'wiki') {
+  if (fileType !== "wiki") {
     const urlFn = DOC_TYPE_URL[fileType];
     const docUrl = urlFn ? urlFn(fileToken) : null;
     return { fileToken, fileType, docUrl };
   }
 
-  const data = await apiCall('GET', '/wiki/v2/spaces/get_node', accessToken, {
-    query: { token: fileToken, obj_type: 'wiki' },
+  const data = await apiCall("GET", "/wiki/v2/spaces/get_node", accessToken, {
+    query: { token: fileToken, obj_type: "wiki" },
   });
   if (data.code !== 0) throw new Error(`wiki token 转换失败: code=${data.code} msg=${data.msg}`);
 
@@ -116,21 +144,28 @@ async function resolveFileToken(fileToken, fileType, accessToken) {
 // ---------------------------------------------------------------------------
 
 async function listComments(args, accessToken) {
-  if (!args.fileToken) die({ error: 'missing_param', message: '--file-token 参数必填' });
-  if (!args.fileType)  die({ error: 'missing_param', message: '--file-type 参数必填（docx/sheet/file/slides/wiki）' });
+  if (!args.fileToken) die({ error: "missing_param", message: "--file-token 参数必填" });
+  if (!args.fileType)
+    die({ error: "missing_param", message: "--file-type 参数必填（docx/sheet/file/slides/wiki）" });
 
-  const { fileToken, fileType, docUrl } = await resolveFileToken(args.fileToken, args.fileType, accessToken);
+  const { fileToken, fileType, docUrl } = await resolveFileToken(
+    args.fileToken,
+    args.fileType,
+    accessToken,
+  );
 
   const query = {
     file_type: fileType,
-    user_id_type: 'open_id',
+    user_id_type: "open_id",
     page_size: String(args.pageSize || 50),
   };
   if (args.pageToken) query.page_token = args.pageToken;
   if (args.isWhole != null) query.is_whole = args.isWhole;
   if (args.isSolved != null) query.is_solved = args.isSolved;
 
-  const data = await apiCall('GET', `/drive/v1/files/${fileToken}/comments`, accessToken, { query });
+  const data = await apiCall("GET", `/drive/v1/files/${fileToken}/comments`, accessToken, {
+    query,
+  });
   if (data.code !== 0) throw new Error(`code=${data.code} msg=${data.msg}`);
 
   const items = data.data?.items || [];
@@ -141,10 +176,10 @@ async function listComments(args, accessToken) {
         const replies = [];
         let pageToken;
         do {
-          const replyQuery = { file_type: fileType, user_id_type: 'open_id', page_size: '50' };
+          const replyQuery = { file_type: fileType, user_id_type: "open_id", page_size: "50" };
           if (pageToken) replyQuery.page_token = pageToken;
           const replyData = await apiCall(
-            'GET',
+            "GET",
             `/drive/v1/files/${fileToken}/comments/${comment.comment_id}/replies`,
             accessToken,
             { query: replyQuery },
@@ -154,7 +189,9 @@ async function listComments(args, accessToken) {
           pageToken = replyData.data?.has_more ? replyData.data.page_token : null;
         } while (pageToken);
         comment.reply_list = { replies };
-      } catch (_) { /* 保留原始回复 */ }
+      } catch (_) {
+        /* 保留原始回复 */
+      }
     }
   }
 
@@ -163,30 +200,31 @@ async function listComments(args, accessToken) {
     has_more: data.data?.has_more || false,
     page_token: data.data?.page_token || null,
     url: docUrl,
-    reply: `找到 ${items.length} 条评论${docUrl ? `\n文档链接：${docUrl}` : ''}`,
+    reply: `找到 ${items.length} 条评论${docUrl ? `\n文档链接：${docUrl}` : ""}`,
   });
 }
 
 async function createComment(args, accessToken) {
-  if (!args.fileToken) die({ error: 'missing_param', message: '--file-token 参数必填' });
-  if (!args.fileType)  die({ error: 'missing_param', message: '--file-type 参数必填' });
-  if (!args.content)   die({ error: 'missing_param', message: '--content 参数必填（评论内容）' });
+  if (!args.fileToken) die({ error: "missing_param", message: "--file-token 参数必填" });
+  if (!args.fileType) die({ error: "missing_param", message: "--file-type 参数必填" });
+  if (!args.content) die({ error: "missing_param", message: "--content 参数必填（评论内容）" });
 
-  const { fileToken, fileType, docUrl } = await resolveFileToken(args.fileToken, args.fileType, accessToken);
-
-  const data = await apiCall(
-    'POST',
-    `/drive/v1/files/${fileToken}/comments`,
+  const { fileToken, fileType, docUrl } = await resolveFileToken(
+    args.fileToken,
+    args.fileType,
     accessToken,
-    {
-      query: { file_type: fileType, user_id_type: 'open_id' },
-      body: {
-        reply_list: {
-          replies: [{ content: { elements: [{ type: 'text_run', text_run: { text: args.content } }] } }],
-        },
+  );
+
+  const data = await apiCall("POST", `/drive/v1/files/${fileToken}/comments`, accessToken, {
+    query: { file_type: fileType, user_id_type: "open_id" },
+    body: {
+      reply_list: {
+        replies: [
+          { content: { elements: [{ type: "text_run", text_run: { text: args.content } }] } },
+        ],
       },
     },
-  );
+  });
   if (data.code !== 0) throw new Error(`code=${data.code} msg=${data.msg}`);
 
   const comment = data.data;
@@ -194,21 +232,29 @@ async function createComment(args, accessToken) {
     comment,
     comment_id: comment?.comment_id,
     url: docUrl,
-    reply: `评论已创建（comment_id=${comment?.comment_id}）${docUrl ? `\n文档链接：${docUrl}` : ''}`,
+    reply: `评论已创建（comment_id=${comment?.comment_id}）${docUrl ? `\n文档链接：${docUrl}` : ""}`,
   });
 }
 
 async function patchComment(args, accessToken) {
-  if (!args.fileToken)      die({ error: 'missing_param', message: '--file-token 参数必填' });
-  if (!args.fileType)       die({ error: 'missing_param', message: '--file-type 参数必填' });
-  if (!args.commentId)      die({ error: 'missing_param', message: '--comment-id 参数必填' });
-  if (args.isSolvedValue == null) die({ error: 'missing_param', message: '--is-solved-value 参数必填（true=解决 / false=恢复）' });
+  if (!args.fileToken) die({ error: "missing_param", message: "--file-token 参数必填" });
+  if (!args.fileType) die({ error: "missing_param", message: "--file-type 参数必填" });
+  if (!args.commentId) die({ error: "missing_param", message: "--comment-id 参数必填" });
+  if (args.isSolvedValue == null)
+    die({
+      error: "missing_param",
+      message: "--is-solved-value 参数必填（true=解决 / false=恢复）",
+    });
 
-  const { fileToken, fileType, docUrl } = await resolveFileToken(args.fileToken, args.fileType, accessToken);
-  const isSolved = args.isSolvedValue === 'true';
+  const { fileToken, fileType, docUrl } = await resolveFileToken(
+    args.fileToken,
+    args.fileType,
+    accessToken,
+  );
+  const isSolved = args.isSolvedValue === "true";
 
   const data = await apiCall(
-    'PATCH',
+    "PATCH",
     `/drive/v1/files/${fileToken}/comments/${args.commentId}`,
     accessToken,
     {
@@ -218,7 +264,11 @@ async function patchComment(args, accessToken) {
   );
   if (data.code !== 0) throw new Error(`code=${data.code} msg=${data.msg}`);
 
-  out({ success: true, url: docUrl, reply: `评论已${isSolved ? '解决' : '恢复'}（comment_id=${args.commentId}）${docUrl ? `\n文档链接：${docUrl}` : ''}` });
+  out({
+    success: true,
+    url: docUrl,
+    reply: `评论已${isSolved ? "解决" : "恢复"}（comment_id=${args.commentId}）${docUrl ? `\n文档链接：${docUrl}` : ""}`,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -229,22 +279,32 @@ const ACTIONS = { list: listComments, create: createComment, patch: patchComment
 
 async function main() {
   const args = parseArgs();
-  if (!args.openId) die({ error: 'missing_param', message: '--open-id 参数必填' });
-  if (!args.action) die({ error: 'missing_param', message: `--action 参数必填（${Object.keys(ACTIONS).join(' / ')}）` });
+  if (!args.openId) die({ error: "missing_param", message: "--open-id 参数必填" });
+  if (!args.action)
+    die({
+      error: "missing_param",
+      message: `--action 参数必填（${Object.keys(ACTIONS).join(" / ")}）`,
+    });
 
   const handler = ACTIONS[args.action];
-  if (!handler) die({ error: 'unsupported_action', message: `不支持的 action: ${args.action}` });
+  if (!handler) die({ error: "unsupported_action", message: `不支持的 action: ${args.action}` });
 
   let cfg;
-  try { cfg = getConfig(__dirname); } catch (err) { die({ error: 'config_error', message: err.message }); }
+  try {
+    cfg = getConfig(__dirname);
+  } catch (err) {
+    die({ error: "config_error", message: err.message });
+  }
 
   let accessToken;
-  try { accessToken = await getValidToken(args.openId, cfg.appId, cfg.appSecret); } catch (err) {
-    die({ error: 'token_error', message: err.message });
+  try {
+    accessToken = await getValidToken(args.openId, cfg.appId, cfg.appSecret);
+  } catch (err) {
+    die({ error: "token_error", message: err.message });
   }
   if (!accessToken) {
     die({
-      error: 'auth_required',
+      error: "auth_required",
       message: `用户未完成飞书授权或授权已过期。用户 open_id: ${args.openId}`,
     });
   }
@@ -252,17 +312,18 @@ async function main() {
   try {
     await handler(args, accessToken);
   } catch (err) {
-    const msg = err.message || '';
-    if (msg.includes('99991663')) die({ error: 'auth_required', message: '飞书 token 已失效，请重新授权' });
-    if (msg.includes('99991672') || msg.includes('99991679') || /permission|scope/i.test(msg)) {
+    const msg = err.message || "";
+    if (msg.includes("99991663"))
+      die({ error: "auth_required", message: "飞书 token 已失效，请重新授权" });
+    if (msg.includes("99991672") || msg.includes("99991679") || /permission|scope/i.test(msg)) {
       die({
-        error: 'permission_required',
+        error: "permission_required",
         message: msg,
-        required_scopes: ['drive:drive', 'drive:drive.readonly'],
-        reply: '**权限不足，需要重新授权以获取云文档评论权限。**',
+        required_scopes: ["drive:drive", "drive:drive.readonly"],
+        reply: "**权限不足，需要重新授权以获取云文档评论权限。**",
       });
     }
-    die({ error: 'api_error', message: msg });
+    die({ error: "api_error", message: msg });
   }
 }
 

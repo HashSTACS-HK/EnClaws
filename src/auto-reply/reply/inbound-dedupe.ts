@@ -63,6 +63,8 @@ export function resetInboundDedupe(): void {
  */
 export function deleteInboundDedupeEntry(ctx: MsgContext): void {
   const key = buildInboundDedupeKey(ctx);
-  if (!key) {return;}
+  if (!key) {
+    return;
+  }
   inboundDedupeCache.delete(key);
 }

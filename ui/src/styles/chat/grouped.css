@@ -181,7 +181,9 @@ img.chat-avatar {
   border-color: transparent !important;
   border-radius: 18px 18px 4px 18px;
   color: #fff !important;
-  box-shadow: 0 1px 4px rgba(22, 119, 255, 0.3), 0 4px 16px rgba(22, 119, 255, 0.15);
+  box-shadow:
+    0 1px 4px rgba(22, 119, 255, 0.3),
+    0 4px 16px rgba(22, 119, 255, 0.15);
   opacity: 1 !important;
 }
 
@@ -189,7 +191,9 @@ img.chat-avatar {
   background: #1677ff !important;
   border-color: transparent !important;
   color: #fff !important;
-  box-shadow: 0 1px 4px rgba(22, 119, 255, 0.4), 0 4px 16px rgba(22, 119, 255, 0.2);
+  box-shadow:
+    0 1px 4px rgba(22, 119, 255, 0.4),
+    0 4px 16px rgba(22, 119, 255, 0.2);
 }
 
 /* User bubble text colors */
@@ -225,7 +229,9 @@ img.chat-avatar {
 
 .chat-group.user .chat-bubble:hover {
   background: #1677ff !important;
-  box-shadow: 0 1px 6px rgba(22, 119, 255, 0.35), 0 6px 20px rgba(22, 119, 255, 0.2);
+  box-shadow:
+    0 1px 6px rgba(22, 119, 255, 0.35),
+    0 6px 20px rgba(22, 119, 255, 0.2);
 }
 
 :root[data-theme="dark"] .chat-group.user .chat-bubble:hover {
@@ -339,7 +345,6 @@ img.chat-avatar {
 }
 
 @keyframes streaming-pulse {
-
   0%,
   100% {
     border-left-color: #3b82f6;
@@ -403,7 +408,6 @@ img.chat-avatar {
 }
 
 @keyframes reading-bounce {
-
   0%,
   80%,
   100% {

@@ -2,8 +2,8 @@
  * Usage tracking — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type { UsageRecord } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 
 export interface UsageSummary {
   totalInputTokens: number;
@@ -52,7 +52,10 @@ export async function recordUsage(params: {
     const isFkViolation =
       err instanceof Error && (err as unknown as Record<string, unknown>)["errcode"] === 787;
     if (isFkViolation) {
-      console.warn("[usage] Skipping usage record: tenant not found (tenantId=%s)", params.tenantId);
+      console.warn(
+        "[usage] Skipping usage record: tenant not found (tenantId=%s)",
+        params.tenantId,
+      );
     } else {
       console.error("[usage] Failed to record usage:", err);
       throw err;

@@ -3,7 +3,6 @@ import fs from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import * as readline from "node:readline";
-import { PRODUCT_NAME } from "../version.js";
 import { Readable, Writable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import {
@@ -17,6 +16,7 @@ import {
 import { isKnownCoreToolId } from "../agents/tool-catalog.js";
 import { ensureOpenClawCliOnPath } from "../infra/path-env.js";
 import { isDangerousAcpTool } from "../security/dangerous-tools.js";
+import { PRODUCT_NAME } from "../version.js";
 
 const SAFE_AUTO_APPROVE_TOOL_IDS = new Set([
   "read",

@@ -14,25 +14,24 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import * as Lark from '@larksuiteoapi/node-sdk';
+import * as Lark from "@larksuiteoapi/node-sdk";
+import type { ClawdbotConfig, PluginRuntime } from "openclaw/plugin-sdk";
+import type { MessageDedup } from "../messaging/inbound/dedup";
+import { clearUserNameCache } from "../messaging/inbound/user-name-cache-store";
+import { getLarkAccount } from "./accounts";
+import { clearChatInfoCache, injectLarkClient } from "./chat-info-cache";
+import { larkLogger } from "./lark-logger";
+import { getLarkRuntime, setLarkRuntime } from "./runtime-store";
+import type { FeishuProbeResult, LarkAccount, LarkBrand } from "./types";
+import { getUserAgent } from "./version";
 
-import type { ClawdbotConfig, PluginRuntime } from 'openclaw/plugin-sdk';
-import type { MessageDedup } from '../messaging/inbound/dedup';
-import { clearUserNameCache } from '../messaging/inbound/user-name-cache-store';
-import type { FeishuProbeResult, LarkAccount, LarkBrand } from './types';
-import { getLarkAccount } from './accounts';
-import { clearChatInfoCache, injectLarkClient } from './chat-info-cache';
-import { larkLogger } from './lark-logger';
-import { getLarkRuntime, setLarkRuntime } from './runtime-store';
-import { getUserAgent } from './version';
-
-const log = larkLogger('core/lark-client');
+const log = larkLogger("core/lark-client");
 
 // ---------------------------------------------------------------------------
 // 注入 User-Agent 到所有飞书 SDK 请求
 // ---------------------------------------------------------------------------
 
-const GLOBAL_LARK_USER_AGENT_KEY = 'LARK_USER_AGENT';
+const GLOBAL_LARK_USER_AGENT_KEY = "LARK_USER_AGENT";
 
 function installGlobalUserAgent(): void {
   // node-sdk 内置拦截器最终会读取 global.LARK_USER_AGENT 并覆盖 User-Agent
@@ -45,7 +44,7 @@ Lark.defaultHttpInstance.interceptors.request.handlers = [];
 Lark.defaultHttpInstance.interceptors.request.use(
   (req) => {
     if (req.headers) {
-      req.headers['User-Agent'] = getUserAgent();
+      req.headers["User-Agent"] = getUserAgent();
     }
     return req;
   },
@@ -75,7 +74,7 @@ const BRAND_TO_DOMAIN: Record<string, Lark.Domain> = {
 
 /** Map a `LarkBrand` to the SDK `domain` parameter. */
 function resolveBrand(brand: LarkBrand | undefined): Lark.Domain | string {
-  return BRAND_TO_DOMAIN[brand ?? 'feishu'] ?? brand!.replace(/\/+$/, '');
+  return BRAND_TO_DOMAIN[brand ?? "feishu"] ?? brand!.replace(/\/+$/, "");
 }
 
 // ---------------------------------------------------------------------------
@@ -106,12 +105,15 @@ function secretRefsEqual(a: Record<string, unknown>, b: Record<string, unknown>)
  */
 function credentialsEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (typeof a === 'string' && typeof b === 'string') return false;
-  if (a && b && typeof a === 'object' && typeof b === 'object') {
+  if (typeof a === "string" && typeof b === "string") return false;
+  if (a && b && typeof a === "object" && typeof b === "object") {
     return secretRefsEqual(a as Record<string, unknown>, b as Record<string, unknown>);
   }
   // Mixed types: keep the cached instance that holds the working string.
-  if ((typeof a === 'string' && b && typeof b === 'object') || (typeof b === 'string' && a && typeof a === 'object')) {
+  if (
+    (typeof a === "string" && b && typeof b === "object") ||
+    (typeof b === "string" && a && typeof a === "object")
+  ) {
     return true;
   }
   return false;
@@ -209,16 +211,26 @@ export class LarkClient {
    */
   static fromCredentials(credentials: LarkClientCredentials): LarkClient {
     const base = {
-      accountId: credentials.accountId ?? 'default',
+      accountId: credentials.accountId ?? "default",
       enabled: true as const,
-      brand: credentials.brand ?? ('feishu' as const),
+      brand: credentials.brand ?? ("feishu" as const),
       config: {} as any,
     };
 
     const account: LarkAccount =
       credentials.appId && credentials.appSecret
-        ? { ...base, configured: true as const, appId: credentials.appId, appSecret: credentials.appSecret }
-        : { ...base, configured: false as const, appId: credentials.appId, appSecret: credentials.appSecret };
+        ? {
+            ...base,
+            configured: true as const,
+            appId: credentials.appId,
+            appSecret: credentials.appSecret,
+          }
+        : {
+            ...base,
+            configured: false as const,
+            appId: credentials.appId,
+            appSecret: credentials.appSecret,
+          };
 
     return new LarkClient(account);
   }
@@ -276,13 +288,13 @@ export class LarkClient {
     }
 
     if (!this.account.appId || !this.account.appSecret) {
-      return { ok: false, error: 'missing credentials (appId, appSecret)' };
+      return { ok: false, error: "missing credentials (appId, appSecret)" };
     }
 
     try {
       const res = await (this.sdk as any).request({
-        method: 'GET',
-        url: '/open-apis/bot/v3/info',
+        method: "GET",
+        url: "/open-apis/bot/v3/info",
         data: {},
       });
 
@@ -351,8 +363,8 @@ export class LarkClient {
     if (autoProbe) await this.probe();
 
     const dispatcher = new Lark.EventDispatcher({
-      encryptKey: this.account.encryptKey ?? '',
-      verificationToken: this.account.verificationToken ?? '',
+      encryptKey: this.account.encryptKey ?? "",
+      verificationToken: this.account.verificationToken ?? "",
     });
     dispatcher.register(handlers as any);
 
@@ -373,17 +385,17 @@ export class LarkClient {
     const wsLogger = onConnectionChange
       ? {
           info: (...args: unknown[]) => {
-            const msg = args.map(String).join(' ');
-            if (msg.includes('[ws] ws client ready')) onConnectionChange(true);
+            const msg = args.map(String).join(" ");
+            if (msg.includes("[ws] ws client ready")) onConnectionChange(true);
             log.info(msg);
           },
           error: (...args: unknown[]) => {
-            const msg = args.map(String).join(' ');
-            if (msg.includes('[ws] connect failed')) onConnectionChange(false);
+            const msg = args.map(String).join(" ");
+            if (msg.includes("[ws] connect failed")) onConnectionChange(false);
             log.error(msg);
           },
-          warn: (...args: unknown[]) => log.warn(args.map(String).join(' ')),
-          debug: (...args: unknown[]) => log.debug(args.map(String).join(' ')),
+          warn: (...args: unknown[]) => log.warn(args.map(String).join(" ")),
+          debug: (...args: unknown[]) => log.debug(args.map(String).join(" ")),
           trace: noop,
         }
       : undefined;
@@ -401,11 +413,11 @@ export class LarkClient {
     const wsClientAny = this._wsClient as any;
     const origHandleEventData = wsClientAny.handleEventData.bind(wsClientAny);
     wsClientAny.handleEventData = (data: any) => {
-      const msgType = data.headers?.find?.((h: any) => h.key === 'type')?.value;
-      if (msgType === 'card') {
+      const msgType = data.headers?.find?.((h: any) => h.key === "type")?.value;
+      if (msgType === "card") {
         const patchedData = {
           ...data,
-          headers: data.headers.map((h: any) => (h.key === 'type' ? { ...h, value: 'event' } : h)),
+          headers: data.headers.map((h: any) => (h.key === "type" ? { ...h, value: "event" } : h)),
         };
         return origHandleEventData(patchedData);
       }
@@ -432,7 +444,10 @@ export class LarkClient {
     }
     this._wsClient = null;
     if (this.messageDedup) {
-      log.info(`disposing message dedup`, { accountId: this.accountId, size: this.messageDedup.size });
+      log.info(`disposing message dedup`, {
+        accountId: this.accountId,
+        size: this.messageDedup.size,
+      });
       this.messageDedup.dispose();
       this.messageDedup = null;
     }
@@ -468,7 +483,7 @@ export class LarkClient {
       }
 
       signal?.addEventListener(
-        'abort',
+        "abort",
         () => {
           this.disconnect();
           resolve();

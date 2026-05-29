@@ -77,13 +77,13 @@ enclaws gateway
 
 EnClaws 支持 41+ 消息通道，常用选项：
 
-| 通道 | 配置方式 |
-|------|----------|
-| **WebChat** | 内置——打开控制面板直接聊天 |
+| 通道          | 配置方式                                             |
+| ------------- | ---------------------------------------------------- |
+| **WebChat**   | 内置——打开控制面板直接聊天                           |
 | **飞书/Lark** | 安装 `openclaw-lark` 插件，配置 App ID 和 App Secret |
-| **Telegram** | 设置 `TELEGRAM_BOT_TOKEN` 环境变量 |
-| **Discord** | 设置 `DISCORD_BOT_TOKEN` 环境变量 |
-| **Slack** | 设置 `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN` 环境变量 |
+| **Telegram**  | 设置 `TELEGRAM_BOT_TOKEN` 环境变量                   |
+| **Discord**   | 设置 `DISCORD_BOT_TOKEN` 环境变量                    |
+| **Slack**     | 设置 `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN` 环境变量  |
 
 ### 4. 开始对话
 
@@ -118,14 +118,14 @@ open http://localhost:18888
 
 ## 关键环境变量
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `ENCLAWS_GATEWAY_PORT` | `18888` | Gateway HTTP/WebSocket 端口 |
-| `ENCLAWS_GATEWAY_PASSWORD` | — | 认证密码 |
-| `ENCLAWS_DB_URL` | SQLite | 数据库连接字符串 |
-| `ENCLAWS_JWT_SECRET` | — | JWT 签名密钥（多租户必填） |
-| `OPENAI_API_KEY` | — | OpenAI API Key |
-| `ANTHROPIC_API_KEY` | — | Anthropic API Key |
+| 变量                       | 默认值  | 说明                        |
+| -------------------------- | ------- | --------------------------- |
+| `ENCLAWS_GATEWAY_PORT`     | `18888` | Gateway HTTP/WebSocket 端口 |
+| `ENCLAWS_GATEWAY_PASSWORD` | —       | 认证密码                    |
+| `ENCLAWS_DB_URL`           | SQLite  | 数据库连接字符串            |
+| `ENCLAWS_JWT_SECRET`       | —       | JWT 签名密钥（多租户必填）  |
+| `OPENAI_API_KEY`           | —       | OpenAI API Key              |
+| `ANTHROPIC_API_KEY`        | —       | Anthropic API Key           |
 
 完整列表见 `.env.example`。
 

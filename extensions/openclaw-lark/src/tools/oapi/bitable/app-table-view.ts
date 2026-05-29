@@ -13,11 +13,16 @@
  *   - patch:  PATCH /open-apis/bitable/v1/apps/:app_token/tables/:table_id/views/:view_id
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-
-import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json , registerTool } from '../helpers';
-import type { PaginatedData } from '../sdk-types';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import {
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
+import type { PaginatedData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -26,47 +31,46 @@ import type { PaginatedData } from '../sdk-types';
 const FeishuBitableAppTableViewSchema = Type.Union([
   // CREATE (P1)
   Type.Object({
-    action: Type.Literal('create'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    view_name: Type.String({ description: '视图名称' }),
+    action: Type.Literal("create"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    view_name: Type.String({ description: "视图名称" }),
     view_type: Type.Optional(
       Type.Union([
-        Type.Literal('grid'), // 表格视图
-        Type.Literal('kanban'), // 看板视图
-        Type.Literal('gallery'), // 画册视图
-        Type.Literal('gantt'), // 甘特图
-        Type.Literal('form'), // 表单视图
+        Type.Literal("grid"), // 表格视图
+        Type.Literal("kanban"), // 看板视图
+        Type.Literal("gallery"), // 画册视图
+        Type.Literal("gantt"), // 甘特图
+        Type.Literal("form"), // 表单视图
       ]),
     ),
   }),
 
   // GET (P1)
   Type.Object({
-    action: Type.Literal('get'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    view_id: Type.String({ description: '视图 ID' }),
+    action: Type.Literal("get"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    view_id: Type.String({ description: "视图 ID" }),
   }),
 
   // LIST (P1)
   Type.Object({
-    action: Type.Literal('list'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    page_size: Type.Optional(Type.Number({ description: '每页数量，默认 50，最大 100' })),
-    page_token: Type.Optional(Type.String({ description: '分页标记' })),
+    action: Type.Literal("list"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    page_size: Type.Optional(Type.Number({ description: "每页数量，默认 50，最大 100" })),
+    page_token: Type.Optional(Type.String({ description: "分页标记" })),
   }),
 
   // PATCH (P1)
   Type.Object({
-    action: Type.Literal('patch'),
-    app_token: Type.String({ description: '多维表格 token' }),
-    table_id: Type.String({ description: '数据表 ID' }),
-    view_id: Type.String({ description: '视图 ID' }),
-    view_name: Type.Optional(Type.String({ description: '新的视图名称' })),
+    action: Type.Literal("patch"),
+    app_token: Type.String({ description: "多维表格 token" }),
+    table_id: Type.String({ description: "数据表 ID" }),
+    view_id: Type.String({ description: "视图 ID" }),
+    view_name: Type.Optional(Type.String({ description: "新的视图名称" })),
   }),
-
 ]);
 
 // ---------------------------------------------------------------------------
@@ -75,27 +79,27 @@ const FeishuBitableAppTableViewSchema = Type.Union([
 
 type FeishuBitableAppTableViewParams =
   | {
-      action: 'create';
+      action: "create";
       app_token: string;
       table_id: string;
       view_name: string;
       view_type?: string;
     }
   | {
-      action: 'get';
+      action: "get";
       app_token: string;
       table_id: string;
       view_id: string;
     }
   | {
-      action: 'list';
+      action: "list";
       app_token: string;
       table_id: string;
       page_size?: number;
       page_token?: string;
     }
   | {
-      action: 'patch';
+      action: "patch";
       app_token: string;
       table_id: string;
       view_id: string;
@@ -111,15 +115,15 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
 
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_bitable_app_table_view');
+  const { toolClient, log } = createToolContext(api, "feishu_bitable_app_table_view");
 
   registerTool(
     api,
     {
-      name: 'feishu_bitable_app_table_view',
-      label: 'Feishu Bitable Views',
+      name: "feishu_bitable_app_table_view",
+      label: "Feishu Bitable Views",
       description:
-        '【以用户身份】飞书多维表格视图管理工具。当用户要求创建/查询/更新视图、切换展示方式时使用。Actions: create（创建视图）, get（获取视图详情）, list（列出所有视图）, patch（更新视图）。',
+        "【以用户身份】飞书多维表格视图管理工具。当用户要求创建/查询/更新视图、切换展示方式时使用。Actions: create（创建视图）, get（获取视图详情）, list（列出所有视图）, patch（更新视图）。",
       parameters: FeishuBitableAppTableViewSchema,
       async execute(_toolCallId, params) {
         const p = params as FeishuBitableAppTableViewParams;
@@ -131,13 +135,13 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
             // -----------------------------------------------------------------
             // CREATE
             // -----------------------------------------------------------------
-            case 'create': {
+            case "create": {
               log.info(
-                `create: app_token=${p.app_token}, table_id=${p.table_id}, view_name=${p.view_name}, view_type=${p.view_type ?? 'grid'}`,
+                `create: app_token=${p.app_token}, table_id=${p.table_id}, view_name=${p.view_name}, view_type=${p.view_type ?? "grid"}`,
               );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_view.create',
+                "feishu_bitable_app_table_view.create",
                 (sdk, opts) =>
                   sdk.bitable.appTableView.create(
                     {
@@ -148,12 +152,12 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                       data: {
                         view_name: p.view_name,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        view_type: (p.view_type || 'grid') as any,
+                        view_type: (p.view_type || "grid") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -167,11 +171,13 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
             // -----------------------------------------------------------------
             // GET
             // -----------------------------------------------------------------
-            case 'get': {
-              log.info(`get: app_token=${p.app_token}, table_id=${p.table_id}, view_id=${p.view_id}`);
+            case "get": {
+              log.info(
+                `get: app_token=${p.app_token}, table_id=${p.table_id}, view_id=${p.view_id}`,
+              );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_view.get',
+                "feishu_bitable_app_table_view.get",
                 (sdk, opts) =>
                   sdk.bitable.appTableView.get(
                     {
@@ -183,7 +189,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -197,11 +203,11 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
             // -----------------------------------------------------------------
             // LIST
             // -----------------------------------------------------------------
-            case 'list': {
+            case "list": {
               log.info(`list: app_token=${p.app_token}, table_id=${p.table_id}`);
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_view.list',
+                "feishu_bitable_app_table_view.list",
                 (sdk, opts) =>
                   sdk.bitable.appTableView.list(
                     {
@@ -216,7 +222,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -234,13 +240,13 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
             // -----------------------------------------------------------------
             // PATCH
             // -----------------------------------------------------------------
-            case 'patch': {
+            case "patch": {
               log.info(
                 `patch: app_token=${p.app_token}, table_id=${p.table_id}, view_id=${p.view_id}, view_name=${p.view_name}`,
               );
 
               const res = await client.invoke(
-                'feishu_bitable_app_table_view.patch',
+                "feishu_bitable_app_table_view.patch",
                 (sdk, opts) =>
                   sdk.bitable.appTableView.patch(
                     {
@@ -255,7 +261,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -265,14 +271,12 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                 view: res.data?.view,
               });
             }
-
           }
         } catch (err) {
           return await handleInvokeErrorWithAutoAuth(err, cfg);
         }
       },
     },
-    { name: 'feishu_bitable_app_table_view' },
+    { name: "feishu_bitable_app_table_view" },
   );
-
 }

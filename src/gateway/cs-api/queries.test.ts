@@ -10,11 +10,11 @@
  */
 
 import fs from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import type { IncomingMessage, ServerResponse } from "node:http";
 
 // ── Mock runCSAgentReply so we don't hit LLM during import chain ──────────────
 vi.mock("../../customer-service/rag/cs-agent-runner.js", () => ({
@@ -60,12 +60,26 @@ function makeRes(): ServerResponse & { _status: number; _body: string } {
   let status = 200;
   let body = "";
   const res = {
-    get _status() { return status; },
-    get _body() { return body; },
-    get statusCode() { return status; },
-    set statusCode(v: number) { status = v; },
-    setHeader() { /* noop */ },
-    end(chunk?: string) { if (chunk) { body += chunk; } },
+    get _status() {
+      return status;
+    },
+    get _body() {
+      return body;
+    },
+    get statusCode() {
+      return status;
+    },
+    set statusCode(v: number) {
+      status = v;
+    },
+    setHeader() {
+      /* noop */
+    },
+    end(chunk?: string) {
+      if (chunk) {
+        body += chunk;
+      }
+    },
   } as unknown as ServerResponse & { _status: number; _body: string };
   return res;
 }
@@ -165,7 +179,8 @@ describe("§11.6 query endpoints", () => {
 
   it("single session metadata returns no messages array", async () => {
     const { tenantId, appObjectId, appId, plainSecret } = await seedTenantAndObject("single");
-    const { findOrCreateCsApiSession, appendCsApiMessage } = await import("../../db/models/cs-session.js");
+    const { findOrCreateCsApiSession, appendCsApiMessage } =
+      await import("../../db/models/cs-session.js");
 
     const session = await findOrCreateCsApiSession({
       tenantId,
@@ -203,7 +218,8 @@ describe("§11.6 query endpoints", () => {
 
   it("transcript with cursor + direction=before paginates oldest-toward-newest", async () => {
     const { tenantId, appObjectId, appId, plainSecret } = await seedTenantAndObject("transcript");
-    const { findOrCreateCsApiSession, appendCsApiMessage } = await import("../../db/models/cs-session.js");
+    const { findOrCreateCsApiSession, appendCsApiMessage } =
+      await import("../../db/models/cs-session.js");
 
     const session = await findOrCreateCsApiSession({
       tenantId,

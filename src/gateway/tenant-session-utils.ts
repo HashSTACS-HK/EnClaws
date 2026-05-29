@@ -13,34 +13,32 @@
  * original behavior.
  */
 
-import type { OpenClawConfig } from "../config/config.js";
-import { loadConfig } from "../config/config.js";
-import {
-  loadSessionStore,
-  resolveStorePath,
-  type SessionEntry,
-} from "../config/sessions.js";
-import { isDbInitialized } from "../db/index.js";
-import { loadTenantConfig } from "../config/tenant-config.js";
 import fs from "node:fs";
-import {
-  resolveTenantDir,
-  resolveTenantSessionStorePath,
-  ensureTenantSessionDirs,
-} from "../config/sessions/tenant-paths.js";
 import {
   tenantScopedSessionKey,
   extractTenantFromSessionKey,
   type TenantContext,
 } from "../auth/middleware.js";
-import { normalizeAgentId, parseAgentSessionKey, DEFAULT_AGENT_ID } from "../routing/session-key.js";
+import type { OpenClawConfig } from "../config/config.js";
+import { loadConfig } from "../config/config.js";
+import { loadSessionStore, resolveStorePath, type SessionEntry } from "../config/sessions.js";
+import {
+  resolveTenantDir,
+  resolveTenantSessionStorePath,
+  ensureTenantSessionDirs,
+} from "../config/sessions/tenant-paths.js";
+import { loadTenantConfig } from "../config/tenant-config.js";
+import { isDbInitialized } from "../db/index.js";
+import {
+  normalizeAgentId,
+  parseAgentSessionKey,
+  DEFAULT_AGENT_ID,
+} from "../routing/session-key.js";
 
 /**
  * Resolve the config to use for a request, tenant-scoped if applicable.
  */
-export async function resolveRequestConfig(
-  tenant?: TenantContext,
-): Promise<OpenClawConfig> {
+export async function resolveRequestConfig(tenant?: TenantContext): Promise<OpenClawConfig> {
   if (tenant && isDbInitialized()) {
     return loadTenantConfig(tenant.tenantId, {
       userId: tenant.userId,
@@ -73,13 +71,14 @@ export function resolveRequestStorePath(
 /**
  * Transform a session key for storage — adds tenant prefix in multi-tenant mode.
  */
-export function toStorageSessionKey(
-  sessionKey: string,
-  tenantId?: string,
-): string {
-  if (!tenantId) {return sessionKey;}
+export function toStorageSessionKey(sessionKey: string, tenantId?: string): string {
+  if (!tenantId) {
+    return sessionKey;
+  }
   // Don't double-prefix
-  if (sessionKey.startsWith(`t:${tenantId}:`)) {return sessionKey;}
+  if (sessionKey.startsWith(`t:${tenantId}:`)) {
+    return sessionKey;
+  }
   return tenantScopedSessionKey(tenantId, sessionKey);
 }
 
@@ -128,7 +127,8 @@ export function loadAllTenantSessionStores(
   const usersDir = `${tenantDir}/users`;
   let userDirs: string[];
   try {
-    userDirs = fs.readdirSync(usersDir, { withFileTypes: true })
+    userDirs = fs
+      .readdirSync(usersDir, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => d.name);
   } catch {
@@ -160,14 +160,13 @@ export function findTenantStorePathForKey(
   sessionKey: string,
   fallbackUserId?: string,
 ): string {
-  const agentId = normalizeAgentId(
-    parseAgentSessionKey(sessionKey)?.agentId ?? DEFAULT_AGENT_ID,
-  );
+  const agentId = normalizeAgentId(parseAgentSessionKey(sessionKey)?.agentId ?? DEFAULT_AGENT_ID);
   const tenantDir = resolveTenantDir(tenantId);
   const usersDir = `${tenantDir}/users`;
   let userDirs: string[];
   try {
-    userDirs = fs.readdirSync(usersDir, { withFileTypes: true })
+    userDirs = fs
+      .readdirSync(usersDir, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => d.name);
   } catch {
@@ -197,11 +196,10 @@ export function findTenantStorePathForKey(
  * - The session key has the correct tenant prefix
  * - The session key has no tenant prefix (legacy, allowed in transition)
  */
-export function verifySessionTenantAccess(
-  sessionKey: string,
-  tenantId?: string,
-): boolean {
-  if (!tenantId) {return true;}
+export function verifySessionTenantAccess(sessionKey: string, tenantId?: string): boolean {
+  if (!tenantId) {
+    return true;
+  }
 
   const parsed = extractTenantFromSessionKey(sessionKey);
   if (!parsed) {
@@ -214,10 +212,7 @@ export function verifySessionTenantAccess(
 /**
  * Resolve session agent ID from a possibly tenant-prefixed key.
  */
-export function resolveSessionAgentIdFromKey(
-  cfg: OpenClawConfig,
-  sessionKey: string,
-): string {
+export function resolveSessionAgentIdFromKey(cfg: OpenClawConfig, sessionKey: string): string {
   // Strip tenant prefix if present
   const { innerKey } = fromStorageSessionKey(sessionKey);
 

@@ -9,14 +9,17 @@
  * dependency inversion.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { buildConvertContextFromItem, convertMessageContent } from '../converters/content-converter';
-import { LarkClient } from '../../core/lark-client';
-import { larkLogger } from '../../core/lark-logger';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import {
+  buildConvertContextFromItem,
+  convertMessageContent,
+} from "../converters/content-converter";
 
-const log = larkLogger('shared/message-lookup');
-import { createBatchResolveNames, getUserNameCache } from '../inbound/user-name-cache';
-import { getLarkAccount } from '../../core/accounts';
+const log = larkLogger("shared/message-lookup");
+import { getLarkAccount } from "../../core/accounts";
+import { createBatchResolveNames, getUserNameCache } from "../inbound/user-name-cache";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -77,12 +80,12 @@ export async function getMessageFeishu(params: {
 
   try {
     const requestOpts = {
-      method: 'GET',
+      method: "GET",
       url: `/open-apis/im/v1/messages/mget`,
       params: {
         message_ids: messageId,
-        user_id_type: 'open_id',
-        card_msg_content_type: 'raw_card_content',
+        user_id_type: "open_id",
+        card_msg_content_type: "raw_card_content",
       },
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,23 +104,26 @@ export async function getMessageFeishu(params: {
           fetchSubMessages: async (msgId: string) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const res = await (larkClient.sdk as any).request({
-              method: 'GET',
+              method: "GET",
               url: `/open-apis/im/v1/messages/${msgId}`,
-              params: { user_id_type: 'open_id', card_msg_content_type: 'raw_card_content' },
+              params: { user_id_type: "open_id", card_msg_content_type: "raw_card_content" },
             });
             if (res?.code !== 0) {
               throw new Error(`API error: code=${res?.code} msg=${res?.msg}`);
             }
             return res?.data?.items ?? [];
           },
-          batchResolveNames: createBatchResolveNames(getLarkAccount(cfg, accountId), (...args: unknown[]) =>
-            log.info(args.map(String).join(' ')),
+          batchResolveNames: createBatchResolveNames(
+            getLarkAccount(cfg, accountId),
+            (...args: unknown[]) => log.info(args.map(String).join(" ")),
           ),
         }
       : undefined;
     return await parseMessageItem(items[0], messageId, expandCtx);
   } catch (error) {
-    log.error(`get message failed (${messageId}): ${error instanceof Error ? error.message : String(error)}`);
+    log.error(
+      `get message failed (${messageId}): ${error instanceof Error ? error.message : String(error)}`,
+    );
     return null;
   }
 }
@@ -145,8 +151,8 @@ async function parseMessageItem(
     batchResolveNames?: (openIds: string[]) => Promise<void>;
   },
 ): Promise<FeishuMessageInfo> {
-  const msgType: string = msg.msg_type ?? 'text';
-  const rawContent: string = msg.body?.content ?? '{}';
+  const msgType: string = msg.msg_type ?? "text";
+  const rawContent: string = msg.body?.content ?? "{}";
   const messageId = msg.message_id ?? fallbackMessageId;
 
   const acctId = expandCtx?.accountId;
@@ -165,7 +171,7 @@ async function parseMessageItem(
 
   return {
     messageId,
-    chatId: msg.chat_id ?? '',
+    chatId: msg.chat_id ?? "",
     chatType: msg.chat_type ?? undefined,
     senderId,
     senderName,

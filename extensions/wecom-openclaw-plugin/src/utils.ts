@@ -3,10 +3,15 @@
  */
 
 import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
-import { DEFAULT_ACCOUNT_ID } from "./openclaw-compat.js";
 import { CHANNEL_ID } from "./const.js";
+import { DEFAULT_ACCOUNT_ID } from "./openclaw-compat.js";
 import type { ResolvedAgentAccount } from "./types/account.js";
-import type { WecomAgentConfig, WecomNetworkConfig, WecomMediaConfig, WecomDynamicAgentsConfig } from "./types/config.js";
+import type {
+  WecomAgentConfig,
+  WecomNetworkConfig,
+  WecomMediaConfig,
+  WecomDynamicAgentsConfig,
+} from "./types/config.js";
 
 // ============================================================================
 // 配置类型定义
@@ -88,7 +93,7 @@ export interface ResolvedWeComAccount {
   /** Webhook 模式配置 */
   token?: string;
   encodingAESKey?: string;
-  receiveId?: string,
+  receiveId?: string;
 }
 
 /**
@@ -127,15 +132,13 @@ export function setWeComAccount(
     ...(account.websocketUrl || existing?.websocketUrl
       ? { websocketUrl: account.websocketUrl ?? existing?.websocketUrl }
       : {}),
-    ...(account.name || existing?.name
-      ? { name: account.name ?? existing?.name }
-      : {}),
+    ...(account.name || existing?.name ? { name: account.name ?? existing?.name } : {}),
     ...(account.sendThinkingMessage !== undefined || existing?.sendThinkingMessage !== undefined
       ? { sendThinkingMessage: account.sendThinkingMessage ?? existing?.sendThinkingMessage }
       : {}),
   };
 
-return {
+  return {
     ...cfg,
     channels: {
       ...cfg.channels,

@@ -3,12 +3,12 @@
  * 支持 Markdown、文本、链接等消息类型
  */
 
-import type { DingtalkConfig } from '../../types/index.ts';
-import { DINGTALK_API, getAccessToken } from '../../utils/token.ts';
-import { dingtalkHttp } from '../../utils/http-client.ts';
+import type { DingtalkConfig } from "../../types/index.ts";
+import { dingtalkHttp } from "../../utils/http-client.ts";
+import { DINGTALK_API, getAccessToken } from "../../utils/token.ts";
 
 /** 消息类型枚举 */
-export type DingTalkMsgType = 'text' | 'markdown' | 'link' | 'actionCard' | 'image';
+export type DingTalkMsgType = "text" | "markdown" | "link" | "actionCard" | "image";
 
 /** 主动发送消息的结果 */
 export interface SendResult {
@@ -44,7 +44,7 @@ export async function sendMarkdownMessage(
   if (options.atUserId) text = `${text} @${options.atUserId}`;
 
   const body: any = {
-    msgtype: 'markdown',
+    msgtype: "markdown",
     markdown: {
       title,
       text: text,
@@ -60,8 +60,8 @@ export async function sendMarkdownMessage(
 
   const resp = await dingtalkHttp.post(sessionWebhook, body, {
     headers: {
-      'x-acs-dingtalk-access-token': token,
-      'Content-Type': 'application/json',
+      "x-acs-dingtalk-access-token": token,
+      "Content-Type": "application/json",
     },
   });
 
@@ -82,7 +82,7 @@ export async function sendTextMessage(
   if (options.atUserId) text = `${text} @${options.atUserId}`;
 
   const body: any = {
-    msgtype: 'text',
+    msgtype: "text",
     text: {
       content: text,
     },
@@ -97,8 +97,8 @@ export async function sendTextMessage(
 
   const resp = await dingtalkHttp.post(sessionWebhook, body, {
     headers: {
-      'x-acs-dingtalk-access-token': token,
-      'Content-Type': 'application/json',
+      "x-acs-dingtalk-access-token": token,
+      "Content-Type": "application/json",
     },
   });
 
@@ -121,7 +121,7 @@ export async function sendLinkMessage(
   const token = await getAccessToken(config);
 
   const body = {
-    msgtype: 'link',
+    msgtype: "link",
     link: {
       title: params.title,
       text: params.text,
@@ -132,8 +132,8 @@ export async function sendLinkMessage(
 
   const resp = await dingtalkHttp.post(sessionWebhook, body, {
     headers: {
-      'x-acs-dingtalk-access-token': token,
-      'Content-Type': 'application/json',
+      "x-acs-dingtalk-access-token": token,
+      "Content-Type": "application/json",
     },
   });
 

@@ -9,13 +9,13 @@
  * never perform I/O, send messages, or mutate external state.
  */
 
-import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
-import { buildPendingHistoryContextFromMap } from 'openclaw/plugin-sdk/reply-history';
-import type { MessageContext } from '../types';
-import type { LarkClient } from '../../core/lark-client';
-import { threadScopedKey } from '../../channel/chat-queue';
-import type { DispatchContext } from './dispatch-context';
-import { nonBotMentions } from './mention';
+import type { HistoryEntry } from "openclaw/plugin-sdk/reply-history";
+import { buildPendingHistoryContextFromMap } from "openclaw/plugin-sdk/reply-history";
+import { threadScopedKey } from "../../channel/chat-queue";
+import type { LarkClient } from "../../core/lark-client";
+import type { MessageContext } from "../types";
+import type { DispatchContext } from "./dispatch-context";
+import { nonBotMentions } from "./mention";
 
 // ---------------------------------------------------------------------------
 // Mention annotation
@@ -33,7 +33,7 @@ import { nonBotMentions } from './mention';
 export function buildMentionAnnotation(ctx: MessageContext): string | undefined {
   const mentions = nonBotMentions(ctx);
   if (mentions.length === 0) return undefined;
-  const mentionDetails = mentions.map((t) => `${t.name} (open_id: ${t.openId})`).join(', ');
+  const mentionDetails = mentions.map((t) => `${t.name} (open_id: ${t.openId})`).join(", ");
   return `[System: This message @mentions the following users: ${mentionDetails}. Use these open_ids when performing actions involving these users.]`;
 }
 
@@ -130,19 +130,19 @@ export function buildInboundPayload(
     To: dc.feishuTo,
     SessionKey: dc.threadSessionKey ?? dc.route.sessionKey,
     AccountId: dc.route.accountId,
-    ChatType: dc.isGroup ? 'group' : 'direct',
+    ChatType: dc.isGroup ? "group" : "direct",
     GroupSubject: dc.isGroup ? (dc.chatName ?? dc.ctx.chatId) : undefined,
     SenderName: opts.senderName,
     SenderId: opts.senderId,
-    Provider: 'feishu' as const,
-    Surface: 'feishu' as const,
+    Provider: "feishu" as const,
+    Surface: "feishu" as const,
     MessageSid: opts.messageSid,
     ReplyToBody: opts.replyToBody,
     InboundHistory: opts.inboundHistory,
     Timestamp: dc.ctx.createTime ?? Date.now(),
     WasMentioned: opts.wasMentioned,
     CommandAuthorized: dc.commandAuthorized,
-    OriginatingChannel: 'feishu' as const,
+    OriginatingChannel: "feishu" as const,
     OriginatingTo: opts.originatingTo ?? dc.feishuTo,
   });
 }
@@ -162,7 +162,7 @@ export function buildEnvelopeWithHistory(
   historyLimit: number,
 ): { combinedBody: string; historyKey: string | undefined } {
   const body = dc.core.channel.reply.formatAgentEnvelope({
-    channel: 'Feishu',
+    channel: "Feishu",
     from: dc.envelopeFrom,
     timestamp: new Date(),
     envelope: dc.envelopeOptions,
@@ -170,7 +170,9 @@ export function buildEnvelopeWithHistory(
   });
 
   let combinedBody = body;
-  const historyKey = dc.isGroup ? threadScopedKey(dc.ctx.chatId, dc.isThread ? dc.ctx.threadId : undefined) : undefined;
+  const historyKey = dc.isGroup
+    ? threadScopedKey(dc.ctx.chatId, dc.isThread ? dc.ctx.threadId : undefined)
+    : undefined;
 
   if (dc.isGroup && historyKey && chatHistories) {
     combinedBody = buildPendingHistoryContextFromMap({
@@ -180,7 +182,7 @@ export function buildEnvelopeWithHistory(
       currentMessage: combinedBody,
       formatEntry: (entry) =>
         dc.core.channel.reply.formatAgentEnvelope({
-          channel: 'Feishu',
+          channel: "Feishu",
           from: `${dc.ctx.chatId}:${entry.sender}`,
           timestamp: entry.timestamp,
           body: entry.body,

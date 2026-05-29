@@ -1,8 +1,10 @@
 import type { ModelCatalogEntry } from "../../agents/model-catalog.js";
+import type { TenantContext } from "../../auth/middleware.js";
 import type { createDefaultDeps } from "../../cli/deps.js";
 import type { HealthSummary } from "../../commands/health.js";
 import type { CronService } from "../../cron/service.js";
 import type { createSubsystemLogger } from "../../logging/subsystem.js";
+import type { TenantContext as BaseTenantContext } from "../../types/tenant-context.js";
 import type { WizardSession } from "../../wizard/session.js";
 import type { ChatAbortControllerEntry } from "../chat-abort.js";
 import type { ExecApprovalManager } from "../exec-approval-manager.js";
@@ -11,8 +13,6 @@ import type { ConnectParams, ErrorShape, RequestFrame } from "../protocol/index.
 import type { GatewayBroadcastFn, GatewayBroadcastToConnIdsFn } from "../server-broadcast.js";
 import type { ChannelRuntimeSnapshot } from "../server-channels.js";
 import type { DedupeEntry } from "../server-shared.js";
-import type { TenantContext } from "../../auth/middleware.js";
-import type { TenantContext as BaseTenantContext } from "../../types/tenant-context.js";
 
 type SubsystemLogger = ReturnType<typeof createSubsystemLogger>;
 
@@ -41,9 +41,14 @@ export type GatewayRequestContext = {
   cron: CronService;
   cronStorePath: string;
   /** Resolve tenant-scoped cron service + storePath when tenant context is present. */
-  resolveTenantCron?: (tenant: BaseTenantContext) => { cron: CronService; cronStorePath: string } | undefined;
+  resolveTenantCron?: (
+    tenant: BaseTenantContext,
+  ) => { cron: CronService; cronStorePath: string } | undefined;
   /** Resolve agent-scoped cron service + storePath for enterprise per-agent cron. */
-  resolveTenantAgentCron?: (tenantId: string, agentId: string) => { cron: CronService; cronStorePath: string } | undefined;
+  resolveTenantAgentCron?: (
+    tenantId: string,
+    agentId: string,
+  ) => { cron: CronService; cronStorePath: string } | undefined;
   /**
    * Count the in-memory cron job total for a tenant across all its registered
    * agent cron services. Used for platform-level quota enforcement and the

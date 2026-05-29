@@ -1,6 +1,10 @@
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { resolveSkillNameFromPath, formatPrecheckMessage, precheckSkill } from "./skills-precheck.js";
+import {
+  resolveSkillNameFromPath,
+  formatPrecheckMessage,
+  precheckSkill,
+} from "./skills-precheck.js";
 import type { SkillStatusEntry } from "./skills-status.js";
 import type { SkillEntry } from "./skills/types.js";
 
@@ -26,10 +30,7 @@ describe("resolveSkillNameFromPath", () => {
   ];
 
   it("从 managed 技能路径解析技能名", () => {
-    const result = resolveSkillNameFromPath(
-      "/home/user/.enclaws/skills/github/SKILL.md",
-      entries,
-    );
+    const result = resolveSkillNameFromPath("/home/user/.enclaws/skills/github/SKILL.md", entries);
     expect(result).toBe("github");
   });
 
@@ -42,26 +43,17 @@ describe("resolveSkillNameFromPath", () => {
   });
 
   it("从租户目录路径解析技能名", () => {
-    const result = resolveSkillNameFromPath(
-      "/data/tenants/t1/skills/my-skill/SKILL.md",
-      entries,
-    );
+    const result = resolveSkillNameFromPath("/data/tenants/t1/skills/my-skill/SKILL.md", entries);
     expect(result).toBe("tenant-skill");
   });
 
   it("非 SKILL.md 路径返回 null", () => {
-    const result = resolveSkillNameFromPath(
-      "/home/user/.enclaws/skills/github/README.md",
-      entries,
-    );
+    const result = resolveSkillNameFromPath("/home/user/.enclaws/skills/github/README.md", entries);
     expect(result).toBeNull();
   });
 
   it("无匹配条目时返回 null", () => {
-    const result = resolveSkillNameFromPath(
-      "/unknown/path/SKILL.md",
-      entries,
-    );
+    const result = resolveSkillNameFromPath("/unknown/path/SKILL.md", entries);
     expect(result).toBeNull();
   });
 });
@@ -142,7 +134,14 @@ describe("precheckSkill", () => {
     const entry = makeEntry("needs-bin", "/tmp/skills/needs-bin");
     entry.metadata = {
       requires: { bins: ["nonexistent-binary-xyz"] },
-      install: [{ id: "brew-0", kind: "brew", formula: "nonexistent-binary-xyz", bins: ["nonexistent-binary-xyz"] }],
+      install: [
+        {
+          id: "brew-0",
+          kind: "brew",
+          formula: "nonexistent-binary-xyz",
+          bins: ["nonexistent-binary-xyz"],
+        },
+      ],
     };
 
     const notify = vi.fn();
@@ -177,7 +176,14 @@ describe("precheckSkill", () => {
     const entry = makeEntry("installable", "/tmp/skills/installable");
     entry.metadata = {
       requires: { bins: ["nonexistent-binary-xyz"] },
-      install: [{ id: "brew-0", kind: "brew", formula: "nonexistent-binary-xyz", bins: ["nonexistent-binary-xyz"] }],
+      install: [
+        {
+          id: "brew-0",
+          kind: "brew",
+          formula: "nonexistent-binary-xyz",
+          bins: ["nonexistent-binary-xyz"],
+        },
+      ],
     };
 
     const notify = vi.fn();
@@ -188,7 +194,13 @@ describe("precheckSkill", () => {
       notify,
       confirm,
       _entries: [entry],
-      _installSkill: async () => ({ ok: true, message: "Installed", stdout: "", stderr: "", code: 0 }),
+      _installSkill: async () => ({
+        ok: true,
+        message: "Installed",
+        stdout: "",
+        stderr: "",
+        code: 0,
+      }),
     });
 
     expect(confirm).toHaveBeenCalled();
@@ -199,7 +211,14 @@ describe("precheckSkill", () => {
     const entry = makeEntry("declinable", "/tmp/skills/declinable");
     entry.metadata = {
       requires: { bins: ["nonexistent-binary-xyz"] },
-      install: [{ id: "brew-0", kind: "brew", formula: "nonexistent-binary-xyz", bins: ["nonexistent-binary-xyz"] }],
+      install: [
+        {
+          id: "brew-0",
+          kind: "brew",
+          formula: "nonexistent-binary-xyz",
+          bins: ["nonexistent-binary-xyz"],
+        },
+      ],
     };
 
     const notify = vi.fn();

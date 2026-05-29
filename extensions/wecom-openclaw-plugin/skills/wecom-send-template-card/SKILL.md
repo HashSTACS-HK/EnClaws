@@ -1,10 +1,7 @@
 ---
 name: wecom-send-template-card
 description: 当需要通过企业微信发送结构化卡片消息时使用，包括：通知提醒、投票表决、方案选择、多维度选择等需要用户交互或查看结构化信息的场景。即使用户未明确要求"发卡片"，只要语境适合（如"帮我问一下选A还是B"），也应主动激活。仅限 wecom 通道。
-metadata:
-  {
-    "openclaw": { "emoji": "🃏", "requires": { "config": ["channels.wecom"] } },
-  }
+metadata: { "openclaw": { "emoji": "🃏", "requires": { "config": ["channels.wecom"] } } }
 ---
 
 ## 使用方式
@@ -47,12 +44,12 @@ metadata:
 
 ### 场景速查
 
-| card_type | 典型场景 |
-|-----------|---------|
-| `text_notice` | 系统告警、部署通知、数据日报、审批结果、放假公告 |
-| `news_notice` | 新闻推送、活动宣传、产品发布、带图表的周报、新员工介绍 |
-| `button_interaction` | 审批（同意/驳回）、工单处理（接单/转派）、确认操作、满意度评价、二次确认（是/否） |
-| `vote_interaction` | 团建投票、会议时间协调、问卷单题、意见征集、方案评选 |
+| card_type              | 典型场景                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| `text_notice`          | 系统告警、部署通知、数据日报、审批结果、放假公告                                          |
+| `news_notice`          | 新闻推送、活动宣传、产品发布、带图表的周报、新员工介绍                                    |
+| `button_interaction`   | 审批（同意/驳回）、工单处理（接单/转派）、确认操作、满意度评价、二次确认（是/否）         |
+| `vote_interaction`     | 团建投票、会议时间协调、问卷单题、意见征集、方案评选                                      |
 | `multiple_interaction` | 多维度信息收集（部门+楼层+时间）、报障工单（类型+紧急程度）、会议室预定（日期+时间+房间） |
 
 ### 易混淆卡片区分
@@ -62,13 +59,13 @@ metadata:
 
 ## 必填字段速查
 
-| card_type | required |
-|-----------|----------|
-| `text_notice` | `card_type`, `task_id`, `card_action`, (`main_title` 或 `sub_title_text` 至少一个) |
-| `news_notice` | `card_type`, `task_id`, `main_title`, `card_action` |
-| `button_interaction` | `card_type`, `task_id`, `main_title`, `button_list` |
-| `vote_interaction` | `card_type`, `task_id`, `title`, `options` |
-| `multiple_interaction` | `card_type`, `task_id`, `title`, `selectors` |
+| card_type              | required                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| `text_notice`          | `card_type`, `task_id`, `card_action`, (`main_title` 或 `sub_title_text` 至少一个) |
+| `news_notice`          | `card_type`, `task_id`, `main_title`, `card_action`                                |
+| `button_interaction`   | `card_type`, `task_id`, `main_title`, `button_list`                                |
+| `vote_interaction`     | `card_type`, `task_id`, `title`, `options`                                         |
+| `multiple_interaction` | `card_type`, `task_id`, `title`, `selectors`                                       |
 
 ## 最小示例
 

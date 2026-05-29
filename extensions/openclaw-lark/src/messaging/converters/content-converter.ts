@@ -12,12 +12,16 @@
  * from inbound handling, outbound formatting, and skills.
  */
 
-import type { ConvertContext, ConvertResult } from './types';
-import { converters } from './index';
+import { converters } from "./index";
+import type { ConvertContext, ConvertResult } from "./types";
 
 // Re-export types for convenience
-export type { ApiMessageItem, ConvertContext, ConvertResult, ContentConverterFn } from './types';
-export { buildConvertContextFromItem, extractMentionOpenId, resolveMentions } from './content-converter-helpers';
+export type { ApiMessageItem, ConvertContext, ConvertResult, ContentConverterFn } from "./types";
+export {
+  buildConvertContextFromItem,
+  extractMentionOpenId,
+  resolveMentions,
+} from "./content-converter-helpers";
 
 // ---------------------------------------------------------------------------
 // Convert
@@ -35,7 +39,7 @@ export async function convertMessageContent(
   messageType: string,
   ctx: ConvertContext,
 ): Promise<ConvertResult> {
-  const fn = converters.get(messageType) ?? converters.get('unknown');
+  const fn = converters.get(messageType) ?? converters.get("unknown");
   if (!fn) {
     return { content: raw, resources: [] };
   }

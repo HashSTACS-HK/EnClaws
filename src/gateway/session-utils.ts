@@ -9,6 +9,7 @@ import {
   resolveConfiguredModelRef,
   resolveDefaultModelForAgent,
 } from "../agents/model-selection.js";
+import { extractTenantFromSessionKey } from "../auth/middleware.js";
 import { type OpenClawConfig, loadConfig } from "../config/config.js";
 import { resolveStateDir } from "../config/paths.js";
 import {
@@ -22,13 +23,11 @@ import {
   type SessionScope,
 } from "../config/sessions.js";
 import { openBoundaryFileSync } from "../infra/boundary-file-read.js";
-import { extractTenantFromSessionKey } from "../auth/middleware.js";
 import {
   normalizeAgentId,
   normalizeMainKey,
   parseAgentSessionKey,
 } from "../routing/session-key.js";
-import { resolveRequestStorePath } from "./tenant-session-utils.js";
 import { isCronRunSessionKey } from "../sessions/session-key-utils.js";
 import {
   AVATAR_MAX_BYTES,
@@ -46,6 +45,7 @@ import type {
   GatewaySessionsDefaults,
   SessionsListResult,
 } from "./session-utils.types.js";
+import { resolveRequestStorePath } from "./tenant-session-utils.js";
 
 export {
   archiveFileOnDisk,
@@ -833,10 +833,7 @@ export function listSessionsFromStore(params: {
       const displayName =
         groupLabel && userLabel
           ? `${groupLabel} · ${userLabel}`
-          : userLabel
-            ?? groupLabel
-            ?? entry?.label
-            ?? originLabel;
+          : (userLabel ?? groupLabel ?? entry?.label ?? originLabel);
       const deliveryFields = normalizeSessionDeliveryFields(entry);
       const parsedAgent = parseAgentSessionKey(key);
       const sessionAgentId = normalizeAgentId(parsedAgent?.agentId ?? resolveDefaultAgentId(cfg));

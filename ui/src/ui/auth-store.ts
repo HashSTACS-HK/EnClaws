@@ -39,8 +39,7 @@ function sha256Hex(message: Uint8Array): string {
   // Initial hash values (first 32 bits of fractional parts of square roots
   // of the first 8 primes 2..19)
   const H = new Uint32Array([
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
   ]);
   // Round constants (first 32 bits of fractional parts of cube roots of
   // the first 64 primes 2..311)
@@ -87,14 +86,28 @@ function sha256Hex(message: Uint8Array): string {
       const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
       const maj = (a & b) ^ (a & c) ^ (b & c);
       const temp2 = (S0 + maj) >>> 0;
-      h = g; g = f; f = e; e = (d + temp1) >>> 0;
-      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + temp1) >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (temp1 + temp2) >>> 0;
     }
-    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
-    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+    H[0] = (H[0] + a) >>> 0;
+    H[1] = (H[1] + b) >>> 0;
+    H[2] = (H[2] + c) >>> 0;
+    H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0;
+    H[5] = (H[5] + f) >>> 0;
+    H[6] = (H[6] + g) >>> 0;
+    H[7] = (H[7] + h) >>> 0;
   }
   let hex = "";
-  for (let i = 0; i < 8; i++) {hex += H[i].toString(16).padStart(8, "0");}
+  for (let i = 0; i < 8; i++) {
+    hex += H[i].toString(16).padStart(8, "0");
+  }
   return hex;
 }
 
@@ -128,7 +141,10 @@ export interface AuthUser {
 
 /** Thrown by login() when the gateway returns RATE_LIMITED. */
 export class LoginRateLimitedError extends Error {
-  constructor(public readonly retryAfterMs: number, message: string) {
+  constructor(
+    public readonly retryAfterMs: number,
+    message: string,
+  ) {
     super(message);
     this.name = "LoginRateLimitedError";
   }
@@ -184,14 +200,22 @@ let currentAuth: AuthState | null = null;
  * Load auth state from localStorage.
  */
 export function loadAuth(): AuthState | null {
-  if (currentAuth) {return currentAuth;}
+  if (currentAuth) {
+    return currentAuth;
+  }
   try {
     const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) {return null;}
+    if (!raw) {
+      return null;
+    }
     const parsed = JSON.parse(raw) as AuthState;
-    if (!parsed.accessToken || !parsed.refreshToken) {return null;}
+    if (!parsed.accessToken || !parsed.refreshToken) {
+      return null;
+    }
     // Check if expired and no refresh possible
-    if (parsed.expiresAt < Date.now() && !parsed.refreshToken) {return null;}
+    if (parsed.expiresAt < Date.now() && !parsed.refreshToken) {
+      return null;
+    }
     currentAuth = parsed;
     // Ensure activity listener is running (covers page reload scenario)
     startActivityListener();
@@ -234,8 +258,12 @@ export function isAuthenticated(): boolean {
  */
 export function getAccessToken(): string | null {
   const auth = loadAuth();
-  if (!auth) {return null;}
-  if (auth.expiresAt > Date.now()) {return auth.accessToken;}
+  if (!auth) {
+    return null;
+  }
+  if (auth.expiresAt > Date.now()) {
+    return auth.accessToken;
+  }
   return null; // Token expired, needs refresh
 }
 
@@ -249,14 +277,20 @@ let refreshing = false;
  * trigger a refresh (throttled).
  */
 async function onUserActivity(): Promise<void> {
-  if (refreshing) {return;}
+  if (refreshing) {
+    return;
+  }
   const auth = currentAuth ?? loadAuth();
-  if (!auth?.refreshToken) {return;}
+  if (!auth?.refreshToken) {
+    return;
+  }
 
   const now = Date.now();
 
   // Throttle: don't refresh too frequently
-  if (now - lastRefreshAttempt < REFRESH_THROTTLE_MS) {return;}
+  if (now - lastRefreshAttempt < REFRESH_THROTTLE_MS) {
+    return;
+  }
 
   lastRefreshAttempt = now;
   refreshing = true;
@@ -277,7 +311,9 @@ async function onUserActivity(): Promise<void> {
 }
 
 function startActivityListener(): void {
-  if (activityListenerActive) {return;}
+  if (activityListenerActive) {
+    return;
+  }
   activityListenerActive = true;
   for (const evt of ["click", "keydown", "scroll", "mousemove", "touchstart"]) {
     document.addEventListener(evt, onUserActivity, { passive: true, capture: true });
@@ -285,7 +321,9 @@ function startActivityListener(): void {
 }
 
 function stopActivityListener(): void {
-  if (!activityListenerActive) {return;}
+  if (!activityListenerActive) {
+    return;
+  }
   activityListenerActive = false;
   for (const evt of ["click", "keydown", "scroll", "mousemove", "touchstart"]) {
     document.removeEventListener(evt, onUserActivity, true);
@@ -299,7 +337,9 @@ function stopActivityListener(): void {
  */
 export async function refreshAccessToken(): Promise<AuthState | null> {
   const auth = loadAuth();
-  if (!auth?.refreshToken) {return null;}
+  if (!auth?.refreshToken) {
+    return null;
+  }
 
   // Fast path: reuse the existing gateway connection
   if (sharedClient) {
@@ -550,9 +590,15 @@ export function callPublicRpc<T = unknown>(
     let handshakeDone = false;
     let settled = false;
     const finish = (r: PublicRpcResult<T>) => {
-      if (settled) {return;}
+      if (settled) {
+        return;
+      }
       settled = true;
-      try { ws.close(); } catch { /* ignore */ }
+      try {
+        ws.close();
+      } catch {
+        /* ignore */
+      }
       resolve(r);
     };
 
@@ -561,12 +607,14 @@ export function callPublicRpc<T = unknown>(
       if (jwtToken) {
         connectParams.auth = { ...connectParams.auth, token: jwtToken };
       }
-      ws.send(JSON.stringify({
-        type: "req",
-        id: generateUUID(),
-        method: "connect",
-        params: connectParams,
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "req",
+          id: generateUUID(),
+          method: "connect",
+          params: connectParams,
+        }),
+      );
     };
 
     ws.onmessage = (event) => {
@@ -574,12 +622,14 @@ export function callPublicRpc<T = unknown>(
         const frame = JSON.parse(event.data);
         if (frame.type === "res" && !handshakeDone) {
           handshakeDone = true;
-          ws.send(JSON.stringify({
-            type: "req",
-            id: generateUUID(),
-            method,
-            params,
-          }));
+          ws.send(
+            JSON.stringify({
+              type: "req",
+              id: generateUUID(),
+              method,
+              params,
+            }),
+          );
           return;
         }
         if (frame.type === "res" && handshakeDone) {
@@ -642,7 +692,9 @@ export async function callAuthRpc<T = unknown>(
 
 export async function getAuthCapabilities(gatewayUrl: string): Promise<{ email: boolean }> {
   const r = await callPublicRpc<{ email: boolean }>(gatewayUrl, "auth.capabilities", {});
-  if (!r.ok) {throw new Error(r.errorMessage ?? "capabilities failed");}
+  if (!r.ok) {
+    throw new Error(r.errorMessage ?? "capabilities failed");
+  }
   return r.payload ?? { email: false };
 }
 
@@ -690,20 +742,24 @@ export async function verifyForgotPassword(
     token,
     newPassword: hashedNew,
   });
-  if (!r.ok) {throw new Error(r.errorMessage ?? "reset failed");}
+  if (!r.ok) {
+    throw new Error(r.errorMessage ?? "reset failed");
+  }
 }
 
 export async function viewTempPassword(
   gatewayUrl: string,
   token: string,
 ): Promise<{ tempPassword: string }> {
-  const r = await callPublicRpc<{ tempPassword: string }>(
-    gatewayUrl,
-    "auth.viewTempPassword",
-    { token },
-  );
-  if (!r.ok) {throw new Error(r.errorMessage ?? "view failed");}
-  if (!r.payload) {throw new Error("empty response");}
+  const r = await callPublicRpc<{ tempPassword: string }>(gatewayUrl, "auth.viewTempPassword", {
+    token,
+  });
+  if (!r.ok) {
+    throw new Error(r.errorMessage ?? "view failed");
+  }
+  if (!r.payload) {
+    throw new Error("empty response");
+  }
   return r.payload;
 }
 

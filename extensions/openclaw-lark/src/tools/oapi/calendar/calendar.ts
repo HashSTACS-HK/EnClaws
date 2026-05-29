@@ -12,10 +12,16 @@
  *   - primary: POST /open-apis/calendar/v4/calendars/primary
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json , registerTool } from '../helpers';
-import type { CalendarGetData, CalendarListData, CalendarPrimaryData } from '../sdk-types';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import {
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
+import type { CalendarGetData, CalendarListData, CalendarPrimaryData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -24,30 +30,30 @@ import type { CalendarGetData, CalendarListData, CalendarPrimaryData } from '../
 const FeishuCalendarCalendarSchema = Type.Union([
   // LIST
   Type.Object({
-    action: Type.Literal('list'),
+    action: Type.Literal("list"),
     page_size: Type.Optional(
       Type.Number({
-        description: 'Number of calendars to return per page (default: 50, max: 1000)',
+        description: "Number of calendars to return per page (default: 50, max: 1000)",
       }),
     ),
     page_token: Type.Optional(
       Type.String({
-        description: 'Pagination token for next page',
+        description: "Pagination token for next page",
       }),
     ),
   }),
 
   // GET
   Type.Object({
-    action: Type.Literal('get'),
+    action: Type.Literal("get"),
     calendar_id: Type.String({
-      description: 'Calendar ID',
+      description: "Calendar ID",
     }),
   }),
 
   // PRIMARY
   Type.Object({
-    action: Type.Literal('primary'),
+    action: Type.Literal("primary"),
   }),
 ]);
 
@@ -56,9 +62,9 @@ const FeishuCalendarCalendarSchema = Type.Union([
 // ---------------------------------------------------------------------------
 
 type FeishuCalendarCalendarParams =
-  | { action: 'list'; page_size?: number; page_token?: string }
-  | { action: 'get'; calendar_id: string }
-  | { action: 'primary' };
+  | { action: "list"; page_size?: number; page_token?: string }
+  | { action: "get"; calendar_id: string }
+  | { action: "primary" };
 
 // ---------------------------------------------------------------------------
 // Registration
@@ -68,15 +74,15 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
   if (!api.config) return;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_calendar_calendar');
+  const { toolClient, log } = createToolContext(api, "feishu_calendar_calendar");
 
   registerTool(
     api,
     {
-      name: 'feishu_calendar_calendar',
-      label: 'Feishu Calendar Management',
+      name: "feishu_calendar_calendar",
+      label: "Feishu Calendar Management",
       description:
-        '【以用户身份】飞书日历管理工具。用于查询日历列表、获取日历信息、查询主日历。Actions: list（查询日历列表）, get（查询指定日历信息）, primary（查询主日历信息）。',
+        "【以用户身份】飞书日历管理工具。用于查询日历列表、获取日历信息、查询主日历。Actions: list（查询日历列表）, get（查询指定日历信息）, primary（查询主日历信息）。",
       parameters: FeishuCalendarCalendarSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as FeishuCalendarCalendarParams;
@@ -87,11 +93,13 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
             // -----------------------------------------------------------------
             // LIST CALENDARS
             // -----------------------------------------------------------------
-            case 'list': {
-              log.info(`list: page_size=${p.page_size ?? 50}, page_token=${p.page_token ?? 'none'}`);
+            case "list": {
+              log.info(
+                `list: page_size=${p.page_size ?? 50}, page_token=${p.page_token ?? "none"}`,
+              );
 
               const res = await client.invoke(
-                'feishu_calendar_calendar.list',
+                "feishu_calendar_calendar.list",
                 (sdk, opts) =>
                   sdk.calendar.calendar.list(
                     {
@@ -102,7 +110,7 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -120,7 +128,7 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
             // -----------------------------------------------------------------
             // GET CALENDAR
             // -----------------------------------------------------------------
-            case 'get': {
+            case "get": {
               if (!p.calendar_id) {
                 return json({
                   error: "calendar_id is required for 'get' action",
@@ -130,7 +138,7 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
               log.info(`get: calendar_id=${p.calendar_id}`);
 
               const res = await client.invoke(
-                'feishu_calendar_calendar.get',
+                "feishu_calendar_calendar.get",
                 (sdk, opts) =>
                   sdk.calendar.calendar.get(
                     {
@@ -138,7 +146,7 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -153,13 +161,13 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
             // -----------------------------------------------------------------
             // PRIMARY CALENDAR
             // -----------------------------------------------------------------
-            case 'primary': {
+            case "primary": {
               log.info(`primary: querying primary calendar`);
 
               const res = await client.invoke(
-                'feishu_calendar_calendar.primary',
+                "feishu_calendar_calendar.primary",
                 (sdk, opts) => sdk.calendar.calendar.primary({}, opts),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -177,7 +185,6 @@ export function registerFeishuCalendarCalendarTool(api: OpenClawPluginApi): void
         }
       },
     },
-    { name: 'feishu_calendar_calendar' },
+    { name: "feishu_calendar_calendar" },
   );
-
 }

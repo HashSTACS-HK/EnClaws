@@ -14,10 +14,11 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { wwwDomain } from "../../../core/domains";
 import {
   StringEnum,
   assertLarkOk,
@@ -25,8 +26,7 @@ import {
   handleInvokeErrorWithAutoAuth,
   json,
   registerTool,
-} from '../helpers';
-import { wwwDomain } from '../../../core/domains';
+} from "../helpers";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -61,7 +61,7 @@ function parseSheetUrl(url: string): { token: string; sheetId?: string } | null 
     if (!match) return null;
     return {
       token: match[1],
-      sheetId: u.searchParams.get('sheet') || undefined,
+      sheetId: u.searchParams.get("sheet") || undefined,
     };
   } catch {
     return null;
@@ -76,26 +76,26 @@ function parseSheetUrl(url: string): { token: string; sheetId?: string } | null 
  * 常见类型：dox=云文档, sht=电子表格, bas=多维表格, wik=知识库
  */
 const KNOWN_TOKEN_TYPES = new Set([
-  'dox',
-  'doc',
-  'sht',
-  'bas',
-  'app',
-  'sld',
-  'bmn',
-  'fld',
-  'nod',
-  'box',
-  'jsn',
-  'img',
-  'isv',
-  'wik',
-  'wia',
-  'wib',
-  'wic',
-  'wid',
-  'wie',
-  'dsb',
+  "dox",
+  "doc",
+  "sht",
+  "bas",
+  "app",
+  "sld",
+  "bmn",
+  "fld",
+  "nod",
+  "box",
+  "jsn",
+  "img",
+  "isv",
+  "wik",
+  "wia",
+  "wib",
+  "wic",
+  "wid",
+  "wie",
+  "dsb",
 ]);
 
 /**
@@ -139,26 +139,26 @@ async function resolveToken(
     token = parsed.token;
     urlSheetId = parsed.sheetId;
   } else {
-    throw new Error('url or spreadsheet_token is required');
+    throw new Error("url or spreadsheet_token is required");
   }
 
   // 检测 wiki token 并解析为真实的 spreadsheet_token
   const tokenType = getTokenType(token);
-  if (tokenType === 'wik') {
+  if (tokenType === "wik") {
     log.info(`resolveToken: detected wiki token, resolving obj_token...`);
     const wikiNodeRes = await client.invoke(
-      'feishu_sheet.info',
+      "feishu_sheet.info",
       (sdk: any, opts: any) =>
         sdk.wiki.space.getNode(
           {
             params: {
               token,
-              obj_type: 'wiki',
+              obj_type: "wiki",
             },
           },
           opts,
         ),
-      { as: 'user' },
+      { as: "user" },
     );
     assertLarkOk(wikiNodeRes);
     const objToken = wikiNodeRes.data?.node?.obj_token;
@@ -190,13 +190,14 @@ async function resolveRange(
 
   const sheetsRes = await client.invoke(
     apiName,
-    (sdk: any, opts: any) => sdk.sheets.spreadsheetSheet.query({ path: { spreadsheet_token: token } }, opts),
-    { as: 'user' },
+    (sdk: any, opts: any) =>
+      sdk.sheets.spreadsheetSheet.query({ path: { spreadsheet_token: token } }, opts),
+    { as: "user" },
   );
   assertLarkOk(sheetsRes);
   const firstSheet = (sheetsRes.data?.sheets ?? [])[0];
   if (!firstSheet?.sheet_id) {
-    throw new Error('spreadsheet has no worksheets');
+    throw new Error("spreadsheet has no worksheets");
   }
   return firstSheet.sheet_id;
 }
@@ -205,7 +206,7 @@ async function resolveRange(
  * 将列号（1-based）转换为 Excel 列字母（A, B, ..., Z, AA, AB, ...）。
  */
 function colLetter(n: number): string {
-  let result = '';
+  let result = "";
   while (n > 0) {
     n--;
     result = String.fromCharCode(65 + (n % 26)) + result;
@@ -223,8 +224,11 @@ function colLetter(n: number): string {
 function flattenCellValue(cell: unknown): unknown {
   if (!Array.isArray(cell)) return cell;
   // 检测是否为富文本 segment 数组：每个元素都是 {text: string, ...} 对象
-  if (cell.length > 0 && cell.every((seg) => seg != null && typeof seg === 'object' && 'text' in seg)) {
-    return cell.map((seg: any) => seg.text).join('');
+  if (
+    cell.length > 0 &&
+    cell.every((seg) => seg != null && typeof seg === "object" && "text" in seg)
+  ) {
+    return cell.map((seg: any) => seg.text).join("");
   }
   return cell;
 }
@@ -256,12 +260,12 @@ const UrlOrToken = [
   Type.Optional(
     Type.String({
       description:
-        '电子表格 URL，例如 https://xxx.feishu.cn/sheets/TOKEN 或 https://xxx.feishu.cn/wiki/TOKEN（与 spreadsheet_token 二选一）',
+        "电子表格 URL，例如 https://xxx.feishu.cn/sheets/TOKEN 或 https://xxx.feishu.cn/wiki/TOKEN（与 spreadsheet_token 二选一）",
     }),
   ),
   Type.Optional(
     Type.String({
-      description: '电子表格 token（与 url 二选一）',
+      description: "电子表格 token（与 url 二选一）",
     }),
   ),
 ] as const;
@@ -269,14 +273,14 @@ const UrlOrToken = [
 const ValueRenderOption = Type.Optional(
   Type.Union(
     [
-      Type.Literal('ToString'),
-      Type.Literal('FormattedValue'),
-      Type.Literal('Formula'),
-      Type.Literal('UnformattedValue'),
+      Type.Literal("ToString"),
+      Type.Literal("FormattedValue"),
+      Type.Literal("Formula"),
+      Type.Literal("UnformattedValue"),
     ],
     {
       description:
-        '值渲染方式：ToString（默认）、FormattedValue（按格式）、Formula（公式）、UnformattedValue（原始值）',
+        "值渲染方式：ToString（默认）、FormattedValue（按格式）、Formula（公式）、UnformattedValue（原始值）",
     },
   ),
 );
@@ -284,25 +288,26 @@ const ValueRenderOption = Type.Optional(
 const FeishuSheetSchema = Type.Union([
   // INFO
   Type.Object({
-    action: Type.Literal('info'),
+    action: Type.Literal("info"),
     url: UrlOrToken[0],
     spreadsheet_token: UrlOrToken[1],
   }),
 
   // READ
   Type.Object({
-    action: Type.Literal('read'),
+    action: Type.Literal("read"),
     url: UrlOrToken[0],
     spreadsheet_token: UrlOrToken[1],
     range: Type.Optional(
       Type.String({
         description:
-          '读取范围（可选）。格式：<sheetId>!A1:D10 或 <sheetId>（sheetId 通过 info 获取）。不填则自动读取第一个工作表全部数据',
+          "读取范围（可选）。格式：<sheetId>!A1:D10 或 <sheetId>（sheetId 通过 info 获取）。不填则自动读取第一个工作表全部数据",
       }),
     ),
     sheet_id: Type.Optional(
       Type.String({
-        description: '工作表 ID（可选）。仅当不提供 range 时生效，指定要读取的工作表。不填则读取第一个工作表',
+        description:
+          "工作表 ID（可选）。仅当不提供 range 时生效，指定要读取的工作表。不填则读取第一个工作表",
       }),
     ),
     value_render_option: ValueRenderOption,
@@ -310,18 +315,18 @@ const FeishuSheetSchema = Type.Union([
 
   // WRITE
   Type.Object({
-    action: Type.Literal('write'),
+    action: Type.Literal("write"),
     url: UrlOrToken[0],
     spreadsheet_token: UrlOrToken[1],
     range: Type.Optional(
       Type.String({
         description:
-          '写入范围（可选）。格式：<sheetId>!A1:D10（sheetId 通过 info 获取）。不填则写入第一个工作表（从 A1 开始）',
+          "写入范围（可选）。格式：<sheetId>!A1:D10（sheetId 通过 info 获取）。不填则写入第一个工作表（从 A1 开始）",
       }),
     ),
     sheet_id: Type.Optional(
       Type.String({
-        description: '工作表 ID（可选）。仅当不提供 range 时生效。不填则使用第一个工作表',
+        description: "工作表 ID（可选）。仅当不提供 range 时生效。不填则使用第一个工作表",
       }),
     ),
     values: Type.Array(Type.Array(Type.Any()), {
@@ -331,55 +336,59 @@ const FeishuSheetSchema = Type.Union([
 
   // APPEND
   Type.Object({
-    action: Type.Literal('append'),
+    action: Type.Literal("append"),
     url: UrlOrToken[0],
     spreadsheet_token: UrlOrToken[1],
     range: Type.Optional(
       Type.String({
-        description: '追加范围（可选）。格式同 write。不填则追加到第一个工作表末尾',
+        description: "追加范围（可选）。格式同 write。不填则追加到第一个工作表末尾",
       }),
     ),
     sheet_id: Type.Optional(
       Type.String({
-        description: '工作表 ID（可选）。仅当不提供 range 时生效',
+        description: "工作表 ID（可选）。仅当不提供 range 时生效",
       }),
     ),
     values: Type.Array(Type.Array(Type.Any()), {
-      description: '要追加的二维数组数据',
+      description: "要追加的二维数组数据",
     }),
   }),
 
   // FIND
   Type.Object({
-    action: Type.Literal('find'),
+    action: Type.Literal("find"),
     url: UrlOrToken[0],
     spreadsheet_token: UrlOrToken[1],
     sheet_id: Type.String({
-      description: '工作表 ID（必填，可通过 info action 获取）',
+      description: "工作表 ID（必填，可通过 info action 获取）",
     }),
     find: Type.String({
-      description: '查找内容（字符串或正则表达式）',
+      description: "查找内容（字符串或正则表达式）",
     }),
     range: Type.Optional(
       Type.String({
-        description: '查找范围。格式：A1:D10（不含 sheetId 前缀）。不填则搜索整个工作表',
+        description: "查找范围。格式：A1:D10（不含 sheetId 前缀）。不填则搜索整个工作表",
       }),
     ),
-    match_case: Type.Optional(Type.Boolean({ description: '是否区分大小写（默认 true）' })),
-    match_entire_cell: Type.Optional(Type.Boolean({ description: '是否完全匹配整个单元格（默认 false）' })),
-    search_by_regex: Type.Optional(Type.Boolean({ description: '是否使用正则表达式（默认 false）' })),
-    include_formulas: Type.Optional(Type.Boolean({ description: '是否搜索公式（默认 false）' })),
+    match_case: Type.Optional(Type.Boolean({ description: "是否区分大小写（默认 true）" })),
+    match_entire_cell: Type.Optional(
+      Type.Boolean({ description: "是否完全匹配整个单元格（默认 false）" }),
+    ),
+    search_by_regex: Type.Optional(
+      Type.Boolean({ description: "是否使用正则表达式（默认 false）" }),
+    ),
+    include_formulas: Type.Optional(Type.Boolean({ description: "是否搜索公式（默认 false）" })),
   }),
 
   // CREATE
   Type.Object({
-    action: Type.Literal('create'),
+    action: Type.Literal("create"),
     title: Type.String({
-      description: '电子表格标题',
+      description: "电子表格标题",
     }),
     folder_token: Type.Optional(
       Type.String({
-        description: '文件夹 token（可选）。不填时创建到「我的空间」根目录',
+        description: "文件夹 token（可选）。不填时创建到「我的空间」根目录",
       }),
     ),
     headers: Type.Optional(
@@ -389,27 +398,28 @@ const FeishuSheetSchema = Type.Union([
     ),
     data: Type.Optional(
       Type.Array(Type.Array(Type.Any()), {
-        description: '初始数据（可选）。二维数组，写在表头之后。例如 [["张三", "工程", "2026-01-01"]]',
+        description:
+          '初始数据（可选）。二维数组，写在表头之后。例如 [["张三", "工程", "2026-01-01"]]',
       }),
     ),
   }),
 
   // EXPORT
   Type.Object({
-    action: Type.Literal('export'),
+    action: Type.Literal("export"),
     url: UrlOrToken[0],
     spreadsheet_token: UrlOrToken[1],
-    file_extension: StringEnum(['xlsx', 'csv'], {
-      description: '导出格式：xlsx 或 csv',
+    file_extension: StringEnum(["xlsx", "csv"], {
+      description: "导出格式：xlsx 或 csv",
     }),
     output_path: Type.Optional(
       Type.String({
-        description: '本地保存路径（含文件名）。不填则只返回文件信息',
+        description: "本地保存路径（含文件名）。不填则只返回文件信息",
       }),
     ),
     sheet_id: Type.Optional(
       Type.String({
-        description: '工作表 ID。导出 CSV 时必填（CSV 一次只能导出一个工作表），导出 xlsx 时可选',
+        description: "工作表 ID。导出 CSV 时必填（CSV 一次只能导出一个工作表），导出 xlsx 时可选",
       }),
     ),
   }),
@@ -425,27 +435,27 @@ interface BaseParams {
 }
 
 type FeishuSheetParams =
-  | (BaseParams & { action: 'info' })
+  | (BaseParams & { action: "info" })
   | (BaseParams & {
-      action: 'read';
+      action: "read";
       range?: string;
       sheet_id?: string;
-      value_render_option?: 'ToString' | 'FormattedValue' | 'Formula' | 'UnformattedValue';
+      value_render_option?: "ToString" | "FormattedValue" | "Formula" | "UnformattedValue";
     })
   | (BaseParams & {
-      action: 'write';
-      range?: string;
-      sheet_id?: string;
-      values: unknown[][];
-    })
-  | (BaseParams & {
-      action: 'append';
+      action: "write";
       range?: string;
       sheet_id?: string;
       values: unknown[][];
     })
   | (BaseParams & {
-      action: 'find';
+      action: "append";
+      range?: string;
+      sheet_id?: string;
+      values: unknown[][];
+    })
+  | (BaseParams & {
+      action: "find";
       sheet_id: string;
       find: string;
       range?: string;
@@ -455,15 +465,15 @@ type FeishuSheetParams =
       include_formulas?: boolean;
     })
   | {
-      action: 'create';
+      action: "create";
       title: string;
       folder_token?: string;
       headers?: string[];
       data?: unknown[][];
     }
   | (BaseParams & {
-      action: 'export';
-      file_extension: 'xlsx' | 'csv';
+      action: "export";
+      file_extension: "xlsx" | "csv";
       output_path?: string;
       sheet_id?: string;
     });
@@ -476,25 +486,25 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
   if (!api.config) return false;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_sheet');
+  const { toolClient, log } = createToolContext(api, "feishu_sheet");
 
   return registerTool(
     api,
     {
-      name: 'feishu_sheet',
-      label: 'Feishu Spreadsheet',
+      name: "feishu_sheet",
+      label: "Feishu Spreadsheet",
       description:
-        '【以用户身份】飞书电子表格工具。支持创建、读写、查找、导出电子表格。' +
-        '\n\n电子表格（Sheets）类似 Excel/Google Sheets，与多维表格（Bitable/Airtable）是不同产品。' +
-        '\n\n所有 action（除 create 外）均支持传入 url 或 spreadsheet_token，工具会自动解析。支持知识库 wiki URL，自动解析为电子表格 token。' +
-        '\n\nActions:' +
-        '\n- info：获取表格信息 + 全部工作表列表（一次调用替代 get_info + list_sheets）' +
-        '\n- read：读取数据。不填 range 自动读取第一个工作表全部数据' +
-        '\n- write：覆盖写入,高危,请谨慎使用该操作。不填 range 自动写入第一个工作表（从 A1 开始）' +
-        '\n- append：在已有数据末尾追加行' +
-        '\n- find：在工作表中查找单元格' +
-        '\n- create：创建电子表格。支持带 headers + data 一步创建含数据的表格' +
-        '\n- export：导出为 xlsx 或 csv（csv 必须指定 sheet_id）',
+        "【以用户身份】飞书电子表格工具。支持创建、读写、查找、导出电子表格。" +
+        "\n\n电子表格（Sheets）类似 Excel/Google Sheets，与多维表格（Bitable/Airtable）是不同产品。" +
+        "\n\n所有 action（除 create 外）均支持传入 url 或 spreadsheet_token，工具会自动解析。支持知识库 wiki URL，自动解析为电子表格 token。" +
+        "\n\nActions:" +
+        "\n- info：获取表格信息 + 全部工作表列表（一次调用替代 get_info + list_sheets）" +
+        "\n- read：读取数据。不填 range 自动读取第一个工作表全部数据" +
+        "\n- write：覆盖写入,高危,请谨慎使用该操作。不填 range 自动写入第一个工作表（从 A1 开始）" +
+        "\n- append：在已有数据末尾追加行" +
+        "\n- find：在工作表中查找单元格" +
+        "\n- create：创建电子表格。支持带 headers + data 一步创建含数据的表格" +
+        "\n- export：导出为 xlsx 或 csv（csv 必须指定 sheet_id）",
       parameters: FeishuSheetSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as FeishuSheetParams;
@@ -506,21 +516,23 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // INFO — 表格信息 + 全部工作表列表
             // -----------------------------------------------------------------
-            case 'info': {
+            case "info": {
               const { token } = await resolveToken(p, client, log);
               log.info(`info: token=${token}`);
 
               // 并行请求表格信息和工作表列表
               const [spreadsheetRes, sheetsRes] = await Promise.all([
                 client.invoke(
-                  'feishu_sheet.info',
-                  (sdk, opts) => sdk.sheets.spreadsheet.get({ path: { spreadsheet_token: token } }, opts),
-                  { as: 'user' },
+                  "feishu_sheet.info",
+                  (sdk, opts) =>
+                    sdk.sheets.spreadsheet.get({ path: { spreadsheet_token: token } }, opts),
+                  { as: "user" },
                 ),
                 client.invoke(
-                  'feishu_sheet.info',
-                  (sdk, opts) => sdk.sheets.spreadsheetSheet.query({ path: { spreadsheet_token: token } }, opts),
-                  { as: 'user' },
+                  "feishu_sheet.info",
+                  (sdk, opts) =>
+                    sdk.sheets.spreadsheetSheet.query({ path: { spreadsheet_token: token } }, opts),
+                  { as: "user" },
                 ),
               ]);
               assertLarkOk(spreadsheetRes);
@@ -550,16 +562,22 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // READ — 读取数据（支持自动探测范围）
             // -----------------------------------------------------------------
-            case 'read': {
+            case "read": {
               const { token, urlSheetId } = await resolveToken(p, client, log);
-              const range = await resolveRange(token, p.range, p.sheet_id ?? urlSheetId, client, 'feishu_sheet.read');
+              const range = await resolveRange(
+                token,
+                p.range,
+                p.sheet_id ?? urlSheetId,
+                client,
+                "feishu_sheet.read",
+              );
 
               log.info(`read: token=${token}, range=${range}`);
 
               const query: Record<string, string> = {
                 // 默认返回计算后的值（而非公式原文），日期转为可读字符串
-                valueRenderOption: p.value_render_option ?? 'ToString',
-                dateTimeRenderOption: 'FormattedString',
+                valueRenderOption: p.value_render_option ?? "ToString",
+                dateTimeRenderOption: "FormattedString",
               };
 
               const res = await client.invokeByPath<{
@@ -576,9 +594,9 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                   };
                 };
               }>(
-                'feishu_sheet.read',
+                "feishu_sheet.read",
                 `/open-apis/sheets/v2/spreadsheets/${token}/values/${encodeURIComponent(range)}`,
-                { method: 'GET', query, as: 'user' },
+                { method: "GET", query, as: "user" },
               );
 
               if (res.code && res.code !== 0) {
@@ -586,9 +604,14 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
               }
 
               const valueRange = res.data?.valueRange;
-              const { values, truncated, total_rows } = truncateRows(flattenValues(valueRange?.values), MAX_READ_ROWS);
+              const { values, truncated, total_rows } = truncateRows(
+                flattenValues(valueRange?.values),
+                MAX_READ_ROWS,
+              );
 
-              log.info(`read: ${total_rows} rows${truncated ? ` (truncated to ${MAX_READ_ROWS})` : ''}`);
+              log.info(
+                `read: ${total_rows} rows${truncated ? ` (truncated to ${MAX_READ_ROWS})` : ""}`,
+              );
 
               return json({
                 range: valueRange?.range,
@@ -606,17 +629,28 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // WRITE — 覆盖写入（支持自动 range）
             // -----------------------------------------------------------------
-            case 'write': {
+            case "write": {
               const { token, urlSheetId } = await resolveToken(p, client, log);
 
               if (p.values && p.values.length > MAX_WRITE_ROWS) {
-                return json({ error: `write row count ${p.values.length} exceeds limit ${MAX_WRITE_ROWS}` });
+                return json({
+                  error: `write row count ${p.values.length} exceeds limit ${MAX_WRITE_ROWS}`,
+                });
               }
-              if (p.values && p.values.some((row) => Array.isArray(row) && row.length > MAX_WRITE_COLS)) {
+              if (
+                p.values &&
+                p.values.some((row) => Array.isArray(row) && row.length > MAX_WRITE_COLS)
+              ) {
                 return json({ error: `write column count exceeds limit ${MAX_WRITE_COLS}` });
               }
 
-              const range = await resolveRange(token, p.range, p.sheet_id ?? urlSheetId, client, 'feishu_sheet.write');
+              const range = await resolveRange(
+                token,
+                p.range,
+                p.sheet_id ?? urlSheetId,
+                client,
+                "feishu_sheet.write",
+              );
 
               log.info(`write: token=${token}, range=${range}, rows=${p.values?.length}`);
 
@@ -631,10 +665,10 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                   updatedCells?: number;
                   revision?: number;
                 };
-              }>('feishu_sheet.write', `/open-apis/sheets/v2/spreadsheets/${token}/values`, {
-                method: 'PUT',
+              }>("feishu_sheet.write", `/open-apis/sheets/v2/spreadsheets/${token}/values`, {
+                method: "PUT",
                 body: { valueRange: { range, values: p.values } },
-                as: 'user',
+                as: "user",
               });
 
               if (res.code && res.code !== 0) {
@@ -655,14 +689,22 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // APPEND — 追加行
             // -----------------------------------------------------------------
-            case 'append': {
+            case "append": {
               const { token, urlSheetId } = await resolveToken(p, client, log);
 
               if (p.values && p.values.length > MAX_WRITE_ROWS) {
-                return json({ error: `append row count ${p.values.length} exceeds limit ${MAX_WRITE_ROWS}` });
+                return json({
+                  error: `append row count ${p.values.length} exceeds limit ${MAX_WRITE_ROWS}`,
+                });
               }
 
-              const range = await resolveRange(token, p.range, p.sheet_id ?? urlSheetId, client, 'feishu_sheet.append');
+              const range = await resolveRange(
+                token,
+                p.range,
+                p.sheet_id ?? urlSheetId,
+                client,
+                "feishu_sheet.append",
+              );
 
               log.info(`append: token=${token}, range=${range}, rows=${p.values?.length}`);
 
@@ -682,11 +724,15 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                     revision?: number;
                   };
                 };
-              }>('feishu_sheet.append', `/open-apis/sheets/v2/spreadsheets/${token}/values_append`, {
-                method: 'POST',
-                body: { valueRange: { range, values: p.values } },
-                as: 'user',
-              });
+              }>(
+                "feishu_sheet.append",
+                `/open-apis/sheets/v2/spreadsheets/${token}/values_append`,
+                {
+                  method: "POST",
+                  body: { valueRange: { range, values: p.values } },
+                  as: "user",
+                },
+              );
 
               if (res.code && res.code !== 0) {
                 return json({ error: res.msg || `API error code: ${res.code}` });
@@ -708,7 +754,7 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // FIND — 查找单元格
             // -----------------------------------------------------------------
-            case 'find': {
+            case "find": {
               const { token } = await resolveToken(p, client, log);
               log.info(`find: token=${token}, sheet_id=${p.sheet_id}, find="${p.find}"`);
 
@@ -716,12 +762,15 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                 range: p.range ? `${p.sheet_id}!${p.range}` : p.sheet_id,
               };
               if (p.match_case !== undefined) findCondition.match_case = !p.match_case; // oapi问题, 实际true表示不用区分, false表示需要区分,所以要取反
-              if (p.match_entire_cell !== undefined) findCondition.match_entire_cell = p.match_entire_cell;
-              if (p.search_by_regex !== undefined) findCondition.search_by_regex = p.search_by_regex;
-              if (p.include_formulas !== undefined) findCondition.include_formulas = p.include_formulas;
+              if (p.match_entire_cell !== undefined)
+                findCondition.match_entire_cell = p.match_entire_cell;
+              if (p.search_by_regex !== undefined)
+                findCondition.search_by_regex = p.search_by_regex;
+              if (p.include_formulas !== undefined)
+                findCondition.include_formulas = p.include_formulas;
 
               const res = await client.invoke(
-                'feishu_sheet.find',
+                "feishu_sheet.find",
                 (sdk, opts) =>
                   sdk.sheets.spreadsheetSheet.find(
                     {
@@ -736,7 +785,7 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -753,14 +802,14 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // CREATE — 创建电子表格（支持带初始数据）
             // -----------------------------------------------------------------
-            case 'create': {
+            case "create": {
               log.info(
-                `create: title="${p.title}", folder=${p.folder_token ?? '(root)'}, headers=${!!p.headers}, data=${p.data?.length ?? 0} rows`,
+                `create: title="${p.title}", folder=${p.folder_token ?? "(root)"}, headers=${!!p.headers}, data=${p.data?.length ?? 0} rows`,
               );
 
               // Step 1: 创建电子表格
               const createRes = await client.invoke(
-                'feishu_sheet.create',
+                "feishu_sheet.create",
                 (sdk, opts) =>
                   sdk.sheets.spreadsheet.create(
                     {
@@ -771,14 +820,14 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(createRes);
 
               const spreadsheet = createRes.data?.spreadsheet;
               const token = spreadsheet?.spreadsheet_token;
               if (!token) {
-                return json({ error: 'failed to create spreadsheet: no token returned' });
+                return json({ error: "failed to create spreadsheet: no token returned" });
               }
 
               const url = `${wwwDomain(brand)}/sheets/${token}`;
@@ -793,9 +842,13 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                 if (allRows.length > 0) {
                   // 查询默认工作表的 sheet_id
                   const sheetsRes = await client.invoke(
-                    'feishu_sheet.create',
-                    (sdk, opts) => sdk.sheets.spreadsheetSheet.query({ path: { spreadsheet_token: token } }, opts),
-                    { as: 'user' },
+                    "feishu_sheet.create",
+                    (sdk, opts) =>
+                      sdk.sheets.spreadsheetSheet.query(
+                        { path: { spreadsheet_token: token } },
+                        opts,
+                      ),
+                    { as: "user" },
                   );
                   assertLarkOk(sheetsRes);
                   const firstSheet = (sheetsRes.data?.sheets ?? [])[0];
@@ -808,12 +861,12 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                     log.info(`create: writing ${numRows} rows to ${range}`);
 
                     const writeRes = await client.invokeByPath<{ code?: number; msg?: string }>(
-                      'feishu_sheet.create',
+                      "feishu_sheet.create",
                       `/open-apis/sheets/v2/spreadsheets/${token}/values`,
                       {
-                        method: 'PUT',
+                        method: "PUT",
                         body: { valueRange: { range, values: allRows } },
-                        as: 'user',
+                        as: "user",
                       },
                     );
 
@@ -839,40 +892,42 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // EXPORT — 导出为 xlsx/csv
             // -----------------------------------------------------------------
-            case 'export': {
+            case "export": {
               const { token } = await resolveToken(p, client, log);
 
-              if (p.file_extension === 'csv' && !p.sheet_id) {
+              if (p.file_extension === "csv" && !p.sheet_id) {
                 return json({
                   error:
-                    'sheet_id is required for CSV export (CSV can only export one worksheet at a time). Use info action to get the worksheet list.',
+                    "sheet_id is required for CSV export (CSV can only export one worksheet at a time). Use info action to get the worksheet list.",
                 });
               }
 
-              log.info(`export: token=${token}, format=${p.file_extension}, output=${p.output_path ?? '(info only)'}`);
+              log.info(
+                `export: token=${token}, format=${p.file_extension}, output=${p.output_path ?? "(info only)"}`,
+              );
 
               // Step 1: 创建导出任务
               const createRes = await client.invoke(
-                'feishu_sheet.export',
+                "feishu_sheet.export",
                 (sdk, opts) =>
                   sdk.drive.exportTask.create(
                     {
                       data: {
                         file_extension: p.file_extension,
                         token,
-                        type: 'sheet',
+                        type: "sheet",
                         sub_id: p.sheet_id,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(createRes);
 
               const ticket = createRes.data?.ticket;
               if (!ticket) {
-                return json({ error: 'failed to create export task: no ticket returned' });
+                return json({ error: "failed to create export task: no ticket returned" });
               }
 
               log.info(`export: ticket=${ticket}`);
@@ -886,9 +941,10 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                 await sleep(EXPORT_POLL_INTERVAL_MS);
 
                 const pollRes = await client.invoke(
-                  'feishu_sheet.export',
-                  (sdk, opts) => sdk.drive.exportTask.get({ path: { ticket }, params: { token } }, opts),
-                  { as: 'user' },
+                  "feishu_sheet.export",
+                  (sdk, opts) =>
+                    sdk.drive.exportTask.get({ path: { ticket }, params: { token } }, opts),
+                  { as: "user" },
                 );
                 assertLarkOk(pollRes);
 
@@ -904,22 +960,27 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                 }
 
                 if (jobStatus !== undefined && jobStatus >= 3) {
-                  return json({ error: result?.job_error_msg || `export failed (status=${jobStatus})` });
+                  return json({
+                    error: result?.job_error_msg || `export failed (status=${jobStatus})`,
+                  });
                 }
 
-                log.info(`export: polling ${i + 1}/${EXPORT_POLL_MAX_RETRIES}, status=${jobStatus}`);
+                log.info(
+                  `export: polling ${i + 1}/${EXPORT_POLL_MAX_RETRIES}, status=${jobStatus}`,
+                );
               }
 
               if (!fileToken) {
-                return json({ error: 'export timeout: task did not complete within 30 seconds' });
+                return json({ error: "export timeout: task did not complete within 30 seconds" });
               }
 
               // Step 3: 下载（如果指定了 output_path）
               if (p.output_path) {
                 const dlRes: any = await client.invoke(
-                  'feishu_sheet.export',
-                  (sdk, opts) => sdk.drive.exportTask.download({ path: { file_token: fileToken! } }, opts),
-                  { as: 'user' },
+                  "feishu_sheet.export",
+                  (sdk, opts) =>
+                    sdk.drive.exportTask.download({ path: { file_token: fileToken! } }, opts),
+                  { as: "user" },
                 );
 
                 const stream = dlRes.getReadableStream();
@@ -944,7 +1005,7 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
                 file_token: fileToken,
                 file_name: fileName,
                 file_size: fileSize,
-                hint: 'File exported. Provide output_path parameter to download locally.',
+                hint: "File exported. Provide output_path parameter to download locally.",
               });
             }
           }
@@ -953,6 +1014,6 @@ export function registerFeishuSheetTool(api: OpenClawPluginApi): boolean {
         }
       },
     },
-    { name: 'feishu_sheet' },
+    { name: "feishu_sheet" },
   );
 }

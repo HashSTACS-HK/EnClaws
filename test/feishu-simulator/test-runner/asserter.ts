@@ -1,31 +1,63 @@
-import type { TestCaseAssert, ScriptAssert } from "../types.js";
 import type { FeishuReplyMeta } from "../feishu-client.js";
+import type { TestCaseAssert, ScriptAssert } from "../types.js";
 
 export function formatAssert(a?: TestCaseAssert): string {
-  if (!a) {return "";}
+  if (!a) {
+    return "";
+  }
   const parts: string[] = [];
-  if (a.contains) {parts.push(`contains:"${a.contains}"`);}
-  if (a.notContains) {parts.push(`!contains:"${a.notContains}"`);}
-  if (a.matches) {parts.push(`matches:/${a.matches}/`);}
-  if (a.minLength != null) {parts.push(`min:${a.minLength}`);}
-  if (a.maxLength != null) {parts.push(`max:${a.maxLength}`);}
-  if (a.msgType) {parts.push(`msgType:${a.msgType}`);}
-  if (a.hasFile) {parts.push("hasFile");}
-  if (a.hasImage) {parts.push("hasImage");}
-  if (a.fileNameMatches) {parts.push(`fileName:/${a.fileNameMatches}/`);}
-  if (a.containsAny) {parts.push(`containsAny:[${a.containsAny.map((s) => `"${s}"`).join(",")}]`);}
-  if (a.containsAll) {parts.push(`containsAll:[${a.containsAll.map((s) => `"${s}"`).join(",")}]`);}
-  if (a.expectNoReply) {parts.push("expectNoReply");}
+  if (a.contains) {
+    parts.push(`contains:"${a.contains}"`);
+  }
+  if (a.notContains) {
+    parts.push(`!contains:"${a.notContains}"`);
+  }
+  if (a.matches) {
+    parts.push(`matches:/${a.matches}/`);
+  }
+  if (a.minLength != null) {
+    parts.push(`min:${a.minLength}`);
+  }
+  if (a.maxLength != null) {
+    parts.push(`max:${a.maxLength}`);
+  }
+  if (a.msgType) {
+    parts.push(`msgType:${a.msgType}`);
+  }
+  if (a.hasFile) {
+    parts.push("hasFile");
+  }
+  if (a.hasImage) {
+    parts.push("hasImage");
+  }
+  if (a.fileNameMatches) {
+    parts.push(`fileName:/${a.fileNameMatches}/`);
+  }
+  if (a.containsAny) {
+    parts.push(`containsAny:[${a.containsAny.map((s) => `"${s}"`).join(",")}]`);
+  }
+  if (a.containsAll) {
+    parts.push(`containsAll:[${a.containsAll.map((s) => `"${s}"`).join(",")}]`);
+  }
+  if (a.expectNoReply) {
+    parts.push("expectNoReply");
+  }
   return parts.join(", ");
 }
 
-export function checkAssertions(text: string, assert?: TestCaseAssert, meta?: FeishuReplyMeta): string[] {
+export function checkAssertions(
+  text: string,
+  assert?: TestCaseAssert,
+  meta?: FeishuReplyMeta,
+): string[] {
   const failures: string[] = [];
 
   // Negative assertion: expect the bot to NOT reply
   if (assert?.expectNoReply) {
     if (text || meta?.fileKey || meta?.imageKey) {
-      failures.push(`expected no reply but got: "${text.slice(0, 60)}${text.length > 60 ? "..." : ""}"`);
+      failures.push(
+        `expected no reply but got: "${text.slice(0, 60)}${text.length > 60 ? "..." : ""}"`,
+      );
     }
     return failures;
   }
@@ -59,12 +91,16 @@ export function checkAssertions(text: string, assert?: TestCaseAssert, meta?: Fe
       failures.push("expected reply to contain an image");
     }
     if (assert.fileNameMatches && !new RegExp(assert.fileNameMatches).test(meta?.fileName ?? "")) {
-      failures.push(`expected fileName to match /${assert.fileNameMatches}/ but got "${meta?.fileName ?? ""}"`);
+      failures.push(
+        `expected fileName to match /${assert.fileNameMatches}/ but got "${meta?.fileName ?? ""}"`,
+      );
     }
     if (assert.containsAny && assert.containsAny.length > 0) {
       const found = assert.containsAny.some((s) => text.includes(s));
       if (!found) {
-        failures.push(`expected to contain any of [${assert.containsAny.map((s) => `"${s}"`).join(", ")}]`);
+        failures.push(
+          `expected to contain any of [${assert.containsAny.map((s) => `"${s}"`).join(", ")}]`,
+        );
       }
     }
     if (assert.containsAll) {
@@ -83,19 +119,39 @@ export function checkAssertions(text: string, assert?: TestCaseAssert, meta?: Fe
 // ---------------------------------------------------------------------------
 
 export function formatScriptAssert(a?: ScriptAssert): string {
-  if (!a) {return "";}
+  if (!a) {
+    return "";
+  }
   const parts: string[] = [];
-  if (a.exitCode != null) {parts.push(`exitCode:${a.exitCode}`);}
-  if (a.stdoutContains) {parts.push(`stdout~"${a.stdoutContains}"`);}
-  if (a.stdoutNotContains) {parts.push(`stdout!~"${a.stdoutNotContains}"`);}
-  if (a.stderrContains) {parts.push(`stderr~"${a.stderrContains}"`);}
+  if (a.exitCode != null) {
+    parts.push(`exitCode:${a.exitCode}`);
+  }
+  if (a.stdoutContains) {
+    parts.push(`stdout~"${a.stdoutContains}"`);
+  }
+  if (a.stdoutNotContains) {
+    parts.push(`stdout!~"${a.stdoutNotContains}"`);
+  }
+  if (a.stderrContains) {
+    parts.push(`stderr~"${a.stderrContains}"`);
+  }
   if (a.jsonPath) {
     for (const [p, rule] of Object.entries(a.jsonPath)) {
-      if (rule.equals != null) {parts.push(`$.${p}==${JSON.stringify(rule.equals)}`);}
-      if (rule.contains) {parts.push(`$.${p}~"${rule.contains}"`);}
-      if (rule.matches) {parts.push(`$.${p}~/${rule.matches}/`);}
-      if (rule.notContains) {parts.push(`$.${p}!~"${rule.notContains}"`);}
-      if (rule.exists) {parts.push(`$.${p} exists`);}
+      if (rule.equals != null) {
+        parts.push(`$.${p}==${JSON.stringify(rule.equals)}`);
+      }
+      if (rule.contains) {
+        parts.push(`$.${p}~"${rule.contains}"`);
+      }
+      if (rule.matches) {
+        parts.push(`$.${p}~/${rule.matches}/`);
+      }
+      if (rule.notContains) {
+        parts.push(`$.${p}!~"${rule.notContains}"`);
+      }
+      if (rule.exists) {
+        parts.push(`$.${p} exists`);
+      }
     }
   }
   return parts.join(", ");
@@ -114,7 +170,9 @@ export function checkScriptAssertions(
     failures.push(`exitCode ${exitCode} !== expected ${expectedExitCode}`);
   }
 
-  if (!assert) {return failures;}
+  if (!assert) {
+    return failures;
+  }
 
   if (assert.stdoutContains && !stdout.includes(assert.stdoutContains)) {
     failures.push(`stdout does not contain "${assert.stdoutContains}"`);
@@ -148,10 +206,14 @@ export function checkScriptAssertions(
         failures.push(`$.${dotPath}: ${JSON.stringify(value)} !== ${JSON.stringify(rule.equals)}`);
       }
       if (rule.contains && (typeof value !== "string" || !value.includes(rule.contains))) {
-        failures.push(`$.${dotPath}: expected to contain "${rule.contains}", got ${JSON.stringify(value)}`);
+        failures.push(
+          `$.${dotPath}: expected to contain "${rule.contains}", got ${JSON.stringify(value)}`,
+        );
       }
       if (rule.matches && (typeof value !== "string" || !new RegExp(rule.matches).test(value))) {
-        failures.push(`$.${dotPath}: expected to match /${rule.matches}/, got ${JSON.stringify(value)}`);
+        failures.push(
+          `$.${dotPath}: expected to match /${rule.matches}/, got ${JSON.stringify(value)}`,
+        );
       }
       if (rule.notContains && typeof value === "string" && value.includes(rule.notContains)) {
         failures.push(`$.${dotPath}: should NOT contain "${rule.notContains}"`);
@@ -163,11 +225,15 @@ export function checkScriptAssertions(
 }
 
 function resolveDotPath(obj: Record<string, unknown> | null, dotPath: string): unknown {
-  if (!obj) {return undefined;}
+  if (!obj) {
+    return undefined;
+  }
   const parts = dotPath.split(".");
   let current: unknown = obj;
   for (const part of parts) {
-    if (current == null || typeof current !== "object") {return undefined;}
+    if (current == null || typeof current !== "object") {
+      return undefined;
+    }
     current = (current as Record<string, unknown>)[part];
   }
   return current;

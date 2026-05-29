@@ -24,7 +24,9 @@ const INSTALL_INTENT_PATTERNS: RegExp[] = [
 ];
 
 function hasSkillInstallIntent(text: string): boolean {
-  if (!text) {return false;}
+  if (!text) {
+    return false;
+  }
   return INSTALL_INTENT_PATTERNS.some((p) => p.test(text));
 }
 
@@ -41,15 +43,23 @@ function hasSkillInstallIntent(text: string): boolean {
 export const handleSkillInstallGuard: CommandHandler = async (params) => {
   const tenantRole = params.ctx.TenantUserRole;
   // Back-compat: no tenant context (CLI / single-user) → never block here.
-  if (!tenantRole) {return null;}
+  if (!tenantRole) {
+    return null;
+  }
   // owner/admin may install — let the message flow to the agent or slash handler.
-  if (tenantRole === "owner" || tenantRole === "admin") {return null;}
+  if (tenantRole === "owner" || tenantRole === "admin") {
+    return null;
+  }
 
   const raw = params.command.rawBodyNormalized || params.command.commandBodyNormalized || "";
   // Skip slash commands — their own handlers enforce role checks.
-  if (raw.startsWith("/")) {return null;}
+  if (raw.startsWith("/")) {
+    return null;
+  }
 
-  if (!hasSkillInstallIntent(raw)) {return null;}
+  if (!hasSkillInstallIntent(raw)) {
+    return null;
+  }
 
   logVerbose(
     `Blocking NL skill-install intent: tenantRole=${tenantRole} sender=${params.command.senderId || "<unknown>"}`,
@@ -83,7 +93,9 @@ const SKILL_MUTATE_INTENT_PATTERNS: RegExp[] = [
 ];
 
 function hasSkillMutateIntent(text: string): boolean {
-  if (!text) {return false;}
+  if (!text) {
+    return false;
+  }
   return SKILL_MUTATE_INTENT_PATTERNS.some((p) => p.test(text));
 }
 
@@ -101,13 +113,21 @@ function hasSkillMutateIntent(text: string): boolean {
  */
 export const handleSkillMutateGuard: CommandHandler = async (params) => {
   const tenantRole = params.ctx.TenantUserRole;
-  if (!tenantRole) {return null;}
-  if (tenantRole === "owner" || tenantRole === "admin") {return null;}
+  if (!tenantRole) {
+    return null;
+  }
+  if (tenantRole === "owner" || tenantRole === "admin") {
+    return null;
+  }
 
   const raw = params.command.rawBodyNormalized || params.command.commandBodyNormalized || "";
-  if (raw.startsWith("/")) {return null;}
+  if (raw.startsWith("/")) {
+    return null;
+  }
 
-  if (!hasSkillMutateIntent(raw)) {return null;}
+  if (!hasSkillMutateIntent(raw)) {
+    return null;
+  }
 
   logVerbose(
     `Blocking NL skill-mutate intent: tenantRole=${tenantRole} sender=${params.command.senderId || "<unknown>"}`,

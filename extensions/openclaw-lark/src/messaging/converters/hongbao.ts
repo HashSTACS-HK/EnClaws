@@ -5,8 +5,8 @@
  * Converter for "hongbao" (red packet) message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertHongbao: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as
@@ -16,7 +16,7 @@ export const convertHongbao: ContentConverterFn = (raw) => {
     | undefined;
 
   const text = parsed?.text;
-  const textAttr = text ? ` text="${text}"` : '';
+  const textAttr = text ? ` text="${text}"` : "";
 
   return {
     content: `<hongbao${textAttr}/>`,

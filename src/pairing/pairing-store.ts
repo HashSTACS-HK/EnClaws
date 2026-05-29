@@ -47,7 +47,10 @@ type AllowFromStore = {
   allowFrom: string[];
 };
 
-function resolveCredentialsDir(env: NodeJS.ProcessEnv = process.env, tenantContext?: TenantContext): string {
+function resolveCredentialsDir(
+  env: NodeJS.ProcessEnv = process.env,
+  tenantContext?: TenantContext,
+): string {
   if (tenantContext) {
     return resolveTenantCredentialsDir(tenantContext.tenantId, tenantContext.userId, env);
   }
@@ -68,8 +71,15 @@ function safeChannelKey(channel: PairingChannel): string {
   return safe;
 }
 
-function resolvePairingPath(channel: PairingChannel, env: NodeJS.ProcessEnv = process.env, tenantContext?: TenantContext): string {
-  return path.join(resolveCredentialsDir(env, tenantContext), `${safeChannelKey(channel)}-pairing.json`);
+function resolvePairingPath(
+  channel: PairingChannel,
+  env: NodeJS.ProcessEnv = process.env,
+  tenantContext?: TenantContext,
+): string {
+  return path.join(
+    resolveCredentialsDir(env, tenantContext),
+    `${safeChannelKey(channel)}-pairing.json`,
+  );
 }
 
 function safeAccountKey(accountId: string): string {
@@ -347,7 +357,12 @@ async function readNonDefaultAccountAllowFrom(params: {
   accountId: string;
   tenantContext?: TenantContext;
 }): Promise<string[]> {
-  const scopedPath = resolveAllowFromPath(params.channel, params.env, params.accountId, params.tenantContext);
+  const scopedPath = resolveAllowFromPath(
+    params.channel,
+    params.env,
+    params.accountId,
+    params.tenantContext,
+  );
   return await readAllowFromStateForPath(params.channel, scopedPath);
 }
 
@@ -357,7 +372,12 @@ function readNonDefaultAccountAllowFromSync(params: {
   accountId: string;
   tenantContext?: TenantContext;
 }): string[] {
-  const scopedPath = resolveAllowFromPath(params.channel, params.env, params.accountId, params.tenantContext);
+  const scopedPath = resolveAllowFromPath(
+    params.channel,
+    params.env,
+    params.accountId,
+    params.tenantContext,
+  );
   return readAllowFromStateForPathSync(params.channel, scopedPath);
 }
 
@@ -370,7 +390,12 @@ async function updateAllowFromStoreEntry(params: {
   apply: (current: string[], normalized: string) => string[] | null;
 }): Promise<{ changed: boolean; allowFrom: string[] }> {
   const env = params.env ?? process.env;
-  const filePath = resolveAllowFromPath(params.channel, env, params.accountId, params.tenantContext);
+  const filePath = resolveAllowFromPath(
+    params.channel,
+    env,
+    params.accountId,
+    params.tenantContext,
+  );
   return await withFileLock(
     filePath,
     { version: 1, allowFrom: [] } satisfies AllowFromStore,

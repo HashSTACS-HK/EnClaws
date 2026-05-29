@@ -2,44 +2,21 @@
   "name": "@dingtalk-real-ai/dingtalk-connector",
   "version": "0.8.13",
   "description": "DingTalk (钉钉) channel connector — Stream mode with AI Card streaming",
-  "main": "index.ts",
-  "type": "module",
-  "scripts": {
-    "build": "echo 'No build needed - jiti loads TS at runtime'",
-    "lint": "echo 'Lint check skipped'",
-    "lint:fix": "echo 'Lint fix skipped'",
-    "test": "vitest run tests/gateway-methods.unit.test.ts",
-    "test:unit": "vitest run tests/gateway-methods.unit.test.ts",
-    "test:integration": "vitest run tests/gateway-methods.unit.test.ts",
-    "test:all": "vitest run",
-    "test:watch": "vitest watch",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage --exclude tests/gateway-methods.test.ts",
-    "type-check": "npx tsc --noEmit",
-    "version:check": "echo 'Version check skipped'",
-    "release:prepare": "echo 'Release prepare skipped'",
-    "release:publish": "npm publish --access public",
-    "release:verify": "npm view @dingtalk-real-ai/dingtalk-connector version",
-    "clean": "rm -rf node_modules package-lock.json",
-    "install:fresh": "npm run clean && npm install",
-    "dev": "echo 'Run: openclaw start'",
-    "validate": "npm run lint && npm run type-check && npm run version:check"
-  },
   "keywords": [
-    "dingtalk",
-    "channel",
-    "stream",
     "ai-card",
-    "connector"
+    "channel",
+    "connector",
+    "dingtalk",
+    "stream"
   ],
-  "author": "DingTalk Real Team",
+  "homepage": "https://github.com/DingTalk-Real-AI/dingtalk-openclaw-connector#readme",
+  "bugs": "https://github.com/DingTalk-Real-AI/dingtalk-openclaw-connector/issues",
   "license": "MIT",
+  "author": "DingTalk Real Team",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DingTalk-Real-AI/dingtalk-openclaw-connector.git"
   },
-  "homepage": "https://github.com/DingTalk-Real-AI/dingtalk-openclaw-connector#readme",
-  "bugs": "https://github.com/DingTalk-Real-AI/dingtalk-openclaw-connector/issues",
   "files": [
     "index.ts",
     "src/",
@@ -51,8 +28,31 @@
     "README.en.md",
     "CHANGELOG.md"
   ],
+  "type": "module",
+  "main": "index.ts",
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "build": "echo 'No build needed - jiti loads TS at runtime'",
+    "clean": "rm -rf node_modules package-lock.json",
+    "dev": "echo 'Run: openclaw start'",
+    "install:fresh": "npm run clean && npm install",
+    "lint": "echo 'Lint check skipped'",
+    "lint:fix": "echo 'Lint fix skipped'",
+    "release:prepare": "echo 'Release prepare skipped'",
+    "release:publish": "npm publish --access public",
+    "release:verify": "npm view @dingtalk-real-ai/dingtalk-connector version",
+    "test": "vitest run tests/gateway-methods.unit.test.ts",
+    "test:all": "vitest run",
+    "test:coverage": "vitest run --coverage --exclude tests/gateway-methods.test.ts",
+    "test:integration": "vitest run tests/gateway-methods.unit.test.ts",
+    "test:ui": "vitest --ui",
+    "test:unit": "vitest run tests/gateway-methods.unit.test.ts",
+    "test:watch": "vitest watch",
+    "type-check": "npx tsc --noEmit",
+    "validate": "npm run lint && npm run type-check && npm run version:check",
+    "version:check": "echo 'Version check skipped'"
   },
   "dependencies": {
     "axios": "1.14.0",
@@ -60,8 +60,13 @@
     "form-data": "^4.0.0",
     "zod": "^4.3.6"
   },
-  "optionalDependencies": {
-    "mammoth": "^1.8.0"
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "@vitest/coverage-v8": "^2.0.0",
+    "@vitest/ui": "^2.1.9",
+    "openclaw": "^2026.3.23-2",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.9"
   },
   "peerDependencies": {
     "openclaw": "^2026.3.23-2"
@@ -71,13 +76,8 @@
       "optional": true
     }
   },
-  "devDependencies": {
-    "@types/node": "^20.19.37",
-    "@vitest/coverage-v8": "^2.0.0",
-    "@vitest/ui": "^2.1.9",
-    "openclaw": "^2026.3.23-2",
-    "typescript": "^5.6.0",
-    "vitest": "^2.1.9"
+  "optionalDependencies": {
+    "mammoth": "^1.8.0"
   },
   "openclaw": {
     "extensions": [

@@ -6,22 +6,27 @@
  */
 
 import type { WSClient } from "@wecom/aibot-node-sdk";
-import type { MessageState } from "./interface.js";
-import { createPersistentReqIdStore, type PersistentReqIdStore } from "./reqid-store.js";
 import {
   MESSAGE_STATE_TTL_MS,
   MESSAGE_STATE_CLEANUP_INTERVAL_MS,
   MESSAGE_STATE_MAX_SIZE,
   GLOBAL_WS_CLIENT_KEY,
 } from "./const.js";
+import type { MessageState } from "./interface.js";
+import { createPersistentReqIdStore, type PersistentReqIdStore } from "./reqid-store.js";
 
 // ============================================================================
 // WSClient 实例管理
 // ============================================================================
 
 /** WSClient 实例管理 */
-const wsClientInstances: Map<string, WSClient> = ((globalThis as Record<string, unknown>)[GLOBAL_WS_CLIENT_KEY]
-  ?? ((globalThis as Record<string, unknown>)[GLOBAL_WS_CLIENT_KEY] = new Map<string, WSClient>())) as Map<string, WSClient>;
+const wsClientInstances: Map<string, WSClient> = ((globalThis as Record<string, unknown>)[
+  GLOBAL_WS_CLIENT_KEY
+] ??
+  ((globalThis as Record<string, unknown>)[GLOBAL_WS_CLIENT_KEY] = new Map<
+    string,
+    WSClient
+  >())) as Map<string, WSClient>;
 
 /**
  * 获取指定账户的 WSClient 实例
@@ -182,7 +187,10 @@ export function setReqIdForChat(chatId: string, reqId: string, accountId = "defa
 /**
  * 获取 chatId 对应的 reqId（异步：优先内存，miss 时查磁盘并回填内存）
  */
-export async function getReqIdForChatAsync(chatId: string, accountId = "default"): Promise<string | undefined> {
+export async function getReqIdForChatAsync(
+  chatId: string,
+  accountId = "default",
+): Promise<string | undefined> {
   return getOrCreateReqIdStore(accountId).get(chatId);
 }
 

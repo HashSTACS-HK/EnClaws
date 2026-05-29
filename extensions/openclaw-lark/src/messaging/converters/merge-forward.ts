@@ -18,11 +18,11 @@
  * for creating the appropriate callbacks (UAT / TAT / event push).
  */
 
-import { larkLogger } from '../../core/lark-logger';
-import type { ApiMessageItem, ContentConverterFn, ConvertContext } from './types';
-import { buildConvertContextFromItem } from './content-converter-helpers';
+import { larkLogger } from "../../core/lark-logger";
+import { buildConvertContextFromItem } from "./content-converter-helpers";
+import type { ApiMessageItem, ContentConverterFn, ConvertContext } from "./types";
 
-const log = larkLogger('converters/merge-forward');
+const log = larkLogger("converters/merge-forward");
 
 /**
  * Recursively expand a merge_forward message.
@@ -36,10 +36,17 @@ const log = larkLogger('converters/merge-forward');
  * ```
  */
 export const convertMergeForward: ContentConverterFn = async (_raw, ctx) => {
-  const { accountId, messageId, resolveUserName, batchResolveNames, fetchSubMessages, convertMessageContent } = ctx;
+  const {
+    accountId,
+    messageId,
+    resolveUserName,
+    batchResolveNames,
+    fetchSubMessages,
+    convertMessageContent,
+  } = ctx;
 
   if (!fetchSubMessages) {
-    return { content: '<forwarded_messages/>', resources: [] };
+    return { content: "<forwarded_messages/>", resources: [] };
   }
 
   const content = await expand(
@@ -63,22 +70,22 @@ async function expand(
   resolveUserName?: (openId: string) => string | undefined,
   batchResolveNames?: (openIds: string[]) => Promise<void>,
   fetchSubMessages?: (messageId: string) => Promise<ApiMessageItem[]>,
-  convertContent?: ConvertContext['convertMessageContent'],
+  convertContent?: ConvertContext["convertMessageContent"],
 ): Promise<string> {
   // --- Phase 1: Fetch (single API call via callback) ---
   let items: ApiMessageItem[];
   try {
     items = await fetchSubMessages!(messageId);
   } catch (error) {
-    log.error('fetch sub-messages failed', {
+    log.error("fetch sub-messages failed", {
       messageId,
       error: error instanceof Error ? error.message : String(error),
     });
-    return '<forwarded_messages/>';
+    return "<forwarded_messages/>";
   }
 
   if (items.length === 0) {
-    return '<forwarded_messages/>';
+    return "<forwarded_messages/>";
   }
 
   // --- Phase 2: Build children map ---
@@ -90,7 +97,7 @@ async function expand(
     try {
       await batchResolveNames(senderIds);
     } catch (err) {
-      log.debug('batchResolveNames failed (best-effort)', {
+      log.debug("batchResolveNames failed (best-effort)", {
         error: err instanceof Error ? err.message : String(err),
       });
     }
@@ -113,7 +120,10 @@ async function expand(
  *
  * The root container message itself (matching `rootMessageId`) is skipped.
  */
-function buildChildrenMap(items: ApiMessageItem[], rootMessageId: string): Map<string, ApiMessageItem[]> {
+function buildChildrenMap(
+  items: ApiMessageItem[],
+  rootMessageId: string,
+): Map<string, ApiMessageItem[]> {
   const map = new Map<string, ApiMessageItem[]>();
 
   for (const item of items) {
@@ -134,8 +144,8 @@ function buildChildrenMap(items: ApiMessageItem[], rootMessageId: string): Map<s
   // Sort each group by create_time ascending
   for (const children of map.values()) {
     children.sort((a, b) => {
-      const ta = parseInt(String(a.create_time ?? '0'), 10);
-      const tb = parseInt(String(b.create_time ?? '0'), 10);
+      const ta = parseInt(String(a.create_time ?? "0"), 10);
+      const tb = parseInt(String(b.create_time ?? "0"), 10);
       return ta - tb;
     });
   }
@@ -157,7 +167,7 @@ function collectSenderIds(items: ApiMessageItem[], rootMessageId: string): strin
     if (item.message_id === rootMessageId && !item.upper_message_id) {
       continue;
     }
-    if (item.sender?.sender_type === 'user') {
+    if (item.sender?.sender_type === "user") {
       const senderId: string | undefined = item.sender.id;
       if (senderId) {
         ids.add(senderId);
@@ -183,32 +193,40 @@ async function formatSubTree(
   childrenMap: Map<string, ApiMessageItem[]>,
   accountId: string | undefined,
   resolveUserName?: (openId: string) => string | undefined,
-  convertContent?: ConvertContext['convertMessageContent'],
+  convertContent?: ConvertContext["convertMessageContent"],
 ): Promise<string> {
   const children = childrenMap.get(parentId);
   if (!children || children.length === 0) {
-    return '<forwarded_messages/>';
+    return "<forwarded_messages/>";
   }
 
   const parts: string[] = [];
 
   for (const item of children) {
     try {
-      const msgType: string = item.msg_type ?? 'text';
-      const senderId: string = item.sender?.id ?? 'unknown';
-      const createTime: number | undefined = item.create_time ? parseInt(String(item.create_time), 10) : undefined;
-      const timestamp = createTime ? formatTimestamp(createTime) : 'unknown';
-      const rawContent: string = item.body?.content ?? '{}';
+      const msgType: string = item.msg_type ?? "text";
+      const senderId: string = item.sender?.id ?? "unknown";
+      const createTime: number | undefined = item.create_time
+        ? parseInt(String(item.create_time), 10)
+        : undefined;
+      const timestamp = createTime ? formatTimestamp(createTime) : "unknown";
+      const rawContent: string = item.body?.content ?? "{}";
 
       let content: string;
 
-      if (msgType === 'merge_forward') {
+      if (msgType === "merge_forward") {
         // Recurse into nested merge_forward via the tree — no API call
         const nestedId: string | undefined = item.message_id;
         if (nestedId) {
-          content = await formatSubTree(nestedId, childrenMap, accountId, resolveUserName, convertContent);
+          content = await formatSubTree(
+            nestedId,
+            childrenMap,
+            accountId,
+            resolveUserName,
+            convertContent,
+          );
         } else {
-          content = '<forwarded_messages/>';
+          content = "<forwarded_messages/>";
         }
       } else {
         // Delegate to the unified converter system.
@@ -229,22 +247,22 @@ async function formatSubTree(
       }
 
       const displayName = resolveUserName?.(senderId) ?? senderId;
-      const indented = indentLines(content, '    ');
+      const indented = indentLines(content, "    ");
       parts.push(`[${timestamp}] ${displayName}:\n${indented}`);
     } catch (err) {
-      log.warn('failed to convert sub-message', {
+      log.warn("failed to convert sub-message", {
         messageId: item.message_id,
-        msgType: item.msg_type ?? 'unknown',
+        msgType: item.msg_type ?? "unknown",
         error: err instanceof Error ? err.message : String(err),
       });
     }
   }
 
   if (parts.length === 0) {
-    return '<forwarded_messages/>';
+    return "<forwarded_messages/>";
   }
 
-  return `<forwarded_messages>\n${parts.join('\n')}\n</forwarded_messages>`;
+  return `<forwarded_messages>\n${parts.join("\n")}\n</forwarded_messages>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -261,11 +279,11 @@ function formatTimestamp(ms: number): string {
   const bjDate = new Date(utcMs + 8 * 3600_000);
 
   const y = bjDate.getFullYear();
-  const mo = String(bjDate.getMonth() + 1).padStart(2, '0');
-  const d = String(bjDate.getDate()).padStart(2, '0');
-  const h = String(bjDate.getHours()).padStart(2, '0');
-  const mi = String(bjDate.getMinutes()).padStart(2, '0');
-  const s = String(bjDate.getSeconds()).padStart(2, '0');
+  const mo = String(bjDate.getMonth() + 1).padStart(2, "0");
+  const d = String(bjDate.getDate()).padStart(2, "0");
+  const h = String(bjDate.getHours()).padStart(2, "0");
+  const mi = String(bjDate.getMinutes()).padStart(2, "0");
+  const s = String(bjDate.getSeconds()).padStart(2, "0");
 
   return `${y}-${mo}-${d}T${h}:${mi}:${s}+08:00`;
 }
@@ -273,7 +291,7 @@ function formatTimestamp(ms: number): string {
 /** Add a prefix indent to every line of text. */
 function indentLines(text: string, indent: string): string {
   return text
-    .split('\n')
+    .split("\n")
     .map((line) => `${indent}${line}`)
-    .join('\n');
+    .join("\n");
 }

@@ -8,7 +8,7 @@
  * plugin's dispatch/reply layers.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
 
 // ---------------------------------------------------------------------------
 // Internal types (mirroring SDK agent config shape without importing internals)
@@ -98,7 +98,10 @@ export function getAgentSkillsFilter(cfg: ClawdbotConfig, agentId: string): stri
  * @param agentId - The agent ID.
  * @returns Tools policy object, or `undefined` if none configured.
  */
-export function getAgentToolsPolicy(cfg: ClawdbotConfig, agentId: string): AgentToolsPolicy | undefined {
+export function getAgentToolsPolicy(
+  cfg: ClawdbotConfig,
+  agentId: string,
+): AgentToolsPolicy | undefined {
   const entry = resolveAgentEntry(cfg, agentId);
   if (!entry?.tools) return undefined;
   const { allow, deny } = entry.tools;
@@ -144,7 +147,10 @@ export function mergeSkillFilters(
  * @param policy - The agent's tool policy.
  * @returns `true` if the tool is allowed, `false` if denied.
  */
-export function isToolAllowedByPolicy(toolName: string, policy: AgentToolsPolicy | undefined): boolean {
+export function isToolAllowedByPolicy(
+  toolName: string,
+  policy: AgentToolsPolicy | undefined,
+): boolean {
   if (!policy) return true;
 
   if (policy.deny && policy.deny.length > 0) {
@@ -164,8 +170,8 @@ export function isToolAllowedByPolicy(toolName: string, policy: AgentToolsPolicy
  */
 function matchesAnyPattern(value: string, patterns: string[]): boolean {
   for (const pattern of patterns) {
-    if (pattern === '*') return true;
-    if (pattern.endsWith('*')) {
+    if (pattern === "*") return true;
+    if (pattern.endsWith("*")) {
       if (value.startsWith(pattern.slice(0, -1))) return true;
     } else if (value === pattern) {
       return true;

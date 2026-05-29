@@ -10,7 +10,8 @@ type ResolveEffectiveMessagesConfig =
 type ResolveHumanDelayConfig = typeof import("../../agents/identity.js").resolveHumanDelayConfig;
 type ResolveAgentRoute = typeof import("../../routing/resolve-route.js").resolveAgentRoute;
 type BuildAgentSessionKey = typeof import("../../routing/resolve-route.js").buildAgentSessionKey;
-type BuildAgentMainSessionKey = typeof import("../../routing/session-key.js").buildAgentMainSessionKey;
+type BuildAgentMainSessionKey =
+  typeof import("../../routing/session-key.js").buildAgentMainSessionKey;
 type BuildPairingReply = typeof import("../../pairing/pairing-messages.js").buildPairingReply;
 type ReadChannelAllowFromStore =
   typeof import("../../pairing/pairing-store.js").readChannelAllowFromStore;
@@ -391,15 +392,17 @@ export type PluginRuntime = {
       unionId?: string;
       displayName?: string;
       channelId?: string;
-    }) => Promise<{ userId: string; unionId: string; userCreated: boolean; channelId?: string } | null>;
+    }) => Promise<{
+      userId: string;
+      unionId: string;
+      userCreated: boolean;
+      channelId?: string;
+    } | null>;
   };
   agent: {
     /** Inject a user message into a running agent session (steer).
      *  Looks up sessionId from the active run registry using sessionKey.
      *  Returns true if the message was successfully queued. */
-    steerMessage: (params: {
-      sessionKey: string;
-      text: string;
-    }) => boolean;
+    steerMessage: (params: { sessionKey: string; text: string }) => boolean;
   };
 };

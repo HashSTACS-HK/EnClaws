@@ -6,6 +6,7 @@ The format generally follows Keep a Changelog, and versions should follow Semant
 ## [Unreleased]
 
 ### Added
+
 - `NOTICE`
 - `TRADEMARKS.md`
 - `THIRD_PARTY_NOTICES.md`

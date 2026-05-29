@@ -1,15 +1,15 @@
 import { LitElement, html, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { SUPPORTED_LOCALES } from "../../i18n/index.ts";
-import { caretFix } from "../shared-styles.ts";
 import type { Locale } from "../../i18n/index.ts";
+import { caretFix } from "../shared-styles.ts";
 
 const LOCALE_LABELS: Record<Locale, string> = {
-  "en": "English",
+  en: "English",
   "zh-CN": "简体中文",
   "zh-TW": "繁體中文",
   "pt-BR": "Portugues",
-  "de": "Deutsch",
+  de: "Deutsch",
 };
 
 @customElement("language-switcher")
@@ -17,85 +17,88 @@ export class LanguageSwitcher extends LitElement {
   @property({ type: String }) locale: string = "en";
   @state() private menuOpen = false;
 
-  static styles = [caretFix, css`
-    :host {
-      display: inline-block;
-      position: relative;
-    }
+  static styles = [
+    caretFix,
+    css`
+      :host {
+        display: inline-block;
+        position: relative;
+      }
 
-    button {
-      background: transparent;
-      border: none;
-      color: var(--text-color, var(--text, #e5e5e5));
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
+      button {
+        background: transparent;
+        border: none;
+        color: var(--text-color, var(--text, #e5e5e5));
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
 
-    button:hover {
-      background: var(--surface-2, rgba(128, 128, 128, 0.15));
-    }
+      button:hover {
+        background: var(--surface-2, rgba(128, 128, 128, 0.15));
+      }
 
-    .icon {
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+      .icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .icon svg {
-      width: 14px;
-      height: 14px;
-    }
+      .icon svg {
+        width: 14px;
+        height: 14px;
+      }
 
-    .menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 4px;
-      background: var(--surface-1, var(--card, #1f1f1f));
-      border: 1px solid var(--border-color, var(--border, #303030));
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      min-width: 120px;
-      z-index: 100;
-      display: none;
-      flex-direction: column;
-      padding: 4px;
-    }
+      .menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+        background: var(--surface-1, var(--card, #1f1f1f));
+        border: 1px solid var(--border-color, var(--border, #303030));
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        min-width: 120px;
+        z-index: 100;
+        display: none;
+        flex-direction: column;
+        padding: 4px;
+      }
 
-    .menu.open {
-      display: flex;
-    }
+      .menu.open {
+        display: flex;
+      }
 
-    .menu-item {
-      background: transparent;
-      border: none;
-      text-align: left;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 14px;
-      color: var(--text-color, var(--text, #e5e5e5));
-      border-radius: 4px;
-      width: 100%;
-    }
+      .menu-item {
+        background: transparent;
+        border: none;
+        text-align: left;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--text-color, var(--text, #e5e5e5));
+        border-radius: 4px;
+        width: 100%;
+      }
 
-    .menu-item:hover {
-      background: var(--surface-2, rgba(128, 128, 128, 0.15));
-    }
+      .menu-item:hover {
+        background: var(--surface-2, rgba(128, 128, 128, 0.15));
+      }
 
-    .menu-item.active {
-      font-weight: 600;
-      background: var(--surface-2, rgba(128, 128, 128, 0.15));
-      color: var(--primary-color, var(--accent, #3b82f6));
-    }
-  `];
+      .menu-item.active {
+        font-weight: 600;
+        background: var(--surface-2, rgba(128, 128, 128, 0.15));
+        color: var(--primary-color, var(--accent, #3b82f6));
+      }
+    `,
+  ];
 
   private handleToggle() {
     this.menuOpen = !this.menuOpen;

@@ -2,6 +2,7 @@
 name: wecom-meeting-query
 description: 企业微信会议查询技能, 支持查询会议列表, 获取会议详情, 按关键词查找会议. 当用户需要"查看会议", "查询会议列表", "会议详情", "什么时候开会", "有哪些会议", "查找会议"时触发.
 ---
+
 # 企业微信会议查询技能
 
 > `wecom_mcp` 是一个 MCP tool，所有操作通过调用该 tool 完成。
@@ -19,8 +20,7 @@ wecom-meeting-query 提供企业微信会议查询能力, 包含以下功能:
 
 查看可用命令列表：使用 `wecom_mcp` tool 调用 `wecom_mcp list meeting`
 
-执行指定命令：使用 `wecom_mcp` tool 调用 `wecom_mcp call meeting <tool_name> '<json_params>'`
----
+## 执行指定命令：使用 `wecom_mcp` tool 调用 `wecom_mcp call meeting <tool_name> '<json_params>'`
 
 ## 命令详细说明
 
@@ -34,12 +34,12 @@ wecom-meeting-query 提供企业微信会议查询能力, 包含以下功能:
 
 #### 入参说明
 
-| 参数               | 类型    | 必填 | 说明                                    |
-| ------------------ | ------- | ---- | --------------------------------------- |
+| 参数             | 类型    | 必填 | 说明                                  |
+| ---------------- | ------- | ---- | ------------------------------------- |
 | `begin_datetime` | string  | 否   | 查询起始时间, 格式:`YYYY-MM-DD HH:mm` |
 | `end_datetime`   | string  | 否   | 查询结束时间, 格式:`YYYY-MM-DD HH:mm` |
-| `cursor`         | string  | 否   | 分页游标, 用于获取下一页数据            |
-| `limit`          | integer | 否   | 每页返回条数, 最大 100                  |
+| `cursor`         | string  | 否   | 分页游标, 用于获取下一页数据          |
+| `limit`          | integer | 否   | 每页返回条数, 最大 100                |
 
 > **限制**: 时间范围仅支持当日及前后 30 天.
 
@@ -54,8 +54,8 @@ wecom-meeting-query 提供企业微信会议查询能力, 包含以下功能:
 }
 ```
 
-| 字段               | 类型   | 说明                           |
-| ------------------ | ------ | ------------------------------ |
+| 字段             | 类型   | 说明                           |
+| ---------------- | ------ | ------------------------------ |
 | `meetingid_list` | array  | 会议 ID 列表                   |
 | `next_cursor`    | string | 下一页游标, 为空表示无更多数据 |
 
@@ -71,11 +71,11 @@ wecom-meeting-query 提供企业微信会议查询能力, 包含以下功能:
 
 #### 入参说明
 
-| 参数              | 类型   | 必填 | 说明            |
-| ----------------- | ------ | ---- | --------------- |
+| 参数            | 类型   | 必填 | 说明                                    |
+| --------------- | ------ | ---- | --------------------------------------- |
 | `meetingid`     | string | 是   | 会议 ID, 通过 `list_user_meetings` 获取 |
-| `meeting_code`  | string | 否   | 会议号码        |
-| `sub_meetingid` | string | 否   | 子会议 ID       |
+| `meeting_code`  | string | 否   | 会议号码                                |
+| `sub_meetingid` | string | 否   | 子会议 ID                               |
 
 #### 返回参数
 
@@ -191,10 +191,10 @@ wecom-meeting-query 提供企业微信会议查询能力, 包含以下功能:
 
 **关键返回字段:**
 
-| 字段                                      | 类型    | 说明                                                                                                          |
-| ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `creator_userid`                        | string  | 创建者 userid, 与 `admin_userid` 有且仅返回一个                                                             |
-| `admin_userid`                          | string  | 会议管理 userid, 与 `creator_userid` 有且仅返回一个                                                         |
+| 字段                                    | 类型    | 说明                                                                                                          |
+| --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| `creator_userid`                        | string  | 创建者 userid, 与 `admin_userid` 有且仅返回一个                                                               |
+| `admin_userid`                          | string  | 会议管理 userid, 与 `creator_userid` 有且仅返回一个                                                           |
 | `title`                                 | string  | 会议标题                                                                                                      |
 | `meeting_start_datetime`                | string  | 会议开始时间                                                                                                  |
 | `meeting_duration`                      | integer | 会议时长 (秒)                                                                                                 |
@@ -207,7 +207,7 @@ wecom-meeting-query 提供企业微信会议查询能力, 包含以下功能:
 | `attendees.member[].status`             | integer | 与会状态 (1: 已参与, 2: 未参与)                                                                               |
 | `attendees.tmp_external_user`           | array   | 外部参与者 (临时 ID)                                                                                          |
 | `attendees.tmp_external_user[].status`  | integer | 与会状态 (1: 已参与, 2: 未参与)                                                                               |
-| `guests`                                | array   | 外部嘉宾列表, 每项含 `area`, `phone_number`, `guest_name`                                               |
+| `guests`                                | array   | 外部嘉宾列表, 每项含 `area`, `phone_number`, `guest_name`                                                     |
 | `current_sub_meetingid`                 | string  | 当前子会议 ID                                                                                                 |
 | `settings.ring_users`                   | object  | 响铃用户列表                                                                                                  |
 | `settings.need_password`                | boolean | 是否需要密码 (只读字段)                                                                                       |

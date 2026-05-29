@@ -1,5 +1,10 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId , normalizeResolvedSecretInputString, normalizeSecretInputString } from "../sdk/helpers.ts";
 import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import {
+  DEFAULT_ACCOUNT_ID,
+  normalizeAccountId,
+  normalizeResolvedSecretInputString,
+  normalizeSecretInputString,
+} from "../sdk/helpers.ts";
 import type {
   DingtalkConfig,
   DingtalkAccountConfig,
@@ -38,7 +43,9 @@ export function resolveDefaultDingtalkAccountSelection(cfg: ClawdbotConfig): {
   accountId: string;
   source: DingtalkDefaultAccountSelectionSource;
 } {
-  const preferredRaw = (cfg.channels?.["dingtalk"] as DingtalkConfig | undefined)?.defaultAccount?.trim();
+  const preferredRaw = (
+    cfg.channels?.["dingtalk"] as DingtalkConfig | undefined
+  )?.defaultAccount?.trim();
   const preferred = preferredRaw ? normalizeAccountId(preferredRaw) : undefined;
   if (preferred) {
     return {
@@ -228,7 +235,7 @@ export function listEnabledDingtalkAccounts(cfg: ClawdbotConfig): ResolvedDingta
   const accounts = listDingtalkAccountIds(cfg)
     .map((accountId) => resolveDingtalkAccount({ cfg, accountId }))
     .filter((account) => account.enabled && account.configured);
-  
+
   // Deduplicate by clientId to avoid multiple connections with same credentials
   const seen = new Set<string>();
   return accounts.filter((account) => {

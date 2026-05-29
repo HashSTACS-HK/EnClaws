@@ -5,21 +5,21 @@
  *   tenant.onboarding.setup - Create channel + model + agent in one transaction
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape, getPlanUpgradeLink } from "../protocol/index.js";
-import { isDbInitialized, withTransaction } from "../../db/index.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
-import type { TenantContext } from "../../auth/middleware.js";
-import { checkTenantQuota } from "../../db/models/tenant.js";
-import { createTenantChannel } from "../../db/models/tenant-channel.js";
-import { createChannelApp, updateChannelApp } from "../../db/models/tenant-channel-app.js";
-import { createTenantModel } from "../../db/models/tenant-model.js";
-import { createTenantAgent } from "../../db/models/tenant-agent.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
-import { invalidateTenantConfigCache } from "../../config/tenant-config.js";
 import { seedAgentWorkspaceFiles, removeAgentWorkspaceFiles } from "../../agents/workspace.js";
+import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
 import { resolveTenantAgentDir } from "../../config/sessions/tenant-paths.js";
+import { invalidateTenantConfigCache } from "../../config/tenant-config.js";
+import { isDbInitialized, withTransaction } from "../../db/index.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
+import { createTenantAgent } from "../../db/models/tenant-agent.js";
+import { createChannelApp, updateChannelApp } from "../../db/models/tenant-channel-app.js";
+import { createTenantChannel } from "../../db/models/tenant-channel.js";
+import { createTenantModel } from "../../db/models/tenant-model.js";
+import { checkTenantQuota } from "../../db/models/tenant.js";
 import type { ModelConfigEntry } from "../../db/types.js";
+import { ErrorCodes, errorShape, getPlanUpgradeLink } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 /**
  * Resolve default agent identity for onboarding.
@@ -45,7 +45,11 @@ function getTenantCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -66,9 +70,16 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
    *   agent?: { agentId?, name?, config? } — auto-filled with locale-aware defaults when omitted
    *   locale?: string — UI locale (e.g. "zh-CN", "en") used to pick agent defaults
    */
-  "tenant.onboarding.setup": async ({ params, client, respond, context }: GatewayRequestHandlerOptions) => {
+  "tenant.onboarding.setup": async ({
+    params,
+    client,
+    respond,
+    context,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "agent.create");
@@ -80,7 +91,13 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
       throw err;
     }
 
-    const { channel, model, sharedModel, agent: agentParam, locale } = params as {
+    const {
+      channel,
+      model,
+      sharedModel,
+      agent: agentParam,
+      locale,
+    } = params as {
       channel?: {
         channelType: string;
         channelName?: string;
@@ -108,7 +125,11 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
 
     // Validate: either model or sharedModel must be provided
     if (!sharedModel && (!model || !model.providerType || !model.apiKeyEncrypted)) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Model configuration is required"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "Model configuration is required"),
+      );
       return;
     }
 
@@ -130,13 +151,17 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
         if (channel?.channelType) {
           const channelQuota = await checkTenantQuota(ctx.tenantId, "channels");
           if (!channelQuota.allowed) {
-            const err = new Error(`Channel quota reached (${channelQuota.current}/${channelQuota.max})`);
-            (err as { quotaResource?: string; quotaCurrent?: number; quotaMax?: number }).quotaResource = "channels";
+            const err = new Error(
+              `Channel quota reached (${channelQuota.current}/${channelQuota.max})`,
+            );
+            (
+              err as { quotaResource?: string; quotaCurrent?: number; quotaMax?: number }
+            ).quotaResource = "channels";
             (err as { quotaCurrent?: number }).quotaCurrent = channelQuota.current;
             (err as { quotaMax?: number }).quotaMax = channelQuota.max;
             throw err;
           }
-          const userConfig = (channel.config ?? {});
+          const userConfig = channel.config ?? {};
           const appId = (userConfig.appId as string) ?? "";
           const appSecret = (userConfig.appSecret as string) ?? "";
           const botName = (userConfig.botName as string) ?? "";
@@ -195,7 +220,8 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
             createdBy: ctx.userId,
           });
           modelProviderId = modelResult.id;
-          modelModelId = (model!.models && model!.models.length > 0) ? model!.models[0].id : "default";
+          modelModelId =
+            model!.models && model!.models.length > 0 ? model!.models[0].id : "default";
         }
 
         // 3. Create agent (bind model + channel app)
@@ -208,11 +234,13 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
           throw err;
         }
 
-        const modelConfig: ModelConfigEntry[] = [{
-          providerId: modelProviderId,
-          modelId: modelModelId,
-          isDefault: true,
-        }];
+        const modelConfig: ModelConfigEntry[] = [
+          {
+            providerId: modelProviderId,
+            modelId: modelModelId,
+            isDefault: true,
+          },
+        ];
 
         const agentResult = await createTenantAgent({
           tenantId: ctx.tenantId,
@@ -228,9 +256,8 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
         // the writes back if the transaction later fails.
         await seedAgentWorkspaceFiles(resolveTenantAgentDir(ctx.tenantId, agent.agentId), {
           locale,
-          systemPrompt: typeof agent.config?.systemPrompt === "string"
-            ? (agent.config.systemPrompt)
-            : undefined,
+          systemPrompt:
+            typeof agent.config?.systemPrompt === "string" ? agent.config.systemPrompt : undefined,
         });
         filesSeeded = true;
 
@@ -239,7 +266,14 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
           await updateChannelApp(channelAppResult.id, ctx.tenantId, { agentId: agent.agentId });
         }
 
-        return { channel: channelResult, channelApp: channelAppResult, model: modelResult, modelProviderId, modelModelId, agent: agentResult };
+        return {
+          channel: channelResult,
+          channelApp: channelAppResult,
+          model: modelResult,
+          modelProviderId,
+          modelModelId,
+          agent: agentResult,
+        };
       });
 
       // Audit log
@@ -256,16 +290,20 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
 
       // Invalidate config cache, reload channel config, and start channel connection
       invalidateTenantConfigCache(ctx.tenantId);
-      if (result.channelApp && result.channel && context?.reloadDbChannels && context?.startChannel) {
+      if (
+        result.channelApp &&
+        result.channel &&
+        context?.reloadDbChannels &&
+        context?.startChannel
+      ) {
         await context.reloadDbChannels();
-        await context.startChannel(
-          result.channel.channelType as any,
-          result.channelApp.appId,
-        );
+        await context.startChannel(result.channel.channelType as any, result.channelApp.appId);
       }
 
       respond(true, {
-        channel: result.channel ? { id: result.channel.id, channelType: result.channel.channelType } : null,
+        channel: result.channel
+          ? { id: result.channel.id, channelType: result.channel.channelType }
+          : null,
         model: result.model
           ? { id: result.model.id, providerName: result.model.providerName }
           : { id: result.modelProviderId, shared: true },
@@ -274,25 +312,27 @@ export const tenantOnboardingHandlers: GatewayRequestHandlers = {
     } catch (err) {
       // Roll back seeded files if they were written before the transaction failed.
       if (filesSeeded) {
-        await removeAgentWorkspaceFiles(resolveTenantAgentDir(ctx.tenantId, agent.agentId)).catch(() => {});
+        await removeAgentWorkspaceFiles(resolveTenantAgentDir(ctx.tenantId, agent.agentId)).catch(
+          () => {},
+        );
       }
       const msg = err instanceof Error ? err.message : "Onboarding setup failed";
       // Surface quota-exceeded errors with structured details so the UI can
       // render a localized "upgrade plan" message instead of a raw 500.
       const quotaResource = (err as { quotaResource?: string })?.quotaResource;
       if (quotaResource) {
-        respond(false, undefined, errorShape(
-          ErrorCodes.QUOTA_EXCEEDED,
-          msg,
-          {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.QUOTA_EXCEEDED, msg, {
             details: {
               resource: quotaResource,
               current: (err as { quotaCurrent?: number }).quotaCurrent ?? 0,
               max: (err as { quotaMax?: number }).quotaMax ?? 0,
               contactLink: getPlanUpgradeLink(),
             },
-          },
-        ));
+          }),
+        );
         return;
       }
       respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, msg));

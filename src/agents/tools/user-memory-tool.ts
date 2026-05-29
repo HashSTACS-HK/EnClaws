@@ -5,9 +5,9 @@
  * The file is loaded into the LLM context via loadTenantBootstrapFiles().
  */
 
-import { Type } from "@sinclair/typebox";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Type } from "@sinclair/typebox";
 import { resolveTenantUserDir } from "../../config/sessions/tenant-paths.js";
 import { stringEnum } from "../schema/typebox.js";
 import type { AnyAgentTool } from "./common.js";
@@ -64,7 +64,9 @@ export function createUserMemoryTool(options: UserMemoryToolOptions): AnyAgentTo
       "Keep entries concise and factual.",
     parameters: UserMemorySchema,
     execute: async (_toolCallId, params) => {
-      const action = readStringParam(params, "action", { required: true }) as (typeof USER_MEMORY_ACTIONS)[number];
+      const action = readStringParam(params, "action", {
+        required: true,
+      }) as (typeof USER_MEMORY_ACTIONS)[number];
       const userDir = resolveTenantUserDir(tenantId, userId);
       const memoryPath = path.join(userDir, USER_MEMORY_FILENAME);
 
@@ -99,7 +101,8 @@ export function createUserMemoryTool(options: UserMemoryToolOptions): AnyAgentTo
 
         if (newContent.length > MAX_USER_MEMORY_SIZE) {
           return jsonResult({
-            error: "User memory file would exceed size limit (4KB). Consider removing outdated entries first.",
+            error:
+              "User memory file would exceed size limit (4KB). Consider removing outdated entries first.",
           });
         }
 
@@ -123,7 +126,10 @@ export function createUserMemoryTool(options: UserMemoryToolOptions): AnyAgentTo
         );
         const removed = lines.length - remaining.length;
         if (removed === 0) {
-          return jsonResult({ status: "not_found", message: `No entries matching "${keyword}" found` });
+          return jsonResult({
+            status: "not_found",
+            message: `No entries matching "${keyword}" found`,
+          });
         }
         await writeMemoryFile(memoryPath, remaining.join("\n"));
         return jsonResult({ status: "deleted", removed, keyword: keyword.trim() });

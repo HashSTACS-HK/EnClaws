@@ -2,7 +2,6 @@
  * Tenant CRUD operations — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type {
   Tenant,
   CreateTenantInput,
@@ -11,6 +10,7 @@ import type {
   TenantSettings,
   TenantStatus,
 } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 
 function rowToTenant(row: Record<string, unknown>): Tenant {
   return {
@@ -18,8 +18,12 @@ function rowToTenant(row: Record<string, unknown>): Tenant {
     name: row.name as string,
     plan: row.plan as TenantPlan,
     status: row.status as TenantStatus,
-    settings: (typeof row.settings === "string" ? JSON.parse(row.settings) : row.settings ?? {}) as TenantSettings,
-    quotas: (typeof row.quotas === "string" ? JSON.parse(row.quotas) : row.quotas ?? {}) as TenantQuotas,
+    settings: (typeof row.settings === "string"
+      ? JSON.parse(row.settings)
+      : (row.settings ?? {})) as TenantSettings,
+    quotas: (typeof row.quotas === "string"
+      ? JSON.parse(row.quotas)
+      : (row.quotas ?? {})) as TenantQuotas,
     traceEnabled: Boolean(row.trace_enabled),
     identityPrompt: (row.identity_prompt as string) ?? "",
     createdAt: new Date(row.created_at as string),
@@ -51,7 +55,9 @@ export async function getPlanQuotas(planId: string): Promise<TenantQuotas> {
       [planId],
     );
     const row = result.rows[0];
-    if (!row) {return FALLBACK_FREE_QUOTAS;}
+    if (!row) {
+      return FALLBACK_FREE_QUOTAS;
+    }
     return {
       maxUsers: Number(row.max_users),
       maxAgents: Number(row.max_agents),
@@ -119,10 +125,7 @@ export async function listTenants(opts?: {
     `SELECT * FROM tenants ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [...values, limit, offset],
   );
-  const countResult = sqliteQuery(
-    `SELECT COUNT(*) as count FROM tenants ${where}`,
-    values,
-  );
+  const countResult = sqliteQuery(`SELECT COUNT(*) as count FROM tenants ${where}`, values);
 
   return {
     tenants: dataResult.rows.map(rowToTenant),
@@ -132,7 +135,12 @@ export async function listTenants(opts?: {
 
 export async function updateTenant(
   id: string,
-  updates: Partial<Pick<Tenant, "name" | "plan" | "status" | "settings" | "quotas" | "traceEnabled" | "identityPrompt">>,
+  updates: Partial<
+    Pick<
+      Tenant,
+      "name" | "plan" | "status" | "settings" | "quotas" | "traceEnabled" | "identityPrompt"
+    >
+  >,
 ): Promise<Tenant | null> {
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -166,13 +174,12 @@ export async function updateTenant(
     values.push(updates.identityPrompt);
   }
 
-  if (sets.length === 0) {return getTenantById(id);}
+  if (sets.length === 0) {
+    return getTenantById(id);
+  }
 
   values.push(id);
-  sqliteQuery(
-    `UPDATE tenants SET ${sets.join(", ")} WHERE id = ?`,
-    values,
-  );
+  sqliteQuery(`UPDATE tenants SET ${sets.join(", ")} WHERE id = ?`, values);
 
   return getTenantById(id);
 }
@@ -190,7 +197,9 @@ export async function checkTenantQuota(
   resource: "users" | "agents" | "channels",
 ): Promise<{ allowed: boolean; current: number; max: number }> {
   const tenant = await getTenantById(tenantId);
-  if (!tenant) {return { allowed: false, current: 0, max: 0 };}
+  if (!tenant) {
+    return { allowed: false, current: 0, max: 0 };
+  }
 
   const tableMap = {
     users: "users",
@@ -211,7 +220,9 @@ export async function checkTenantQuota(
   const max = tenant.quotas[quotaKeyMap[resource]];
 
   // -1 means unlimited (enterprise plan).
-  if (max < 0) {return { allowed: true, current, max };}
+  if (max < 0) {
+    return { allowed: true, current, max };
+  }
   return { allowed: current < max, current, max };
 }
 

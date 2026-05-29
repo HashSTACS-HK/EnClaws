@@ -22,49 +22,90 @@ export interface ConfirmDialogOptions {
 
 @customElement("confirm-dialog")
 export class ConfirmDialog extends LitElement {
-  static styles = [caretFix, css`
-    .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 10000; animation: fadeIn 0.15s ease;
-    }
-    .card {
-      background: var(--card, #141414);
-      border: 1px solid var(--border, #262626);
-      border-radius: var(--radius-lg, 8px);
-      padding: 1.5rem; width: 400px;
-      max-width: 90vw;
-      animation: slideUp 0.15s ease;
-    }
-    .title {
-      margin: 0 0 0.75rem; font-size: 1rem; font-weight: 600;
-      color: var(--text, #e5e5e5);
-    }
-    .message {
-      font-size: 0.85rem; color: var(--text-secondary, #a3a3a3);
-      line-height: 1.5; margin: 0 0 1.25rem; white-space: pre-wrap;
-    }
-    .footer {
-      display: flex; gap: 0.5rem; justify-content: flex-end;
-    }
-    .btn {
-      padding: 0.45rem 0.9rem; border: none; border-radius: var(--radius-md, 6px);
-      font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn-cancel {
-      background: transparent; border: 1px solid var(--border, #262626);
-      color: var(--text, #e5e5e5);
-    }
-    .btn-confirm {
-      background: var(--accent, #3b82f6); color: white;
-    }
-    .btn-confirm.danger {
-      background: var(--bg-destructive, #7f1d1d); color: var(--text-destructive, #fca5a5);
-    }
-    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
-  `];
+  static styles = [
+    caretFix,
+    css`
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.15s ease;
+      }
+      .card {
+        background: var(--card, #141414);
+        border: 1px solid var(--border, #262626);
+        border-radius: var(--radius-lg, 8px);
+        padding: 1.5rem;
+        width: 400px;
+        max-width: 90vw;
+        animation: slideUp 0.15s ease;
+      }
+      .title {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text, #e5e5e5);
+      }
+      .message {
+        font-size: 0.85rem;
+        color: var(--text-secondary, #a3a3a3);
+        line-height: 1.5;
+        margin: 0 0 1.25rem;
+        white-space: pre-wrap;
+      }
+      .footer {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+      }
+      .btn {
+        padding: 0.45rem 0.9rem;
+        border: none;
+        border-radius: var(--radius-md, 6px);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .btn:hover {
+        opacity: 0.85;
+      }
+      .btn-cancel {
+        background: transparent;
+        border: 1px solid var(--border, #262626);
+        color: var(--text, #e5e5e5);
+      }
+      .btn-confirm {
+        background: var(--accent, #3b82f6);
+        color: white;
+      }
+      .btn-confirm.danger {
+        background: var(--bg-destructive, #7f1d1d);
+        color: var(--text-destructive, #fca5a5);
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `,
+  ];
 
   @property() title = "";
   @property() message = "";
@@ -90,7 +131,9 @@ export class ConfirmDialog extends LitElement {
   }
 
   private _overlayClick(e: Event) {
-    if (e.target === e.currentTarget) {this._cancel();}
+    if (e.target === e.currentTarget) {
+      this._cancel();
+    }
   }
 
   render() {
@@ -114,10 +157,18 @@ export function showConfirm(opts: ConfirmDialogOptions): Promise<boolean> {
     const el = document.createElement("confirm-dialog") as ConfirmDialog;
     el.title = opts.title;
     el.message = opts.message;
-    if (opts.confirmText) {el.confirmText = opts.confirmText;}
-    if (opts.cancelText) {el.cancelText = opts.cancelText;}
-    if (opts.danger) {el.danger = true;}
-    if (opts.hideCancel) {el.hideCancel = true;}
+    if (opts.confirmText) {
+      el.confirmText = opts.confirmText;
+    }
+    if (opts.cancelText) {
+      el.cancelText = opts.cancelText;
+    }
+    if (opts.danger) {
+      el.danger = true;
+    }
+    if (opts.hideCancel) {
+      el.hideCancel = true;
+    }
     el.show(resolve);
     document.body.appendChild(el);
   });

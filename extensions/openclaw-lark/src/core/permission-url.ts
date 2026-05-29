@@ -21,8 +21,8 @@
  */
 function getPermissionPriority(scope: string): number {
   const lowerScope = scope.toLowerCase();
-  const hasRead = lowerScope.includes('read');
-  const hasWrite = lowerScope.includes('write');
+  const hasRead = lowerScope.includes("read");
+  const hasWrite = lowerScope.includes("write");
 
   if (hasRead && !hasWrite) return 1;
   if (hasWrite && !hasRead) return 2;
@@ -34,7 +34,10 @@ function getPermissionPriority(scope: string): number {
  * Returns the permission with the lowest priority number (read > write > other).
  */
 function extractHighestPriorityScope(scopeList: string): string {
-  return scopeList.split(',').sort((a, b) => getPermissionPriority(a) - getPermissionPriority(b))[0] ?? '';
+  return (
+    scopeList.split(",").sort((a, b) => getPermissionPriority(a) - getPermissionPriority(b))[0] ??
+    ""
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -51,15 +54,15 @@ function extractHighestPriorityScope(scopeList: string): string {
 export function extractPermissionGrantUrl(msg: string): string {
   const urlMatch = msg.match(/https:\/\/[^\s]+\/app\/[^\s]+/);
   if (!urlMatch?.[0]) {
-    return '';
+    return "";
   }
 
   try {
     const url = new URL(urlMatch[0]);
-    const scopeListParam = url.searchParams.get('q') ?? '';
+    const scopeListParam = url.searchParams.get("q") ?? "";
     const firstScope = extractHighestPriorityScope(scopeListParam);
     if (firstScope) {
-      url.searchParams.set('q', firstScope);
+      url.searchParams.set("q", firstScope);
     }
     return url.href;
   } catch {
@@ -73,5 +76,5 @@ export function extractPermissionGrantUrl(msg: string): string {
  */
 export function extractPermissionScopes(msg: string): string {
   const scopeMatch = msg.match(/\[([^\]]+)\]/);
-  return scopeMatch?.[1] ?? 'unknown';
+  return scopeMatch?.[1] ?? "unknown";
 }

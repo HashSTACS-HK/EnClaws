@@ -6,59 +6,73 @@
  * hand-written stub-and-rewrite approach.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
 // Mock leaf dependency used by card-error → parseCardApiError
-vi.mock('../src/core/api-error', () => ({
+vi.mock("../src/core/api-error", () => ({
   extractLarkApiCode: () => undefined,
 }));
 
 // streaming-card-controller has heavy infra imports — mock them all.
 // card-error and builder are kept real so prepareTerminalCardContent works.
-vi.mock('openclaw/plugin-sdk/reply-runtime', () => ({ SILENT_REPLY_TOKEN: '__silent__' }));
-vi.mock('../src/core/lark-logger', () => ({
+vi.mock("openclaw/plugin-sdk/reply-runtime", () => ({ SILENT_REPLY_TOKEN: "__silent__" }));
+vi.mock("../src/core/lark-logger", () => ({
   larkLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
-vi.mock('../src/core/lark-client', () => ({ LarkClient: {} }));
-vi.mock('../src/core/shutdown-hooks', () => ({ registerShutdownHook: () => () => {} }));
-vi.mock('../src/messaging/outbound/send', () => ({
+vi.mock("../src/core/lark-client", () => ({ LarkClient: {} }));
+vi.mock("../src/core/shutdown-hooks", () => ({ registerShutdownHook: () => () => {} }));
+vi.mock("../src/messaging/outbound/send", () => ({
   sendCardFeishu: vi.fn(),
   updateCardFeishu: vi.fn(),
 }));
-vi.mock('../src/card/cardkit', () => ({
+vi.mock("../src/card/cardkit", () => ({
   createCardEntity: vi.fn(),
   sendCardByCardId: vi.fn(),
   setCardStreamingMode: vi.fn(),
   streamCardContent: vi.fn(),
   updateCardKitCard: vi.fn(),
 }));
-vi.mock('../src/card/flush-controller', () => ({
+vi.mock("../src/card/flush-controller", () => ({
   FlushController: class {
     constructor() {}
     cancelPendingFlush() {}
     complete() {}
-    waitForFlush() { return Promise.resolve(); }
+    waitForFlush() {
+      return Promise.resolve();
+    }
     setCardMessageReady() {}
-    throttledUpdate() { return Promise.resolve(); }
+    throttledUpdate() {
+      return Promise.resolve();
+    }
   },
 }));
-vi.mock('../src/card/image-resolver', () => ({
+vi.mock("../src/card/image-resolver", () => ({
   ImageResolver: class {
-    resolveImages(t: string) { return t; }
-    resolveImagesAwait(t: string) { return Promise.resolve(t); }
+    resolveImages(t: string) {
+      return t;
+    }
+    resolveImagesAwait(t: string) {
+      return Promise.resolve(t);
+    }
   },
 }));
-vi.mock('../src/card/unavailable-guard', () => ({
+vi.mock("../src/card/unavailable-guard", () => ({
   UnavailableGuard: class {
-    shouldSkip() { return false; }
-    terminate() { return false; }
-    get isTerminated() { return false; }
+    shouldSkip() {
+      return false;
+    }
+    terminate() {
+      return false;
+    }
+    get isTerminated() {
+      return false;
+    }
   },
 }));
 
-import { shouldUseCard } from '../src/card/reply-mode';
-import { findMarkdownTablesOutsideCodeBlocks, sanitizeTextForCard } from '../src/card/card-error';
-import { prepareTerminalCardContent } from '../src/card/streaming-card-controller';
+import { findMarkdownTablesOutsideCodeBlocks, sanitizeTextForCard } from "../src/card/card-error";
+import { shouldUseCard } from "../src/card/reply-mode";
+import { prepareTerminalCardContent } from "../src/card/streaming-card-controller";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,52 +84,56 @@ function buildTable(label: string): string {
 
 function buildCodeBlockWithTables(count: number): string {
   return [
-    '```md',
+    "```md",
     ...Array.from({ length: count }, (_, i) => buildTable(`code-${i + 1}`)),
-    '```',
-  ].join('\n\n');
+    "```",
+  ].join("\n\n");
 }
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('shouldUseCard', () => {
-  it('ignores fenced-code tables when checking the table limit', () => {
+describe("shouldUseCard", () => {
+  it("ignores fenced-code tables when checking the table limit", () => {
     const text = buildCodeBlockWithTables(4);
     expect(shouldUseCard(text)).toBe(true);
   });
 });
 
-describe('sanitizeTextForCard', () => {
-  it('only wraps excess tables outside fenced code blocks', () => {
+describe("sanitizeTextForCard", () => {
+  it("only wraps excess tables outside fenced code blocks", () => {
     const text = [
       buildCodeBlockWithTables(4),
-      buildTable('real-1'),
-      buildTable('real-2'),
-      buildTable('real-3'),
-      buildTable('real-4'),
-    ].join('\n\n');
+      buildTable("real-1"),
+      buildTable("real-2"),
+      buildTable("real-3"),
+      buildTable("real-4"),
+    ].join("\n\n");
 
     const sanitized = sanitizeTextForCard(text);
 
     // Code-block tables untouched
     expect(sanitized).toMatch(/```md[\s\S]*\| code-4 \| code-4 \|[\s\S]*```/);
     // 4th real table wrapped in code fence
-    expect(sanitized).toMatch(/```\n\| name \| value \|\n\| --- \| --- \|\n\| real-4 \| real-4 \|\n```/);
+    expect(sanitized).toMatch(
+      /```\n\| name \| value \|\n\| --- \| --- \|\n\| real-4 \| real-4 \|\n```/,
+    );
     // Code-block tables not wrapped
-    expect(sanitized).not.toContain('```\n| name | value |\n| --- | --- |\n| code-4 | code-4 |\n```');
+    expect(sanitized).not.toContain(
+      "```\n| name | value |\n| --- | --- |\n| code-4 | code-4 |\n```",
+    );
   });
 });
 
-describe('prepareTerminalCardContent', () => {
-  it('shares the table budget across reasoning and body', () => {
-    const rawText = ['Before', buildTable('real-1'), buildTable('real-2'), 'After'].join('\n\n');
-    const rawReasoningText = [buildTable('reason-1'), buildTable('reason-2')].join('\n\n');
+describe("prepareTerminalCardContent", () => {
+  it("shares the table budget across reasoning and body", () => {
+    const rawText = ["Before", buildTable("real-1"), buildTable("real-2"), "After"].join("\n\n");
+    const rawReasoningText = [buildTable("reason-1"), buildTable("reason-2")].join("\n\n");
 
     const imageResolver = {
       resolveImages(text: string) {
-        return text.replace('Before', 'Resolved');
+        return text.replace("Before", "Resolved");
       },
     };
 
@@ -130,6 +148,6 @@ describe('prepareTerminalCardContent', () => {
     expect(safeContent.text).toMatch(
       /```\n\| name \| value \|\n\| --- \| --- \|\n\| real-2 \| real-2 \|\n```/,
     );
-    expect(safeContent.reasoningText).not.toContain('```\n| name | value |');
+    expect(safeContent.reasoningText).not.toContain("```\n| name | value |");
   });
 });

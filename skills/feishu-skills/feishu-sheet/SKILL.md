@@ -8,6 +8,7 @@ inline: true
 ---
 
 # feishu-sheet
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -83,21 +84,21 @@ CSV 导出时 `--sheet-id` 必填（一次只能导出一个工作表）。
 
 ## 参数总览
 
-| 参数 | 必填 | 说明 |
-|---|---|---|
-| `--open-id` | 是 | 当前用户 open_id |
-| `--action` | 是 | info / read / write / append / find / create / export |
-| `--url` | 多数 action 必填 | 表格 URL（支持 feishu.cn/sheets/ 和 feishu.cn/wiki/） |
-| `--spreadsheet-token` | 二选一 | 与 `--url` 二选一 |
-| `--sheet-id` | find 必填，其余可选 | 工作表 ID（通过 info 获取） |
-| `--range` | 可选 | 范围，格式 `sheetId!A1:D10` 或 `sheetId` |
-| `--values` | write/append 必填 | JSON 二维数组，如 `'[["A","B"],["1","2"]]'` |
-| `--find` | find 必填 | 搜索内容 |
-| `--title` | create 必填 | 表格标题 |
-| `--headers` | 可选 | JSON 字符串数组，如 `'["姓名","部门"]'` |
-| `--data` | 可选 | JSON 二维数组，写在表头后 |
-| `--file-extension` | export 必填 | xlsx 或 csv |
-| `--output-path` | 可选 | 本地保存路径（含文件名）|
+| 参数                  | 必填                | 说明                                                  |
+| --------------------- | ------------------- | ----------------------------------------------------- |
+| `--open-id`           | 是                  | 当前用户 open_id                                      |
+| `--action`            | 是                  | info / read / write / append / find / create / export |
+| `--url`               | 多数 action 必填    | 表格 URL（支持 feishu.cn/sheets/ 和 feishu.cn/wiki/） |
+| `--spreadsheet-token` | 二选一              | 与 `--url` 二选一                                     |
+| `--sheet-id`          | find 必填，其余可选 | 工作表 ID（通过 info 获取）                           |
+| `--range`             | 可选                | 范围，格式 `sheetId!A1:D10` 或 `sheetId`              |
+| `--values`            | write/append 必填   | JSON 二维数组，如 `'[["A","B"],["1","2"]]'`           |
+| `--find`              | find 必填           | 搜索内容                                              |
+| `--title`             | create 必填         | 表格标题                                              |
+| `--headers`           | 可选                | JSON 字符串数组，如 `'["姓名","部门"]'`               |
+| `--data`              | 可选                | JSON 二维数组，写在表头后                             |
+| `--file-extension`    | export 必填         | xlsx 或 csv                                           |
+| `--output-path`       | 可选                | 本地保存路径（含文件名）                              |
 
 ## 典型场景
 

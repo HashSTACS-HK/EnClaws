@@ -9,25 +9,25 @@
  * appropriate handlers.
  */
 
-import type { ClawdbotConfig, RuntimeEnv } from 'openclaw/plugin-sdk';
-import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
-import { getEnabledLarkAccounts, getLarkAccount } from '../core/accounts';
-import { LarkClient } from '../core/lark-client';
-import { MessageDedup } from '../messaging/inbound/dedup';
-import { larkLogger } from '../core/lark-logger';
-import { drainShutdownHooks } from '../core/shutdown-hooks';
-import type { MonitorContext, MonitorFeishuOpts } from './types';
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import type { HistoryEntry } from "openclaw/plugin-sdk/reply-history";
+import { getEnabledLarkAccounts, getLarkAccount } from "../core/accounts";
+import { LarkClient } from "../core/lark-client";
+import { larkLogger } from "../core/lark-logger";
+import { drainShutdownHooks } from "../core/shutdown-hooks";
+import { MessageDedup } from "../messaging/inbound/dedup";
 import {
   handleBotMembershipEvent,
   handleCardActionEvent,
   handleMessageEvent,
   handleReactionEvent,
-} from './event-handlers';
+} from "./event-handlers";
+import type { MonitorContext, MonitorFeishuOpts } from "./types";
 
-const mlog = larkLogger('channel/monitor');
+const mlog = larkLogger("channel/monitor");
 
 // Re-export type for backward compatibility
-export type { MonitorFeishuOpts } from './types';
+export type { MonitorFeishuOpts } from "./types";
 
 // ---------------------------------------------------------------------------
 // Single-account monitor
@@ -49,12 +49,12 @@ async function monitorSingleAccount(params: {
 }): Promise<void> {
   const { account, runtime, abortSignal } = params;
   const { accountId } = account;
-  const log = runtime?.log ?? ((...args: unknown[]) => mlog.info(args.map(String).join(' ')));
-  const error = runtime?.error ?? ((...args: unknown[]) => mlog.error(args.map(String).join(' ')));
+  const log = runtime?.log ?? ((...args: unknown[]) => mlog.info(args.map(String).join(" ")));
+  const error = runtime?.error ?? ((...args: unknown[]) => mlog.error(args.map(String).join(" ")));
 
   // Only websocket mode is supported in the monitor path.
-  const connectionMode = account.config.connectionMode ?? 'websocket';
-  if (connectionMode !== 'websocket') {
+  const connectionMode = account.config.connectionMode ?? "websocket";
+  if (connectionMode !== "websocket") {
     log(`feishu[${accountId}]: webhook mode not implemented in monitor`);
     return;
   }
@@ -66,7 +66,7 @@ async function monitorSingleAccount(params: {
     maxEntries: dedupCfg?.maxEntries,
   });
   log(
-    `feishu[${accountId}]: message dedup enabled (ttl=${messageDedup['ttlMs']}ms, max=${messageDedup['maxEntries']})`,
+    `feishu[${accountId}]: message dedup enabled (ttl=${messageDedup["ttlMs"]}ms, max=${messageDedup["maxEntries"]})`,
   );
 
   log(`feishu[${accountId}]: starting WebSocket connection...`);
@@ -95,18 +95,18 @@ async function monitorSingleAccount(params: {
 
   await lark.startWS({
     handlers: {
-      'im.message.receive_v1': (data) => handleMessageEvent(ctx, data),
-      'im.message.message_read_v1': async () => {},
-      'im.message.reaction.created_v1': (data) => handleReactionEvent(ctx, data),
+      "im.message.receive_v1": (data) => handleMessageEvent(ctx, data),
+      "im.message.message_read_v1": async () => {},
+      "im.message.reaction.created_v1": (data) => handleReactionEvent(ctx, data),
       // These events are expected in normal usage but do not affect the
       // plugin's current behavior. Register no-op handlers to avoid SDK
       // warnings about missing handlers.
-      'im.message.reaction.deleted_v1': async () => {},
-      'im.chat.access_event.bot_p2p_chat_entered_v1': async () => {},
-      'im.chat.member.bot.added_v1': (data) => handleBotMembershipEvent(ctx, data, 'added'),
-      'im.chat.member.bot.deleted_v1': (data) => handleBotMembershipEvent(ctx, data, 'removed'),
+      "im.message.reaction.deleted_v1": async () => {},
+      "im.chat.access_event.bot_p2p_chat_entered_v1": async () => {},
+      "im.chat.member.bot.added_v1": (data) => handleBotMembershipEvent(ctx, data, "added"),
+      "im.chat.member.bot.deleted_v1": (data) => handleBotMembershipEvent(ctx, data, "removed"),
       // 飞书 SDK EventDispatcher.register 不支持带返回值的处理器，此处 as any 是 SDK 类型限制的变通
-      'card.action.trigger': ((data: unknown) =>
+      "card.action.trigger": ((data: unknown) =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handleCardActionEvent(ctx, data)) as any,
     },
@@ -115,7 +115,7 @@ async function monitorSingleAccount(params: {
   });
 
   // startWS resolves when abortSignal fires — probe result is logged inside startWS.
-  log(`feishu[${accountId}]: bot open_id resolved: ${lark.botOpenId ?? 'unknown'}`);
+  log(`feishu[${accountId}]: bot open_id resolved: ${lark.botOpenId ?? "unknown"}`);
   log(`feishu[${accountId}]: WebSocket client started`);
   mlog.info(`websocket started for account ${accountId}`);
 }
@@ -131,7 +131,7 @@ async function monitorSingleAccount(params: {
 export async function monitorFeishuProvider(opts: MonitorFeishuOpts = {}): Promise<void> {
   const cfg = opts.config;
   if (!cfg) {
-    throw new Error('Config is required for Feishu monitor');
+    throw new Error("Config is required for Feishu monitor");
   }
 
   // Store the original global config so plugin commands (doctor, diagnose)
@@ -139,7 +139,7 @@ export async function monitorFeishuProvider(opts: MonitorFeishuOpts = {}): Promi
   // account-scoped config context.
   LarkClient.setGlobalConfig(cfg);
 
-  const log = opts.runtime?.log ?? ((...args: unknown[]) => mlog.info(args.map(String).join(' ')));
+  const log = opts.runtime?.log ?? ((...args: unknown[]) => mlog.info(args.map(String).join(" ")));
 
   // Single-account mode.
   if (opts.accountId) {
@@ -161,10 +161,12 @@ export async function monitorFeishuProvider(opts: MonitorFeishuOpts = {}): Promi
   // Multi-account mode: start all enabled accounts in parallel.
   const accounts = getEnabledLarkAccounts(cfg);
   if (accounts.length === 0) {
-    throw new Error('No enabled Feishu accounts configured');
+    throw new Error("No enabled Feishu accounts configured");
   }
 
-  log(`feishu: starting ${accounts.length} account(s): ${accounts.map((a) => a.accountId).join(', ')}`);
+  log(
+    `feishu: starting ${accounts.length} account(s): ${accounts.map((a) => a.accountId).join(", ")}`,
+  );
 
   await Promise.all(
     accounts.map((account) =>

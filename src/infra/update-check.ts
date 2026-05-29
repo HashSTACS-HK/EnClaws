@@ -479,10 +479,8 @@ export async function checkUpdateStatus(params: {
   // - macOS:   node/bin/node lives inside Contents/Resources/
   const isInstaller =
     !isGit &&
-    ((process.platform === "win32" &&
-      (await exists(path.join(root, "..", "node", "node.exe")))) ||
-     (process.platform === "darwin" &&
-      (await exists(path.join(root, "node", "bin", "node")))));
+    ((process.platform === "win32" && (await exists(path.join(root, "..", "node", "node.exe")))) ||
+      (process.platform === "darwin" && (await exists(path.join(root, "node", "bin", "node")))));
 
   const installKind: UpdateCheckResult["installKind"] = isGit
     ? "git"

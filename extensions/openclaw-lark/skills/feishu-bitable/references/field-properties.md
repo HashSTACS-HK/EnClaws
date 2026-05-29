@@ -52,6 +52,7 @@
 ```
 
 **注意**:
+
 - 默认 `ui_type` 为 "Text"
 - 单个单元格最多 10 万字符
 - 支持富文本格式（提及人、超链接等）
@@ -64,11 +65,12 @@
 
 ```json
 {
-  "formatter": "0"  // 可选，数字显示格式
+  "formatter": "0" // 可选，数字显示格式
 }
 ```
 
 **formatter 可选值**:
+
 - `"0"`: 整数（默认）
 - `"0.0"`: 一位小数
 - `"0.00"`: 两位小数
@@ -95,12 +97,13 @@
 
 ```json
 {
-  "date_formatter": "yyyy/MM/dd",  // 可选，默认 "yyyy/MM/dd"
-  "auto_fill": false               // 可选，是否自动填充创建时间
+  "date_formatter": "yyyy/MM/dd", // 可选，默认 "yyyy/MM/dd"
+  "auto_fill": false // 可选，是否自动填充创建时间
 }
 ```
 
 **date_formatter 可选值**:
+
 - `"yyyy/MM/dd"`: 2021/1/30
 - `"yyyy-MM-dd HH:mm"`: 2021/1/30 14:00
 - `"MM-dd"`: 1月30日
@@ -149,6 +152,7 @@
 ```
 
 **注意**:
+
 - 电话号码格式：符合正则 `(\+)?\d*`
 - 最大长度 64 字符
 
@@ -164,8 +168,8 @@
 {
   "options": [
     {
-      "name": "进行中",   // 必填，选项名称
-      "color": 0         // 可选，颜色编号 (0-54)
+      "name": "进行中", // 必填，选项名称
+      "color": 0 // 可选，颜色编号 (0-54)
     },
     {
       "name": "已完成",
@@ -176,6 +180,7 @@
 ```
 
 **颜色编号 (color)**:
+
 - 范围: 0-54
 - 0: 红色
 - 10: 绿色
@@ -190,15 +195,16 @@
   "field_name": "任务状态",
   "property": {
     "options": [
-      {"name": "待开始", "color": 0},
-      {"name": "进行中", "color": 20},
-      {"name": "已完成", "color": 10}
+      { "name": "待开始", "color": 0 },
+      { "name": "进行中", "color": 20 },
+      { "name": "已完成", "color": 10 }
     ]
   }
 }
 ```
 
 **注意**:
+
 - 选项总数不超过 20,000 个
 - 创建时**不能**指定选项 ID（`id` 字段），系统自动生成
 - 更新时需保留已有选项的 `id`
@@ -212,13 +218,14 @@
 ```json
 {
   "options": [
-    {"name": "紧急", "color": 0},
-    {"name": "重要", "color": 10}
+    { "name": "紧急", "color": 0 },
+    { "name": "重要", "color": 10 }
   ]
 }
 ```
 
 **注意**:
+
 - 选项总数不超过 20,000 个
 - 单个单元格选项数不超过 1,000 个
 
@@ -232,9 +239,9 @@
 
 ```json
 {
-  "min": 0,                  // 必填，最小值
-  "max": 100,                // 必填，最大值
-  "range_customize": false   // 可选，是否允许自定义进度值
+  "min": 0, // 必填，最小值
+  "max": 100, // 必填，最大值
+  "range_customize": false // 可选，是否允许自定义进度值
 }
 ```
 
@@ -254,6 +261,7 @@
 ```
 
 **注意**:
+
 - `min` 取值范围: 0-1
 - `max` 取值范围: 1-100
 - `range_customize` 为 `true` 时用户可输入超出范围的值
@@ -266,12 +274,13 @@
 
 ```json
 {
-  "currency_code": "CNY",  // 必填，货币类型
-  "formatter": "0.00"      // 可选，数字格式
+  "currency_code": "CNY", // 必填，货币类型
+  "formatter": "0.00" // 可选，数字格式
 }
 ```
 
 **currency_code 可选值**:
+
 - `"CNY"`: 人民币 (¥)
 - `"USD"`: 美元 ($)
 - `"EUR"`: 欧元 (€)
@@ -302,15 +311,17 @@
 
 ```json
 {
-  "min": 1,                 // 必填，最小值
-  "max": 5,                 // 必填，最大值
-  "rating": {               // 可选，评分样式
-    "symbol": "star"        // 图标类型
+  "min": 1, // 必填，最小值
+  "max": 5, // 必填，最大值
+  "rating": {
+    // 可选，评分样式
+    "symbol": "star" // 图标类型
   }
 }
 ```
 
 **symbol 可选值**:
+
 - `"star"`: ⭐ 星星（默认）
 - `"heart"`: ❤️ 爱心
 - `"thumbsup"`: 👍 赞
@@ -346,8 +357,8 @@
 ```json
 {
   "allowed_edit_modes": {
-    "manual": true,   // 是否允许手动录入
-    "scan": true      // 是否允许扫描录入
+    "manual": true, // 是否允许手动录入
+    "scan": true // 是否允许扫描录入
   }
 }
 ```
@@ -393,7 +404,7 @@
 
 ```json
 {
-  "multiple": true  // 可选，是否允许多个人员，默认 true
+  "multiple": true // 可选，是否允许多个人员，默认 true
 }
 ```
 
@@ -404,12 +415,13 @@
   "type": 11,
   "field_name": "负责人",
   "property": {
-    "multiple": false  // 只允许单个人员
+    "multiple": false // 只允许单个人员
   }
 }
 ```
 
 **注意**:
+
 - 单个单元格人员数不超过 1,000
 - 记录值只支持传入 `id` 字段（open_id/union_id/user_id）
 
@@ -428,6 +440,7 @@
 ```
 
 **⚠️ 重要**: 超链接字段的特殊要求（经实测验证）：
+
 - ✅ **正确**: 完全省略 `property` 参数
 - ❌ **错误**: `"property": {}`（会报 URLFieldPropertyError）
 - ❌ **错误**: 传递任何 property 值
@@ -449,6 +462,7 @@
 ```
 
 **注意**:
+
 - 单个单元格附件数不超过 100
 - 写入前需先调用[上传素材接口](https://go.feishu.cn/s/63soQp6O80s)
 
@@ -460,8 +474,8 @@
 
 ```json
 {
-  "table_id": "tblXXXXXXXX",  // 必填，关联的数据表 ID
-  "multiple": true             // 可选，是否允许多条记录，默认 true
+  "table_id": "tblXXXXXXXX", // 必填，关联的数据表 ID
+  "multiple": true // 可选，是否允许多条记录，默认 true
 }
 ```
 
@@ -479,6 +493,7 @@
 ```
 
 **注意**:
+
 - 单个单元格关联数不超过 500
 
 ---
@@ -489,9 +504,9 @@
 
 ```json
 {
-  "table_id": "tblXXXXXXXX",      // 必填，关联的数据表 ID
-  "back_field_name": "反向字段名",  // 必填，对方表的双向关联字段名
-  "multiple": true                 // 可选，是否允许多条记录
+  "table_id": "tblXXXXXXXX", // 必填，关联的数据表 ID
+  "back_field_name": "反向字段名", // 必填，对方表的双向关联字段名
+  "multiple": true // 可选，是否允许多条记录
 }
 ```
 
@@ -510,6 +525,7 @@
 ```
 
 **注意**:
+
 - 单个单元格关联数不超过 500
 - 对方表会自动创建对应的双向关联字段
 
@@ -522,12 +538,13 @@
 ```json
 {
   "location": {
-    "input_type": "not_limit"  // 输入限制
+    "input_type": "not_limit" // 输入限制
   }
 }
 ```
 
 **input_type 可选值**:
+
 - `"only_mobile"`: 仅允许移动端实时定位
 - `"not_limit"`: 无限制（默认）
 
@@ -560,6 +577,7 @@
 ```
 
 **注意**:
+
 - 单个单元格群组数不超过 10 个
 
 ---
@@ -572,7 +590,7 @@
 
 ```json
 {
-  "formula_expression": "bitable::$table[tblXXX].$field[fldYYY]*2"  // 可选
+  "formula_expression": "bitable::$table[tblXXX].$field[fldYYY]*2" // 可选
 }
 ```
 
@@ -589,6 +607,7 @@
 ```
 
 **注意**:
+
 - 创建字段时**不支持**设置公式表达式
 - 参考[飞书帮助中心 - 公式字段](https://www.feishu.cn/hc/zh-CN/articles/360049067853)
 
@@ -600,12 +619,13 @@
   "field_name": "计算字段",
   "property": {
     "type": {
-      "data_type": 2,           // 公式结果的数据类型 (1=文本, 2=数字, 5=日期...)
-      "ui_property": {          // UI 展示属性
+      "data_type": 2, // 公式结果的数据类型 (1=文本, 2=数字, 5=日期...)
+      "ui_property": {
+        // UI 展示属性
         "formatter": "0.00",
         "currency_code": "CNY"
       },
-      "ui_type": "Currency"     // UI 类型 (Number/Progress/Currency/Rating/DateTime)
+      "ui_type": "Currency" // UI 类型 (Number/Progress/Currency/Rating/DateTime)
     }
   }
 }
@@ -619,7 +639,7 @@
 
 ```json
 {
-  "date_formatter": "yyyy/MM/dd"  // 可选，日期格式
+  "date_formatter": "yyyy/MM/dd" // 可选，日期格式
 }
 ```
 
@@ -656,8 +676,9 @@
 ```json
 {
   "auto_serial": {
-    "type": "auto_increment_number",  // 或 "custom"
-    "options": [                      // 自定义编号规则（仅 type="custom" 时需要）
+    "type": "auto_increment_number", // 或 "custom"
+    "options": [
+      // 自定义编号规则（仅 type="custom" 时需要）
       {
         "type": "fixed_text",
         "value": "TASK-"
@@ -676,10 +697,12 @@
 ```
 
 **auto_serial.type 可选值**:
+
 - `"auto_increment_number"`: 纯自增数字
 - `"custom"`: 自定义编号规则
 
 **options 中的规则类型**:
+
 - `"system_number"`: 自增数字位数（value: 1-9）
 - `"fixed_text"`: 固定字符（value: 最多 20 字符）
 - `"created_time"`: 创建时间（value: "yyyyMMdd"/"yyyyMM"/"yyyy"/"MMdd"/"MM"/"dd"）
@@ -708,9 +731,9 @@
     "auto_serial": {
       "type": "custom",
       "options": [
-        {"type": "fixed_text", "value": "WO-"},
-        {"type": "created_time", "value": "yyyyMMdd"},
-        {"type": "system_number", "value": "4"}
+        { "type": "fixed_text", "value": "WO-" },
+        { "type": "created_time", "value": "yyyyMMdd" },
+        { "type": "system_number", "value": "4" }
       ]
     }
   }
@@ -722,23 +745,23 @@
 
 ## 🔍 常见错误码
 
-| 错误码 | 字段类型 | 说明 |
-|--------|---------|------|
-| 1254080 | 文本 | property 结构错误 |
-| 1254081 | 数字 | property 结构错误，检查 formatter |
-| 1254082 | 单选 | property 结构错误，检查 options 数组 |
-| 1254083 | 多选 | property 结构错误，检查 options 数组 |
-| 1254084 | 日期 | property 结构错误，检查 date_formatter |
-| 1254085 | 复选框 | property 结构错误 |
-| 1254086 | 人员 | property 结构错误，检查 multiple |
-| 1254087 | 超链接 | **必须省略 property 参数（传空对象也会报错）** |
-| 1254088 | 附件 | property 结构错误 |
-| 1254089 | 单向关联 | property 结构错误，检查 table_id |
-| 1254090 | 查找引用 | property 结构错误 |
-| 1254091 | 公式 | property 结构错误 |
-| 1254092 | 双向关联 | property 结构错误，检查 table_id 和 back_field_name |
-| 1254093 | 创建时间 | property 结构错误 |
-| 1254094 | 最后更新时间 | property 结构错误 |
+| 错误码  | 字段类型     | 说明                                                |
+| ------- | ------------ | --------------------------------------------------- |
+| 1254080 | 文本         | property 结构错误                                   |
+| 1254081 | 数字         | property 结构错误，检查 formatter                   |
+| 1254082 | 单选         | property 结构错误，检查 options 数组                |
+| 1254083 | 多选         | property 结构错误，检查 options 数组                |
+| 1254084 | 日期         | property 结构错误，检查 date_formatter              |
+| 1254085 | 复选框       | property 结构错误                                   |
+| 1254086 | 人员         | property 结构错误，检查 multiple                    |
+| 1254087 | 超链接       | **必须省略 property 参数（传空对象也会报错）**      |
+| 1254088 | 附件         | property 结构错误                                   |
+| 1254089 | 单向关联     | property 结构错误，检查 table_id                    |
+| 1254090 | 查找引用     | property 结构错误                                   |
+| 1254091 | 公式         | property 结构错误                                   |
+| 1254092 | 双向关联     | property 结构错误，检查 table_id 和 back_field_name |
+| 1254093 | 创建时间     | property 结构错误                                   |
+| 1254094 | 最后更新时间 | property 结构错误                                   |
 
 ---
 

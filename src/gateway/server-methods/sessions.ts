@@ -8,19 +8,14 @@ import { stopSubagentsForRequester } from "../../auto-reply/reply/abort.js";
 import { clearSessionQueues } from "../../auto-reply/reply/queue.js";
 import { loadConfig } from "../../config/config.js";
 import {
-  resolveRequestConfig,
-  resolveRequestStorePath,
-  loadTenantSessionStore,
-  loadAllTenantSessionStores,
-  findTenantStorePathForKey,
-} from "../tenant-session-utils.js";
-import {
   loadSessionStore,
   snapshotSessionOrigin,
   resolveMainSessionKey,
   type SessionEntry,
   updateSessionStore,
 } from "../../config/sessions.js";
+import { isDbInitialized } from "../../db/index.js";
+import { getUserById } from "../../db/models/user.js";
 import { unbindThreadBindingsBySessionKey } from "../../discord/monitor/thread-bindings.js";
 import { logVerbose } from "../../globals.js";
 import { createInternalHookEvent, triggerInternalHook } from "../../hooks/internal-hooks.js";
@@ -58,13 +53,18 @@ import {
   type SessionsPreviewEntry,
   type SessionsPreviewResult,
 } from "../session-utils.js";
+import type { SessionsListResult } from "../session-utils.types.js";
 import { applySessionsPatchToStore } from "../sessions-patch.js";
 import { resolveSessionKeyFromResolveParams } from "../sessions-resolve.js";
+import {
+  resolveRequestConfig,
+  resolveRequestStorePath,
+  loadTenantSessionStore,
+  loadAllTenantSessionStores,
+  findTenantStorePathForKey,
+} from "../tenant-session-utils.js";
 import type { GatewayClient, GatewayRequestHandlers, RespondFn } from "./types.js";
 import { assertValidParams } from "./validation.js";
-import { isDbInitialized } from "../../db/index.js";
-import { getUserById } from "../../db/models/user.js";
-import type { SessionsListResult } from "../session-utils.types.js";
 
 // ── User display name resolution for webchat session keys ────────────────────
 // Webchat session keys embed the DB user UUID: `...:user:{uuid}`.
@@ -80,7 +80,9 @@ async function enrichSessionDisplayNames(
   result: SessionsListResult,
   _tenantId: string,
 ): Promise<void> {
-  if (!isDbInitialized() || !result.sessions?.length) { return; }
+  if (!isDbInitialized() || !result.sessions?.length) {
+    return;
+  }
 
   // Collect unique user UUIDs from webchat session keys (:user:{uuid})
   const userIdSet = new Set<string>();
@@ -91,7 +93,9 @@ async function enrichSessionDisplayNames(
     }
   }
 
-  if (userIdSet.size === 0) { return; }
+  if (userIdSet.size === 0) {
+    return;
+  }
 
   // Batch-fetch user info by UUID
   const userInfoMap = new Map<string, UserInfo>();
@@ -107,7 +111,9 @@ async function enrichSessionDisplayNames(
   // Apply resolved names and roles — only if not already present (write-time value wins)
   for (const session of result.sessions) {
     const userMatch = USER_SUFFIX_RE.exec(session.key);
-    if (!userMatch) { continue; }
+    if (!userMatch) {
+      continue;
+    }
     const info = userInfoMap.get(userMatch[1]);
     if (info?.displayName && !session.displayName) {
       session.displayName = info.displayName;
@@ -486,7 +492,12 @@ export const sessionsHandlers: GatewayRequestHandlers = {
           const canonicalKey = resolveSessionStoreKey({ cfg: tenantCfg, sessionKey: key });
           return {
             cfg: tenantCfg,
-            target: { canonicalKey, storePath: tenantStorePath, agentId, storeKeys: [canonicalKey, key] },
+            target: {
+              canonicalKey,
+              storePath: tenantStorePath,
+              agentId,
+              storeKeys: [canonicalKey, key],
+            },
             storePath: tenantStorePath,
           };
         })()
@@ -643,7 +654,12 @@ export const sessionsHandlers: GatewayRequestHandlers = {
           const canonicalKey = resolveSessionStoreKey({ cfg: tenantCfg, sessionKey: key });
           return {
             cfg: tenantCfg,
-            target: { canonicalKey, storePath: tenantStorePath, agentId, storeKeys: [canonicalKey, key] },
+            target: {
+              canonicalKey,
+              storePath: tenantStorePath,
+              agentId,
+              storeKeys: [canonicalKey, key],
+            },
             storePath: tenantStorePath,
           };
         })()

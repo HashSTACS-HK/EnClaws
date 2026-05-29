@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js 22 / 配置 Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       # 4. 赋予脚本执行权限
       - name: Make scripts executable / 赋予脚本执行权限

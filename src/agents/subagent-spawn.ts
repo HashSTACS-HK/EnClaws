@@ -40,7 +40,9 @@ export function resolveSubagentTools(tools: string[] | undefined): string[] | un
 }
 
 export function compressSubagentResult(result: string): string {
-  if (!isOptEnabled("COMPRESS") || result.length <= MAX_RESULT_CHARS) {return result;}
+  if (!isOptEnabled("COMPRESS") || result.length <= MAX_RESULT_CHARS) {
+    return result;
+  }
   const head = result.slice(0, RESULT_HEAD_CHARS);
   const tail = result.slice(-RESULT_TAIL_CHARS);
   const trimmedChars = result.length - RESULT_HEAD_CHARS - RESULT_TAIL_CHARS;

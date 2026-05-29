@@ -132,11 +132,17 @@ function parseJudgeResponse(response: string, criteria: string[]): JudgeCriterio
   const jsonMatch = response.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     console.log(`  [LLM Judge] Failed to parse response: ${response.slice(0, 200)}`);
-    return criteria.map((c) => ({ criterion: c, passed: false, reason: "Failed to parse LLM response" }));
+    return criteria.map((c) => ({
+      criterion: c,
+      passed: false,
+      reason: "Failed to parse LLM response",
+    }));
   }
 
   try {
-    const parsed = JSON.parse(jsonMatch[0]) as { results: Array<{ criterion: number; passed: boolean; reason: string }> };
+    const parsed = JSON.parse(jsonMatch[0]) as {
+      results: Array<{ criterion: number; passed: boolean; reason: string }>;
+    };
 
     return criteria.map((c, i) => {
       const r = parsed.results?.find((r) => r.criterion === i + 1);
@@ -148,6 +154,10 @@ function parseJudgeResponse(response: string, criteria: string[]): JudgeCriterio
     });
   } catch {
     console.log(`  [LLM Judge] JSON parse error: ${jsonMatch[0].slice(0, 200)}`);
-    return criteria.map((c) => ({ criterion: c, passed: false, reason: "JSON parse error in LLM response" }));
+    return criteria.map((c) => ({
+      criterion: c,
+      passed: false,
+      reason: "JSON parse error in LLM response",
+    }));
   }
 }

@@ -14,42 +14,46 @@
  * - dispatch-commands.ts — system command & permission notification
  */
 
-import type { ClawdbotConfig, RuntimeEnv  } from 'openclaw/plugin-sdk';
-import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
-import { clearHistoryEntriesIfEnabled } from 'openclaw/plugin-sdk/reply-history';
-import type { MessageContext } from '../types';
-import type { FeishuGroupConfig, LarkAccount  } from '../../core/types';
-import { larkLogger } from '../../core/lark-logger';
-import { ticketElapsed } from '../../core/lark-ticket';
-import { createFeishuReplyDispatcher } from '../../card/reply-dispatcher';
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import type { HistoryEntry } from "openclaw/plugin-sdk/reply-history";
+import { clearHistoryEntriesIfEnabled } from "openclaw/plugin-sdk/reply-history";
+import { createFeishuReplyDispatcher } from "../../card/reply-dispatcher";
+import { isLikelyAbortText } from "../../channel/abort-detect";
 import {
   buildQueueKey,
   consumeAbortedCardMessageId,
   registerActiveDispatcher,
   threadScopedKey,
   unregisterActiveDispatcher,
-} from '../../channel/chat-queue';
-import { isLikelyAbortText } from '../../channel/abort-detect';
-import { getChatInfo, isThreadCapableGroup } from '../../core/chat-info-cache';
-import { encodeFeishuRouteTarget } from '../../core/targets';
-import type { LarkClient } from '../../core/lark-client';
-import { runFeishuDoctorI18n } from '../../commands/doctor';
-import { runFeishuAuthI18n } from '../../commands/auth';
-import { getFeishuHelpI18n, runFeishuStartI18n } from '../../commands/index';
-import { buildI18nMarkdownCard, sendCardFeishu, sendMessageFeishu } from '../outbound/send';
-import { dispatchPermissionNotification, dispatchSystemCommand } from './dispatch-commands';
+} from "../../channel/chat-queue";
+import { runFeishuAuthI18n } from "../../commands/auth";
+import { runFeishuDoctorI18n } from "../../commands/doctor";
+import { getFeishuHelpI18n, runFeishuStartI18n } from "../../commands/index";
+import { getChatInfo, isThreadCapableGroup } from "../../core/chat-info-cache";
+import type { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import { ticketElapsed } from "../../core/lark-ticket";
+import { encodeFeishuRouteTarget } from "../../core/targets";
+import type { FeishuGroupConfig, LarkAccount } from "../../core/types";
+import { buildI18nMarkdownCard, sendCardFeishu, sendMessageFeishu } from "../outbound/send";
+import type { MessageContext } from "../types";
 import {
   buildBodyForAgent,
   buildEnvelopeWithHistory,
   buildInboundPayload,
   buildMessageBody,
-} from './dispatch-builders';
-import { type DispatchContext, buildDispatchContext, resolveThreadSessionKey } from './dispatch-context';
-import type { PermissionError } from './permission';
-import { mentionedBot } from './mention';
-import { resolveRespondToMentionAll } from './gate';
+} from "./dispatch-builders";
+import { dispatchPermissionNotification, dispatchSystemCommand } from "./dispatch-commands";
+import {
+  type DispatchContext,
+  buildDispatchContext,
+  resolveThreadSessionKey,
+} from "./dispatch-context";
+import { resolveRespondToMentionAll } from "./gate";
+import { mentionedBot } from "./mention";
+import type { PermissionError } from "./permission";
 
-const log = larkLogger('inbound/dispatch');
+const log = larkLogger("inbound/dispatch");
 
 // ---------------------------------------------------------------------------
 // Internal: normal message dispatch
@@ -76,18 +80,30 @@ async function dispatchNormalMessage(
   // Abort messages should never create streaming cards — dispatch via the
   // plain-text system-command path so the SDK's abort handler can reply
   // without touching CardKit.
-  if (isLikelyAbortText(dc.ctx.content?.trim() ?? '')) {
-    const abortIsGroup = dc.ctx.chatType === 'group';
-    const abortQueueKey = buildQueueKey(dc.account.accountId, dc.ctx.chatId, dc.ctx.threadId, abortIsGroup ? dc.ctx.senderId : undefined);
+  if (isLikelyAbortText(dc.ctx.content?.trim() ?? "")) {
+    const abortIsGroup = dc.ctx.chatType === "group";
+    const abortQueueKey = buildQueueKey(
+      dc.account.accountId,
+      dc.ctx.chatId,
+      dc.ctx.threadId,
+      abortIsGroup ? dc.ctx.senderId : undefined,
+    );
     const abortedCardId = consumeAbortedCardMessageId(abortQueueKey);
     const effectiveReplyToMessageId = abortedCardId ?? replyToMessageId;
     dc.log(`feishu[${dc.account.accountId}]: abort message detected, using plain-text dispatch`);
-    log.info('abort message detected, using plain-text dispatch');
+    log.info("abort message detected, using plain-text dispatch");
     await dispatchSystemCommand(dc, ctxPayload, false, effectiveReplyToMessageId);
     return;
   }
 
-  const { dispatcher, replyOptions, markDispatchIdle, markFullyComplete, abortCard, getCardMessageId } = createFeishuReplyDispatcher({
+  const {
+    dispatcher,
+    replyOptions,
+    markDispatchIdle,
+    markFullyComplete,
+    abortCard,
+    getCardMessageId,
+  } = createFeishuReplyDispatcher({
     cfg: dc.accountScopedCfg,
     agentId: dc.route.agentId,
     sessionKey: dc.threadSessionKey ?? dc.route.sessionKey,
@@ -105,9 +121,14 @@ async function dispatchNormalMessage(
 
   // Register the active dispatcher so the monitor abort fast-path can
   // terminate the streaming card before this task completes.
-  const isGroup = dc.ctx.chatType === 'group';
+  const isGroup = dc.ctx.chatType === "group";
   const senderQueueId = isGroup ? dc.ctx.senderId : undefined;
-  const queueKey = buildQueueKey(dc.account.accountId, dc.ctx.chatId, dc.ctx.threadId, senderQueueId);
+  const queueKey = buildQueueKey(
+    dc.account.accountId,
+    dc.ctx.chatId,
+    dc.ctx.threadId,
+    senderQueueId,
+  );
   const effectiveSessionKey = dc.threadSessionKey ?? dc.route.sessionKey;
   registerActiveDispatcher(queueKey, {
     abortCard,
@@ -115,7 +136,7 @@ async function dispatchNormalMessage(
     steer: (text: string) => {
       try {
         const agent = dc.core.agent as any;
-        if (typeof agent.steerMessage === 'function') {
+        if (typeof agent.steerMessage === "function") {
           agent.steerMessage({ sessionKey: effectiveSessionKey, text });
           return true;
         }
@@ -162,7 +183,9 @@ async function dispatchNormalMessage(
       });
     }
 
-    dc.log(`feishu[${dc.account.accountId}]: dispatch complete (queuedFinal=${queuedFinal}, replies=${counts.final})`);
+    dc.log(
+      `feishu[${dc.account.accountId}]: dispatch complete (queuedFinal=${queuedFinal}, replies=${counts.final})`,
+    );
     log.info(`dispatch complete (replies=${counts.final}, elapsed=${ticketElapsed()}ms)`);
   } finally {
     unregisterActiveDispatcher(queueKey);
@@ -252,7 +275,9 @@ export async function dispatchToAgent(params: {
     try {
       await dispatchPermissionNotification(dc, params.permissionError, params.replyToMessageId);
     } catch (err) {
-      dc.error(`feishu[${dc.account.accountId}]: permission notification failed, continuing: ${String(err)}`);
+      dc.error(
+        `feishu[${dc.account.accountId}]: permission notification failed, continuing: ${String(err)}`,
+      );
     }
   }
 
@@ -272,7 +297,10 @@ export async function dispatchToAgent(params: {
   // 6. Build InboundHistory for SDK metadata injection (>= 2026.2.10).
   //    The SDK's buildInboundUserContextPrefix renders these as structured
   //    JSON blocks; earlier SDK versions simply ignore unknown fields.
-  const threadHistoryKey = threadScopedKey(dc.ctx.chatId, dc.isThread ? dc.ctx.threadId : undefined);
+  const threadHistoryKey = threadScopedKey(
+    dc.ctx.chatId,
+    dc.isThread ? dc.ctx.threadId : undefined,
+  );
   const inboundHistory =
     dc.isGroup && params.chatHistories && params.historyLimit > 0
       ? (params.chatHistories.get(threadHistoryKey) ?? []).map((entry) => ({
@@ -283,9 +311,11 @@ export async function dispatchToAgent(params: {
       : undefined;
 
   // 7. Build inbound context payload
-  const isBareNewOrReset = /^\/(?:new|reset)\s*$/i.test((params.ctx.content ?? '').trim());
+  const isBareNewOrReset = /^\/(?:new|reset)\s*$/i.test((params.ctx.content ?? "").trim());
   const groupSystemPrompt = dc.isGroup
-    ? params.groupConfig?.systemPrompt?.trim() || params.defaultGroupConfig?.systemPrompt?.trim() || undefined
+    ? params.groupConfig?.systemPrompt?.trim() ||
+      params.defaultGroupConfig?.systemPrompt?.trim() ||
+      undefined
     : undefined;
   const originatingTo =
     isBareNewOrReset && dc.isThread
@@ -318,7 +348,9 @@ export async function dispatchToAgent(params: {
       ...params.mediaPayload,
       ...(groupSystemPrompt ? { GroupSystemPrompt: groupSystemPrompt } : {}),
       ...(dc.ctx.threadId ? { MessageThreadId: dc.ctx.threadId } : {}),
-      ...(dc.ctx.rawSender?.sender_id?.union_id ? { SenderUnionId: dc.ctx.rawSender.sender_id.union_id } : {}),
+      ...(dc.ctx.rawSender?.sender_id?.union_id
+        ? { SenderUnionId: dc.ctx.rawSender.sender_id.union_id }
+        : {}),
     },
   });
 
@@ -326,24 +358,26 @@ export async function dispatchToAgent(params: {
   //     Must run BEFORE the SDK command check — the SDK does not recognise
   //     plugin-registered commands via isControlCommandMessage, so
   //     /feishu_* falls through to the AI agent otherwise.
-  const contentTrimmed = (params.ctx.content ?? '').trim();
+  const contentTrimmed = (params.ctx.content ?? "").trim();
   const isDoctorCommand = /^\/feishu[_ ]doctor\s*$/i.test(contentTrimmed);
   const isAuthCommand = /^\/feishu[_ ](?:auth|onboarding)\s*$/i.test(contentTrimmed);
   const isStartCommand = /^\/feishu[_ ]start\s*$/i.test(contentTrimmed);
   const isHelpCommand = /^\/feishu(?:[_ ]help)?\s*$/i.test(contentTrimmed);
 
   const i18nCommandName = isDoctorCommand
-    ? 'doctor'
+    ? "doctor"
     : isAuthCommand
-      ? 'auth'
+      ? "auth"
       : isStartCommand
-        ? 'start'
+        ? "start"
         : isHelpCommand
-          ? 'help'
+          ? "help"
           : null;
 
   if (i18nCommandName) {
-    dc.log(`feishu[${dc.account.accountId}]: ${i18nCommandName} command detected, using i18n dispatch`);
+    dc.log(
+      `feishu[${dc.account.accountId}]: ${i18nCommandName} command detected, using i18n dispatch`,
+    );
     log.info(`${i18nCommandName} command detected, using i18n dispatch`);
     try {
       let i18nTexts: Record<string, string>;
@@ -367,7 +401,9 @@ export async function dispatchToAgent(params: {
       });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      dc.error(`feishu[${dc.account.accountId}]: ${i18nCommandName} i18n dispatch failed: ${errMsg}`);
+      dc.error(
+        `feishu[${dc.account.accountId}]: ${i18nCommandName} i18n dispatch failed: ${errMsg}`,
+      );
       await sendMessageFeishu({
         cfg: dc.accountScopedCfg,
         to: dc.ctx.chatId,
@@ -381,19 +417,29 @@ export async function dispatchToAgent(params: {
   }
 
   // 8. Dispatch: system command vs. normal message
-  const isCommand = dc.core.channel.commands.isControlCommandMessage(params.ctx.content, params.accountScopedCfg);
+  const isCommand = dc.core.channel.commands.isControlCommandMessage(
+    params.ctx.content,
+    params.accountScopedCfg,
+  );
 
   // Resolve per-group skill filter (per-group > default "*")
-  const skillFilter = dc.isGroup ? (params.groupConfig?.skills ?? params.defaultGroupConfig?.skills) : undefined;
+  const skillFilter = dc.isGroup
+    ? (params.groupConfig?.skills ?? params.defaultGroupConfig?.skills)
+    : undefined;
 
   if (isCommand) {
     // For abort commands (/stop), reply to the active streaming card instead
     // of the /stop message itself so the user sees the reply linked to the
     // in-progress task, not their stop command.
     let commandReplyToMessageId = params.replyToMessageId;
-    if (isLikelyAbortText(params.ctx.content?.trim() ?? '')) {
-      const abortIsGroup = dc.ctx.chatType === 'group';
-      const abortQueueKey = buildQueueKey(dc.account.accountId, dc.ctx.chatId, dc.ctx.threadId, abortIsGroup ? dc.ctx.senderId : undefined);
+    if (isLikelyAbortText(params.ctx.content?.trim() ?? "")) {
+      const abortIsGroup = dc.ctx.chatType === "group";
+      const abortQueueKey = buildQueueKey(
+        dc.account.accountId,
+        dc.ctx.chatId,
+        dc.ctx.threadId,
+        abortIsGroup ? dc.ctx.senderId : undefined,
+      );
       const abortedCardId = consumeAbortedCardMessageId(abortQueueKey);
       if (abortedCardId) {
         commandReplyToMessageId = abortedCardId;

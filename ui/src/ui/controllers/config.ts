@@ -182,7 +182,9 @@ export async function applyConfig(state: ConfigState) {
 
 /** Poll the gateway until it comes back online, then reload the page. */
 async function waitForGatewayAndReload(state: ConfigState, oldVersion: string | undefined) {
-  const baseUrl = (state as unknown as { settings?: { gatewayUrl?: string } }).settings?.gatewayUrl || window.location.origin;
+  const baseUrl =
+    (state as unknown as { settings?: { gatewayUrl?: string } }).settings?.gatewayUrl ||
+    window.location.origin;
   const maxAttempts = 60; // ~2 minutes
   const intervalMs = 2000;
 
@@ -214,7 +216,8 @@ export async function runUpdate(state: ConfigState) {
   state.updateMessage = t("update.updating");
   state.lastError = null;
 
-  const oldVersion = (state as unknown as { updateAvailable?: { currentVersion?: string } }).updateAvailable?.currentVersion;
+  const oldVersion = (state as unknown as { updateAvailable?: { currentVersion?: string } })
+    .updateAvailable?.currentVersion;
 
   // Yield to let Lit render the "updating" state before starting the long request
   await new Promise((r) => setTimeout(r, 0));
@@ -223,7 +226,10 @@ export async function runUpdate(state: ConfigState) {
     const res = await state.client.request("update.run", {
       sessionKey: state.applySessionKey,
     });
-    const body = res as { result?: { status?: string; reason?: string; mode?: string }; restart?: unknown };
+    const body = res as {
+      result?: { status?: string; reason?: string; mode?: string };
+      restart?: unknown;
+    };
     const result = body?.result;
     if (result?.status === "ok") {
       if (body?.restart) {

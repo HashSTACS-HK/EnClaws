@@ -17,15 +17,22 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import * as fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { Type } from '@sinclair/typebox';
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { imageSize } from 'image-size';
-import { validateLocalMediaRoots } from '../../../messaging/outbound/media-url-utils';
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
+import { createReadStream } from "node:fs";
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
+import { Type } from "@sinclair/typebox";
+import { imageSize } from "image-size";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { validateLocalMediaRoots } from "../../../messaging/outbound/media-url-utils";
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -44,43 +51,43 @@ const MEDIA_CONFIG = {
   image: {
     block_type: 27,
     block_data: { image: {} },
-    parent_type: 'docx_image' as const,
-    label: '图片',
+    parent_type: "docx_image" as const,
+    label: "图片",
   },
   file: {
     block_type: 23,
-    block_data: { file: { token: '' } },
-    parent_type: 'docx_file' as const,
-    label: '文件',
+    block_data: { file: { token: "" } },
+    parent_type: "docx_file" as const,
+    label: "文件",
   },
 };
 
 /** MIME type → 扩展名映射 */
 const MIME_TO_EXT: Record<string, string> = {
-  'image/png': '.png',
-  'image/jpeg': '.jpg',
-  'image/jpg': '.jpg',
-  'image/gif': '.gif',
-  'image/webp': '.webp',
-  'image/svg+xml': '.svg',
-  'image/bmp': '.bmp',
-  'image/tiff': '.tiff',
-  'video/mp4': '.mp4',
-  'video/mpeg': '.mpeg',
-  'video/quicktime': '.mov',
-  'video/x-msvideo': '.avi',
-  'video/webm': '.webm',
-  'application/pdf': '.pdf',
-  'application/msword': '.doc',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-  'application/vnd.ms-excel': '.xls',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
-  'application/vnd.ms-powerpoint': '.ppt',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
-  'application/zip': '.zip',
-  'application/x-rar-compressed': '.rar',
-  'text/plain': '.txt',
-  'application/json': '.json',
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/jpg": ".jpg",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+  "image/svg+xml": ".svg",
+  "image/bmp": ".bmp",
+  "image/tiff": ".tiff",
+  "video/mp4": ".mp4",
+  "video/mpeg": ".mpeg",
+  "video/quicktime": ".mov",
+  "video/x-msvideo": ".avi",
+  "video/webm": ".webm",
+  "application/pdf": ".pdf",
+  "application/msword": ".doc",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+  "application/vnd.ms-excel": ".xls",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+  "application/vnd.ms-powerpoint": ".ppt",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+  "application/zip": ".zip",
+  "application/x-rar-compressed": ".rar",
+  "text/plain": ".txt",
+  "application/json": ".json",
 };
 
 // ---------------------------------------------------------------------------
@@ -104,43 +111,45 @@ function extractDocumentId(input: string): string {
 const DocMediaSchema = Type.Union([
   // INSERT action
   Type.Object({
-    action: Type.Literal('insert'),
+    action: Type.Literal("insert"),
     doc_id: Type.String({
-      description: '文档 ID 或文档 URL（必填）。支持从 URL 自动提取 document_id',
+      description: "文档 ID 或文档 URL（必填）。支持从 URL 自动提取 document_id",
     }),
     file_path: Type.String({
-      description: '本地文件的绝对路径（必填）。图片支持 jpg/png/gif/webp 等，文件支持任意格式，最大 20MB',
+      description:
+        "本地文件的绝对路径（必填）。图片支持 jpg/png/gif/webp 等，文件支持任意格式，最大 20MB",
     }),
     type: Type.Optional(
-      StringEnum(['image', 'file'], {
+      StringEnum(["image", "file"], {
         description: '媒体类型："image"（图片，默认）或 "file"（文件附件）',
       }),
     ),
     align: Type.Optional(
-      StringEnum(['left', 'center', 'right'], {
-        description: '对齐方式（仅图片生效）："center"（默认居中）、"left"（居左）、"right"（居右）',
+      StringEnum(["left", "center", "right"], {
+        description:
+          '对齐方式（仅图片生效）："center"（默认居中）、"left"（居左）、"right"（居右）',
       }),
     ),
     caption: Type.Optional(
       Type.String({
-        description: '图片描述/标题（可选，仅图片生效）',
+        description: "图片描述/标题（可选，仅图片生效）",
       }),
     ),
   }),
 
   // DOWNLOAD action
   Type.Object({
-    action: Type.Literal('download'),
+    action: Type.Literal("download"),
     resource_token: Type.String({
-      description: '资源的唯一标识（file_token 用于文档素材，whiteboard_id 用于画板）',
+      description: "资源的唯一标识（file_token 用于文档素材，whiteboard_id 用于画板）",
     }),
-    resource_type: StringEnum(['media', 'whiteboard'], {
-      description: '资源类型：media（文档素材：图片、视频、文件等）或 whiteboard（画板缩略图）',
+    resource_type: StringEnum(["media", "whiteboard"], {
+      description: "资源类型：media（文档素材：图片、视频、文件等）或 whiteboard（画板缩略图）",
     }),
     output_path: Type.String({
       description:
-        '保存文件的完整本地路径。可以包含扩展名（如 /tmp/image.png），' +
-        '也可以不带扩展名，系统会根据 Content-Type 自动添加',
+        "保存文件的完整本地路径。可以包含扩展名（如 /tmp/image.png），" +
+        "也可以不带扩展名，系统会根据 Content-Type 自动添加",
     }),
   }),
 ]);
@@ -150,18 +159,18 @@ const DocMediaSchema = Type.Union([
 // ---------------------------------------------------------------------------
 
 interface InsertParams {
-  action: 'insert';
+  action: "insert";
   doc_id: string;
   file_path: string;
-  type?: 'image' | 'file';
-  align?: 'left' | 'center' | 'right';
+  type?: "image" | "file";
+  align?: "left" | "center" | "right";
   caption?: string;
 }
 
 interface DownloadParams {
-  action: 'download';
+  action: "download";
   resource_token: string;
-  resource_type: 'media' | 'whiteboard';
+  resource_type: "media" | "whiteboard";
   output_path: string;
 }
 
@@ -173,11 +182,11 @@ type DocMediaParams = InsertParams | DownloadParams;
 
 async function handleInsert(
   p: InsertParams,
-  client: ReturnType<ReturnType<typeof createToolContext>['toolClient']>,
-  log: ReturnType<typeof createToolContext>['log'],
+  client: ReturnType<ReturnType<typeof createToolContext>["toolClient"]>,
+  log: ReturnType<typeof createToolContext>["log"],
 ) {
   const documentId = extractDocumentId(p.doc_id);
-  const mediaType = p.type ?? 'image';
+  const mediaType = p.type ?? "image";
   const config = MEDIA_CONFIG[mediaType];
 
   // 0. 路径白名单校验 — 仅允许 tmpdir 下的文件
@@ -207,7 +216,7 @@ async function handleInsert(
 
   // 2. 创建空 Block（追加到文档末尾）
   const createRes: any = await client.invoke(
-    'feishu_doc_media.insert',
+    "feishu_doc_media.insert",
     (sdk, opts) =>
       (sdk.docx.documentBlockChildren as any).create(
         {
@@ -222,7 +231,7 @@ async function handleInsert(
         },
         opts,
       ),
-    { as: 'user' },
+    { as: "user" },
   );
   assertLarkOk(createRes);
 
@@ -230,7 +239,7 @@ async function handleInsert(
   // 真正的 File Block ID 在 children[0].children[0]；
   // Image Block 直接返回，block_id 在 children[0].block_id
   let blockId: string | undefined;
-  if (mediaType === 'file') {
+  if (mediaType === "file") {
     blockId = createRes.data?.children?.[0]?.children?.[0];
   } else {
     blockId = createRes.data?.children?.[0]?.block_id;
@@ -244,7 +253,7 @@ async function handleInsert(
 
   // 3. 上传素材
   const uploadRes: any = await client.invoke(
-    'feishu_doc_media.insert',
+    "feishu_doc_media.insert",
     (sdk, opts) =>
       (sdk.drive.v1.media as any).uploadAll(
         {
@@ -261,7 +270,7 @@ async function handleInsert(
         },
         opts,
       ),
-    { as: 'user' },
+    { as: "user" },
   );
 
   const fileToken = uploadRes?.file_token ?? uploadRes?.data?.file_token;
@@ -275,8 +284,8 @@ async function handleInsert(
   // 4. 批量更新 Block - 设置 token
   const patchRequest: any = { block_id: blockId };
 
-  if (mediaType === 'image') {
-    const alignNum = ALIGN_MAP[p.align ?? 'center'];
+  if (mediaType === "image") {
+    const alignNum = ALIGN_MAP[p.align ?? "center"];
 
     // 自动检测图片尺寸
     let width: number | undefined;
@@ -290,7 +299,7 @@ async function handleInsert(
         log.info(`insert: detected image size ${width}x${height}`);
       }
     } catch {
-      log.info('insert: could not detect image dimensions, skipping');
+      log.info("insert: could not detect image dimensions, skipping");
     }
 
     patchRequest.replace_image = {
@@ -305,7 +314,7 @@ async function handleInsert(
   }
 
   const patchRes: any = await client.invoke(
-    'feishu_doc_media.insert',
+    "feishu_doc_media.insert",
     (sdk, opts) =>
       sdk.docx.documentBlock.batchUpdate(
         {
@@ -315,7 +324,7 @@ async function handleInsert(
         },
         opts,
       ),
-    { as: 'user' },
+    { as: "user" },
   );
   assertLarkOk(patchRes);
   log.info(`insert: patched ${mediaType} block with file_token`);
@@ -332,23 +341,27 @@ async function handleInsert(
 
 async function handleDownload(
   p: DownloadParams,
-  client: ReturnType<ReturnType<typeof createToolContext>['toolClient']>,
-  log: ReturnType<typeof createToolContext>['log'],
+  client: ReturnType<ReturnType<typeof createToolContext>["toolClient"]>,
+  log: ReturnType<typeof createToolContext>["log"],
 ) {
   log.info(`download: resource_type=${p.resource_type}, token="${p.resource_token}"`);
 
   let res: any;
-  if (p.resource_type === 'media') {
+  if (p.resource_type === "media") {
     res = await client.invoke(
-      'feishu_doc_media.download',
+      "feishu_doc_media.download",
       (sdk, opts) => sdk.drive.v1.media.download({ path: { file_token: p.resource_token } }, opts),
-      { as: 'user' },
+      { as: "user" },
     );
   } else {
     res = await client.invoke(
-      'feishu_doc_media.download',
-      (sdk, opts) => sdk.board.v1.whiteboard.downloadAsImage({ path: { whiteboard_id: p.resource_token } }, opts),
-      { as: 'user' },
+      "feishu_doc_media.download",
+      (sdk, opts) =>
+        sdk.board.v1.whiteboard.downloadAsImage(
+          { path: { whiteboard_id: p.resource_token } },
+          opts,
+        ),
+      { as: "user" },
     );
   }
 
@@ -362,13 +375,13 @@ async function handleDownload(
   log.info(`download: received ${buffer.length} bytes`);
 
   // 从 Content-Type 推断扩展名
-  const contentType: string = res.headers?.['content-type'] || '';
+  const contentType: string = res.headers?.["content-type"] || "";
   let finalPath = p.output_path;
   const currentExt = path.extname(p.output_path);
 
   if (!currentExt && contentType) {
-    const mimeType = contentType.split(';')[0].trim();
-    const defaultExt = p.resource_type === 'whiteboard' ? '.png' : undefined;
+    const mimeType = contentType.split(";")[0].trim();
+    const defaultExt = p.resource_type === "whiteboard" ? ".png" : undefined;
     const suggestedExt = MIME_TO_EXT[mimeType] || defaultExt;
     if (suggestedExt) {
       finalPath = p.output_path + suggestedExt;
@@ -405,28 +418,28 @@ export function registerDocMediaTool(api: OpenClawPluginApi): boolean {
   if (!api.config) return false;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_doc_media');
+  const { toolClient, log } = createToolContext(api, "feishu_doc_media");
 
   return registerTool(
     api,
     {
-      name: 'feishu_doc_media',
-      label: 'Feishu: Document Media',
+      name: "feishu_doc_media",
+      label: "Feishu: Document Media",
       description:
-        '【以用户身份】文档媒体管理工具。' +
-        '支持两种操作：' +
-        '(1) insert - 在飞书文档末尾插入本地图片或文件（需要文档 ID + 本地文件路径）；' +
-        '(2) download - 下载文档素材或画板缩略图到本地（需要资源 token + 输出路径）。' +
+        "【以用户身份】文档媒体管理工具。" +
+        "支持两种操作：" +
+        "(1) insert - 在飞书文档末尾插入本地图片或文件（需要文档 ID + 本地文件路径）；" +
+        "(2) download - 下载文档素材或画板缩略图到本地（需要资源 token + 输出路径）。" +
         '\n\n【重要】insert 仅支持本地文件路径。URL 图片请使用 create-doc/update-doc 的 <image url="..."/> 语法。',
       parameters: DocMediaSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as DocMediaParams;
         try {
           const client = toolClient();
-          if (p.action === 'insert') {
+          if (p.action === "insert") {
             return await handleInsert(p, client, log);
           }
-          if (p.action === 'download') {
+          if (p.action === "download") {
             return await handleDownload(p, client, log);
           }
           return json({ error: `unknown action: ${(p as any).action}` });
@@ -435,6 +448,6 @@ export function registerDocMediaTool(api: OpenClawPluginApi): boolean {
         }
       },
     },
-    { name: 'feishu_doc_media' },
+    { name: "feishu_doc_media" },
   );
 }

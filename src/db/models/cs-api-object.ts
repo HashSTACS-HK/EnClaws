@@ -67,7 +67,16 @@ export async function createCsApiObject(input: CreateCsApiObjectInput): Promise<
   const r = await query(
     `INSERT INTO cs_api_objects (id, tenant_id, name, description, agent_id, app_id, app_secret_hash, endpoint_url)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-    [id, input.tenantId, input.name, input.description ?? null, input.agentId, appId, input.appSecretHash, input.endpointUrl],
+    [
+      id,
+      input.tenantId,
+      input.name,
+      input.description ?? null,
+      input.agentId,
+      appId,
+      input.appSecretHash,
+      input.endpointUrl,
+    ],
   );
   return rowToCsApiObject(r.rows[0]);
 }
@@ -80,14 +89,17 @@ export async function getCsApiObjectByAppId(appId: string): Promise<CsApiObject 
   return r.rows[0] ? rowToCsApiObject(r.rows[0]) : null;
 }
 
-export async function getCsApiObjectById(id: string, tenantId: string): Promise<CsApiObject | null> {
+export async function getCsApiObjectById(
+  id: string,
+  tenantId: string,
+): Promise<CsApiObject | null> {
   if (getDbType() === DB_SQLITE) {
     return sqliteModel.getCsApiObjectById(id, tenantId);
   }
-  const r = await query(
-    `SELECT * FROM cs_api_objects WHERE id = $1 AND tenant_id = $2`,
-    [id, tenantId],
-  );
+  const r = await query(`SELECT * FROM cs_api_objects WHERE id = $1 AND tenant_id = $2`, [
+    id,
+    tenantId,
+  ]);
   return r.rows[0] ? rowToCsApiObject(r.rows[0]) : null;
 }
 
@@ -159,7 +171,9 @@ export async function rotateCsApiObjectSecret(
      WHERE id = $3 AND tenant_id = $4 RETURNING *`,
     [newHash, rotatingUntil, id, tenantId],
   );
-  if (!r.rows[0]) { throw new Error(`cs_api_object not found: ${id}`); }
+  if (!r.rows[0]) {
+    throw new Error(`cs_api_object not found: ${id}`);
+  }
   return rowToCsApiObject(r.rows[0]);
 }
 
@@ -180,10 +194,10 @@ export async function deleteCsApiObject(id: string, tenantId: string): Promise<b
   if (getDbType() === DB_SQLITE) {
     return sqliteModel.deleteCsApiObject(id, tenantId);
   }
-  const r = await query(
-    `DELETE FROM cs_api_objects WHERE id = $1 AND tenant_id = $2`,
-    [id, tenantId],
-  );
+  const r = await query(`DELETE FROM cs_api_objects WHERE id = $1 AND tenant_id = $2`, [
+    id,
+    tenantId,
+  ]);
   return (r.rowCount ?? 0) > 0;
 }
 

@@ -12,10 +12,17 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
-import type { PaginatedData } from '../sdk-types';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
+import type { PaginatedData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -24,59 +31,56 @@ import type { PaginatedData } from '../sdk-types';
 const FeishuCalendarEventAttendeeSchema = Type.Union([
   // CREATE
   Type.Object({
-    action: Type.Literal('create'),
+    action: Type.Literal("create"),
     calendar_id: Type.String({
-      description: '日历 ID',
+      description: "日历 ID",
     }),
     event_id: Type.String({
-      description: '日程 ID',
+      description: "日程 ID",
     }),
     attendees: Type.Array(
       Type.Object({
-        type: StringEnum(['user', 'chat', 'resource', 'third_party']),
+        type: StringEnum(["user", "chat", "resource", "third_party"]),
         attendee_id: Type.String({
           description:
-            '参会人 ID。type=user 时为 open_id，type=chat 时为 chat_id，type=resource 时为会议室 ID，type=third_party 时为邮箱地址',
+            "参会人 ID。type=user 时为 open_id，type=chat 时为 chat_id，type=resource 时为会议室 ID，type=third_party 时为邮箱地址",
         }),
       }),
       {
-        description: '参会人列表',
+        description: "参会人列表",
       },
     ),
     need_notification: Type.Optional(
       Type.Boolean({
-        description: '是否给参会人发送通知（默认 true）',
+        description: "是否给参会人发送通知（默认 true）",
       }),
     ),
     attendee_ability: Type.Optional(
-      StringEnum(['none', 'can_see_others', 'can_invite_others', 'can_modify_event']),
+      StringEnum(["none", "can_see_others", "can_invite_others", "can_modify_event"]),
     ),
   }),
 
   // LIST
   Type.Object({
-    action: Type.Literal('list'),
+    action: Type.Literal("list"),
     calendar_id: Type.String({
-      description: '日历 ID',
+      description: "日历 ID",
     }),
     event_id: Type.String({
-      description: '日程 ID',
+      description: "日程 ID",
     }),
     page_size: Type.Optional(
       Type.Number({
-        description: '每页数量（默认 50，最大 500）',
+        description: "每页数量（默认 50，最大 500）",
       }),
     ),
     page_token: Type.Optional(
       Type.String({
-        description: '分页标记',
+        description: "分页标记",
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(["open_id", "union_id", "user_id"])),
   }),
-
 ]);
 
 // ---------------------------------------------------------------------------
@@ -85,7 +89,7 @@ const FeishuCalendarEventAttendeeSchema = Type.Union([
 
 type FeishuCalendarEventAttendeeParams =
   | {
-      action: 'create';
+      action: "create";
       calendar_id: string;
       event_id: string;
       attendees: Array<{ type: string; attendee_id: string }>;
@@ -93,7 +97,7 @@ type FeishuCalendarEventAttendeeParams =
       attendee_ability?: string;
     }
   | {
-      action: 'list';
+      action: "list";
       calendar_id: string;
       event_id: string;
       page_size?: number;
@@ -109,15 +113,15 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
   if (!api.config) return;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_calendar_event_attendee');
+  const { toolClient, log } = createToolContext(api, "feishu_calendar_event_attendee");
 
   registerTool(
     api,
     {
-      name: 'feishu_calendar_event_attendee',
-      label: 'Feishu Calendar Event Attendees',
+      name: "feishu_calendar_event_attendee",
+      label: "Feishu Calendar Event Attendees",
       description:
-        '飞书日程参会人管理工具。当用户要求邀请/添加参会人、查看参会人列表时使用。Actions: create（添加参会人）, list（查询参会人列表）。',
+        "飞书日程参会人管理工具。当用户要求邀请/添加参会人、查看参会人列表时使用。Actions: create（添加参会人）, list（查询参会人列表）。",
       parameters: FeishuCalendarEventAttendeeSchema,
       async execute(_toolCallId, params) {
         const p = params as FeishuCalendarEventAttendeeParams;
@@ -129,10 +133,10 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // CREATE ATTENDEES
             // -----------------------------------------------------------------
-            case 'create': {
+            case "create": {
               if (!p.attendees || p.attendees.length === 0) {
                 return json({
-                  error: 'attendees is required and cannot be empty',
+                  error: "attendees is required and cannot be empty",
                 });
               }
 
@@ -146,13 +150,13 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                   is_optional: false,
                 };
 
-                if (a.type === 'user') {
+                if (a.type === "user") {
                   base.user_id = a.attendee_id;
-                } else if (a.type === 'chat') {
+                } else if (a.type === "chat") {
                   base.chat_id = a.attendee_id;
-                } else if (a.type === 'resource') {
+                } else if (a.type === "resource") {
                   base.room_id = a.attendee_id;
-                } else if (a.type === 'third_party') {
+                } else if (a.type === "third_party") {
                   base.third_party_email = a.attendee_id;
                 }
 
@@ -160,7 +164,7 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
               });
 
               const res = await client.invoke(
-                'feishu_calendar_event.create',
+                "feishu_calendar_event.create",
                 (sdk, opts) =>
                   sdk.calendar.calendarEventAttendee.create(
                     {
@@ -169,7 +173,7 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                         event_id: p.event_id,
                       },
                       params: {
-                        user_id_type: 'open_id' as any,
+                        user_id_type: "open_id" as any,
                       },
                       data: {
                         attendees: attendeeData,
@@ -178,7 +182,7 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -192,11 +196,13 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
             // -----------------------------------------------------------------
             // LIST ATTENDEES
             // -----------------------------------------------------------------
-            case 'list': {
-              log.info(`list: calendar_id=${p.calendar_id}, event_id=${p.event_id}, page_size=${p.page_size ?? 50}`);
+            case "list": {
+              log.info(
+                `list: calendar_id=${p.calendar_id}, event_id=${p.event_id}, page_size=${p.page_size ?? 50}`,
+              );
 
               const res = await client.invoke(
-                'feishu_calendar_event_attendee.list',
+                "feishu_calendar_event_attendee.list",
                 (sdk, opts) =>
                   sdk.calendar.calendarEventAttendee.list(
                     {
@@ -207,12 +213,12 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                       params: {
                         page_size: p.page_size,
                         page_token: p.page_token,
-                        user_id_type: (p.user_id_type || 'open_id') as any,
+                        user_id_type: (p.user_id_type || "open_id") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -225,14 +231,12 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                 page_token: data?.page_token,
               });
             }
-
           }
         } catch (err) {
           return await handleInvokeErrorWithAutoAuth(err, cfg);
         }
       },
     },
-    { name: 'feishu_calendar_event_attendee' },
+    { name: "feishu_calendar_event_attendee" },
   );
-
 }

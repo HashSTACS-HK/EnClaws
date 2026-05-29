@@ -12,16 +12,17 @@ This is the official Lark/Feishu plugin for OpenClaw, developed and maintained b
 
 This plugin provides comprehensive Lark/Feishu integration for OpenClaw, including:
 
-| Category | Capabilities |
-|------|------|
+| Category     | Capabilities                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | 💬 Messenger | Read messages (group/DM history, thread replies), send messages, reply to messages, search messages, download images/files |
-| 📄 Docs | Create, update, and read documents |
-| 📊 Base | Create/manage bases, tables, fields, records (CRUD, batch operations, advanced filtering), views |
-| 📈 Sheets | Create, edit, and view spreadsheets |
-| 📅 Calendar | Manage calendars and events (create/query/update/delete/search), manage attendees, check free/busy status |
-| ✅ Tasks | Manage tasks (create/query/update/complete), manage task lists, subtasks, and comments |
+| 📄 Docs      | Create, update, and read documents                                                                                         |
+| 📊 Base      | Create/manage bases, tables, fields, records (CRUD, batch operations, advanced filtering), views                           |
+| 📈 Sheets    | Create, edit, and view spreadsheets                                                                                        |
+| 📅 Calendar  | Manage calendars and events (create/query/update/delete/search), manage attendees, check free/busy status                  |
+| ✅ Tasks     | Manage tasks (create/query/update/complete), manage task lists, subtasks, and comments                                     |
 
 Additionally, the plugin supports:
+
 - **📱 Interactive Cards**: Real-time status updates (Thinking/Generating/Complete), plus confirmation buttons for sensitive operations
 - **🌊 Streaming Responses**: Live streaming text directly within message cards
 - **🔒 Permission Policies**: Flexible access control policies for DMs and group chats
@@ -36,7 +37,6 @@ To reduce these risks, the plugin enables default security protections at multip
 We recommend using the Lark/Feishu bot connected to OpenClaw as a private conversational assistant. Do not add it to group chats or allow other users to interact with it, to avoid abuse of permissions or data leakage.
 
 Please fully understand all usage risks. By using this plugin, you are deemed to voluntarily assume all related responsibilities.
-
 
 **Disclaimer:**
 
@@ -57,6 +57,7 @@ Before you start, make sure you have the following:
 - **OpenClaw**: OpenClaw is installed and works properly. For details, visit the [OpenClaw official website](https://openclaw.ai).
 
 > **Note**: OpenClaw version must be **2026.2.26** or higher. Check with `openclaw -v`. If below this version, you may encounter issues. Upgrade with:
+>
 > ```bash
 > npm install -g openclaw
 > ```

@@ -20,7 +20,7 @@ function resolveSecret(): string {
   if (!secret) {
     log.warn(
       "ENCLAWS_CS_WIDGET_SECRET is not set. " +
-      "Widget visitor tokens are insecure. Set this env var before production deployment.",
+        "Widget visitor tokens are insecure. Set this env var before production deployment.",
     );
     // Use a per-process random fallback so each restart invalidates old tokens,
     // preventing hardcoded-default exploitation while keeping dev usable.
@@ -59,14 +59,12 @@ export function generateVisitorToken(visitorId: string, secret?: string): string
  *
  * 验证访客 token。
  */
-export function verifyVisitorToken(
-  visitorId: string,
-  token: string,
-  secret?: string,
-): boolean {
+export function verifyVisitorToken(visitorId: string, token: string, secret?: string): boolean {
   const expected = generateVisitorToken(visitorId, secret ?? resolveSecret());
   // Constant-time comparison to prevent timing attacks
   // 常量时间比较，防止时序攻击
-  if (expected.length !== token.length) {return false;}
+  if (expected.length !== token.length) {
+    return false;
+  }
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(token));
 }

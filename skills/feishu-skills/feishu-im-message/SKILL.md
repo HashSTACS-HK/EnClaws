@@ -2,7 +2,7 @@
 name: feishu-im-message
 description: |
   以用户身份发送/回复飞书 IM 消息。支持私聊、群聊，支持 text/post/image/file/interactive 等消息类型。
-overrides: feishu_im_user_message  
+overrides: feishu_im_user_message
 inline: true
 ---
 
@@ -61,29 +61,29 @@ node ./message.js --open-id "ou_xxx" --action reply \
 
 ## 参数说明
 
-| 参数 | 必填 | 说明 |
-|---|---|---|
-| `--open-id` | 是 | 当前用户 open_id |
-| `--action` | 是 | `send` / `reply` |
-| **send 参数** | | |
-| `--receive-id-type` | send 必填 | `open_id`（私聊）/ `chat_id`（群聊） |
-| `--receive-id` | send 必填 | 接收者 ID，与 receive-id-type 对应 |
-| `--msg-type` | 是 | `text` / `post` / `image` / `file` / `interactive` 等 |
-| `--content` | 是 | 消息内容（JSON 字符串） |
-| `--uuid` | 可选 | 幂等 ID，1 小时内相同 uuid 只发一条 |
-| `--image-path` | 可选 | 本地图片路径，自动上传后以 image 类型发送（不需同时传 --msg-type 和 --content）。路径必须在允许目录内，见下方说明 |
-| **reply 参数** | | |
-| `--message-id` | reply 必填 | 被回复消息 ID（om_xxx） |
-| `--reply-in-thread` | 可选 | `true`=话题回复，默认 false |
+| 参数                | 必填       | 说明                                                                                                              |
+| ------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| `--open-id`         | 是         | 当前用户 open_id                                                                                                  |
+| `--action`          | 是         | `send` / `reply`                                                                                                  |
+| **send 参数**       |            |                                                                                                                   |
+| `--receive-id-type` | send 必填  | `open_id`（私聊）/ `chat_id`（群聊）                                                                              |
+| `--receive-id`      | send 必填  | 接收者 ID，与 receive-id-type 对应                                                                                |
+| `--msg-type`        | 是         | `text` / `post` / `image` / `file` / `interactive` 等                                                             |
+| `--content`         | 是         | 消息内容（JSON 字符串）                                                                                           |
+| `--uuid`            | 可选       | 幂等 ID，1 小时内相同 uuid 只发一条                                                                               |
+| `--image-path`      | 可选       | 本地图片路径，自动上传后以 image 类型发送（不需同时传 --msg-type 和 --content）。路径必须在允许目录内，见下方说明 |
+| **reply 参数**      |            |                                                                                                                   |
+| `--message-id`      | reply 必填 | 被回复消息 ID（om_xxx）                                                                                           |
+| `--reply-in-thread` | 可选       | `true`=话题回复，默认 false                                                                                       |
 
 ## content 格式示例
 
-| msg_type | content |
-|---|---|
-| `text` | `{"text":"消息内容"}` |
-| `post` | `{"zh_cn":{"title":"标题","content":[[{"tag":"text","text":"正文"}]]}}` |
-| `image` | `{"image_key":"img_xxx"}` |
-| `file` | `{"file_key":"file_xxx"}` |
+| msg_type | content                                                                 |
+| -------- | ----------------------------------------------------------------------- |
+| `text`   | `{"text":"消息内容"}`                                                   |
+| `post`   | `{"zh_cn":{"title":"标题","content":[[{"tag":"text","text":"正文"}]]}}` |
+| `image`  | `{"image_key":"img_xxx"}`                                               |
+| `file`   | `{"file_key":"file_xxx"}`                                               |
 
 ---
 

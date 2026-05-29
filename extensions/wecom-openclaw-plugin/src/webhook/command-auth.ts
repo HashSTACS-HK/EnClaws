@@ -67,7 +67,11 @@ export async function resolveWecomCommandAuthorization(params: {
 }): Promise<WecomCommandAuthResult> {
   const { core, cfg, accountConfig, rawBody, senderUserId } = params;
 
-  const dmPolicy = (accountConfig.dmPolicy ?? "pairing") as "pairing" | "allowlist" | "open" | "disabled";
+  const dmPolicy = (accountConfig.dmPolicy ?? "pairing") as
+    | "pairing"
+    | "allowlist"
+    | "open"
+    | "disabled";
   const configAllowFrom = (accountConfig.allowFrom ?? []).map((v) => String(v));
 
   const shouldComputeAuth = core.channel.commands.shouldComputeCommandAuthorized(rawBody, cfg);
@@ -81,15 +85,17 @@ export async function resolveWecomCommandAuthorization(params: {
   const effectiveAllowFrom = dmPolicy === "open" ? ["*"] : configAllowFrom;
 
   const senderAllowed = isWecomSenderAllowed(senderUserId, effectiveAllowFrom);
-  const allowAllConfigured = effectiveAllowFrom.some((entry) => normalizeWecomAllowFromEntry(entry) === "*");
+  const allowAllConfigured = effectiveAllowFrom.some(
+    (entry) => normalizeWecomAllowFromEntry(entry) === "*",
+  );
   const authorizerConfigured = allowAllConfigured || effectiveAllowFrom.length > 0;
   const useAccessGroups = cfg.commands?.useAccessGroups !== false;
 
   const commandAuthorized = shouldComputeAuth
     ? core.channel.commands.resolveCommandAuthorizedFromAuthorizers({
-      useAccessGroups,
-      authorizers: [{ configured: authorizerConfigured, allowed: senderAllowed }],
-    })
+        useAccessGroups,
+        authorizers: [{ configured: authorizerConfigured, allowed: senderAllowed }],
+      })
     : undefined;
 
   return {
@@ -120,8 +126,10 @@ export function buildWecomUnauthorizedCommandPrompt(params: {
   const policy = params.dmPolicy;
   const scopeLabel = params.scope === "bot" ? "Bot（智能机器人）" : "Agent（自建应用）";
   const dmPrefix = params.scope === "bot" ? "channels.wecom.bot" : "channels.wecom.agent";
-  const allowCmd = (value: string): string => `openclaw config set ${dmPrefix}.allowFrom '${value}'`;
-  const policyCmd = (value: string): string => `openclaw config set ${dmPrefix}.dmPolicy "${value}"`;
+  const allowCmd = (value: string): string =>
+    `openclaw config set ${dmPrefix}.allowFrom '${value}'`;
+  const policyCmd = (value: string): string =>
+    `openclaw config set ${dmPrefix}.dmPolicy "${value}"`;
 
   if (policy === "disabled") {
     return [

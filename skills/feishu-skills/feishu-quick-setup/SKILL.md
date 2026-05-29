@@ -28,10 +28,10 @@ Create a Feishu Bot for the user by executing the commands below step by step. A
 node "{script_dir}/quick-setup.mjs" --status
 ```
 
-| Field | Action |
-|-------|--------|
-| `configured: true` | Tell the user Feishu is already configured (show `appId`), ask if they want to reconfigure |
-| `configured: false` | Proceed to Step 2 |
+| Field               | Action                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| `configured: true`  | Tell the user Feishu is already configured (show `appId`), ask if they want to reconfigure |
+| `configured: false` | Proceed to Step 2                                                                          |
 
 ### Step 2 — Start registration
 
@@ -65,12 +65,12 @@ node "{script_dir}/quick-setup.mjs" --poll --wait --timeout 300
 
 The script polls internally every 5 seconds until the user completes authorization or the timeout (default 5 min) is reached.
 
-| Result | Action |
-|--------|--------|
-| `status: "completed"` | Take `appId` and `appSecret` from the response, proceed to Step 5 |
-| `status: "error"`, `expired_token` | Link expired — restart from Step 2 |
-| `status: "error"`, `access_denied` | User denied the request — inform the user |
-| `status: "timeout"` | Timed out — suggest the user retry |
+| Result                             | Action                                                            |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| `status: "completed"`              | Take `appId` and `appSecret` from the response, proceed to Step 5 |
+| `status: "error"`, `expired_token` | Link expired — restart from Step 2                                |
+| `status: "error"`, `access_denied` | User denied the request — inform the user                         |
+| `status: "timeout"`                | Timed out — suggest the user retry                                |
 
 ### Step 5 — Save config
 
@@ -80,10 +80,10 @@ node "{script_dir}/quick-setup.mjs" --save --app-id "APP_ID" --app-secret "APP_S
 
 Replace `APP_ID` and `APP_SECRET` with the values from Step 4.
 
-| Result | Action |
-|--------|--------|
-| `success: true` | Show the `message` field from the response to the user (it contains next-step instructions and a permissions link) |
-| `success: false` | Show the failure reason to the user |
+| Result           | Action                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `success: true`  | Show the `message` field from the response to the user (it contains next-step instructions and a permissions link) |
+| `success: false` | Show the failure reason to the user                                                                                |
 
 ## Notes
 

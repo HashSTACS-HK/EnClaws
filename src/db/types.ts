@@ -111,8 +111,8 @@ export interface UpdateUserInput {
 // ============================================================
 
 export interface JwtPayload {
-  sub: string;       // user ID
-  tid: string;       // tenant ID
+  sub: string; // user ID
+  tid: string; // tenant ID
   email: string | null;
   role: UserRole;
   /** Force-change-password flag — when true, the client must redirect to change-password. */
@@ -124,7 +124,7 @@ export interface JwtPayload {
 export interface JwtTokenPair {
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;    // seconds
+  expiresIn: number; // seconds
 }
 
 // ============================================================
@@ -205,9 +205,9 @@ export interface TenantModel {
 // ============================================================
 
 export interface ModelConfigEntry {
-  providerId: string;  // tenant_models.id
-  modelId: string;     // tenant_models.models[].id
-  isDefault: boolean;  // true = primary, false = fallback (ordered by array index)
+  providerId: string; // tenant_models.id
+  modelId: string; // tenant_models.models[].id
+  isDefault: boolean; // true = primary, false = fallback (ordered by array index)
 }
 
 export interface TenantAgent {

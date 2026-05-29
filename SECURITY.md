@@ -8,11 +8,11 @@ If you believe you have found a security vulnerability, please **report it priva
 
 Before 1.0, we follow a "main branch first" security-fix strategy:
 
-| Branch / Version | Status | Notes |
-| --- | --- | --- |
-| `main` / latest state of the default branch | ✅ | Primary line for security fixes |
-| Most recent pre-release tag or snapshot | ⚠️ | Best effort, no backport guarantee |
-| Stale snapshots, private forks, or historical branches not kept in sync | ❌ | No security support commitment |
+| Branch / Version                                                        | Status | Notes                              |
+| ----------------------------------------------------------------------- | ------ | ---------------------------------- |
+| `main` / latest state of the default branch                             | ✅     | Primary line for security fixes    |
+| Most recent pre-release tag or snapshot                                 | ⚠️     | Best effort, no backport guarantee |
+| Stale snapshots, private forks, or historical branches not kept in sync | ❌     | No security support commitment     |
 
 ## How to Report
 

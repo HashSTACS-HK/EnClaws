@@ -5,19 +5,19 @@
  * Converter for "sticker" message type.
  */
 
-import type { ContentConverterFn } from './types';
-import { safeParse } from './utils';
+import type { ContentConverterFn } from "./types";
+import { safeParse } from "./utils";
 
 export const convertSticker: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as { file_key?: string } | undefined;
   const fileKey = parsed?.file_key;
 
   if (!fileKey) {
-    return { content: '[sticker]', resources: [] };
+    return { content: "[sticker]", resources: [] };
   }
 
   return {
     content: `<sticker key="${fileKey}"/>`,
-    resources: [{ type: 'sticker', fileKey }],
+    resources: [{ type: "sticker", fileKey }],
   };
 };

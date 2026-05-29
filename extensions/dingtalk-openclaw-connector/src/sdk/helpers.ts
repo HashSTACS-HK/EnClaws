@@ -1,6 +1,6 @@
 /**
  * DingTalk Connector SDK Helpers
- * 
+ *
  * 完全独立的辅助函数，不依赖任何外部 SDK。
  */
 
@@ -62,12 +62,12 @@ export function normalizeSecretInputString(value: unknown): string | undefined {
     const trimmed = value.trim();
     return trimmed || undefined;
   }
-  
+
   if (isSecretInputRef(value)) {
     const ref = value as SecretInputRef;
     return `<${ref.source}:${ref.provider}:${ref.id}>`;
   }
-  
+
   return undefined;
 }
 
@@ -84,11 +84,11 @@ export function resolveSecretInputValue(
     const trimmed = value.trim();
     return trimmed || undefined;
   }
-  
+
   // SecretInput 引用
   if (isSecretInputRef(value)) {
     const ref = value as SecretInputRef;
-    
+
     // 环境变量
     if (ref.source === "env" && options?.allowEnvRead) {
       const envValue = process.env[ref.id];
@@ -96,11 +96,11 @@ export function resolveSecretInputValue(
         return envValue.trim() || undefined;
       }
     }
-    
+
     // 文件或执行 - 返回引用字符串
     return `<${ref.source}:${ref.provider}:${ref.id}>`;
   }
-  
+
   return undefined;
 }
 
@@ -111,7 +111,7 @@ export function hasConfiguredSecretInput(value: unknown): boolean {
   if (typeof value === "string") {
     return value.trim().length > 0;
   }
-  
+
   if (isSecretInputRef(value)) {
     const ref = value as SecretInputRef;
     if (ref.source === "env") {
@@ -120,7 +120,7 @@ export function hasConfiguredSecretInput(value: unknown): boolean {
     // file 和 exec 总是认为已配置（运行时会验证）
     return true;
   }
-  
+
   return false;
 }
 
@@ -133,7 +133,7 @@ export function normalizeResolvedSecretInputString(params: {
   path: string;
 }): string | undefined {
   const { value, path } = params;
-  
+
   // 直接字符串
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -142,11 +142,11 @@ export function normalizeResolvedSecretInputString(params: {
     }
     throw new Error(`${path} must be a non-empty string`);
   }
-  
+
   // SecretInput 引用
   if (isSecretInputRef(value)) {
     const ref = value as SecretInputRef;
-    
+
     // 验证引用格式
     if (!["env", "file", "exec"].includes(ref.source)) {
       throw new Error(`${path}.source must be one of: env, file, exec`);
@@ -157,7 +157,7 @@ export function normalizeResolvedSecretInputString(params: {
     if (typeof ref.id !== "string" || !ref.id.trim()) {
       throw new Error(`${path}.id must be a non-empty string`);
     }
-    
+
     // 环境变量特殊处理
     if (ref.source === "env") {
       const envValue = process.env[ref.id];
@@ -166,11 +166,11 @@ export function normalizeResolvedSecretInputString(params: {
       }
       return envValue.trim();
     }
-    
+
     // file 和 exec 返回引用字符串
     return `<${ref.source}:${ref.provider}:${ref.id}>`;
   }
-  
+
   throw new Error(`${path} must be a string or SecretInput object`);
 }
 
@@ -184,9 +184,11 @@ export function normalizeResolvedSecretInputString(params: {
 export function resolveDefaultGroupPolicy(cfg: {
   channels?: { [key: string]: unknown };
 }): "open" | "allowlist" | "disabled" {
-  const dingtalkCfg = cfg.channels?.["dingtalk"] as {
-    groupPolicy?: "open" | "allowlist" | "disabled";
-  } | undefined;
+  const dingtalkCfg = cfg.channels?.["dingtalk"] as
+    | {
+        groupPolicy?: "open" | "allowlist" | "disabled";
+      }
+    | undefined;
   return dingtalkCfg?.groupPolicy ?? "open";
 }
 
@@ -199,15 +201,15 @@ export function resolveAllowlistProviderRuntimeGroupPolicy(params: {
   defaultGroupPolicy: "open" | "allowlist" | "disabled";
 }): { groupPolicy: "open" | "allowlist" | "disabled" } {
   const { providerConfigPresent, groupPolicy, defaultGroupPolicy } = params;
-  
+
   if (groupPolicy) {
     return { groupPolicy };
   }
-  
+
   if (providerConfigPresent) {
     return { groupPolicy: defaultGroupPolicy };
   }
-  
+
   return { groupPolicy: "disabled" };
 }
 
@@ -281,9 +283,7 @@ export function buildBaseChannelStatusSummary(snapshot: {
 /**
  * 添加通配符到 allowFrom
  */
-export function addWildcardAllowFrom(
-  existing?: (string | number)[],
-): (string | number)[] {
+export function addWildcardAllowFrom(existing?: (string | number)[]): (string | number)[] {
   if (!existing || existing.length === 0) {
     return ["*"];
   }

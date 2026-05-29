@@ -8,17 +8,17 @@
  * to these for its `sendText` and `sendMedia` implementations.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { FeishuSendResult } from '../types';
-import { createAccountScopedConfig } from '../../core/accounts';
-import { LarkClient } from '../../core/lark-client';
-import { normalizeFeishuTarget, resolveReceiveIdType } from '../../core/targets';
-import { optimizeMarkdownStyle } from '../../card/markdown-style';
-import { formatLarkError } from '../../core/api-error';
-import { larkLogger } from '../../core/lark-logger';
-import { uploadAndSendMediaLark } from './media';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { optimizeMarkdownStyle } from "../../card/markdown-style";
+import { createAccountScopedConfig } from "../../core/accounts";
+import { formatLarkError } from "../../core/api-error";
+import { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import { normalizeFeishuTarget, resolveReceiveIdType } from "../../core/targets";
+import type { FeishuSendResult } from "../types";
+import { uploadAndSendMediaLark } from "./media";
 
-const log = larkLogger('outbound/deliver');
+const log = larkLogger("outbound/deliver");
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -30,7 +30,7 @@ const log = larkLogger('outbound/deliver');
 function buildPostContent(text: string): string {
   return JSON.stringify({
     zh_cn: {
-      content: [[{ tag: 'md', text }]],
+      content: [[{ tag: "md", text }]],
     },
   });
 }
@@ -49,7 +49,10 @@ function buildPostContent(text: string): string {
  *   `<at user_id=ou_xxx></at>`   → `<at user_id="ou_xxx"></at>`
  */
 function normalizeAtMentions(text: string): string {
-  return text.replace(/<at\s+(?:id|open_id|user_id)\s*=\s*"?([^">\s]+)"?\s*>/gi, '<at user_id="$1">');
+  return text.replace(
+    /<at\s+(?:id|open_id|user_id)\s*=\s*"?([^">\s]+)"?\s*>/gi,
+    '<at user_id="$1">',
+  );
 }
 
 /**
@@ -64,10 +67,13 @@ function prepareTextForLark(cfg: ClawdbotConfig, text: string, accountId?: strin
   try {
     const accountScopedCfg = createAccountScopedConfig(cfg, accountId);
     const runtime = LarkClient.runtime;
-    if (runtime?.channel?.text?.convertMarkdownTables && runtime.channel.text.resolveMarkdownTableMode) {
+    if (
+      runtime?.channel?.text?.convertMarkdownTables &&
+      runtime.channel.text.resolveMarkdownTableMode
+    ) {
       const tableMode = runtime.channel.text.resolveMarkdownTableMode({
         cfg: accountScopedCfg,
-        channel: 'feishu',
+        channel: "feishu",
       });
       processed = runtime.channel.text.convertMarkdownTables(processed, tableMode);
     }
@@ -84,10 +90,10 @@ function prepareTextForLark(cfg: ClawdbotConfig, text: string, accountId?: strin
  * `replyInteractiveMessage` and `createInteractiveMessage` helpers.
  */
 async function sendImMessage(params: {
-  client: ReturnType<typeof LarkClient.fromCfg>['sdk'];
+  client: ReturnType<typeof LarkClient.fromCfg>["sdk"];
   to: string;
   content: string;
-  msgType: 'post' | 'interactive';
+  msgType: "post" | "interactive";
   replyToMessageId?: string;
   replyInThread?: boolean;
 }): Promise<FeishuSendResult> {
@@ -95,15 +101,18 @@ async function sendImMessage(params: {
 
   // --- Reply path ---
   if (replyToMessageId) {
-    log.info(`replying to message ${replyToMessageId} ` + `(msg_type=${msgType}, thread=${replyInThread ?? false})`);
+    log.info(
+      `replying to message ${replyToMessageId} ` +
+        `(msg_type=${msgType}, thread=${replyInThread ?? false})`,
+    );
     const response = await client.im.message.reply({
       path: { message_id: replyToMessageId },
       data: { content, msg_type: msgType, reply_in_thread: replyInThread },
     });
 
     const result: FeishuSendResult = {
-      messageId: response?.data?.message_id ?? '',
-      chatId: response?.data?.chat_id ?? '',
+      messageId: response?.data?.message_id ?? "",
+      chatId: response?.data?.chat_id ?? "",
     };
     log.debug(`reply sent: messageId=${result.messageId}`);
     return result;
@@ -113,7 +122,8 @@ async function sendImMessage(params: {
   const target = normalizeFeishuTarget(to);
   if (!target) {
     throw new Error(
-      `Cannot send message: "${to}" is not a valid target. ` + `Expected a chat_id (oc_*), open_id (ou_*), or user_id.`,
+      `Cannot send message: "${to}" is not a valid target. ` +
+        `Expected a chat_id (oc_*), open_id (ou_*), or user_id.`,
     );
   }
 
@@ -127,8 +137,8 @@ async function sendImMessage(params: {
   });
 
   const result: FeishuSendResult = {
-    messageId: response?.data?.message_id ?? '',
-    chatId: response?.data?.chat_id ?? '',
+    messageId: response?.data?.message_id ?? "",
+    chatId: response?.data?.chat_id ?? "",
   };
   log.debug(`message created: messageId=${result.messageId}`);
   return result;
@@ -149,18 +159,18 @@ async function sendImMessage(params: {
  */
 function detectCardJson(text: string): Record<string, unknown> | undefined {
   const trimmed = text.trim();
-  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return undefined;
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return undefined;
 
   try {
     const parsed: unknown = JSON.parse(trimmed);
-    if (typeof parsed !== 'object' || parsed == null || Array.isArray(parsed)) {
+    if (typeof parsed !== "object" || parsed == null || Array.isArray(parsed)) {
       return undefined;
     }
 
     const obj = parsed as Record<string, unknown>;
 
     // v2 CardKit — must declare schema "2.0"
-    if (obj.schema === '2.0') return obj;
+    if (obj.schema === "2.0") return obj;
 
     // v1 Message Card — must have elements[] AND (config OR header)
     if (Array.isArray(obj.elements) && (obj.config !== undefined || obj.header !== undefined)) {
@@ -169,18 +179,18 @@ function detectCardJson(text: string): Record<string, unknown> | undefined {
 
     // Template card — type: "template" with data.template_id
     if (
-      obj.type === 'template' &&
-      typeof obj.data === 'object' &&
+      obj.type === "template" &&
+      typeof obj.data === "object" &&
       obj.data != null &&
-      typeof (obj.data as Record<string, unknown>).template_id === 'string'
+      typeof (obj.data as Record<string, unknown>).template_id === "string"
     ) {
       return obj;
     }
 
     // Wrapped card — AI sometimes wraps card JSON with msg_type/type: "interactive"
     if (
-      (obj.msg_type === 'interactive' || obj.type === 'interactive') &&
-      typeof obj.card === 'object' &&
+      (obj.msg_type === "interactive" || obj.type === "interactive") &&
+      typeof obj.card === "object" &&
       obj.card != null
     ) {
       return obj.card as Record<string, unknown>;
@@ -244,7 +254,7 @@ export async function sendTextLark(params: SendTextLarkParams): Promise<FeishuSe
   // Detect card JSON in text — route to card sending before text preprocessing.
   const card = detectCardJson(text);
   if (card) {
-    const version = card.schema === '2.0' ? 'v2' : 'v1';
+    const version = card.schema === "2.0" ? "v2" : "v1";
     log.info(`detected ${version} card JSON in text (target=${to}), routing to sendCardLark`);
     return sendCardLark({ cfg, to, card, replyToMessageId, replyInThread, accountId });
   }
@@ -254,7 +264,7 @@ export async function sendTextLark(params: SendTextLarkParams): Promise<FeishuSe
   const processedText = prepareTextForLark(cfg, text, accountId);
   const content = buildPostContent(processedText);
 
-  return sendImMessage({ client, to, content, msgType: 'post', replyToMessageId, replyInThread });
+  return sendImMessage({ client, to, content, msgType: "post", replyToMessageId, replyInThread });
 }
 
 // ---------------------------------------------------------------------------
@@ -325,14 +335,21 @@ export interface SendCardLarkParams {
 export async function sendCardLark(params: SendCardLarkParams): Promise<FeishuSendResult> {
   const { cfg, to, card, replyToMessageId, replyInThread, accountId } = params;
 
-  const version = card.schema === '2.0' ? 'v2' : 'v1';
+  const version = card.schema === "2.0" ? "v2" : "v1";
   log.info(`sendCardLark: target=${to}, cardVersion=${version}`);
 
   const client = LarkClient.fromCfg(cfg, accountId).sdk;
   const content = JSON.stringify(card);
 
   try {
-    return await sendImMessage({ client, to, content, msgType: 'interactive', replyToMessageId, replyInThread });
+    return await sendImMessage({
+      client,
+      to,
+      content,
+      msgType: "interactive",
+      replyToMessageId,
+      replyInThread,
+    });
   } catch (err) {
     const detail = formatLarkError(err);
     log.error(`sendCardLark failed: ${detail}`);

@@ -37,7 +37,9 @@ export function sendError(
  */
 export async function readJsonBody<T = unknown>(req: IncomingMessage): Promise<T> {
   const chunks: Buffer[] = [];
-  for await (const c of req) { chunks.push(c as Buffer); }
+  for await (const c of req) {
+    chunks.push(c as Buffer);
+  }
   const raw = Buffer.concat(chunks).toString("utf8");
   return raw ? (JSON.parse(raw) as T) : ({} as T);
 }

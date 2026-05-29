@@ -9,7 +9,7 @@
  * @param prefix - 日志前缀
  * @returns 日志记录器对象
  */
-export function createLogger(debug: boolean = false, prefix: string = '') {
+export function createLogger(debug: boolean = false, prefix: string = "") {
   const logger = {
     /**
      * 打印 info 级别日志
@@ -58,7 +58,7 @@ export function createLogger(debug: boolean = false, prefix: string = '') {
         if (prefix) {
           console.log(`[DEBUG][${prefix}]`, ...args);
         } else {
-          console.log('[DEBUG]', ...args);
+          console.log("[DEBUG]", ...args);
         }
       }
     },
@@ -73,6 +73,9 @@ export function createLogger(debug: boolean = false, prefix: string = '') {
  * @param prefix - 日志前缀
  * @returns 日志记录器对象
  */
-export function createLoggerFromConfig(config: { debug?: boolean } | undefined | null, prefix: string = '') {
+export function createLoggerFromConfig(
+  config: { debug?: boolean } | undefined | null,
+  prefix: string = "",
+) {
   return createLogger(!!config?.debug, prefix);
 }

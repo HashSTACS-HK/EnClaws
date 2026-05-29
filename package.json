@@ -114,6 +114,7 @@
     "./cli-entry": "./enclaws.mjs"
   },
   "scripts": {
+    "admin:reset-password": "node --import tsx src/auth/admin-reset-cli.ts",
     "android:assemble": "cd apps/android && ./gradlew :app:assembleDebug",
     "android:format": "cd apps/android && ./gradlew :app:ktlintFormat :benchmark:ktlintFormat",
     "android:install": "cd apps/android && ./gradlew :app:installDebug",
@@ -123,7 +124,6 @@
     "android:test": "cd apps/android && ./gradlew :app:testDebugUnitTest",
     "android:test:integration": "ENCLAWS_LIVE_TEST=1 ENCLAWS_LIVE_ANDROID_NODE=1 vitest run --config vitest.live.config.ts src/gateway/android-node.capabilities.live.test.ts",
     "build": "pnpm canvas:a2ui:bundle && tsdown && pnpm build:plugin-sdk:dts && node --import tsx scripts/write-plugin-sdk-entry-dts.ts && node --import tsx scripts/canvas-a2ui-copy.ts && node --import tsx scripts/copy-hook-metadata.ts && node --import tsx scripts/copy-export-html-templates.ts && node --import tsx scripts/write-build-info.ts && node --import tsx scripts/write-cli-startup-metadata.ts && node --import tsx scripts/write-cli-compat.ts",
-    "postbuild": "node -e \"if(process.platform!=='win32'){require('fs').chmodSync('enclaws.mjs',0o755)}\"",
     "build:plugin-sdk:dts": "tsc -p tsconfig.plugin-sdk.dts.json",
     "canvas:a2ui:bundle": "node scripts/bundle-a2ui.mjs",
     "check": "pnpm format:check && pnpm tsgo && pnpm lint && pnpm lint:tmp:no-random-messaging && pnpm lint:tmp:channel-agnostic-boundaries && pnpm lint:tmp:no-raw-channel-fetch && pnpm lint:auth:no-pairing-store-group && pnpm lint:auth:pairing-account-scope && pnpm check:host-env-policy:swift",
@@ -132,7 +132,6 @@
     "check:loc": "node --import tsx scripts/check-ts-max-loc.ts --max 500",
     "db:migrate": "node --import tsx src/db/migrate.ts",
     "db:migrate:status": "node --import tsx src/db/migrate.ts --status",
-    "admin:reset-password": "node --import tsx src/auth/admin-reset-cli.ts",
     "deadcode:ci": "pnpm deadcode:report:ci:knip && pnpm deadcode:report:ci:ts-prune && pnpm deadcode:report:ci:ts-unused",
     "deadcode:knip": "pnpm dlx knip --no-progress",
     "deadcode:report": "pnpm deadcode:knip; pnpm deadcode:ts-prune; pnpm deadcode:ts-unused",
@@ -184,6 +183,7 @@
     "mac:restart": "bash scripts/restart-mac.sh",
     "moltbot:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "plugins:sync": "node --import tsx scripts/sync-plugin-versions.ts",
+    "postbuild": "node -e \"if(process.platform!=='win32'){require('fs').chmodSync('enclaws.mjs',0o755)}\"",
     "postinstall": "node scripts/postinstall.js",
     "prepack": "node scripts/prepare-skill-pack.js && pnpm build && pnpm ui:build",
     "prepare": "command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config core.hooksPath git-hooks || exit 0",

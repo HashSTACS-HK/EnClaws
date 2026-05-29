@@ -165,7 +165,12 @@ export const deviceHandlers: GatewayRequestHandlers = {
       role: string;
       scopes?: string[];
     };
-    const entry = await rotateDeviceToken({ deviceId, role, scopes, tenantContext: client?.tenant });
+    const entry = await rotateDeviceToken({
+      deviceId,
+      role,
+      scopes,
+      tenantContext: client?.tenant,
+    });
     if (!entry) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "unknown deviceId/role"));
       return;

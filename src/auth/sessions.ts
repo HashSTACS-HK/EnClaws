@@ -33,8 +33,12 @@ interface DeviceInfoBlob {
 }
 
 function parseDeviceInfo(raw: unknown): DeviceInfoBlob {
-  if (!raw) {return {};}
-  if (typeof raw !== "string") {return {};}
+  if (!raw) {
+    return {};
+  }
+  if (typeof raw !== "string") {
+    return {};
+  }
   try {
     const parsed = JSON.parse(raw) as DeviceInfoBlob;
     return parsed && typeof parsed === "object" ? parsed : {};
@@ -44,8 +48,12 @@ function parseDeviceInfo(raw: unknown): DeviceInfoBlob {
 }
 
 function toDate(value: unknown): Date | null {
-  if (!value) {return null;}
-  if (value instanceof Date) {return value;}
+  if (!value) {
+    return null;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
   const d = new Date(String(value));
   return Number.isFinite(d.getTime()) ? d : null;
 }
@@ -114,10 +122,9 @@ export async function touchSession(refreshToken: string): Promise<void> {
   const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
   const nowExpr = getDbType() === DB_SQLITE ? "datetime('now')" : "NOW()";
   try {
-    await query(
-      `UPDATE refresh_tokens SET last_used_at = ${nowExpr} WHERE token_hash = $1`,
-      [hash],
-    );
+    await query(`UPDATE refresh_tokens SET last_used_at = ${nowExpr} WHERE token_hash = $1`, [
+      hash,
+    ]);
   } catch {
     /* ignore */
   }

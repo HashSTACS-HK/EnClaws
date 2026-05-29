@@ -34,15 +34,15 @@ overrides: feishu_create_doc, feishu_pre_auth
 
 ### 实现
 
-| 文件 | 改动 |
-|------|------|
-| `src/agents/skills/frontmatter.ts` | 新增 `resolveSkillOverrides()` |
-| `src/agents/skills/types.ts` | `SkillEntry.overrides`, `SkillSnapshot.skillOverrides` |
-| `src/agents/skills/workspace.ts` | 构建 entry 时收集 overrides，写入 snapshot |
-| `src/agents/pi-tools.ts` | `createOpenClawCodingTools()` 新增 `skillOverrides` 参数，过滤工具列表 |
-| `src/agents/pi-embedded-runner/run/attempt.ts` | 从 skillEntries 或 snapshot 收集 overrides 传入 |
-| `src/agents/pi-embedded-runner/compact.ts` | 同上（compaction 路径） |
-| `src/config/sessions/types.ts` | `SessionSkillSnapshot.skillOverrides`（session 缓存同步） |
+| 文件                                           | 改动                                                                   |
+| ---------------------------------------------- | ---------------------------------------------------------------------- |
+| `src/agents/skills/frontmatter.ts`             | 新增 `resolveSkillOverrides()`                                         |
+| `src/agents/skills/types.ts`                   | `SkillEntry.overrides`, `SkillSnapshot.skillOverrides`                 |
+| `src/agents/skills/workspace.ts`               | 构建 entry 时收集 overrides，写入 snapshot                             |
+| `src/agents/pi-tools.ts`                       | `createOpenClawCodingTools()` 新增 `skillOverrides` 参数，过滤工具列表 |
+| `src/agents/pi-embedded-runner/run/attempt.ts` | 从 skillEntries 或 snapshot 收集 overrides 传入                        |
+| `src/agents/pi-embedded-runner/compact.ts`     | 同上（compaction 路径）                                                |
+| `src/config/sessions/types.ts`                 | `SessionSkillSnapshot.skillOverrides`（session 缓存同步）              |
 
 ### 数据流
 
@@ -58,11 +58,11 @@ SKILL.md frontmatter
 
 ### 与 `deny` 配置的关系
 
-| 机制 | 作用范围 | 影响自定义 skill |
-|------|---------|:-:|
+| 机制        | 作用范围             |     影响自定义 skill     |
+| ----------- | -------------------- | :----------------------: |
 | `overrides` | 跟随 skill 生效/失效 | 否（skill 用 exec 工具） |
-| `deny` | 全局/agent 级别 | 否（同上） |
-| 两者共存 | 重复但无害 | 否 |
+| `deny`      | 全局/agent 级别      |        否（同上）        |
+| 两者共存    | 重复但无害           |            否            |
 
 ---
 
@@ -71,6 +71,7 @@ SKILL.md frontmatter
 ### 问题
 
 Skill 系统的标准流程：
+
 1. 模型看到 `<available_skills>` 列表
 2. 模型用 `read` 工具读取 SKILL.md
 3. 模型按 SKILL.md 指令执行
@@ -99,24 +100,25 @@ inline: true
 ```
 
 同时系统提示的 Skills 指引增加一条：
+
 > If an `<inline_skill>` block exists for the matching skill, follow its instructions DIRECTLY — do NOT read the SKILL.md file.
 
 ### 实现
 
-| 文件 | 改动 |
-|------|------|
-| `src/agents/skills/frontmatter.ts` | 新增 `resolveSkillInline()` |
-| `src/agents/skills/types.ts` | `SkillEntry.inline`, `SkillEntry.inlineContent` |
-| `src/agents/skills/workspace.ts` | 读取并存储 SKILL.md 内容（`stripFrontmatter`），以 `<inline_skill>` 块附加到 prompt |
-| `src/agents/system-prompt.ts` | 检测 inline 块存在时增加指引 |
+| 文件                               | 改动                                                                                |
+| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| `src/agents/skills/frontmatter.ts` | 新增 `resolveSkillInline()`                                                         |
+| `src/agents/skills/types.ts`       | `SkillEntry.inline`, `SkillEntry.inlineContent`                                     |
+| `src/agents/skills/workspace.ts`   | 读取并存储 SKILL.md 内容（`stripFrontmatter`），以 `<inline_skill>` 块附加到 prompt |
+| `src/agents/system-prompt.ts`      | 检测 inline 块存在时增加指引                                                        |
 
 ### 适用场景
 
-| 模型能力 | 是否需要 inline |
-|---------|:-:|
-| 强模型（Claude, GPT-4） | 不需要，能正确执行 read → follow |
-| 弱模型（step-3.5-flash） | 需要，否则跳过 SKILL.md |
-| 用户显式调用（`/skill:xxx`） | 不需要 |
+| 模型能力                     |         是否需要 inline          |
+| ---------------------------- | :------------------------------: |
+| 强模型（Claude, GPT-4）      | 不需要，能正确执行 read → follow |
+| 弱模型（step-3.5-flash）     |     需要，否则跳过 SKILL.md      |
+| 用户显式调用（`/skill:xxx`） |              不需要              |
 
 ---
 
@@ -127,13 +129,13 @@ inline: true
 将 exec 工具的安全默认值从代码硬编码迁移到数据库 `sys_tools_config.exec`：
 
 ```json
-{"security": "full", "ask": "off", "backgroundMs": 600000}
+{ "security": "full", "ask": "off", "backgroundMs": 600000 }
 ```
 
-| 文件 | 改动 |
-|------|------|
+| 文件                             | 改动                           |
+| -------------------------------- | ------------------------------ |
 | `src/db/migrations/001_init.sql` | 新建库默认值（已包含存量迁移） |
-| `src/db/sqlite/schema-sql.ts` | SQLite 同步 |
+| `src/db/sqlite/schema-sql.ts`    | SQLite 同步                    |
 
 建议额外配置 `"host": "gateway"` 显式指定本地执行（否则默认 `"sandbox"`，无 sandbox 时 fallback 到本地）。
 

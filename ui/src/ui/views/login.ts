@@ -7,16 +7,24 @@
 
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { login, register, LoginRateLimitedError, LoginMfaRequiredError, RegisterPendingVerificationError, CaptchaInvalidError, type AuthState } from "../auth-store.ts";
-import "../components/captcha-field.ts";
-import type { CaptchaField } from "../components/captcha-field.ts";
-import { loadSettings, saveSettings } from "../storage.ts";
 import { t, i18n, I18nController, SUPPORTED_LOCALES } from "../../i18n/index.ts";
+import "../components/captcha-field.ts";
 import type { Locale } from "../../i18n/index.ts";
-import type { ThemeMode } from "../theme.ts";
-import { resolveTheme } from "../theme.ts";
-import "../components/language-switcher.ts";
+import {
+  login,
+  register,
+  LoginRateLimitedError,
+  LoginMfaRequiredError,
+  RegisterPendingVerificationError,
+  CaptchaInvalidError,
+  type AuthState,
+} from "../auth-store.ts";
+import type { CaptchaField } from "../components/captcha-field.ts";
 import { caretFix } from "../shared-styles.ts";
+import { loadSettings, saveSettings } from "../storage.ts";
+import type { ThemeMode } from "../theme.ts";
+import "../components/language-switcher.ts";
+import { resolveTheme } from "../theme.ts";
 
 type AuthMode = "login" | "register";
 
@@ -27,649 +35,830 @@ type FieldErrors = Record<string, string>;
 export class EnClawsLogin extends LitElement {
   private i18nCtrl = new I18nController(this);
 
-  static styles = [caretFix, css`
-    *, *::before, *::after { box-sizing: border-box; }
+  static styles = [
+    caretFix,
+    css`
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
 
-    :host {
-      display: flex;
-      flex-direction: row;
-      min-height: 100vh;
-      height: 100vh;
-      font-family: var(--font-body, -apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", sans-serif);
-      color: var(--text);
-      overflow: hidden;
-    }
+      :host {
+        display: flex;
+        flex-direction: row;
+        min-height: 100vh;
+        height: 100vh;
+        font-family: var(
+          --font-body,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Inter",
+          "PingFang SC",
+          sans-serif
+        );
+        color: var(--text);
+        overflow: hidden;
+      }
 
-    /* ══ Brand Panel (left 48%) ══ */
-    .brand-panel {
-      width: 48%;
-      min-height: 100vh;
-      background: linear-gradient(145deg, #083344 0%, #0891b2 40%, #06b6d4 75%, #0e9ab8 100%);
-      padding: 48px 56px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-      box-shadow: 6px 0 32px rgba(0, 0, 0, 0.18);
-    }
+      /* ══ Brand Panel (left 48%) ══ */
+      .brand-panel {
+        width: 48%;
+        min-height: 100vh;
+        background: linear-gradient(145deg, #083344 0%, #0891b2 40%, #06b6d4 75%, #0e9ab8 100%);
+        padding: 48px 56px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 6px 0 32px rgba(0, 0, 0, 0.18);
+      }
 
-    /* animated blobs */
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(60px);
-      pointer-events: none;
-    }
-    .blob-1 {
-      width: 400px; height: 400px;
-      background: rgba(103, 232, 249, 0.25);
-      top: -120px; right: -100px;
-      animation: blob-float1 9s ease-in-out infinite;
-    }
-    .blob-2 {
-      width: 300px; height: 300px;
-      background: rgba(8, 51, 68, 0.4);
-      bottom: -80px; left: -80px;
-      animation: blob-float2 11s ease-in-out infinite;
-    }
-    .blob-3 {
-      width: 200px; height: 200px;
-      background: rgba(255, 255, 255, 0.08);
-      top: 40%; left: 20%;
-    }
+      /* animated blobs */
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        pointer-events: none;
+      }
+      .blob-1 {
+        width: 400px;
+        height: 400px;
+        background: rgba(103, 232, 249, 0.25);
+        top: -120px;
+        right: -100px;
+        animation: blob-float1 9s ease-in-out infinite;
+      }
+      .blob-2 {
+        width: 300px;
+        height: 300px;
+        background: rgba(8, 51, 68, 0.4);
+        bottom: -80px;
+        left: -80px;
+        animation: blob-float2 11s ease-in-out infinite;
+      }
+      .blob-3 {
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.08);
+        top: 40%;
+        left: 20%;
+      }
 
-    @keyframes blob-float1 {
-      0%, 100% { transform: translate(0, 0); }
-      40%       { transform: translate(-28px, 22px); }
-      70%       { transform: translate(18px, -18px); }
-    }
-    @keyframes blob-float2 {
-      0%, 100% { transform: translate(0, 0); }
-      50%       { transform: translate(26px, -22px); }
-    }
+      @keyframes blob-float1 {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        40% {
+          transform: translate(-28px, 22px);
+        }
+        70% {
+          transform: translate(18px, -18px);
+        }
+      }
+      @keyframes blob-float2 {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(26px, -22px);
+        }
+      }
 
-    /* dot matrix */
-    .brand-dots {
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
-      background-size: 28px 28px;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-      pointer-events: none;
-    }
+      /* dot matrix */
+      .brand-dots {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+        pointer-events: none;
+      }
 
-    .brand-inner {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-    }
+      .brand-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
 
-    .brand-logo {
-      display: flex;
-      align-items: center;
-    }
-    .brand-logo img {
-      height: 104px;
-      width: auto;
-      object-fit: contain;
-      filter: brightness(0) invert(1) drop-shadow(0 0 16px rgba(103,232,249,0.4));
-    }
+      .brand-logo {
+        display: flex;
+        align-items: center;
+      }
+      .brand-logo img {
+        height: 104px;
+        width: auto;
+        object-fit: contain;
+        filter: brightness(0) invert(1) drop-shadow(0 0 16px rgba(103, 232, 249, 0.4));
+      }
 
-    .brand-hero {
-      margin-top: 80px;
-      padding-bottom: 16px;
-    }
+      .brand-hero {
+        margin-top: 80px;
+        padding-bottom: 16px;
+      }
 
-    .brand-tagline {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 100px;
-      padding: 5px 14px;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 500;
-      margin-bottom: 22px;
-      letter-spacing: 0.02em;
-    }
-    .brand-tagline-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #67e8f9;
-      box-shadow: 0 0 8px #67e8f9;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
+      .brand-tagline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 100px;
+        padding: 5px 14px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        margin-bottom: 22px;
+        letter-spacing: 0.02em;
+      }
+      .brand-tagline-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #67e8f9;
+        box-shadow: 0 0 8px #67e8f9;
+        animation: pulse-dot 2s ease-in-out infinite;
+      }
 
-    .brand-hero h1 {
-      font-size: 46px;
-      font-weight: 900;
-      color: #fff;
-      line-height: 1.08;
-      letter-spacing: -0.04em;
-      margin: 0 0 16px;
-    }
-    .brand-hero h1 em {
-      font-style: normal;
-      background: linear-gradient(90deg, #67e8f9, #a5f3fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .brand-hero p {
-      font-size: 15px;
-      color: rgba(255, 255, 255, 0.65);
-      line-height: 1.65;
-      max-width: 380px;
-      margin: 0 0 28px;
-    }
+      .brand-hero h1 {
+        font-size: 46px;
+        font-weight: 900;
+        color: #fff;
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+        margin: 0 0 16px;
+      }
+      .brand-hero h1 em {
+        font-style: normal;
+        background: linear-gradient(90deg, #67e8f9, #a5f3fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .brand-hero p {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.65);
+        line-height: 1.65;
+        max-width: 380px;
+        margin: 0 0 28px;
+      }
 
-    /* Feature highlight rows */
-    .brand-features {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .brand-feat {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 14px 16px;
-      backdrop-filter: blur(8px);
-      transition: background 0.2s;
-    }
-    .brand-feat:hover {
-      background: rgba(255, 255, 255, 0.11);
-    }
-    .brand-feat-icon {
-      flex-shrink: 0;
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      background: rgba(103, 232, 249, 0.15);
-      border: 1px solid rgba(103, 232, 249, 0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .brand-feat-icon svg {
-      width: 15px; height: 15px;
-      stroke: #67e8f9; fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .brand-feat-text {
-      flex: 1;
-      min-width: 0;
-    }
-    .brand-feat-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 3px;
-      letter-spacing: -0.01em;
-    }
-    .brand-feat-desc {
-      font-size: 12.5px;
-      color: rgba(255, 255, 255, 0.58);
-      line-height: 1.55;
-    }
+      /* Feature highlight rows */
+      .brand-features {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .brand-feat {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 14px 16px;
+        backdrop-filter: blur(8px);
+        transition: background 0.2s;
+      }
+      .brand-feat:hover {
+        background: rgba(255, 255, 255, 0.11);
+      }
+      .brand-feat-icon {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(103, 232, 249, 0.15);
+        border: 1px solid rgba(103, 232, 249, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-feat-icon svg {
+        width: 15px;
+        height: 15px;
+        stroke: #67e8f9;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .brand-feat-text {
+        flex: 1;
+        min-width: 0;
+      }
+      .brand-feat-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 3px;
+        letter-spacing: -0.01em;
+      }
+      .brand-feat-desc {
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.58);
+        line-height: 1.55;
+      }
 
-    /* ── Pitch callout ── */
-    .brand-pitch {
-      margin-top: 20px;
-      padding: 14px 16px;
-      background: rgba(103, 232, 249, 0.08);
-      border: 1px solid rgba(103, 232, 249, 0.2);
-      border-radius: 12px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-    .brand-pitch-icon {
-      flex-shrink: 0;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(103, 232, 249, 0.15);
-      border: 1px solid rgba(103, 232, 249, 0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .brand-pitch-icon svg {
-      width: 15px;
-      height: 15px;
-      stroke: #67e8f9;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .brand-pitch-body {}
-    .brand-pitch-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #67e8f9;
-      margin-bottom: 4px;
-      letter-spacing: -0.01em;
-    }
-    .brand-pitch-desc {
-      font-size: 12.5px;
-      color: rgba(255, 255, 255, 0.55);
-      line-height: 1.55;
-    }
+      /* ── Pitch callout ── */
+      .brand-pitch {
+        margin-top: 20px;
+        padding: 14px 16px;
+        background: rgba(103, 232, 249, 0.08);
+        border: 1px solid rgba(103, 232, 249, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .brand-pitch-icon {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(103, 232, 249, 0.15);
+        border: 1px solid rgba(103, 232, 249, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-pitch-icon svg {
+        width: 15px;
+        height: 15px;
+        stroke: #67e8f9;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .brand-pitch-body {
+      }
+      .brand-pitch-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #67e8f9;
+        margin-bottom: 4px;
+        letter-spacing: -0.01em;
+      }
+      .brand-pitch-desc {
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.55;
+      }
 
-    /* ── Floating particles ── */
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(103, 232, 249, 0.75);
-      box-shadow: 0 0 6px 1px rgba(103, 232, 249, 0.4);
-      pointer-events: none;
-    }
-    @keyframes particle-rise {
-      0%   { transform: translateY(0) translateX(0); opacity: 0.85; }
-      40%  { opacity: 0.6; }
-      100% { transform: translateY(-110vh) translateX(12px); opacity: 0; }
-    }
-    .p1 { width: 3px; height: 3px; left: 12%;  bottom: 8%;  animation: particle-rise 9s  linear         infinite; }
-    .p2 { width: 2px; height: 2px; left: 28%;  bottom: 15%; animation: particle-rise 11s linear 2.5s    infinite; }
-    .p3 { width: 4px; height: 4px; left: 55%;  bottom: 5%;  animation: particle-rise 8s  linear 1s      infinite; }
-    .p4 { width: 2px; height: 2px; left: 72%;  bottom: 20%; animation: particle-rise 13s linear 4s      infinite; }
-    .p5 { width: 3px; height: 3px; left: 88%;  bottom: 12%; animation: particle-rise 10s linear 0.7s    infinite; }
-    .p6 { width: 2px; height: 2px; left: 40%;  bottom: 28%; animation: particle-rise 12s linear 3s      infinite; }
-    .p7 { width: 3px; height: 3px; left: 65%;  bottom: 42%; animation: particle-rise 7s  linear 5.2s    infinite; }
-    .p8 { width: 2px; height: 2px; left: 20%;  bottom: 36%; animation: particle-rise 15s linear 1.5s    infinite; }
+      /* ── Floating particles ── */
+      .particle {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(103, 232, 249, 0.75);
+        box-shadow: 0 0 6px 1px rgba(103, 232, 249, 0.4);
+        pointer-events: none;
+      }
+      @keyframes particle-rise {
+        0% {
+          transform: translateY(0) translateX(0);
+          opacity: 0.85;
+        }
+        40% {
+          opacity: 0.6;
+        }
+        100% {
+          transform: translateY(-110vh) translateX(12px);
+          opacity: 0;
+        }
+      }
+      .p1 {
+        width: 3px;
+        height: 3px;
+        left: 12%;
+        bottom: 8%;
+        animation: particle-rise 9s linear infinite;
+      }
+      .p2 {
+        width: 2px;
+        height: 2px;
+        left: 28%;
+        bottom: 15%;
+        animation: particle-rise 11s linear 2.5s infinite;
+      }
+      .p3 {
+        width: 4px;
+        height: 4px;
+        left: 55%;
+        bottom: 5%;
+        animation: particle-rise 8s linear 1s infinite;
+      }
+      .p4 {
+        width: 2px;
+        height: 2px;
+        left: 72%;
+        bottom: 20%;
+        animation: particle-rise 13s linear 4s infinite;
+      }
+      .p5 {
+        width: 3px;
+        height: 3px;
+        left: 88%;
+        bottom: 12%;
+        animation: particle-rise 10s linear 0.7s infinite;
+      }
+      .p6 {
+        width: 2px;
+        height: 2px;
+        left: 40%;
+        bottom: 28%;
+        animation: particle-rise 12s linear 3s infinite;
+      }
+      .p7 {
+        width: 3px;
+        height: 3px;
+        left: 65%;
+        bottom: 42%;
+        animation: particle-rise 7s linear 5.2s infinite;
+      }
+      .p8 {
+        width: 2px;
+        height: 2px;
+        left: 20%;
+        bottom: 36%;
+        animation: particle-rise 15s linear 1.5s infinite;
+      }
 
-    /* ── Entry animations ── */
-    @keyframes fadeSlideUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    .brand-logo    { animation: fadeIn       0.8s ease-out         both; }
-    .brand-tagline { animation: fadeSlideUp  0.5s ease-out 0.15s   both; }
-    .brand-hero h1 { animation: fadeSlideUp  0.55s ease-out 0.28s  both; }
-    .brand-hero p  { animation: fadeSlideUp  0.5s ease-out 0.42s   both; }
-    .brand-feat:nth-child(1) { animation: fadeSlideUp 0.45s ease-out 0.55s both; }
-    .brand-feat:nth-child(2) { animation: fadeSlideUp 0.45s ease-out 0.67s both; }
-    .brand-feat:nth-child(3) { animation: fadeSlideUp 0.45s ease-out 0.79s both; }
-    .brand-pitch            { animation: fadeSlideUp 0.45s ease-out 0.92s both; }
+      /* ── Entry animations ── */
+      @keyframes fadeSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .brand-logo {
+        animation: fadeIn 0.8s ease-out both;
+      }
+      .brand-tagline {
+        animation: fadeSlideUp 0.5s ease-out 0.15s both;
+      }
+      .brand-hero h1 {
+        animation: fadeSlideUp 0.55s ease-out 0.28s both;
+      }
+      .brand-hero p {
+        animation: fadeSlideUp 0.5s ease-out 0.42s both;
+      }
+      .brand-feat:nth-child(1) {
+        animation: fadeSlideUp 0.45s ease-out 0.55s both;
+      }
+      .brand-feat:nth-child(2) {
+        animation: fadeSlideUp 0.45s ease-out 0.67s both;
+      }
+      .brand-feat:nth-child(3) {
+        animation: fadeSlideUp 0.45s ease-out 0.79s both;
+      }
+      .brand-pitch {
+        animation: fadeSlideUp 0.45s ease-out 0.92s both;
+      }
 
-    /* ── Feature icon glow pulse ── */
-    @keyframes icon-glow {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(103,232,249,0); }
-      50%       { box-shadow: 0 0 0 5px rgba(103,232,249,0.18); }
-    }
-    .brand-feat:nth-child(1) .brand-feat-icon { animation: icon-glow 3.5s ease-in-out 0.8s  infinite; }
-    .brand-feat:nth-child(2) .brand-feat-icon { animation: icon-glow 3.5s ease-in-out 1.7s  infinite; }
-    .brand-feat:nth-child(3) .brand-feat-icon { animation: icon-glow 3.5s ease-in-out 2.6s  infinite; }
+      /* ── Feature icon glow pulse ── */
+      @keyframes icon-glow {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(103, 232, 249, 0);
+        }
+        50% {
+          box-shadow: 0 0 0 5px rgba(103, 232, 249, 0.18);
+        }
+      }
+      .brand-feat:nth-child(1) .brand-feat-icon {
+        animation: icon-glow 3.5s ease-in-out 0.8s infinite;
+      }
+      .brand-feat:nth-child(2) .brand-feat-icon {
+        animation: icon-glow 3.5s ease-in-out 1.7s infinite;
+      }
+      .brand-feat:nth-child(3) .brand-feat-icon {
+        animation: icon-glow 3.5s ease-in-out 2.6s infinite;
+      }
 
-    /* ── Scan line ── */
-    @keyframes scan-slide {
-      0%   { top: 100%; opacity: 0; }
-      5%   { opacity: 1; }
-      95%  { opacity: 0.6; }
-      100% { top: -2%; opacity: 0; }
-    }
-    .brand-scan {
-      position: absolute;
-      left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent 0%, rgba(103,232,249,0.5) 40%, rgba(103,232,249,0.7) 50%, rgba(103,232,249,0.5) 60%, transparent 100%);
-      pointer-events: none;
-      animation: scan-slide 8s linear 1s infinite;
-    }
+      /* ── Scan line ── */
+      @keyframes scan-slide {
+        0% {
+          top: 100%;
+          opacity: 0;
+        }
+        5% {
+          opacity: 1;
+        }
+        95% {
+          opacity: 0.6;
+        }
+        100% {
+          top: -2%;
+          opacity: 0;
+        }
+      }
+      .brand-scan {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(103, 232, 249, 0.5) 40%,
+          rgba(103, 232, 249, 0.7) 50%,
+          rgba(103, 232, 249, 0.5) 60%,
+          transparent 100%
+        );
+        pointer-events: none;
+        animation: scan-slide 8s linear 1s infinite;
+      }
 
-    /* ══ Form Panel (right, flex: 1) ══ */
-    .form-panel {
-      flex: 1;
-      min-height: 100vh;
-      background: var(--surface, #ffffff);
-      display: flex;
-      flex-direction: column;
-      padding: 40px 64px;
-      overflow-y: auto;
-    }
+      /* ══ Form Panel (right, flex: 1) ══ */
+      .form-panel {
+        flex: 1;
+        min-height: 100vh;
+        background: var(--surface, #ffffff);
+        display: flex;
+        flex-direction: column;
+        padding: 40px 64px;
+        overflow-y: auto;
+      }
 
-    .form-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-      margin-bottom: 4px;
-    }
+      .form-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        margin-bottom: 4px;
+      }
 
-    .topbar-lang {
-      --text-color: var(--text-2);
-      --surface-1: var(--surface);
-      --surface-2: var(--bg);
-      --border-color: var(--border);
-      --primary-color: var(--accent);
-    }
+      .topbar-lang {
+        --text-color: var(--text-2);
+        --surface-1: var(--surface);
+        --surface-2: var(--bg);
+        --border-color: var(--border);
+        --primary-color: var(--accent);
+      }
 
-    /* Theme toggle — rectangular tab style */
-    .theme-switch {
-      display: flex;
-      background: var(--bg, #f0fdfe);
-      border: 1px solid var(--border, #e2eef2);
-      border-radius: 10px;
-      padding: 4px;
-      gap: 2px;
-    }
-    .theme-switch__btn {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 7px;
-      font-size: 12px;
-      color: var(--text-3, #94a3b8);
-      transition: all 0.15s;
-      font-family: inherit;
-      white-space: nowrap;
-    }
-    .theme-switch__btn:hover {
-      color: var(--text-2, #4a6572);
-    }
-    .theme-switch__btn.active {
-      background: var(--surface, #ffffff);
-      color: var(--text, #0c1a1f);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    }
-    .theme-switch__btn svg {
-      width: 13px;
-      height: 13px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.8px;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      flex-shrink: 0;
-    }
+      /* Theme toggle — rectangular tab style */
+      .theme-switch {
+        display: flex;
+        background: var(--bg, #f0fdfe);
+        border: 1px solid var(--border, #e2eef2);
+        border-radius: 10px;
+        padding: 4px;
+        gap: 2px;
+      }
+      .theme-switch__btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 7px;
+        font-size: 12px;
+        color: var(--text-3, #94a3b8);
+        transition: all 0.15s;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .theme-switch__btn:hover {
+        color: var(--text-2, #4a6572);
+      }
+      .theme-switch__btn.active {
+        background: var(--surface, #ffffff);
+        color: var(--text, #0c1a1f);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .theme-switch__btn svg {
+        width: 13px;
+        height: 13px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
 
-    /* ══ Form main (centered, max-width 380px) ══ */
-    .form-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      max-width: 380px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 20px 0;
-    }
+      /* ══ Form main (centered, max-width 380px) ══ */
+      .form-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-width: 380px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px 0;
+      }
 
-    .form-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--accent-light, rgba(8, 145, 178, 0.08));
-      border: 1px solid var(--accent-light-border, rgba(8, 145, 178, 0.2));
-      border-radius: 100px;
-      padding: 5px 12px;
-      font-size: 12px;
-      color: var(--accent, #0891b2);
-      font-weight: 600;
-      margin-bottom: 24px;
-      width: fit-content;
-      letter-spacing: 0.02em;
-    }
+      .form-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--accent-light, rgba(8, 145, 178, 0.08));
+        border: 1px solid var(--accent-light-border, rgba(8, 145, 178, 0.2));
+        border-radius: 100px;
+        padding: 5px 12px;
+        font-size: 12px;
+        color: var(--accent, #0891b2);
+        font-weight: 600;
+        margin-bottom: 24px;
+        width: fit-content;
+        letter-spacing: 0.02em;
+      }
 
-    .form-title {
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--text-strong, #060e12);
-      letter-spacing: -0.04em;
-      line-height: 1.1;
-      margin: 0 0 8px;
-    }
-    .form-subtitle {
-      font-size: 15px;
-      color: var(--text-2, #4a6572);
-      margin: 0 0 32px;
-      line-height: 1.5;
-    }
+      .form-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-strong, #060e12);
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        margin: 0 0 8px;
+      }
+      .form-subtitle {
+        font-size: 15px;
+        color: var(--text-2, #4a6572);
+        margin: 0 0 32px;
+        line-height: 1.5;
+      }
 
-    /* Tabs (Login / Register) */
-    .form-tabs {
-      display: flex;
-      background: var(--bg, #f0fdfe);
-      border: 1px solid var(--border, #e2eef2);
-      border-radius: 10px;
-      padding: 4px;
-      gap: 2px;
-      margin-bottom: 28px;
-    }
-    .form-tab {
-      flex: 1;
-      text-align: center;
-      padding: 9px;
-      border-radius: 7px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-3, #94a3b8);
-      cursor: pointer;
-      transition: all 0.15s;
-      border: none;
-      background: transparent;
-      font-family: inherit;
-    }
-    .form-tab:hover {
-      color: var(--text-2, #4a6572);
-    }
-    .form-tab.active {
-      background: var(--surface, #ffffff);
-      color: var(--text, #0c1a1f);
-      font-weight: 600;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    }
+      /* Tabs (Login / Register) */
+      .form-tabs {
+        display: flex;
+        background: var(--bg, #f0fdfe);
+        border: 1px solid var(--border, #e2eef2);
+        border-radius: 10px;
+        padding: 4px;
+        gap: 2px;
+        margin-bottom: 28px;
+      }
+      .form-tab {
+        flex: 1;
+        text-align: center;
+        padding: 9px;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-3, #94a3b8);
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+      }
+      .form-tab:hover {
+        color: var(--text-2, #4a6572);
+      }
+      .form-tab.active {
+        background: var(--surface, #ffffff);
+        color: var(--text, #0c1a1f);
+        font-weight: 600;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
 
-    /* Form fields */
-    .form-group {
-      margin-bottom: 18px;
-    }
-    .form-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-2, #4a6572);
-      margin-bottom: 8px;
-      letter-spacing: 0.01em;
-    }
-    .form-input-wrap {
-      position: relative;
-    }
-    .form-input {
-      width: 100%;
-      padding: 13px 16px;
-      border: 1.5px solid var(--input-border, #d1e8ef);
-      border-radius: 10px;
-      font-size: 15px;
-      color: var(--text, #0c1a1f);
-      background: var(--input-bg, #f8fcfd);
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-      font-family: inherit;
-      box-sizing: border-box;
-    }
-    .form-input:focus {
-      border-color: var(--accent, #0891b2);
-      box-shadow: 0 0 0 4px var(--accent-light, rgba(8, 145, 178, 0.08));
-      background: var(--surface, #ffffff);
-    }
-    .form-input::placeholder {
-      color: var(--text-3, #94a3b8);
-    }
-    .form-input.has-error {
-      border-color: var(--danger, #ef4444);
-    }
-    .form-input.has-error:focus {
-      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
-    }
-    .form-input-wrap .form-input {
-      padding-right: 48px;
-    }
+      /* Form fields */
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-2, #4a6572);
+        margin-bottom: 8px;
+        letter-spacing: 0.01em;
+      }
+      .form-input-wrap {
+        position: relative;
+      }
+      .form-input {
+        width: 100%;
+        padding: 13px 16px;
+        border: 1.5px solid var(--input-border, #d1e8ef);
+        border-radius: 10px;
+        font-size: 15px;
+        color: var(--text, #0c1a1f);
+        background: var(--input-bg, #f8fcfd);
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s,
+          background 0.15s;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      .form-input:focus {
+        border-color: var(--accent, #0891b2);
+        box-shadow: 0 0 0 4px var(--accent-light, rgba(8, 145, 178, 0.08));
+        background: var(--surface, #ffffff);
+      }
+      .form-input::placeholder {
+        color: var(--text-3, #94a3b8);
+      }
+      .form-input.has-error {
+        border-color: var(--danger, #ef4444);
+      }
+      .form-input.has-error:focus {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+      }
+      .form-input-wrap .form-input {
+        padding-right: 48px;
+      }
 
-    .eye-btn {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-3, #94a3b8);
-      padding: 4px;
-      transition: color 0.15s;
-      display: flex;
-      align-items: center;
-    }
-    .eye-btn:hover {
-      color: var(--text-2, #4a6572);
-    }
-    .eye-btn svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      pointer-events: none;
-    }
+      .eye-btn {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-3, #94a3b8);
+        padding: 4px;
+        transition: color 0.15s;
+        display: flex;
+        align-items: center;
+      }
+      .eye-btn:hover {
+        color: var(--text-2, #4a6572);
+      }
+      .eye-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+      }
 
-    .form-hint {
-      font-size: 12px;
-      color: var(--muted, #7ea5b2);
-      margin-top: 6px;
-    }
+      .form-hint {
+        font-size: 12px;
+        color: var(--muted, #7ea5b2);
+        margin-top: 6px;
+      }
 
-    .field-error {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--danger, #ef4444);
-    }
-    .field-error svg {
-      flex-shrink: 0;
-      width: 13px;
-      height: 13px;
-      fill: currentColor;
-    }
+      .field-error {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--danger, #ef4444);
+      }
+      .field-error svg {
+        flex-shrink: 0;
+        width: 13px;
+        height: 13px;
+        fill: currentColor;
+      }
 
-    .form-error {
-      margin-bottom: 16px;
-    }
+      .form-error {
+        margin-bottom: 16px;
+      }
 
-    /* Forgot password row */
-    .form-meta {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 24px;
-    }
-    .form-forgot {
-      font-size: 13px;
-      color: var(--accent, #0891b2);
-      font-weight: 500;
-      text-decoration: none;
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 0;
-      font-family: inherit;
-    }
-    .form-forgot:hover {
-      text-decoration: underline;
-    }
+      /* Forgot password row */
+      .form-meta {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 24px;
+      }
+      .form-forgot {
+        font-size: 13px;
+        color: var(--accent, #0891b2);
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+      }
+      .form-forgot:hover {
+        text-decoration: underline;
+      }
 
-    /* Submit button */
-    .btn-submit {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, var(--accent, #0891b2), var(--accent-2, #06b6d4));
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      font-family: inherit;
-      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
-      box-shadow: 0 4px 16px rgba(8, 145, 178, 0.35);
-      margin-bottom: 20px;
-    }
-    .btn-submit:hover {
-      opacity: 0.92;
-      box-shadow: 0 6px 22px rgba(8, 145, 178, 0.45);
-    }
-    .btn-submit:active {
-      transform: scale(0.99);
-    }
-    .btn-submit:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
+      /* Submit button */
+      .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--accent, #0891b2), var(--accent-2, #06b6d4));
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        font-family: inherit;
+        transition:
+          opacity 0.15s,
+          transform 0.1s,
+          box-shadow 0.15s;
+        box-shadow: 0 4px 16px rgba(8, 145, 178, 0.35);
+        margin-bottom: 20px;
+      }
+      .btn-submit:hover {
+        opacity: 0.92;
+        box-shadow: 0 6px 22px rgba(8, 145, 178, 0.45);
+      }
+      .btn-submit:active {
+        transform: scale(0.99);
+      }
+      .btn-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
 
-    /* Register section divider */
-    .section-divider {
-      display: flex;
-      align-items: center;
-      margin: 4px 0 20px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-3, #94a3b8);
-    }
-    .section-divider::before,
-    .section-divider::after {
-      content: "";
-      flex: 1;
-      border-top: 1px solid var(--border, #e2eef2);
-    }
-    .section-divider span {
-      padding: 0 10px;
-    }
+      /* Register section divider */
+      .section-divider {
+        display: flex;
+        align-items: center;
+        margin: 4px 0 20px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-3, #94a3b8);
+      }
+      .section-divider::before,
+      .section-divider::after {
+        content: "";
+        flex: 1;
+        border-top: 1px solid var(--border, #e2eef2);
+      }
+      .section-divider span {
+        padding: 0 10px;
+      }
 
-
-    /* ══ Responsive ══ */
-    @media (max-width: 900px) {
-      :host { flex-direction: column; height: auto; }
-      .brand-panel { width: 100%; min-height: auto; padding: 40px 32px; }
-      .brand-hero h1 { font-size: 32px; }
-      .brand-stats { gap: 8px; }
-      .brand-stat-card { padding: 12px; }
-      .brand-stat-num { font-size: 20px; }
-      .form-panel { padding: 32px 24px; min-height: auto; }
-      .form-main { padding: 16px 0; }
-    }
-    @media (max-width: 600px) {
-      .brand-panel { padding: 32px 24px; }
-      .brand-hero h1 { font-size: 28px; }
-      .form-panel { padding: 24px 20px; }
-      .form-title { font-size: 26px; }
-    }
-  `];
+      /* ══ Responsive ══ */
+      @media (max-width: 900px) {
+        :host {
+          flex-direction: column;
+          height: auto;
+        }
+        .brand-panel {
+          width: 100%;
+          min-height: auto;
+          padding: 40px 32px;
+        }
+        .brand-hero h1 {
+          font-size: 32px;
+        }
+        .brand-stats {
+          gap: 8px;
+        }
+        .brand-stat-card {
+          padding: 12px;
+        }
+        .brand-stat-num {
+          font-size: 20px;
+        }
+        .form-panel {
+          padding: 32px 24px;
+          min-height: auto;
+        }
+        .form-main {
+          padding: 16px 0;
+        }
+      }
+      @media (max-width: 600px) {
+        .brand-panel {
+          padding: 32px 24px;
+        }
+        .brand-hero h1 {
+          font-size: 28px;
+        }
+        .form-panel {
+          padding: 24px 20px;
+        }
+        .form-title {
+          font-size: 26px;
+        }
+      }
+    `,
+  ];
 
   @property({ type: String }) gatewayUrl = "";
   @state() private mode: AuthMode = "login";
@@ -704,7 +893,8 @@ export class EnClawsLogin extends LitElement {
     if (SUPPORTED_LOCALES.includes(loc as Locale)) {
       void i18n.setLocale(loc as Locale).then(() => {
         if (Object.keys(this.fieldErrors).length > 0) {
-          this.fieldErrors = this.mode === "login" ? this.validateLoginForm() : this.validateRegisterForm();
+          this.fieldErrors =
+            this.mode === "login" ? this.validateLoginForm() : this.validateRegisterForm();
         }
       });
       const settings = loadSettings();
@@ -714,16 +904,37 @@ export class EnClawsLogin extends LitElement {
 
   /** Map raw server error to i18n at render time so language switches take effect. */
   private translateServerError(raw: string): string {
-    if (raw === "__rate_limited__") {return t("login.rateLimited");}
-    if (raw.includes("Invalid credentials")) {return t("login.invalidCredentials");}
-    if (raw.includes("已注册") || raw.includes("already registered") || raw.includes("duplicate key") || raw.includes("unique constraint")) {return t("login.emailAlreadyRegistered");}
-    if (raw.includes("verify your email") || raw.includes("pendingVerification")) {return t("login.pendingVerification");}
-    if (raw.includes("该企业账号已被禁用") || raw.includes("tenant suspended") || raw.includes("Tenant is suspended")) {return t("login.tenantSuspended");}
+    if (raw === "__rate_limited__") {
+      return t("login.rateLimited");
+    }
+    if (raw.includes("Invalid credentials")) {
+      return t("login.invalidCredentials");
+    }
+    if (
+      raw.includes("已注册") ||
+      raw.includes("already registered") ||
+      raw.includes("duplicate key") ||
+      raw.includes("unique constraint")
+    ) {
+      return t("login.emailAlreadyRegistered");
+    }
+    if (raw.includes("verify your email") || raw.includes("pendingVerification")) {
+      return t("login.pendingVerification");
+    }
+    if (
+      raw.includes("该企业账号已被禁用") ||
+      raw.includes("tenant suspended") ||
+      raw.includes("Tenant is suspended")
+    ) {
+      return t("login.tenantSuspended");
+    }
     return raw;
   }
 
   private resolveGatewayUrl(): string {
-    if (this.gatewayUrl) {return this.gatewayUrl;}
+    if (this.gatewayUrl) {
+      return this.gatewayUrl;
+    }
     const settings = loadSettings();
     return settings.gatewayUrl;
   }
@@ -733,30 +944,51 @@ export class EnClawsLogin extends LitElement {
   }
 
   private validatePasswordStrength(pw: string): boolean {
-    return pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /\d/.test(pw) && /[^a-zA-Z0-9]/.test(pw);
+    return (
+      pw.length >= 8 &&
+      /[a-z]/.test(pw) &&
+      /[A-Z]/.test(pw) &&
+      /\d/.test(pw) &&
+      /[^a-zA-Z0-9]/.test(pw)
+    );
   }
 
   private validateLoginForm(): FieldErrors {
     const errors: FieldErrors = {};
-    if (!this.email) {errors.email = t("login.errRequired", { field: t("login.email") });}
-    else if (!this.validateEmail(this.email)) {errors.email = t("login.errEmailInvalid");}
-    if (!this.password) {errors.password = t("login.errRequired", { field: t("login.password") });}
+    if (!this.email) {
+      errors.email = t("login.errRequired", { field: t("login.email") });
+    } else if (!this.validateEmail(this.email)) {
+      errors.email = t("login.errEmailInvalid");
+    }
+    if (!this.password) {
+      errors.password = t("login.errRequired", { field: t("login.password") });
+    }
     return errors;
   }
 
   private validateRegisterForm(): FieldErrors {
     const errors: FieldErrors = {};
-    if (!this.regTenantName) {errors.tenantName = t("login.errRequired", { field: t("login.tenantName") });}
-    if (!this.regEmail) {errors.regEmail = t("login.errRequired", { field: t("login.email") });}
-    else if (!this.validateEmail(this.regEmail)) {errors.regEmail = t("login.errEmailInvalid");}
-    if (!this.regPassword) {errors.regPassword = t("login.errRequired", { field: t("login.password") });}
-    else if (!this.validatePasswordStrength(this.regPassword)) {errors.regPassword = t("login.errPasswordWeak");}
+    if (!this.regTenantName) {
+      errors.tenantName = t("login.errRequired", { field: t("login.tenantName") });
+    }
+    if (!this.regEmail) {
+      errors.regEmail = t("login.errRequired", { field: t("login.email") });
+    } else if (!this.validateEmail(this.regEmail)) {
+      errors.regEmail = t("login.errEmailInvalid");
+    }
+    if (!this.regPassword) {
+      errors.regPassword = t("login.errRequired", { field: t("login.password") });
+    } else if (!this.validatePasswordStrength(this.regPassword)) {
+      errors.regPassword = t("login.errPasswordWeak");
+    }
     return errors;
   }
 
   private renderFieldError(field: string) {
     const msg = this.fieldErrors[field];
-    if (!msg) {return nothing;}
+    if (!msg) {
+      return nothing;
+    }
     return html`
       <div class="field-error">
         <svg viewBox="0 0 16 16" fill="currentColor">
@@ -788,16 +1020,22 @@ export class EnClawsLogin extends LitElement {
       delete next[field];
       this.fieldErrors = next;
     }
-    if (this.serverError) {this.serverError = "";}
+    if (this.serverError) {
+      this.serverError = "";
+    }
   }
 
   private startRateLimitCountdown(retryAfterMs: number): void {
-    if (this.rateLimitTimer) {clearInterval(this.rateLimitTimer);}
+    if (this.rateLimitTimer) {
+      clearInterval(this.rateLimitTimer);
+    }
     this.rateLimitCountdown = Math.max(1, Math.ceil(retryAfterMs / 1000));
     this.rateLimitTimer = setInterval(() => {
       this.rateLimitCountdown -= 1;
       if (this.rateLimitCountdown <= 0) {
-        if (this.rateLimitTimer) {clearInterval(this.rateLimitTimer);}
+        if (this.rateLimitTimer) {
+          clearInterval(this.rateLimitTimer);
+        }
         this.rateLimitTimer = null;
         this.rateLimitCountdown = 0;
       }
@@ -806,7 +1044,9 @@ export class EnClawsLogin extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this.rateLimitTimer) {clearInterval(this.rateLimitTimer);}
+    if (this.rateLimitTimer) {
+      clearInterval(this.rateLimitTimer);
+    }
   }
 
   private getCaptchaField(name: "login" | "register"): CaptchaField | null {
@@ -828,7 +1068,9 @@ export class EnClawsLogin extends LitElement {
       return;
     }
 
-    if (this.rateLimitCountdown > 0) {return;}
+    if (this.rateLimitCountdown > 0) {
+      return;
+    }
 
     this.loading = true;
 
@@ -840,11 +1082,13 @@ export class EnClawsLogin extends LitElement {
         captchaId: captcha!.captchaId,
         captchaAnswer: captcha!.value,
       });
-      this.dispatchEvent(new CustomEvent("auth-success", {
-        detail: { ...auth, forceChangePassword: auth.user.forceChangePassword === true },
-        bubbles: true,
-        composed: true,
-      }));
+      this.dispatchEvent(
+        new CustomEvent("auth-success", {
+          detail: { ...auth, forceChangePassword: auth.user.forceChangePassword === true },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     } catch (err) {
       // Any failure invalidates the used captcha on the server. Refresh
       // so the user isn't left with a stale/empty image.
@@ -891,7 +1135,13 @@ export class EnClawsLogin extends LitElement {
         captchaId: captcha!.captchaId,
         captchaAnswer: captcha!.value,
       });
-      this.dispatchEvent(new CustomEvent("auth-success", { detail: { ...auth, isNewRegistration: true }, bubbles: true, composed: true }));
+      this.dispatchEvent(
+        new CustomEvent("auth-success", {
+          detail: { ...auth, isNewRegistration: true },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     } catch (err) {
       void this.getCaptchaField("register")?.refresh();
       if (err instanceof RegisterPendingVerificationError) {
@@ -1041,7 +1291,9 @@ export class EnClawsLogin extends LitElement {
         </div>
 
         <div class="form-main">
-          ${this.pendingVerificationEmail ? html`
+          ${
+            this.pendingVerificationEmail
+              ? html`
             <!-- Phase 3: email verification pending -->
             <div class="form-badge">✉ ${t("auth.verify.pendingTitle")}</div>
             <h1 class="form-title">${t("auth.verify.pendingTitle")}</h1>
@@ -1049,20 +1301,24 @@ export class EnClawsLogin extends LitElement {
             <div style="text-align:center;padding:20px 0;font-size:15px;font-weight:600;color:var(--accent,#0891b2);">
               ${this.pendingVerificationEmail}
             </div>
-            <button class="btn-submit" @click=${() => { this.pendingVerificationEmail = ""; this.switchMode("login"); }}>
+            <button class="btn-submit" @click=${() => {
+              this.pendingVerificationEmail = "";
+              this.switchMode("login");
+            }}>
               ${t("auth.common.backToLogin")}
             </button>
-          ` : html`
+          `
+              : html`
             <div class="form-badge">✦ ${t("login.formBadge")}</div>
             <h1 class="form-title">
-              ${this.mode === "login"
-                ? html`${t("login.welcomeLine1")}<br/>${t("login.welcomeLine2")}`
-                : html`${t("login.createLine1")}<br/>${t("login.createLine2")}`}
+              ${
+                this.mode === "login"
+                  ? html`${t("login.welcomeLine1")}<br/>${t("login.welcomeLine2")}`
+                  : html`${t("login.createLine1")}<br/>${t("login.createLine2")}`
+              }
             </h1>
             <p class="form-subtitle">
-              ${this.mode === "login"
-                ? t("login.subtitle")
-                : t("login.subtitleRegister")}
+              ${this.mode === "login" ? t("login.subtitle") : t("login.subtitleRegister")}
             </p>
 
             <div class="form-tabs">
@@ -1073,7 +1329,8 @@ export class EnClawsLogin extends LitElement {
             </div>
 
             ${this.mode === "login" ? this.renderLoginForm() : this.renderRegisterForm()}
-          `}
+          `
+          }
         </div>
 
       </div>
@@ -1090,7 +1347,10 @@ export class EnClawsLogin extends LitElement {
             type="email"
             placeholder=${t("login.emailPlaceholder")}
             .value=${this.email}
-            @input=${(e: InputEvent) => { this.email = (e.target as HTMLInputElement).value; this.clearFieldError("email"); }}
+            @input=${(e: InputEvent) => {
+              this.email = (e.target as HTMLInputElement).value;
+              this.clearFieldError("email");
+            }}
           />
           ${this.renderFieldError("email")}
         </div>
@@ -1103,12 +1363,24 @@ export class EnClawsLogin extends LitElement {
               type="password"
               placeholder=${t("login.passwordPlaceholder")}
               .value=${this.password}
-              @input=${(e: InputEvent) => { this.password = (e.target as HTMLInputElement).value; this.clearFieldError("password"); }}
+              @input=${(e: InputEvent) => {
+                this.password = (e.target as HTMLInputElement).value;
+                this.clearFieldError("password");
+              }}
             />
             <button type="button" class="eye-btn"
-              @mousedown=${(e: Event) => { const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!; (wrap.querySelector("input") as HTMLInputElement).type = "text"; }}
-              @mouseup=${(e: Event) => { const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!; (wrap.querySelector("input") as HTMLInputElement).type = "password"; }}
-              @mouseleave=${(e: Event) => { const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!; (wrap.querySelector("input") as HTMLInputElement).type = "password"; }}
+              @mousedown=${(e: Event) => {
+                const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!;
+                (wrap.querySelector("input") as HTMLInputElement).type = "text";
+              }}
+              @mouseup=${(e: Event) => {
+                const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!;
+                (wrap.querySelector("input") as HTMLInputElement).type = "password";
+              }}
+              @mouseleave=${(e: Event) => {
+                const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!;
+                (wrap.querySelector("input") as HTMLInputElement).type = "password";
+              }}
             >
               <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -1127,16 +1399,22 @@ export class EnClawsLogin extends LitElement {
 
         <div class="form-meta">
           <button type="button" class="form-forgot"
-            @click=${() => { window.location.hash = "#/auth/forgot-password"; }}
+            @click=${() => {
+              window.location.hash = "#/auth/forgot-password";
+            }}
           >${t("login.forgotPassword")}</button>
         </div>
 
         ${this.serverError ? this.renderFormError(this.translateServerError(this.serverError)) : nothing}
 
         <button class="btn-submit" type="submit" ?disabled=${this.loading || this.rateLimitCountdown > 0}>
-          ${this.rateLimitCountdown > 0
-            ? `${this.rateLimitCountdown}s`
-            : (this.loading ? t("login.loggingIn") : t("login.loginBtn"))}
+          ${
+            this.rateLimitCountdown > 0
+              ? `${this.rateLimitCountdown}s`
+              : this.loading
+                ? t("login.loggingIn")
+                : t("login.loginBtn")
+          }
         </button>
       </form>
     `;
@@ -1152,7 +1430,10 @@ export class EnClawsLogin extends LitElement {
             type="text"
             placeholder=${t("login.tenantNamePlaceholder")}
             .value=${this.regTenantName}
-            @input=${(e: InputEvent) => { this.regTenantName = (e.target as HTMLInputElement).value; this.clearFieldError("tenantName"); }}
+            @input=${(e: InputEvent) => {
+              this.regTenantName = (e.target as HTMLInputElement).value;
+              this.clearFieldError("tenantName");
+            }}
           />
           ${this.renderFieldError("tenantName")}
         </div>
@@ -1177,7 +1458,10 @@ export class EnClawsLogin extends LitElement {
             type="email"
             placeholder=${t("login.regEmailPlaceholder")}
             .value=${this.regEmail}
-            @input=${(e: InputEvent) => { this.regEmail = (e.target as HTMLInputElement).value; this.clearFieldError("regEmail"); }}
+            @input=${(e: InputEvent) => {
+              this.regEmail = (e.target as HTMLInputElement).value;
+              this.clearFieldError("regEmail");
+            }}
           />
           ${this.renderFieldError("regEmail")}
         </div>
@@ -1190,14 +1474,30 @@ export class EnClawsLogin extends LitElement {
               type="password"
               placeholder=${t("login.regPasswordPlaceholder")}
               .value=${this.regPassword}
-              @input=${(e: InputEvent) => { this.regPassword = (e.target as HTMLInputElement).value; this.clearFieldError("regPassword"); }}
-              @focus=${() => { this.regPasswordFocused = true; }}
-              @blur=${() => { this.regPasswordFocused = false; }}
+              @input=${(e: InputEvent) => {
+                this.regPassword = (e.target as HTMLInputElement).value;
+                this.clearFieldError("regPassword");
+              }}
+              @focus=${() => {
+                this.regPasswordFocused = true;
+              }}
+              @blur=${() => {
+                this.regPasswordFocused = false;
+              }}
             />
             <button type="button" class="eye-btn"
-              @mousedown=${(e: Event) => { const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!; (wrap.querySelector("input") as HTMLInputElement).type = "text"; }}
-              @mouseup=${(e: Event) => { const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!; (wrap.querySelector("input") as HTMLInputElement).type = "password"; }}
-              @mouseleave=${(e: Event) => { const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!; (wrap.querySelector("input") as HTMLInputElement).type = "password"; }}
+              @mousedown=${(e: Event) => {
+                const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!;
+                (wrap.querySelector("input") as HTMLInputElement).type = "text";
+              }}
+              @mouseup=${(e: Event) => {
+                const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!;
+                (wrap.querySelector("input") as HTMLInputElement).type = "password";
+              }}
+              @mouseleave=${(e: Event) => {
+                const wrap = (e.target as HTMLElement).closest(".form-input-wrap")!;
+                (wrap.querySelector("input") as HTMLInputElement).type = "password";
+              }}
             >
               <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>

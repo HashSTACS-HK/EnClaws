@@ -8,17 +8,17 @@
  * logic previously scattered as closures in reply-dispatcher.ts.
  */
 
-import { larkLogger } from '../core/lark-logger';
-import { extractLarkApiCode } from '../core/api-error';
+import { extractLarkApiCode } from "../core/api-error";
+import { larkLogger } from "../core/lark-logger";
 import {
   getMessageUnavailableState,
   isMessageUnavailable,
   isMessageUnavailableError,
   isTerminalMessageApiCode,
   markMessageUnavailable,
-} from '../core/message-unavailable';
+} from "../core/message-unavailable";
 
-const log = larkLogger('card/unavailable-guard');
+const log = larkLogger("card/unavailable-guard");
 
 // ---------------------------------------------------------------------------
 // Constructor params
@@ -75,7 +75,8 @@ export class UnavailableGuard {
     const fromError = isMessageUnavailableError(err) ? err : undefined;
     const cardMessageId = this.getCardMessageId();
     const state =
-      getMessageUnavailableState(this.replyToMessageId) ?? getMessageUnavailableState(cardMessageId ?? undefined);
+      getMessageUnavailableState(this.replyToMessageId) ??
+      getMessageUnavailableState(cardMessageId ?? undefined);
     let apiCode = fromError?.apiCode ?? state?.apiCode;
 
     if (!apiCode && err) {
@@ -97,8 +98,9 @@ export class UnavailableGuard {
     this.terminated = true;
     this.onTerminate();
 
-    const affectedMessageId = fromError?.messageId ?? this.replyToMessageId ?? cardMessageId ?? 'unknown';
-    log.warn('reply pipeline terminated by unavailable message', {
+    const affectedMessageId =
+      fromError?.messageId ?? this.replyToMessageId ?? cardMessageId ?? "unknown";
+    log.warn("reply pipeline terminated by unavailable message", {
       source,
       apiCode,
       messageId: affectedMessageId,

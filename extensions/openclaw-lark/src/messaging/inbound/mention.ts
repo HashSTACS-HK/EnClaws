@@ -10,10 +10,10 @@
  * - Format helpers for outbound text and card messages.
  */
 
-import type { MentionInfo, MessageContext } from '../types';
-import { escapeRegExp } from '../converters/utils';
+import { escapeRegExp } from "../converters/utils";
+import type { MentionInfo, MessageContext } from "../types";
 
-export type { MentionInfo } from '../types';
+export type { MentionInfo } from "../types";
 
 // ---------------------------------------------------------------------------
 // Derive helpers (work on MentionInfo[])
@@ -26,7 +26,7 @@ export type { MentionInfo } from '../types';
  * We match on `key` as the primary signal (most stable across locales).
  */
 export function isMentionAll(mention: { key: string }): boolean {
-  return mention.key === '@_all';
+  return mention.key === "@_all";
 }
 
 /** Whether the bot was @-mentioned. */
@@ -49,7 +49,7 @@ export function nonBotMentions(ctx: MessageContext): MentionInfo[] {
 export function extractMessageBody(text: string, allMentionKeys: string[]): string {
   let result = text;
   for (const key of allMentionKeys) {
-    result = result.replace(new RegExp(escapeRegExp(key) + '\\s*', 'g'), '');
+    result = result.replace(new RegExp(escapeRegExp(key) + "\\s*", "g"), "");
   }
   return result.trim();
 }
@@ -95,13 +95,13 @@ export function formatMentionAllForCard(): string {
 /** Prepend @mention tags (text format) to a message body. */
 export function buildMentionedMessage(targets: MentionInfo[], message: string): string {
   if (targets.length === 0) return message;
-  const mentionTags = targets.map(formatMentionForText).join(' ');
+  const mentionTags = targets.map(formatMentionForText).join(" ");
   return `${mentionTags}\n${message}`;
 }
 
 /** Prepend @mention tags (card format) to card markdown content. */
 export function buildMentionedCardContent(targets: MentionInfo[], message: string): string {
   if (targets.length === 0) return message;
-  const mentionTags = targets.map(formatMentionForCard).join(' ');
+  const mentionTags = targets.map(formatMentionForCard).join(" ");
   return `${mentionTags}\n${message}`;
 }

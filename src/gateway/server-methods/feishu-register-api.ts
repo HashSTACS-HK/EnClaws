@@ -6,11 +6,11 @@
  *   tenant.feishu.register.poll   - Poll for registration result (client_id, client_secret)
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { isDbInitialized } from "../../db/index.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
 import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import { isDbInitialized } from "../../db/index.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Feishu registration API base URLs
@@ -44,9 +44,7 @@ function resolveBaseUrl(domain?: string, env?: string): string {
 }
 
 function resolveOpenApiBase(domain?: string): string {
-  return domain === "lark"
-    ? FEISHU_OPEN_API_URLS.lark
-    : FEISHU_OPEN_API_URLS.feishu;
+  return domain === "lark" ? FEISHU_OPEN_API_URLS.lark : FEISHU_OPEN_API_URLS.feishu;
 }
 
 /**
@@ -71,7 +69,9 @@ async function fetchFeishuAppName(
       code?: number;
       tenant_access_token?: string;
     };
-    if (tokenJson.code !== 0 || !tokenJson.tenant_access_token) {return null;}
+    if (tokenJson.code !== 0 || !tokenJson.tenant_access_token) {
+      return null;
+    }
 
     const infoRes = await fetch(
       `${base}/open-apis/application/v6/applications/${appId}?lang=zh_cn`,
@@ -84,7 +84,9 @@ async function fetchFeishuAppName(
       code?: number;
       data?: { app?: { app_name?: string } };
     };
-    if (infoJson.code !== 0) {return null;}
+    if (infoJson.code !== 0) {
+      return null;
+    }
     return infoJson.data?.app?.app_name ?? null;
   } catch {
     return null;
@@ -100,7 +102,11 @@ function getTenantCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -146,9 +152,15 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
    * Returns:
    *   { deviceCode, verificationUrl, interval, expireIn }
    */
-  "tenant.feishu.register.begin": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+  "tenant.feishu.register.begin": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -169,7 +181,14 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
       const initRes = await postRegistration(baseUrl, new URLSearchParams({ action: "init" }));
       const methods = initRes.supported_auth_methods;
       if (!Array.isArray(methods) || !methods.includes("client_secret")) {
-        respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Current environment does not support client_secret auth"));
+        respond(
+          false,
+          undefined,
+          errorShape(
+            ErrorCodes.INVALID_REQUEST,
+            "Current environment does not support client_secret auth",
+          ),
+        );
         return;
       }
 
@@ -190,7 +209,11 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
       const expireIn = (beginRes.expire_in as number) ?? 600;
 
       if (!deviceCode || !verificationUrl) {
-        respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Failed to begin registration"));
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "Failed to begin registration"),
+        );
         return;
       }
 
@@ -203,7 +226,14 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
         env,
       });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, `Registration begin failed: ${err instanceof Error ? err.message : String(err)}`));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `Registration begin failed: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
     }
   },
 
@@ -224,9 +254,15 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
    * Returns on error:
    *   { status: "error", error, errorDescription? }
    */
-  "tenant.feishu.register.poll": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+  "tenant.feishu.register.poll": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "channel.create");
@@ -272,7 +308,9 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
       const clientSecret = pollRes.client_secret as string | undefined;
 
       if (clientId && clientSecret) {
-        const openId = (pollRes.user_info as Record<string, unknown> | undefined)?.open_id as string | undefined;
+        const openId = (pollRes.user_info as Record<string, unknown> | undefined)?.open_id as
+          | string
+          | undefined;
         // Best-effort: fetch the app's display name so the UI can pre-fill botName.
         const botName = await fetchFeishuAppName(clientId, clientSecret, effectiveDomain);
         respond(true, {
@@ -304,7 +342,14 @@ export const feishuRegisterHandlers: GatewayRequestHandlers = {
         errorDescription: pollRes.error_description as string | undefined,
       });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, `Registration poll failed: ${err instanceof Error ? err.message : String(err)}`));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `Registration poll failed: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
     }
   },
 };

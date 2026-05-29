@@ -17,20 +17,19 @@ import type {
   ChannelMessageActionAdapter,
   ChannelMessageActionName,
   OpenClawConfig,
-} from 'openclaw/plugin-sdk';
-import type { ChannelThreadingToolContext } from 'openclaw/plugin-sdk/channel-contract';
-import { extractToolSend } from 'openclaw/plugin-sdk/tool-send';
-import { readStringParam } from 'openclaw/plugin-sdk/param-readers';
-import { jsonResult, readReactionParams } from '../../core/sdk-compat';
+} from "openclaw/plugin-sdk";
+import type { ChannelThreadingToolContext } from "openclaw/plugin-sdk/channel-contract";
+import { readStringParam } from "openclaw/plugin-sdk/param-readers";
+import { extractToolSend } from "openclaw/plugin-sdk/tool-send";
+import { getEnabledLarkAccounts } from "../../core/accounts";
+import { LarkClient } from "../../core/lark-client";
+import { larkLogger } from "../../core/lark-logger";
+import { jsonResult, readReactionParams } from "../../core/sdk-compat";
+import { sendCardLark, sendTextLark } from "./deliver";
+import { uploadAndSendMediaLark } from "./media";
+import { addReactionFeishu, listReactionsFeishu, removeReactionFeishu } from "./reactions";
 
-import { LarkClient } from '../../core/lark-client';
-import { getEnabledLarkAccounts } from '../../core/accounts';
-import { larkLogger } from '../../core/lark-logger';
-import { addReactionFeishu, listReactionsFeishu, removeReactionFeishu } from './reactions';
-import { sendCardLark, sendTextLark } from './deliver';
-import { uploadAndSendMediaLark } from './media';
-
-const log = larkLogger('outbound/actions');
+const log = larkLogger("outbound/actions");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -41,7 +40,7 @@ const log = larkLogger('outbound/actions');
 function assertLarkOk(res: any, context: string): void {
   const code = res?.code;
   if (code !== undefined && code !== 0) {
-    const msg = res?.msg ?? 'unknown error';
+    const msg = res?.msg ?? "unknown error";
     throw new Error(`[feishu-actions] ${context}: code=${code}, msg=${msg}`);
   }
 }
@@ -51,11 +50,11 @@ function assertLarkOk(res: any, context: string): void {
 // ---------------------------------------------------------------------------
 
 const SUPPORTED_ACTIONS: Set<ChannelMessageActionName> = new Set([
-  'send',
-  'react',
-  'reactions',
-  'delete',
-  'unsend',
+  "send",
+  "react",
+  "reactions",
+  "delete",
+  "unsend",
   // "member-info",
 ]);
 
@@ -68,27 +67,27 @@ function parseCardParam(raw: unknown): Record<string, unknown> | undefined {
   if (raw == null) return undefined;
 
   // Already a non-array object — use directly.
-  if (typeof raw === 'object' && !Array.isArray(raw)) {
+  if (typeof raw === "object" && !Array.isArray(raw)) {
     return raw as Record<string, unknown>;
   }
 
   // String — attempt JSON.parse.
-  if (typeof raw === 'string') {
+  if (typeof raw === "string") {
     const trimmed = raw.trim();
-    if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
-      log.warn('params.card is a string but not a JSON object, ignoring');
+    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+      log.warn("params.card is a string but not a JSON object, ignoring");
       return undefined;
     }
     try {
       const parsed: unknown = JSON.parse(trimmed);
-      if (typeof parsed === 'object' && parsed != null && !Array.isArray(parsed)) {
-        log.info('params.card was a JSON string, parsed successfully');
+      if (typeof parsed === "object" && parsed != null && !Array.isArray(parsed)) {
+        log.info("params.card was a JSON string, parsed successfully");
         return parsed as Record<string, unknown>;
       }
-      log.warn('params.card JSON parsed but is not a plain object, ignoring');
+      log.warn("params.card JSON parsed but is not a plain object, ignoring");
       return undefined;
     } catch {
-      log.warn('params.card is a string but failed to JSON.parse, ignoring');
+      log.warn("params.card is a string but failed to JSON.parse, ignoring");
       return undefined;
     }
   }
@@ -118,20 +117,20 @@ function readFeishuSendParams(
   params: Record<string, unknown>,
   toolContext?: ChannelThreadingToolContext,
 ): FeishuSendParams {
-  const to = readStringParam(params, 'to') ?? '';
+  const to = readStringParam(params, "to") ?? "";
 
   const text =
-    readStringParam(params, 'message', { allowEmpty: true }) ??
-    readStringParam(params, 'text', { allowEmpty: true }) ??
-    '';
+    readStringParam(params, "message", { allowEmpty: true }) ??
+    readStringParam(params, "text", { allowEmpty: true }) ??
+    "";
 
   const mediaUrl =
-    readStringParam(params, 'media') ??
-    readStringParam(params, 'path') ??
-    readStringParam(params, 'filePath') ??
-    readStringParam(params, 'url');
+    readStringParam(params, "media") ??
+    readStringParam(params, "path") ??
+    readStringParam(params, "filePath") ??
+    readStringParam(params, "url");
 
-  const fileName = readStringParam(params, 'fileName') ?? readStringParam(params, 'name');
+  const fileName = readStringParam(params, "fileName") ?? readStringParam(params, "name");
 
   // Thread routing: when targeting the current chat (or unspecified),
   // inherit thread context from SDK toolContext.
@@ -139,8 +138,10 @@ function readFeishuSendParams(
   const replyInThread = sameChat && Boolean(toolContext?.currentThreadTs);
 
   const replyToMessageId =
-    readStringParam(params, 'replyTo') ??
-    (replyInThread && toolContext?.currentMessageId ? String(toolContext.currentMessageId) : undefined);
+    readStringParam(params, "replyTo") ??
+    (replyInThread && toolContext?.currentMessageId
+      ? String(toolContext.currentMessageId)
+      : undefined);
 
   const card = parseCardParam(params.card);
 
@@ -167,36 +168,41 @@ export const feishuMessageActions: ChannelMessageActionAdapter = {
     }
     return {
       actions: Array.from(SUPPORTED_ACTIONS),
-      capabilities: ['cards'],
+      capabilities: ["cards"],
       schema: null,
     };
   },
 
   supportsAction: ({ action }) => SUPPORTED_ACTIONS.has(action),
 
-  extractToolSend: ({ args }) => extractToolSend(args, 'sendMessage'),
+  extractToolSend: ({ args }) => extractToolSend(args, "sendMessage"),
 
   handleAction: async (ctx) => {
     const { action, params, cfg, accountId, toolContext } = ctx;
     const aid = accountId ?? undefined;
 
-    log.info(`handleAction: action=${action}, accountId=${aid ?? 'default'}`);
+    log.info(`handleAction: action=${action}, accountId=${aid ?? "default"}`);
 
     try {
       switch (action) {
-        case 'send':
-          return await deliverMessage(cfg, readFeishuSendParams(params, toolContext), aid, ctx.mediaLocalRoots);
-        case 'react':
+        case "send":
+          return await deliverMessage(
+            cfg,
+            readFeishuSendParams(params, toolContext),
+            aid,
+            ctx.mediaLocalRoots,
+          );
+        case "react":
           return await handleReact(cfg, params, aid);
-        case 'reactions':
+        case "reactions":
           return await handleReactions(cfg, params, aid);
-        case 'delete':
-        case 'unsend':
+        case "delete":
+        case "unsend":
           return await handleDelete(cfg, params, aid);
         default:
           throw new Error(
             `Action "${action}" is not supported for Feishu. ` +
-              `Supported actions: ${Array.from(SUPPORTED_ACTIONS).join(', ')}.`,
+              `Supported actions: ${Array.from(SUPPORTED_ACTIONS).join(", ")}.`,
           );
       }
     } catch (err) {
@@ -226,26 +232,28 @@ async function deliverMessage(
 ) {
   const { to, text, mediaUrl, fileName, replyToMessageId, replyInThread, card } = sp;
 
-  const payloadType = card ? 'card' : mediaUrl ? 'media' : 'text';
-  const target = to || replyToMessageId || 'unknown';
+  const payloadType = card ? "card" : mediaUrl ? "media" : "text";
+  const target = to || replyToMessageId || "unknown";
 
   log.info(
     `deliverMessage: type=${payloadType}, target=${target}, ` +
       `isReply=${Boolean(replyToMessageId)}, replyInThread=${replyInThread}, ` +
       `textLen=${text.trim().length}, hasMedia=${Boolean(mediaUrl)}, ` +
-      `fileName=${fileName ?? '(none)'}`,
+      `fileName=${fileName ?? "(none)"}`,
   );
 
   if (!text.trim() && !card && !mediaUrl) {
-    log.warn('deliverMessage: no payload, rejecting');
-    throw new Error('send requires at least one of: message, card, or media.');
+    log.warn("deliverMessage: no payload, rejecting");
+    throw new Error("send requires at least one of: message, card, or media.");
   }
 
   const sendCtx = { cfg, to, replyToMessageId, replyInThread, accountId };
 
   // Send text first if both text and card/media are present.
   if (text.trim() && (card || mediaUrl)) {
-    log.info(`deliverMessage: sending preceding text ` + `(${text.length} chars) before ${payloadType}`);
+    log.info(
+      `deliverMessage: sending preceding text ` + `(${text.length} chars) before ${payloadType}`,
+    );
     await sendTextLark({ ...sendCtx, text });
   }
 
@@ -278,7 +286,7 @@ async function deliverMedia(
 ) {
   const { to, mediaUrl, fileName, replyToMessageId, replyInThread } = sp;
 
-  log.info(`deliverMedia: url=${mediaUrl}, fileName=${fileName ?? '(auto)'}`);
+  log.info(`deliverMedia: url=${mediaUrl}, fileName=${fileName ?? "(auto)"}`);
 
   try {
     const result = await uploadAndSendMediaLark({
@@ -298,7 +306,7 @@ async function deliverMedia(
     log.error(`deliverMedia: upload failed for "${mediaUrl}": ${errMsg}`);
 
     // Fallback: send the URL with error reason as a quote above.
-    log.info('deliverMedia: falling back to text link');
+    log.info("deliverMedia: falling back to text link");
     const fallback = await sendTextLark({
       cfg,
       to,
@@ -321,21 +329,25 @@ async function deliverMedia(
 // Reaction handlers
 // ---------------------------------------------------------------------------
 
-async function handleReact(cfg: OpenClawConfig, params: Record<string, unknown>, accountId?: string) {
-  const messageId = readStringParam(params, 'messageId', { required: true });
+async function handleReact(
+  cfg: OpenClawConfig,
+  params: Record<string, unknown>,
+  accountId?: string,
+) {
+  const messageId = readStringParam(params, "messageId", { required: true });
   const { emoji, remove, isEmpty } = readReactionParams(params, {
-    removeErrorMessage: 'Emoji is required to remove a Feishu reaction.',
+    removeErrorMessage: "Emoji is required to remove a Feishu reaction.",
   });
 
   if (remove || isEmpty) {
-    log.info(`react: removing emoji=${emoji || 'all'} from messageId=${messageId}`);
+    log.info(`react: removing emoji=${emoji || "all"} from messageId=${messageId}`);
     const reactions = await listReactionsFeishu({
       cfg,
       messageId,
       emojiType: emoji || undefined,
       accountId,
     });
-    const botReactions = reactions.filter((r) => r.operatorType === 'app');
+    const botReactions = reactions.filter((r) => r.operatorType === "app");
     for (const r of botReactions) {
       await removeReactionFeishu({
         cfg,
@@ -359,9 +371,13 @@ async function handleReact(cfg: OpenClawConfig, params: Record<string, unknown>,
   return jsonResult({ ok: true, reactionId });
 }
 
-async function handleReactions(cfg: OpenClawConfig, params: Record<string, unknown>, accountId?: string) {
-  const messageId = readStringParam(params, 'messageId', { required: true });
-  const emojiType = readStringParam(params, 'emoji');
+async function handleReactions(
+  cfg: OpenClawConfig,
+  params: Record<string, unknown>,
+  accountId?: string,
+) {
+  const messageId = readStringParam(params, "messageId", { required: true });
+  const emojiType = readStringParam(params, "emoji");
 
   const reactions = await listReactionsFeishu({
     cfg,
@@ -385,8 +401,12 @@ async function handleReactions(cfg: OpenClawConfig, params: Record<string, unkno
 // Delete
 // ---------------------------------------------------------------------------
 
-async function handleDelete(cfg: OpenClawConfig, params: Record<string, unknown>, accountId?: string) {
-  const messageId = readStringParam(params, 'messageId', { required: true });
+async function handleDelete(
+  cfg: OpenClawConfig,
+  params: Record<string, unknown>,
+  accountId?: string,
+) {
+  const messageId = readStringParam(params, "messageId", { required: true });
   log.info(`delete: messageId=${messageId}`);
   const client = LarkClient.fromCfg(cfg, accountId).sdk;
 

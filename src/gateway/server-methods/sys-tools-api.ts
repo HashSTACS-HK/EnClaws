@@ -6,11 +6,11 @@
  *   sys.tools.update - Update sys_tools_config (deny list, profile, etc.)
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
+import { loadAndActivateSysConfig } from "../../config/sys-config.js";
 import { isDbInitialized } from "../../db/index.js";
 import { getSysToolsConfig, upsertSysToolsConfig } from "../../db/models/sys-config.js";
-import { loadAndActivateSysConfig } from "../../config/sys-config.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 export const sysToolsHandlers: GatewayRequestHandlers = {
   "sys.tools.get": async ({ respond }: GatewayRequestHandlerOptions) => {
@@ -37,8 +37,12 @@ export const sysToolsHandlers: GatewayRequestHandlers = {
       profile?: string;
     };
     const updates: Record<string, unknown> = {};
-    if (deny !== undefined) {updates.deny = deny;}
-    if (profile !== undefined) {updates.profile = profile;}
+    if (deny !== undefined) {
+      updates.deny = deny;
+    }
+    if (profile !== undefined) {
+      updates.profile = profile;
+    }
 
     if (Object.keys(updates).length === 0) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "No fields to update"));

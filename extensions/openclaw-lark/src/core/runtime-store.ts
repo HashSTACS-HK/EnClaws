@@ -8,11 +8,11 @@
  * importing LarkClient directly, which would otherwise create static cycles.
  */
 
-import type { PluginRuntime } from 'openclaw/plugin-sdk';
+import type { PluginRuntime } from "openclaw/plugin-sdk";
 
 const RUNTIME_NOT_INITIALIZED_ERROR =
-  'Feishu plugin runtime has not been initialised. ' +
-  'Ensure LarkClient.setRuntime() is called during plugin activation.';
+  "Feishu plugin runtime has not been initialised. " +
+  "Ensure LarkClient.setRuntime() is called during plugin activation.";
 
 let runtime: PluginRuntime | null = null;
 

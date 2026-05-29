@@ -9,10 +9,10 @@
  * into the agent envelope.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { FeishuMediaInfo, ResourceDescriptor } from '../types';
-import { LarkClient } from '../../core/lark-client';
-import { downloadMessageResourceFeishu } from '../outbound/media';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { LarkClient } from "../../core/lark-client";
+import { downloadMessageResourceFeishu } from "../outbound/media";
+import type { FeishuMediaInfo, ResourceDescriptor } from "../types";
 
 // ---------------------------------------------------------------------------
 // Resource-descriptor-based download
@@ -41,7 +41,7 @@ export async function downloadResources(params: {
 
   for (const res of resources) {
     try {
-      const resourceType = res.type === 'image' ? 'image' : 'file';
+      const resourceType = res.type === "image" ? "image" : "file";
       const result = await downloadMessageResourceFeishu({
         cfg,
         messageId,
@@ -56,7 +56,14 @@ export async function downloadResources(params: {
       }
 
       const fileName = result.fileName || res.fileName;
-      const saved = await core.channel.media.saveMediaBuffer(result.buffer, contentType, 'inbound', maxBytes, fileName, params.mediaBaseDir);
+      const saved = await core.channel.media.saveMediaBuffer(
+        result.buffer,
+        contentType,
+        "inbound",
+        maxBytes,
+        fileName,
+        params.mediaBaseDir,
+      );
 
       const placeholder = inferPlaceholderFromType(res.type);
       out.push({
@@ -76,18 +83,18 @@ export async function downloadResources(params: {
   return out;
 }
 
-function inferPlaceholderFromType(type: ResourceDescriptor['type']): string {
+function inferPlaceholderFromType(type: ResourceDescriptor["type"]): string {
   switch (type) {
-    case 'image':
-      return '<media:image>';
-    case 'file':
-      return '<media:document>';
-    case 'audio':
-      return '<media:audio>';
-    case 'video':
-      return '<media:video>';
-    case 'sticker':
-      return '<media:sticker>';
+    case "image":
+      return "<media:image>";
+    case "file":
+      return "<media:document>";
+    case "audio":
+      return "<media:audio>";
+    case "video":
+      return "<media:video>";
+    case "sticker":
+      return "<media:sticker>";
   }
 }
 

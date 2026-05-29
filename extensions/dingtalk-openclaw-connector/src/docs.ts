@@ -3,9 +3,9 @@
  * 支持读写钉钉在线文档（文档、表格等）
  */
 
-import type { DingtalkConfig } from './types/index.ts';
-import { getAccessToken, DINGTALK_API } from './utils/index.ts';
-import { dingtalkHttp } from './utils/http-client.ts';
+import type { DingtalkConfig } from "./types/index.ts";
+import { dingtalkHttp } from "./utils/http-client.ts";
+import { getAccessToken, DINGTALK_API } from "./utils/index.ts";
 
 // ============ 类型定义 ============
 
@@ -41,8 +41,8 @@ export class DingtalkDocsClient {
   private async getHeaders(): Promise<Record<string, string>> {
     const token = await getAccessToken(this.config);
     return {
-      'x-acs-dingtalk-access-token': token,
-      'Content-Type': 'application/json',
+      "x-acs-dingtalk-access-token": token,
+      "Content-Type": "application/json",
     };
   }
 
@@ -64,8 +64,8 @@ export class DingtalkDocsClient {
 
       return {
         docId: data.docId || docId,
-        title: data.title || '',
-        docType: data.docType || 'unknown',
+        title: data.title || "",
+        docType: data.docType || "unknown",
         creatorId: data.creatorId,
         updatedAt: data.updatedAt,
       };
@@ -81,37 +81,42 @@ export class DingtalkDocsClient {
   async readDoc(nodeId: string, operatorId?: string): Promise<string | null> {
     try {
       const headers = await this.getHeaders();
-      this.log?.info?.(`[DingTalk][Docs] 读取知识库节点: nodeId=${nodeId}, operatorId=${operatorId}`);
+      this.log?.info?.(
+        `[DingTalk][Docs] 读取知识库节点: nodeId=${nodeId}, operatorId=${operatorId}`,
+      );
 
       if (!operatorId) {
-        this.log?.error?.('[DingTalk][Docs] readDoc 需要 operatorId（unionId）');
+        this.log?.error?.("[DingTalk][Docs] readDoc 需要 operatorId（unionId）");
         return null;
       }
 
-      const resp = await dingtalkHttp.get(
-        `${DINGTALK_API}/v2.0/wiki/nodes/${nodeId}/content`,
-        { headers, params: { operatorId }, timeout: 30_000 },
-      );
+      const resp = await dingtalkHttp.get(`${DINGTALK_API}/v2.0/wiki/nodes/${nodeId}/content`, {
+        headers,
+        params: { operatorId },
+        timeout: 30_000,
+      });
 
       const node = resp.data?.node || resp.data;
-      const name = node.name || '未知文档';
-      const category = node.category || 'unknown';
-      const url = node.url || '';
-      const workspaceId = node.workspaceId || '';
+      const name = node.name || "未知文档";
+      const category = node.category || "unknown";
+      const url = node.url || "";
+      const workspaceId = node.workspaceId || "";
 
       const content = [
         `文档名: ${name}`,
         `类型: ${category}`,
         `URL: ${url}`,
         `工作区: ${workspaceId}`,
-      ].join('\n');
+      ].join("\n");
 
       this.log?.info?.(`[DingTalk][Docs] 节点信息获取成功: name=${name}, category=${category}`);
       return content;
     } catch (err: any) {
       this.log?.error?.(`[DingTalk][Docs] 读取节点失败: ${err.message}`);
       if (err.response) {
-        this.log?.error?.(`[DingTalk][Docs] 错误详情: status=${err.response.status} data=${JSON.stringify(err.response.data)}`);
+        this.log?.error?.(
+          `[DingTalk][Docs] 错误详情: status=${err.response.status} data=${JSON.stringify(err.response.data)}`,
+        );
       }
       return null;
     }
@@ -136,17 +141,15 @@ export class DingtalkDocsClient {
   /**
    * 向文档追加内容
    */
-  async appendToDoc(
-    docId: string,
-    content: string,
-    index: number = -1,
-  ): Promise<boolean> {
+  async appendToDoc(docId: string, content: string, index: number = -1): Promise<boolean> {
     try {
       const headers = await this.getHeaders();
-      this.log?.info?.(`[DingTalk][Docs] 向文档追加内容: docId=${docId}, contentLen=${content.length}`);
+      this.log?.info?.(
+        `[DingTalk][Docs] 向文档追加内容: docId=${docId}, contentLen=${content.length}`,
+      );
 
       const body = {
-        blockType: 'PARAGRAPH',
+        blockType: "PARAGRAPH",
         body: {
           text: content,
         },
@@ -164,7 +167,9 @@ export class DingtalkDocsClient {
     } catch (err: any) {
       this.log?.error?.(`[DingTalk][Docs] 追加内容失败: ${err.message}`);
       if (err.response) {
-        this.log?.error?.(`[DingTalk][Docs] 错误详情: status=${err.response.status} data=${JSON.stringify(err.response.data)}`);
+        this.log?.error?.(
+          `[DingTalk][Docs] 错误详情: status=${err.response.status} data=${JSON.stringify(err.response.data)}`,
+        );
       }
       return false;
     }
@@ -173,20 +178,16 @@ export class DingtalkDocsClient {
   /**
    * 创建新文档
    */
-  async createDoc(
-    spaceId: string,
-    title: string,
-    content?: string,
-  ): Promise<DocInfo | null> {
+  async createDoc(spaceId: string, title: string, content?: string): Promise<DocInfo | null> {
     try {
       const headers = await this.getHeaders();
       this.log?.info?.(`[DingTalk][Docs] 创建文档: spaceId=${spaceId}, title=${title}`);
 
       const body: any = {
         spaceId,
-        parentDentryId: '',
+        parentDentryId: "",
         name: title,
-        docType: 'alidoc',
+        docType: "alidoc",
       };
 
       const resp = await dingtalkHttp.post(
@@ -199,9 +200,9 @@ export class DingtalkDocsClient {
       this.log?.info?.(`[DingTalk][Docs] 文档创建成功: docId=${data?.docId}`);
 
       const docInfo: DocInfo = {
-        docId: data.docId || data.dentryUuid || '',
+        docId: data.docId || data.dentryUuid || "",
         title: title,
-        docType: data.docType || 'alidoc',
+        docType: data.docType || "alidoc",
       };
 
       if (content && docInfo.docId) {
@@ -212,7 +213,9 @@ export class DingtalkDocsClient {
     } catch (err: any) {
       this.log?.error?.(`[DingTalk][Docs] 创建文档失败: ${err.message}`);
       if (err.response) {
-        this.log?.error?.(`[DingTalk][Docs] 错误详情: status=${err.response.status} data=${JSON.stringify(err.response.data)}`);
+        this.log?.error?.(
+          `[DingTalk][Docs] 错误详情: status=${err.response.status} data=${JSON.stringify(err.response.data)}`,
+        );
       }
       return null;
     }
@@ -221,28 +224,26 @@ export class DingtalkDocsClient {
   /**
    * 搜索文档
    */
-  async searchDocs(
-    keyword: string,
-    spaceId?: string,
-  ): Promise<DocInfo[]> {
+  async searchDocs(keyword: string, spaceId?: string): Promise<DocInfo[]> {
     try {
       const headers = await this.getHeaders();
-      this.log?.info?.(`[DingTalk][Docs] 搜索文档: keyword=${keyword}, spaceId=${spaceId || '全部'}`);
+      this.log?.info?.(
+        `[DingTalk][Docs] 搜索文档: keyword=${keyword}, spaceId=${spaceId || "全部"}`,
+      );
 
       const body: any = { keyword, maxResults: 20 };
       if (spaceId) body.spaceId = spaceId;
 
-      const resp = await dingtalkHttp.post(
-        `${DINGTALK_API}/v1.0/doc/docs/search`,
-        body,
-        { headers, timeout: 10_000 },
-      );
+      const resp = await dingtalkHttp.post(`${DINGTALK_API}/v1.0/doc/docs/search`, body, {
+        headers,
+        timeout: 10_000,
+      });
 
       const items = resp.data?.items || [];
       const docs: DocInfo[] = items.map((item: any) => ({
-        docId: item.docId || item.dentryUuid || '',
-        title: item.name || item.title || '',
-        docType: item.docType || 'unknown',
+        docId: item.docId || item.dentryUuid || "",
+        title: item.name || item.title || "",
+        docType: item.docType || "unknown",
         creatorId: item.creatorId,
         updatedAt: item.updatedAt,
       }));
@@ -258,27 +259,27 @@ export class DingtalkDocsClient {
   /**
    * 列出空间下的文档
    */
-  async listDocs(
-    spaceId: string,
-    parentId?: string,
-  ): Promise<DocInfo[]> {
+  async listDocs(spaceId: string, parentId?: string): Promise<DocInfo[]> {
     try {
       const headers = await this.getHeaders();
-      this.log?.info?.(`[DingTalk][Docs] 列出文档: spaceId=${spaceId}, parentId=${parentId || '根目录'}`);
+      this.log?.info?.(
+        `[DingTalk][Docs] 列出文档: spaceId=${spaceId}, parentId=${parentId || "根目录"}`,
+      );
 
       const params: any = { maxResults: 50 };
       if (parentId) params.parentDentryId = parentId;
 
-      const resp = await dingtalkHttp.get(
-        `${DINGTALK_API}/v1.0/doc/spaces/${spaceId}/dentries`,
-        { headers, params, timeout: 10_000 },
-      );
+      const resp = await dingtalkHttp.get(`${DINGTALK_API}/v1.0/doc/spaces/${spaceId}/dentries`, {
+        headers,
+        params,
+        timeout: 10_000,
+      });
 
       const items = resp.data?.items || [];
       const docs: DocInfo[] = items.map((item: any) => ({
-        docId: item.dentryUuid || item.docId || '',
-        title: item.name || '',
-        docType: item.docType || item.dentryType || 'unknown',
+        docId: item.dentryUuid || item.docId || "",
+        title: item.name || "",
+        docType: item.docType || item.dentryType || "unknown",
         creatorId: item.creatorId,
         updatedAt: item.updatedAt,
       }));

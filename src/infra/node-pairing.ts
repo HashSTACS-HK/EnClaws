@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { TenantContext } from "../types/tenant-context.js";
 import {
   createAsyncLock,
   pruneExpiredPending,
@@ -9,7 +10,6 @@ import {
 } from "./pairing-files.js";
 import { rejectPendingPairingRequest } from "./pairing-pending.js";
 import { generatePairingToken, verifyPairingToken } from "./pairing-token.js";
-import type { TenantContext } from "../types/tenant-context.js";
 
 export type NodePairingPendingRequest = {
   requestId: string;
@@ -64,7 +64,10 @@ const PENDING_TTL_MS = 5 * 60 * 1000;
 
 const withLock = createAsyncLock();
 
-async function loadState(baseDir?: string, tenantContext?: TenantContext): Promise<NodePairingStateFile> {
+async function loadState(
+  baseDir?: string,
+  tenantContext?: TenantContext,
+): Promise<NodePairingStateFile> {
   const { pendingPath, pairedPath } = resolvePairingPaths(baseDir, "nodes", tenantContext);
   const [pending, paired] = await Promise.all([
     readJsonFile<Record<string, NodePairingPendingRequest>>(pendingPath),
@@ -78,7 +81,11 @@ async function loadState(baseDir?: string, tenantContext?: TenantContext): Promi
   return state;
 }
 
-async function persistState(state: NodePairingStateFile, baseDir?: string, tenantContext?: TenantContext) {
+async function persistState(
+  state: NodePairingStateFile,
+  baseDir?: string,
+  tenantContext?: TenantContext,
+) {
   const { pendingPath, pairedPath } = resolvePairingPaths(baseDir, "nodes", tenantContext);
   await Promise.all([
     writeJsonAtomic(pendingPath, state.pendingById),
@@ -94,7 +101,10 @@ function newToken() {
   return generatePairingToken();
 }
 
-export async function listNodePairing(baseDir?: string, tenantContext?: TenantContext): Promise<NodePairingList> {
+export async function listNodePairing(
+  baseDir?: string,
+  tenantContext?: TenantContext,
+): Promise<NodePairingList> {
   const state = await loadState(baseDir, tenantContext);
   const pending = Object.values(state.pendingById).toSorted((a, b) => b.ts - a.ts);
   const paired = Object.values(state.pairedByNodeId).toSorted(

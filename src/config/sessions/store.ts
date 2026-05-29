@@ -771,8 +771,8 @@ async function saveSessionStoreUnlocked(
   // In multi-tenant mode, block writes to root-level agents dir.
   // Session stores should only live under tenants/{tenantId}/users/{userId}/.
   {
-    const normalizedPath = storePath.replace(/\\/g, '/');
-    if (normalizedPath.includes('/agents/') && !normalizedPath.includes('/tenants/')) {
+    const normalizedPath = storePath.replace(/\\/g, "/");
+    if (normalizedPath.includes("/agents/") && !normalizedPath.includes("/tenants/")) {
       const { isMultiTenantMode } = await import("../../config/multi-tenant.js");
       if (isMultiTenantMode()) {
         return;

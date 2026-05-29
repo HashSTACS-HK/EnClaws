@@ -8,6 +8,7 @@ inline: true
 ---
 
 # feishu-wiki
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 直接用 `exec` 执行，不要检查文件或环境。
@@ -114,38 +115,38 @@ node ./wiki.js --open-id "ou_xxx" --action node_copy \
 
 ## 参数总览
 
-| 参数 | 必填 | 说明 |
-|---|---|---|
-| `--open-id` | 是 | 当前用户 open_id |
-| `--action` | 是 | 见下方 Action 表 |
-| `--space-id` | 多数 action 必填 | 知识空间 ID |
-| `--token` | node_get 必填 | 节点 token 或文档 token |
-| `--node-token` | move/copy 必填 | 被操作的节点 token |
-| `--parent-node-token` | 可选 | node_list 时指定父节点；node_create 时指定父节点 |
-| `--target-parent-token` | 可选 | move/copy 目标父节点 |
-| `--target-space-id` | 可选 | copy 时跨空间目标 space_id |
-| `--obj-type` | node_create 必填 | `docx` / `sheet` / `bitable` / `mindnote` / `file` / `slides` |
-| `--node-type` | node_create 必填 | `origin`（新建）/ `shortcut`（快捷方式） |
-| `--origin-node-token` | shortcut 时必填 | 快捷方式指向的原始节点 |
-| `--title` | 可选 | 节点/空间标题 |
-| `--name` | space_create 必填 | 知识空间名称 |
-| `--description` | 可选 | 知识空间描述 |
-| `--page-size` | 可选 | 分页大小 |
-| `--page-token` | 可选 | 翻页 token |
-| `--obj-type` | node_get 可选 | 默认 `wiki`，可指定 `doc`/`sheet`/`bitable` 等 |
+| 参数                    | 必填              | 说明                                                          |
+| ----------------------- | ----------------- | ------------------------------------------------------------- |
+| `--open-id`             | 是                | 当前用户 open_id                                              |
+| `--action`              | 是                | 见下方 Action 表                                              |
+| `--space-id`            | 多数 action 必填  | 知识空间 ID                                                   |
+| `--token`               | node_get 必填     | 节点 token 或文档 token                                       |
+| `--node-token`          | move/copy 必填    | 被操作的节点 token                                            |
+| `--parent-node-token`   | 可选              | node_list 时指定父节点；node_create 时指定父节点              |
+| `--target-parent-token` | 可选              | move/copy 目标父节点                                          |
+| `--target-space-id`     | 可选              | copy 时跨空间目标 space_id                                    |
+| `--obj-type`            | node_create 必填  | `docx` / `sheet` / `bitable` / `mindnote` / `file` / `slides` |
+| `--node-type`           | node_create 必填  | `origin`（新建）/ `shortcut`（快捷方式）                      |
+| `--origin-node-token`   | shortcut 时必填   | 快捷方式指向的原始节点                                        |
+| `--title`               | 可选              | 节点/空间标题                                                 |
+| `--name`                | space_create 必填 | 知识空间名称                                                  |
+| `--description`         | 可选              | 知识空间描述                                                  |
+| `--page-size`           | 可选              | 分页大小                                                      |
+| `--page-token`          | 可选              | 翻页 token                                                    |
+| `--obj-type`            | node_get 可选     | 默认 `wiki`，可指定 `doc`/`sheet`/`bitable` 等                |
 
 ## Action 速查
 
-| Action | 说明 |
-|---|---|
-| `space_list` | 列出当前用户可见的知识空间 |
-| `space_get` | 获取指定知识空间详情 |
-| `space_create` | 创建知识空间 |
-| `node_list` | 列出空间内节点（根节点或指定父节点的子节点） |
-| `node_get` | 获取节点详情（可将 wiki token 转换为 obj_token），返回 `url` |
-| `node_create` | 在空间内创建新文档节点，返回 `url` |
-| `node_move` | 移动节点到另一位置，返回 `url` |
-| `node_copy` | 复制节点到另一位置（可跨空间），返回 `url` |
+| Action         | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `space_list`   | 列出当前用户可见的知识空间                                   |
+| `space_get`    | 获取指定知识空间详情                                         |
+| `space_create` | 创建知识空间                                                 |
+| `node_list`    | 列出空间内节点（根节点或指定父节点的子节点）                 |
+| `node_get`     | 获取节点详情（可将 wiki token 转换为 obj_token），返回 `url` |
+| `node_create`  | 在空间内创建新文档节点，返回 `url`                           |
+| `node_move`    | 移动节点到另一位置，返回 `url`                               |
+| `node_copy`    | 复制节点到另一位置（可跨空间），返回 `url`                   |
 
 ## 典型场景
 

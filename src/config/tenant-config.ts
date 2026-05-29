@@ -12,13 +12,17 @@
 
 // normalizeProviderId no longer needed — providers are keyed by tenant_models.id
 import { isDbInitialized } from "../db/index.js";
-import { getTenantById } from "../db/models/tenant.js";
-import { listTenantAgents, toConfigAgentsList, buildTenantModelProviderKey } from "../db/models/tenant-agent.js";
+import {
+  listTenantAgents,
+  toConfigAgentsList,
+  buildTenantModelProviderKey,
+} from "../db/models/tenant-agent.js";
 import { listTenantChannels, toConfigChannels } from "../db/models/tenant-channel.js";
 import { listTenantModels } from "../db/models/tenant-model.js";
+import { getTenantById } from "../db/models/tenant.js";
 import type { TenantSettings } from "../db/types.js";
-import { loadConfig, type OpenClawConfig } from "./config.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
+import { loadConfig, type OpenClawConfig } from "./config.js";
 
 const log = createSubsystemLogger("tenant-config");
 
@@ -65,7 +69,13 @@ export async function loadTenantConfig(
     listTenantModels(tenantId, { activeOnly: true }),
   ]);
 
-  const tenantConfig = await buildTenantConfig(globalConfig, tenant.settings, agents, channels, tenantModels);
+  const tenantConfig = await buildTenantConfig(
+    globalConfig,
+    tenant.settings,
+    agents,
+    channels,
+    tenantModels,
+  );
 
   // Cache the result
   tenantConfigCache.set(cacheKey, {

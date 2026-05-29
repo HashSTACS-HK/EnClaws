@@ -31,7 +31,9 @@ export async function createChannelApp(params: {
   groupPolicy?: ChannelPolicy;
   agentId?: string | null;
 }): Promise<TenantChannelApp> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.createChannelApp(params);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.createChannelApp(params);
+  }
   const result = await query(
     `INSERT INTO tenant_channel_apps (channel_id, tenant_id, app_id, app_secret, bot_name, group_policy, agent_id)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -50,7 +52,9 @@ export async function createChannelApp(params: {
 }
 
 export async function listChannelApps(channelId: string): Promise<TenantChannelApp[]> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.listChannelApps(channelId);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.listChannelApps(channelId);
+  }
   const result = await query(
     "SELECT * FROM tenant_channel_apps WHERE channel_id = $1 ORDER BY created_at ASC",
     [channelId],
@@ -61,9 +65,16 @@ export async function listChannelApps(channelId: string): Promise<TenantChannelA
 export async function updateChannelApp(
   appDbId: string,
   tenantId: string,
-  updates: Partial<Pick<TenantChannelApp, "appId" | "appSecret" | "botName" | "groupPolicy" | "agentId" | "isActive">>,
+  updates: Partial<
+    Pick<
+      TenantChannelApp,
+      "appId" | "appSecret" | "botName" | "groupPolicy" | "agentId" | "isActive"
+    >
+  >,
 ): Promise<TenantChannelApp | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.updateChannelApp(appDbId, tenantId, updates);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.updateChannelApp(appDbId, tenantId, updates);
+  }
   const sets: string[] = [];
   const values: unknown[] = [];
   let idx = 1;
@@ -93,7 +104,9 @@ export async function updateChannelApp(
     values.push(updates.isActive);
   }
 
-  if (sets.length === 0) {return null;}
+  if (sets.length === 0) {
+    return null;
+  }
 
   values.push(tenantId, appDbId);
   const result = await query(
@@ -117,7 +130,9 @@ export async function findTenantByChannelApp(
   channelType: string,
   appId: string,
 ): Promise<{ tenantId: string; userId: string; channelId?: string } | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.findTenantByChannelApp(channelType, appId);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.findTenantByChannelApp(channelType, appId);
+  }
   // Some channel plugins (e.g. WeCom) normalize the inbound accountId to
   // lowercase, while tenant_channel_apps.app_id stores the original-case
   // credential id from onboarding. Match case-insensitively so the lookup
@@ -133,11 +148,15 @@ export async function findTenantByChannelApp(
      LIMIT 1`,
     [channelType, appId],
   );
-  if (result.rows.length === 0) {return null;}
+  if (result.rows.length === 0) {
+    return null;
+  }
   const row = result.rows[0];
   const tenantId = row.tenant_id as string;
   const userId = row.created_by as string | null;
-  if (!userId) {return null;}
+  if (!userId) {
+    return null;
+  }
   return { tenantId, userId, channelId: row.channel_id as string };
 }
 
@@ -151,7 +170,9 @@ export async function agentChannelBindingExists(
   agentId: string,
   channelType: string,
 ): Promise<boolean> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.agentChannelBindingExists(tenantId, agentId, channelType);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.agentChannelBindingExists(tenantId, agentId, channelType);
+  }
   const result = await query(
     `SELECT 1
      FROM tenant_channel_apps ca
@@ -175,7 +196,9 @@ export async function findChannelAppByAgent(
   tenantId: string,
   agentId: string,
 ): Promise<{ channelType: string; appId: string; appSecret: string; botName: string } | null> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.findChannelAppByAgent(tenantId, agentId);}
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.findChannelAppByAgent(tenantId, agentId);
+  }
   const result = await query(
     `SELECT tc.channel_type, ca.app_id, ca.app_secret, ca.bot_name
      FROM tenant_channel_apps ca
@@ -187,7 +210,9 @@ export async function findChannelAppByAgent(
      LIMIT 1`,
     [tenantId, agentId],
   );
-  if (result.rows.length === 0) {return null;}
+  if (result.rows.length === 0) {
+    return null;
+  }
   const row = result.rows[0];
   return {
     channelType: row.channel_type as string,
@@ -198,11 +223,13 @@ export async function findChannelAppByAgent(
 }
 
 export async function deleteChannelApp(appDbId: string, tenantId: string): Promise<boolean> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.deleteChannelApp(appDbId, tenantId);}
-  const result = await query(
-    "DELETE FROM tenant_channel_apps WHERE id = $1 AND tenant_id = $2",
-    [appDbId, tenantId],
-  );
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.deleteChannelApp(appDbId, tenantId);
+  }
+  const result = await query("DELETE FROM tenant_channel_apps WHERE id = $1 AND tenant_id = $2", [
+    appDbId,
+    tenantId,
+  ]);
   return (result.rowCount ?? 0) > 0;
 }
 
@@ -210,16 +237,20 @@ export async function deleteChannelApp(appDbId: string, tenantId: string): Promi
  * List all active channel apps for a tenant, joined with channel info.
  * Used by the agent creation form to populate the channel app dropdown.
  */
-export async function listAllTenantChannelApps(tenantId: string): Promise<Array<{
-  id: string;
-  channelId: string;
-  channelType: string;
-  channelName: string | null;
-  appId: string;
-  botName: string;
-  agentId: string | null;
-}>> {
-  if (getDbType() === DB_SQLITE) {return sqliteChannelApp.listAllTenantChannelApps(tenantId);}
+export async function listAllTenantChannelApps(tenantId: string): Promise<
+  Array<{
+    id: string;
+    channelId: string;
+    channelType: string;
+    channelName: string | null;
+    appId: string;
+    botName: string;
+    agentId: string | null;
+  }>
+> {
+  if (getDbType() === DB_SQLITE) {
+    return sqliteChannelApp.listAllTenantChannelApps(tenantId);
+  }
   const result = await query(
     `SELECT ca.id, ca.channel_id, tc.channel_type, tc.channel_name,
             ca.app_id, ca.bot_name, ca.agent_id

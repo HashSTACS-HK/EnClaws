@@ -1,7 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-
-import type { WebhookInboundMessage, WecomWebhookTarget } from "./types.js";
 import { StreamStore } from "./state.js";
+import type { WebhookInboundMessage, WecomWebhookTarget } from "./types.js";
 
 describe("wecom StreamStore queue", () => {
   test("does not merge into active batch; flushes queued batch after active finishes", async () => {

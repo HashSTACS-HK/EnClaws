@@ -4,7 +4,7 @@ title: "We Did Something That Might Be Misunderstood"
 date: 2026-04-03
 ---
 
-*------The launch of EnClaws, and why we didn't build "just another AI assistant"*
+_------The launch of EnClaws, and why we didn't build "just another AI assistant"_
 
 EnClaws Team · 2026
 
@@ -20,7 +20,7 @@ When more people start using it, the problems arrive—can it serve fifty sales 
 
 These problems aren't caused by "AI not being smart enough." They exist because enterprises lack the infrastructure to truly run AI as a workforce.
 
-> *Managing one AI is easy. Managing a fleet of AI is the real enterprise problem.*
+> _Managing one AI is easy. Managing a fleet of AI is the real enterprise problem._
 
 ## What We Saw
 
@@ -34,7 +34,7 @@ Most products are solving "how to make one AI smarter" or "how to embed AI into 
 
 That is why EnClaws exists.
 
-> *Not making one AI smarter—making a fleet of AI work controllably inside an enterprise.*
+> _Not making one AI smarter—making a fleet of AI work controllably inside an enterprise._
 
 ## What EnClaws Does
 
@@ -56,7 +56,7 @@ Our core capabilities revolve around six things:
 
 **Sixth, audit and observability.** The more capable AI becomes, the more governance it needs. EnClaws gives enterprises visibility into every assistant's execution state, invocation paths, consumption costs, and risk signals, with full behavioral replay. When AI handles a business process, it's no longer a black box.
 
-> *EnClaws turns AI from "demo capability" into "operational capability."*
+> _EnClaws turns AI from "demo capability" into "operational capability."_
 
 ## What We Are Not
 
@@ -90,8 +90,8 @@ But we believe that what truly determines how far AI can go inside an enterprise
 
 That is what EnClaws exists for.
 
-> *How an enterprise can governably run a fleet of digital workers—that is what we believe is most worth building.*
+> _How an enterprise can governably run a fleet of digital workers—that is what we believe is most worth building._
 
 **If you're thinking about the same questions, we'd love to hear from you.**
 
-*—— EnClaws Team*
+_—— EnClaws Team_

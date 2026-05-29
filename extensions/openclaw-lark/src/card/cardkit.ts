@@ -5,15 +5,15 @@
  * CardKit streaming APIs for Lark/Feishu.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import { LarkClient } from '../core/lark-client';
-import { larkLogger } from '../core/lark-logger';
-import { runWithMessageUnavailableGuard } from '../core/message-unavailable';
-import { normalizeFeishuTarget, normalizeMessageId, resolveReceiveIdType } from '../core/targets';
-import type { FeishuSendResult } from '../messaging/types';
-import { CardKitApiError } from './card-error';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { LarkClient } from "../core/lark-client";
+import { larkLogger } from "../core/lark-logger";
+import { runWithMessageUnavailableGuard } from "../core/message-unavailable";
+import { normalizeFeishuTarget, normalizeMessageId, resolveReceiveIdType } from "../core/targets";
+import type { FeishuSendResult } from "../messaging/types";
+import { CardKitApiError } from "./card-error";
 
-const log = larkLogger('card/cardkit');
+const log = larkLogger("card/cardkit");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,7 +52,7 @@ function logCardKitResponse(params: { resp: CardKitResponse; api: string; contex
       context,
       fullResponse: resp,
     });
-    throw new CardKitApiError({ api, code, msg: msg ?? '', context });
+    throw new CardKitApiError({ api, code, msg: msg ?? "", context });
   }
 }
 
@@ -78,17 +78,19 @@ export async function createCardEntity(params: {
   // SDK 返回类型不完整，运行时包含 code/msg/data 字段
   const response = (await client.cardkit.v1.card.create({
     data: {
-      type: 'card_json',
+      type: "card_json",
       data: JSON.stringify(card),
     },
   })) as CardKitResponse;
 
   // 兼容不同 SDK 包装层：优先 data.card_id，回退顶层 card_id
   const cardId =
-    ((response.data?.card_id ?? (response as Record<string, unknown>).card_id) as string | undefined) ?? null;
+    ((response.data?.card_id ?? (response as Record<string, unknown>).card_id) as
+      | string
+      | undefined) ?? null;
   logCardKitResponse({
     resp: response,
-    api: 'card.create',
+    api: "card.create",
     context: `cardId=${cardId}`,
   });
   return cardId;
@@ -124,7 +126,7 @@ export async function streamCardContent(params: {
   })) as CardKitResponse;
   logCardKitResponse({
     resp,
-    api: 'cardElement.content',
+    api: "cardElement.content",
     context: `seq=${sequence}, contentLen=${content.length}`,
   });
 }
@@ -153,14 +155,14 @@ export async function updateCardKitCard(params: {
   // SDK 返回类型不完整，运行时包含 code/msg 字段
   const resp = (await client.cardkit.v1.card.update({
     data: {
-      card: { type: 'card_json', data: JSON.stringify(card) },
+      card: { type: "card_json", data: JSON.stringify(card) },
       sequence,
     },
     path: { card_id: cardId },
   })) as CardKitResponse;
   logCardKitResponse({
     resp,
-    api: 'card.update',
+    api: "card.update",
     context: `seq=${sequence}, cardId=${cardId}`,
   });
 }
@@ -195,7 +197,7 @@ export async function sendCardByCardId(params: {
   const client = LarkClient.fromCfg(cfg, accountId).sdk;
 
   const contentPayload = JSON.stringify({
-    type: 'card',
+    type: "card",
     data: { card_id: cardId },
   });
 
@@ -204,20 +206,20 @@ export async function sendCardByCardId(params: {
     const normalizedId = normalizeMessageId(replyToMessageId);
     const response = await runWithMessageUnavailableGuard({
       messageId: normalizedId,
-      operation: 'im.message.reply(interactive.cardkit)',
+      operation: "im.message.reply(interactive.cardkit)",
       fn: () =>
         client.im.message.reply({
           path: { message_id: normalizedId! },
           data: {
             content: contentPayload,
-            msg_type: 'interactive',
+            msg_type: "interactive",
             reply_in_thread: replyInThread,
           },
         }),
     });
     return {
-      messageId: response?.data?.message_id ?? '',
-      chatId: response?.data?.chat_id ?? '',
+      messageId: response?.data?.message_id ?? "",
+      chatId: response?.data?.chat_id ?? "",
     };
   }
 
@@ -233,14 +235,14 @@ export async function sendCardByCardId(params: {
     params: { receive_id_type: receiveIdType as any },
     data: {
       receive_id: target,
-      msg_type: 'interactive',
+      msg_type: "interactive",
       content: contentPayload,
     },
   });
 
   return {
-    messageId: response?.data?.message_id ?? '',
-    chatId: response?.data?.chat_id ?? '',
+    messageId: response?.data?.message_id ?? "",
+    chatId: response?.data?.chat_id ?? "",
   };
 }
 
@@ -271,7 +273,7 @@ export async function setCardStreamingMode(params: {
   })) as CardKitResponse;
   logCardKitResponse({
     resp,
-    api: 'card.settings',
+    api: "card.settings",
     context: `seq=${sequence}, streaming_mode=${streamingMode}`,
   });
 }

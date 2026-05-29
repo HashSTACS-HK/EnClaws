@@ -7,17 +7,17 @@
  * 即时通讯相关工具
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { registerFeishuImUserMessageTool } from './message';
-import { registerFeishuImUserFetchResourceTool } from './resource';
-import { registerMessageReadTools } from './message-read';
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { registerFeishuImUserMessageTool } from "./message";
+import { registerMessageReadTools } from "./message-read";
+import { registerFeishuImUserFetchResourceTool } from "./resource";
 
 export function registerFeishuImTools(api: OpenClawPluginApi): void {
   const registered: string[] = [];
-  if (registerFeishuImUserMessageTool(api)) registered.push('feishu_im_user_message');
-  if (registerFeishuImUserFetchResourceTool(api)) registered.push('feishu_im_user_fetch_resource');
+  if (registerFeishuImUserMessageTool(api)) registered.push("feishu_im_user_message");
+  if (registerFeishuImUserFetchResourceTool(api)) registered.push("feishu_im_user_fetch_resource");
   registered.push(...registerMessageReadTools(api));
   if (registered.length > 0) {
-    api.logger.debug?.(`feishu_im: Registered ${registered.join(', ')}`);
+    api.logger.debug?.(`feishu_im: Registered ${registered.join(", ")}`);
   }
 }

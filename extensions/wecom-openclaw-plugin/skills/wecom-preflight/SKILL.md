@@ -62,6 +62,7 @@ openclaw config set tools.alsoAllow '["wecom_mcp"]'
 ```
 
 > **注意**：如果步骤 1b 返回的列表中已有其他工具（如 `["other_tool"]`），需要合并后再写入，例如：
+>
 > ```bash
 > openclaw config set tools.alsoAllow '["other_tool", "wecom_mcp"]'
 > ```
@@ -130,12 +131,12 @@ openclaw gateway restart
 
 ## 快速参考
 
-| 场景 | 处理方式 |
-|------|---------|
-| 首次调用 wecom_mcp 前 | 执行 `openclaw config get tools.profile` 检查 |
-| `tools.profile` 为 `full` | ✅ 跳过，直接执行原始请求 |
-| profile 非 full + alsoAllow 已包含 wecom_mcp | ✅ 跳过，继续执行 |
+| 场景                                              | 处理方式                                                  |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| 首次调用 wecom_mcp 前                             | 执行 `openclaw config get tools.profile` 检查             |
+| `tools.profile` 为 `full`                         | ✅ 跳过，直接执行原始请求                                 |
+| profile 非 full + alsoAllow 已包含 wecom_mcp      | ✅ 跳过，继续执行                                         |
 | profile 非 full + alsoAllow 不包含 → 自动写入成功 | 提示已配置 + 附 `openclaw gateway restart` 命令让用户重启 |
-| profile 非 full + alsoAllow 不包含 → 自动写入失败 | 给出手动修复指引 |
-| openclaw CLI 不可用 | 告知用户检查 OpenClaw 安装 |
-| 会话中已成功调用过 wecom_mcp | 跳过检查 |
+| profile 非 full + alsoAllow 不包含 → 自动写入失败 | 给出手动修复指引                                          |
+| openclaw CLI 不可用                               | 告知用户检查 OpenClaw 安装                                |
+| 会话中已成功调用过 wecom_mcp                      | 跳过检查                                                  |

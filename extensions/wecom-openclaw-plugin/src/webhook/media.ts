@@ -6,11 +6,11 @@
  */
 
 import crypto from "node:crypto";
-import { request } from "undici";
-import { fileTypeFromBuffer } from "file-type";
 import { pkcs7Unpad, decodeEncodingAESKey } from "@wecom/aibot-node-sdk";
-import { REQUEST_TIMEOUT_MS } from "./types.js";
+import { fileTypeFromBuffer } from "file-type";
+import { request } from "undici";
 import { wecomFetch, readResponseBodyAsBuffer, type WecomHttpOptions } from "./http.js";
+import { REQUEST_TIMEOUT_MS } from "./types.js";
 
 // ============================================================================
 // 媒体文件解密
@@ -30,7 +30,6 @@ export type DecryptedWecomMedia = {
   sourceUrl?: string;
 };
 
-
 /**
  * **decryptWecomMediaWithMeta (解密企业微信媒体并返回源信息)**
  *
@@ -43,12 +42,17 @@ export async function decryptWecomMediaWithMeta(
   params?: { maxBytes?: number; http?: WecomHttpOptions },
 ): Promise<DecryptedWecomMedia> {
   // 1. Download encrypted content
-  const res = await wecomFetch(url, undefined, { ...params?.http, timeoutMs: params?.http?.timeoutMs ?? 15_000 });
+  const res = await wecomFetch(url, undefined, {
+    ...params?.http,
+    timeoutMs: params?.http?.timeoutMs ?? 15_000,
+  });
   if (!res.ok) {
     throw new Error(`failed to download media: ${res.status}`);
   }
   const sourceContentType = normalizeMime(res.headers.get("content-type"));
-  const sourceFilename = extractFilenameFromContentDisposition(res.headers.get("content-disposition"));
+  const sourceFilename = extractFilenameFromContentDisposition(
+    res.headers.get("content-disposition"),
+  );
   const sourceUrl = res.url || url;
   const encryptedData = await readResponseBodyAsBuffer(res, params?.maxBytes);
 
@@ -59,10 +63,7 @@ export async function decryptWecomMediaWithMeta(
   // 3. Decrypt
   const decipher = crypto.createDecipheriv("aes-256-cbc", aesKey, iv);
   decipher.setAutoPadding(false);
-  const decryptedPadded = Buffer.concat([
-    decipher.update(encryptedData),
-    decipher.final(),
-  ]);
+  const decryptedPadded = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
 
   // 4. Unpad
   // Note: Unlike msg bodies, usually removing PKCS#7 padding is enough for media files.
@@ -95,18 +96,26 @@ function extractFilenameFromContentDisposition(disposition?: string | null): str
   // 优先 filename*（RFC 5987 编码）
   const star = raw.match(/filename\*\s*=\s*([^;]+)/i);
   if (star?.[1]) {
-    const v = star[1].trim().replace(/^UTF-8''/i, "").replace(/^"(.*)"$/, "$1");
+    const v = star[1]
+      .trim()
+      .replace(/^UTF-8''/i, "")
+      .replace(/^"(.*)"$/, "$1");
     try {
       const decoded = decodeURIComponent(v);
       if (decoded.trim()) return decoded.trim();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     if (v.trim()) return v.trim();
   }
 
   // 再尝试 filename
   const plain = raw.match(/filename\s*=\s*([^;]+)/i);
   if (plain?.[1]) {
-    const v = plain[1].trim().replace(/^"(.*)"$/, "$1").trim();
+    const v = plain[1]
+      .trim()
+      .replace(/^"(.*)"$/, "$1")
+      .trim();
     if (v) return v;
   }
   return undefined;

@@ -2,9 +2,9 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { PRODUCT_NAME_LOWER } from "../version.js";
 import { isTruthyEnvValue } from "./env.js";
 import { sanitizeHostExecEnv } from "./host-env-security.js";
-import { PRODUCT_NAME_LOWER } from "../version.js";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_BUFFER_BYTES = 2 * 1024 * 1024;

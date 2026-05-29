@@ -12,11 +12,11 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type * as Lark from '@larksuiteoapi/node-sdk';
-import { larkLogger } from './lark-logger';
+import type * as Lark from "@larksuiteoapi/node-sdk";
+import { larkLogger } from "./lark-logger";
 
-const log = larkLogger('core/app-scope-checker');
-import { AppScopeCheckFailedError } from './auth-errors';
+const log = larkLogger("core/app-scope-checker");
+import { AppScopeCheckFailedError } from "./auth-errors";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,7 +73,7 @@ export function invalidateAppScopeCache(appId: string): void {
 export async function getAppGrantedScopes(
   sdk: Lark.Client,
   appId: string,
-  tokenType?: 'user' | 'tenant',
+  tokenType?: "user" | "tenant",
 ): Promise<string[]> {
   // 1. 检查缓存
   const cached = cache.get(appId);
@@ -92,9 +92,9 @@ export async function getAppGrantedScopes(
   // 2. 调用 API
   try {
     const res = await (sdk as any).request({
-      method: 'GET',
+      method: "GET",
       url: `/open-apis/application/v6/applications/${appId}`,
-      params: { lang: 'zh_cn' },
+      params: { lang: "zh_cn" },
     });
 
     if (res.code !== 0) {
@@ -110,7 +110,7 @@ export async function getAppGrantedScopes(
 
     // 提取并验证 scope 字符串
     const validScopes = rawScopes
-      .filter((s) => typeof s.scope === 'string' && s.scope.length > 0)
+      .filter((s) => typeof s.scope === "string" && s.scope.length > 0)
       .map((s) => ({ scope: s.scope!, token_types: s.token_types }));
 
     // 3. 写缓存（缓存完整数据，包含 token_types 和原始 app 对象）
@@ -127,7 +127,7 @@ export async function getAppGrantedScopes(
       })
       .map((s) => s.scope);
 
-    log.info(`returning ${scopes.length} scopes${tokenType ? ` for ${tokenType} token` : ''}`);
+    log.info(`returning ${scopes.length} scopes${tokenType ? ` for ${tokenType} token` : ""}`);
 
     return scopes;
   } catch (err) {
@@ -138,12 +138,14 @@ export async function getAppGrantedScopes(
 
     // 检查是否是权限相关的 HTTP 错误（400/403）
     // axios/SDK 异常对象通常包含 response.status 或 status 字段
-    const statusCode = (err as any)?.response?.status || (err as any)?.status || (err as any)?.statusCode;
+    const statusCode =
+      (err as any)?.response?.status || (err as any)?.status || (err as any)?.statusCode;
 
     const isPermissionError =
       statusCode === 400 ||
       statusCode === 403 ||
-      (err instanceof Error && (err.message.includes('status code 400') || err.message.includes('status code 403')));
+      (err instanceof Error &&
+        (err.message.includes("status code 400") || err.message.includes("status code 403")));
 
     if (isPermissionError) {
       throw new AppScopeCheckFailedError(appId);
@@ -244,11 +246,11 @@ export function missingScopes(appGranted: string[], apiRequired: string[]): stri
 export function isAppScopeSatisfied(
   appScopes: string[],
   requiredScopes: string[],
-  scopeNeedType?: 'one' | 'all',
+  scopeNeedType?: "one" | "all",
 ): boolean {
   if (appScopes.length === 0) return true; // API 查询失败 → 退回服务端判断
   if (requiredScopes.length === 0) return true;
-  if (scopeNeedType === 'all') {
+  if (scopeNeedType === "all") {
     return missingScopes(appScopes, requiredScopes).length === 0;
   }
   return intersectScopes(appScopes, requiredScopes).length > 0;

@@ -1,6 +1,6 @@
 import { parseBooleanValue } from "../../utils/boolean.js";
-import { getSessionProfile } from "../session-profile-map.js";
 import type { BrowserRouteContext, ProfileContext } from "../server-context.js";
+import { getSessionProfile } from "../session-profile-map.js";
 import type { BrowserRequest, BrowserResponse } from "./types.js";
 
 /**

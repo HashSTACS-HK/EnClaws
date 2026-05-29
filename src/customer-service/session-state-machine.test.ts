@@ -38,7 +38,10 @@ describe("CS session state machine", () => {
   // -- HUMAN_ACTIVE state --
   describe("HUMAN_ACTIVE", () => {
     it("customer_message → forward_to_boss, stay human_active", () => {
-      const result = transition("human_active", { type: "customer_message", text: "still waiting" });
+      const result = transition("human_active", {
+        type: "customer_message",
+        text: "still waiting",
+      });
       expect(result.nextState).toBe("human_active");
       expect(result.action).toBe("forward_to_boss");
     });
@@ -67,7 +70,9 @@ describe("CS session state machine", () => {
     it("only AI_ACTIVE + customer_message triggers LLM (run_rag)", () => {
       // All combinations that should NOT trigger run_rag
       // 所有不应触发 run_rag 的组合
-      const nonRagCombinations: Array<[Parameters<typeof transition>[0], Parameters<typeof transition>[1]]> = [
+      const nonRagCombinations: Array<
+        [Parameters<typeof transition>[0], Parameters<typeof transition>[1]]
+      > = [
         ["human_active", { type: "customer_message", text: "test" }],
         ["ai_active", { type: "boss_click_reply" }],
         ["ai_active", { type: "boss_reply", text: "test" }],
@@ -80,7 +85,9 @@ describe("CS session state machine", () => {
 
       for (const [state, event] of nonRagCombinations) {
         const result = transition(state, event);
-        expect(result.action, `${state} + ${event.type} should not trigger run_rag`).not.toBe("run_rag");
+        expect(result.action, `${state} + ${event.type} should not trigger run_rag`).not.toBe(
+          "run_rag",
+        );
       }
 
       // The only combination that triggers run_rag

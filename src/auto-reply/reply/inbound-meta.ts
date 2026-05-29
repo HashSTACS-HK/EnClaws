@@ -128,7 +128,9 @@ export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
         : undefined,
   };
   if (Object.values(conversationInfo).some((v) => v !== undefined)) {
-    const convLabel = isOptEnabled("P1") ? "Conversation:" : "Conversation info (untrusted metadata):";
+    const convLabel = isOptEnabled("P1")
+      ? "Conversation:"
+      : "Conversation info (untrusted metadata):";
     blocks.push([convLabel, toJson(conversationInfo)].join("\n"));
   }
 
@@ -152,12 +154,16 @@ export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
   }
 
   if (safeTrim(ctx.ThreadStarterBody)) {
-    const threadLabel = isOptEnabled("P1") ? "Thread starter:" : "Thread starter (untrusted, for context):";
+    const threadLabel = isOptEnabled("P1")
+      ? "Thread starter:"
+      : "Thread starter (untrusted, for context):";
     blocks.push([threadLabel, toJson({ body: ctx.ThreadStarterBody })].join("\n"));
   }
 
   if (ctx.ReplyToBody) {
-    const replyLabel = isOptEnabled("P1") ? "Replied message:" : "Replied message (untrusted, for context):";
+    const replyLabel = isOptEnabled("P1")
+      ? "Replied message:"
+      : "Replied message (untrusted, for context):";
     blocks.push(
       [
         replyLabel,
@@ -171,7 +177,9 @@ export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
   }
 
   if (ctx.ForwardedFrom) {
-    const fwdLabel = isOptEnabled("P1") ? "Forwarded:" : "Forwarded message context (untrusted metadata):";
+    const fwdLabel = isOptEnabled("P1")
+      ? "Forwarded:"
+      : "Forwarded message context (untrusted metadata):";
     blocks.push(
       [
         fwdLabel,
@@ -189,7 +197,9 @@ export function buildInboundUserContextPrefix(ctx: TemplateContext): string {
   }
 
   if (Array.isArray(ctx.InboundHistory) && ctx.InboundHistory.length > 0) {
-    const histLabel = isOptEnabled("P1") ? "Chat history:" : "Chat history since last reply (untrusted, for context):";
+    const histLabel = isOptEnabled("P1")
+      ? "Chat history:"
+      : "Chat history since last reply (untrusted, for context):";
     blocks.push(
       [
         histLabel,

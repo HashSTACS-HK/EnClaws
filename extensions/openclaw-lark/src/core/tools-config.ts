@@ -9,8 +9,8 @@
  * enabled for a given account.
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { FeishuToolsConfig, LarkAccount } from './types';
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { FeishuToolsConfig, LarkAccount } from "./types";
 
 // ---------------------------------------------------------------------------
 // Defaults
@@ -105,8 +105,8 @@ export function resolveAnyEnabledToolsConfig(accounts: LarkAccount[]): Required<
  */
 function matchesAnyPattern(value: string, patterns: string[]): boolean {
   for (const pattern of patterns) {
-    if (pattern === '*') return true;
-    if (pattern.endsWith('*')) {
+    if (pattern === "*") return true;
+    if (pattern.endsWith("*")) {
       if (value.startsWith(pattern.slice(0, -1))) return true;
     } else if (value === pattern) {
       return true;
@@ -136,7 +136,7 @@ function matchesAnyPattern(value: string, patterns: string[]): boolean {
  */
 export function shouldRegisterTool(cfg: ClawdbotConfig, toolName: string): boolean {
   const feishuConfig = cfg.channels?.feishu;
-  const denyList = feishuConfig?.['tools']?.['deny'];
+  const denyList = feishuConfig?.["tools"]?.["deny"];
 
   if (Array.isArray(denyList) && denyList.length > 0) {
     if (matchesAnyPattern(toolName, denyList)) {

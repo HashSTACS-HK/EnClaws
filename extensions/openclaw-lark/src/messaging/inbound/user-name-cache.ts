@@ -12,12 +12,12 @@
  * - `clearUserNameCache()` — teardown hook (called from LarkClient.clearCache)
  */
 
-import type { LarkAccount } from '../../core/types';
-import { LarkClient } from '../../core/lark-client';
-import { getUserNameCache } from './user-name-cache-store';
-import { type PermissionError, extractPermissionError } from './permission';
+import { LarkClient } from "../../core/lark-client";
+import type { LarkAccount } from "../../core/types";
+import { type PermissionError, extractPermissionError } from "./permission";
+import { getUserNameCache } from "./user-name-cache-store";
 
-export { UserNameCache, clearUserNameCache, getUserNameCache } from './user-name-cache-store';
+export { UserNameCache, clearUserNameCache, getUserNameCache } from "./user-name-cache-store";
 
 // ---------------------------------------------------------------------------
 // Batch resolve via contact/v3/users/batch
@@ -64,7 +64,7 @@ export async function batchResolveUserNames(params: {
       const res: any = await client.contact.user.batch({
         params: {
           user_ids: chunk,
-          user_id_type: 'open_id',
+          user_id_type: "open_id",
         },
       });
 
@@ -74,7 +74,7 @@ export async function batchResolveUserNames(params: {
       for (const item of items) {
         const openId: string | undefined = item.open_id;
         if (!openId) continue;
-        const name: string = item.name || item.display_name || item.nickname || item.en_name || '';
+        const name: string = item.name || item.display_name || item.nickname || item.en_name || "";
         cache.set(openId, name);
         result.set(openId, name);
         resolved.add(openId);
@@ -82,8 +82,8 @@ export async function batchResolveUserNames(params: {
       // Cache empty names for IDs the API didn't return (no permission, etc.)
       for (const id of chunk) {
         if (!resolved.has(id)) {
-          cache.set(id, '');
-          result.set(id, '');
+          cache.set(id, "");
+          result.set(id, "");
         }
       }
     } catch (err) {
@@ -133,14 +133,14 @@ export async function resolveUserName(params: {
   if (!account.configured || !openId) return {};
 
   const cache = getUserNameCache(account.accountId);
-  if (cache.has(openId)) return { name: cache.get(openId) ?? '' };
+  if (cache.has(openId)) return { name: cache.get(openId) ?? "" };
 
   try {
     const client = LarkClient.fromAccount(account).sdk;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res: any = await client.contact.user.get({
       path: { user_id: openId },
-      params: { user_id_type: 'open_id' },
+      params: { user_id_type: "open_id" },
     });
 
     const name: string =
@@ -148,7 +148,7 @@ export async function resolveUserName(params: {
       res?.data?.user?.display_name ||
       res?.data?.user?.nickname ||
       res?.data?.user?.en_name ||
-      '';
+      "";
 
     // Cache even empty names to avoid repeated API calls for users
     // whose names we cannot resolve (e.g. due to permissions).
@@ -159,7 +159,7 @@ export async function resolveUserName(params: {
     if (permErr) {
       log(`feishu: permission error resolving user name: code=${permErr.code}`);
       // Cache empty name so we don't retry a known-failing openId
-      cache.set(openId, '');
+      cache.set(openId, "");
       return { permissionError: permErr };
     }
     log(`feishu: failed to resolve user name for ${openId}: ${String(err)}`);

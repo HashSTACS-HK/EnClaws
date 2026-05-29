@@ -13,10 +13,17 @@
  *   - get:    GET /open-apis/im/v1/chats/:chat_id
  */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
-import type { PaginatedData } from '../sdk-types';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from "../helpers";
+import type { PaginatedData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -25,37 +32,38 @@ import type { PaginatedData } from '../sdk-types';
 const FeishuChatSchema = Type.Union([
   // SEARCH
   Type.Object({
-    action: Type.Literal('search'),
+    action: Type.Literal("search"),
     query: Type.String({
-      description: '搜索关键词（必填）。支持匹配群名称、群成员名称。' + '支持多语种、拼音、前缀等模糊搜索。',
+      description:
+        "搜索关键词（必填）。支持匹配群名称、群成员名称。" + "支持多语种、拼音、前缀等模糊搜索。",
     }),
     page_size: Type.Optional(
       Type.Integer({
-        description: '分页大小（默认20）',
+        description: "分页大小（默认20）",
         minimum: 1,
       }),
     ),
     page_token: Type.Optional(
       Type.String({
-        description: '分页标记。首次请求无需填写',
+        description: "分页标记。首次请求无需填写",
       }),
     ),
     user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id'], {
-        description: '用户 ID 类型（默认 open_id）',
+      StringEnum(["open_id", "union_id", "user_id"], {
+        description: "用户 ID 类型（默认 open_id）",
       }),
     ),
   }),
 
   // GET
   Type.Object({
-    action: Type.Literal('get'),
+    action: Type.Literal("get"),
     chat_id: Type.String({
-      description: '群 ID（格式如 oc_xxx）',
+      description: "群 ID（格式如 oc_xxx）",
     }),
     user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id'], {
-        description: '用户 ID 类型（默认 open_id）',
+      StringEnum(["open_id", "union_id", "user_id"], {
+        description: "用户 ID 类型（默认 open_id）",
       }),
     ),
   }),
@@ -67,16 +75,16 @@ const FeishuChatSchema = Type.Union([
 
 type FeishuChatParams =
   | {
-      action: 'search';
+      action: "search";
       query: string;
       page_size?: number;
       page_token?: string;
-      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+      user_id_type?: "open_id" | "union_id" | "user_id";
     }
   | {
-      action: 'get';
+      action: "get";
       chat_id: string;
-      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+      user_id_type?: "open_id" | "union_id" | "user_id";
     };
 
 // ---------------------------------------------------------------------------
@@ -87,15 +95,15 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
   if (!api.config) return false;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_chat');
+  const { toolClient, log } = createToolContext(api, "feishu_chat");
 
   return registerTool(
     api,
     {
-      name: 'feishu_chat',
-      label: 'Feishu: Chat Management',
+      name: "feishu_chat",
+      label: "Feishu: Chat Management",
       description:
-        '以用户身份调用飞书群聊管理工具。Actions: search（搜索群列表，支持关键词匹配群名称、群成员）, get（获取指定群的详细信息，包括群名称、描述、头像、群主、权限配置等）。',
+        "以用户身份调用飞书群聊管理工具。Actions: search（搜索群列表，支持关键词匹配群名称、群成员）, get（获取指定群的详细信息，包括群名称、描述、头像、群主、权限配置等）。",
       parameters: FeishuChatSchema,
       async execute(_toolCallId: string, params: unknown) {
         const p = params as FeishuChatParams;
@@ -106,16 +114,16 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // SEARCH
             // -----------------------------------------------------------------
-            case 'search': {
+            case "search": {
               log.info(`search: query="${p.query}", page_size=${p.page_size ?? 20}`);
 
               const res = await client.invoke(
-                'feishu_chat.search',
+                "feishu_chat.search",
                 (sdk, opts) =>
                   sdk.im.v1.chat.search(
                     {
                       params: {
-                        user_id_type: p.user_id_type || 'open_id',
+                        user_id_type: p.user_id_type || "open_id",
                         query: p.query,
                         page_size: p.page_size,
                         page_token: p.page_token,
@@ -123,7 +131,7 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -141,11 +149,11 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
             // -----------------------------------------------------------------
             // GET
             // -----------------------------------------------------------------
-            case 'get': {
-              log.info(`get: chat_id=${p.chat_id}, user_id_type=${p.user_id_type ?? 'open_id'}`);
+            case "get": {
+              log.info(`get: chat_id=${p.chat_id}, user_id_type=${p.user_id_type ?? "open_id"}`);
 
               const res = await client.invoke(
-                'feishu_chat.get',
+                "feishu_chat.get",
                 (sdk, opts) =>
                   sdk.im.v1.chat.get(
                     {
@@ -153,7 +161,7 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
                         chat_id: p.chat_id,
                       },
                       params: {
-                        user_id_type: p.user_id_type || 'open_id',
+                        user_id_type: p.user_id_type || "open_id",
                       },
                     },
                     {
@@ -161,12 +169,12 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
                       headers: {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         ...((opts as any)?.headers ?? {}),
-                        'X-Chat-Custom-Header': 'enable_chat_list_security_check',
+                        "X-Chat-Custom-Header": "enable_chat_list_security_check",
                       },
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -182,6 +190,6 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
         }
       },
     },
-    { name: 'feishu_chat' },
+    { name: "feishu_chat" },
   );
 }

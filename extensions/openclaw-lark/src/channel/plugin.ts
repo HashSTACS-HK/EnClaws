@@ -9,30 +9,35 @@
  * start the inbound event gateway.
  */
 
-import type { ChannelPlugin, ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { ChannelThreadingToolContext } from 'openclaw/plugin-sdk/channel-contract';
-import { DEFAULT_ACCOUNT_ID } from 'openclaw/plugin-sdk/account-id';
-import { PAIRING_APPROVED_MESSAGE } from 'openclaw/plugin-sdk/channel-status';
-import type { LarkAccount } from '../core/types';
-import { getDefaultLarkAccountId, getLarkAccount, getLarkAccountIds } from '../core/accounts';
-import { feishuOutbound } from '../messaging/outbound/outbound';
-import { feishuMessageActions } from '../messaging/outbound/actions';
-import { resolveFeishuGroupToolPolicy } from '../messaging/inbound/policy';
-import { LarkClient } from '../core/lark-client';
-import { sendMessageFeishu } from '../messaging/outbound/send';
-import { looksLikeFeishuId, normalizeFeishuTarget } from '../core/targets';
-import { triggerOnboarding } from '../tools/onboarding-auth';
-import { larkLogger } from '../core/lark-logger';
-import { FEISHU_CONFIG_JSON_SCHEMA } from '../core/config-schema';
-import { applyAccountConfig, collectFeishuSecurityWarnings, deleteAccount, setAccountEnabled } from './config-adapter';
+import type { ChannelPlugin, ClawdbotConfig } from "openclaw/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID } from "openclaw/plugin-sdk/account-id";
+import type { ChannelThreadingToolContext } from "openclaw/plugin-sdk/channel-contract";
+import { PAIRING_APPROVED_MESSAGE } from "openclaw/plugin-sdk/channel-status";
+import { getDefaultLarkAccountId, getLarkAccount, getLarkAccountIds } from "../core/accounts";
+import { FEISHU_CONFIG_JSON_SCHEMA } from "../core/config-schema";
+import { LarkClient } from "../core/lark-client";
+import { larkLogger } from "../core/lark-logger";
+import { looksLikeFeishuId, normalizeFeishuTarget } from "../core/targets";
+import type { LarkAccount } from "../core/types";
+import { resolveFeishuGroupToolPolicy } from "../messaging/inbound/policy";
+import { feishuMessageActions } from "../messaging/outbound/actions";
+import { feishuOutbound } from "../messaging/outbound/outbound";
+import { sendMessageFeishu } from "../messaging/outbound/send";
+import { triggerOnboarding } from "../tools/onboarding-auth";
+import {
+  applyAccountConfig,
+  collectFeishuSecurityWarnings,
+  deleteAccount,
+  setAccountEnabled,
+} from "./config-adapter";
 import {
   listFeishuDirectoryGroups,
   listFeishuDirectoryGroupsLive,
   listFeishuDirectoryPeers,
   listFeishuDirectoryPeersLive,
-} from './directory';
+} from "./directory";
 
-const pluginLog = larkLogger('channel/plugin');
+const pluginLog = larkLogger("channel/plugin");
 
 /** 状态轮询的探针结果缓存时长（10 分钟）。 */
 const PROBE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -61,13 +66,13 @@ function adaptDirectoryParams(params: {
 // ---------------------------------------------------------------------------
 
 const meta = {
-  id: 'feishu',
-  label: 'Feishu',
-  selectionLabel: 'Lark/Feishu (\u98DE\u4E66)',
-  docsPath: '/channels/feishu',
-  docsLabel: 'feishu',
-  blurb: '\u98DE\u4E66/Lark enterprise messaging.',
-  aliases: ['lark'],
+  id: "feishu",
+  label: "Feishu",
+  selectionLabel: "Lark/Feishu (\u98DE\u4E66)",
+  docsPath: "/channels/feishu",
+  docsLabel: "feishu",
+  blurb: "\u98DE\u4E66/Lark enterprise messaging.",
+  aliases: ["lark"],
   order: 70,
 };
 
@@ -76,7 +81,7 @@ const meta = {
 // ---------------------------------------------------------------------------
 
 export const feishuPlugin: ChannelPlugin<LarkAccount> = {
-  id: 'feishu',
+  id: "feishu",
 
   meta: {
     ...meta,
@@ -87,11 +92,11 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
   // -------------------------------------------------------------------------
 
   pairing: {
-    idLabel: 'feishuUserId',
-    normalizeAllowEntry: (entry) => entry.replace(/^(feishu|user|open_id):/i, ''),
+    idLabel: "feishuUserId",
+    normalizeAllowEntry: (entry) => entry.replace(/^(feishu|user|open_id):/i, ""),
     notifyApproval: async ({ cfg, id }) => {
       const accountId = getDefaultLarkAccountId(cfg);
-      pluginLog.info('notifyApproval called', { id, accountId });
+      pluginLog.info("notifyApproval called", { id, accountId });
 
       // 1. 发送配对成功消息（保持现有行为）
       await sendMessageFeishu({
@@ -104,9 +109,9 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
       // 2. 触发 onboarding
       try {
         await triggerOnboarding({ cfg, userOpenId: id, accountId });
-        pluginLog.info('onboarding completed', { id });
+        pluginLog.info("onboarding completed", { id });
       } catch (err) {
-        pluginLog.warn('onboarding failed', { id, error: String(err) });
+        pluginLog.warn("onboarding failed", { id, error: String(err) });
       }
     },
   },
@@ -116,7 +121,7 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
   // -------------------------------------------------------------------------
 
   capabilities: {
-    chatTypes: ['direct', 'group'],
+    chatTypes: ["direct", "group"],
     media: true,
     reactions: true,
     threads: true,
@@ -131,9 +136,9 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
 
   agentPrompt: {
     messageToolHints: () => [
-      '- Feishu targeting: omit `target` to reply to the current conversation (auto-inferred). Explicit targets: `user:open_id` or `chat:chat_id`.',
-      '- Feishu supports interactive cards for rich messages.',
-      '- Feishu reactions use UPPERCASE emoji type names (e.g. `OK`,`THUMBSUP`,`THANKS`,`MUSCLE`,`FINGERHEART`,`APPLAUSE`,`FISTBUMP`,`JIAYI`,`DONE`,`SMILE`,`BLUSH` ), not Unicode emoji characters.',
+      "- Feishu targeting: omit `target` to reply to the current conversation (auto-inferred). Explicit targets: `user:open_id` or `chat:chat_id`.",
+      "- Feishu supports interactive cards for rich messages.",
+      "- Feishu reactions use UPPERCASE emoji type names (e.g. `OK`,`THUMBSUP`,`THANKS`,`MUSCLE`,`FINGERHEART`,`APPLAUSE`,`FISTBUMP`,`JIAYI`,`DONE`,`SMILE`,`BLUSH` ), not Unicode emoji characters.",
       "- Feishu `action=delete`/`action=unsend` only deletes messages sent by the bot. When the user quotes a message and says 'delete this', use the **quoted message's** message_id, not the user's own message_id.",
     ],
   },
@@ -150,7 +155,7 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
   // Reload
   // -------------------------------------------------------------------------
 
-  reload: { configPrefixes: ['channels.feishu'] },
+  reload: { configPrefixes: ["channels.feishu"] },
 
   // -------------------------------------------------------------------------
   // Config schema (JSON Schema)
@@ -228,7 +233,7 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
     normalizeTarget: (raw) => normalizeFeishuTarget(raw) ?? undefined,
     targetResolver: {
       looksLikeId: looksLikeFeishuId,
-      hint: '<chatId|user:openId|chat:chatId>',
+      hint: "<chatId|user:openId|chat:chatId>",
     },
   },
 
@@ -256,8 +261,9 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
 
   threading: {
     buildToolContext: ({ context, hasRepliedRef }): ChannelThreadingToolContext => ({
-      currentChannelId: normalizeFeishuTarget(context.To ?? '') ?? undefined,
-      currentThreadTs: context.MessageThreadId != null ? String(context.MessageThreadId) : undefined,
+      currentChannelId: normalizeFeishuTarget(context.To ?? "") ?? undefined,
+      currentThreadTs:
+        context.MessageThreadId != null ? String(context.MessageThreadId) : undefined,
       currentMessageId: context.CurrentMessageId,
       hasRepliedRef,
     }),
@@ -317,7 +323,7 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
 
   gateway: {
     startAccount: async (ctx) => {
-      const { monitorFeishuProvider } = await import('./monitor.js');
+      const { monitorFeishuProvider } = await import("./monitor.js");
       const account = getLarkAccount(ctx.cfg, ctx.accountId);
       const port = account.config?.webhookPort ?? null;
 
@@ -325,12 +331,19 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
       const lark = LarkClient.fromAccount(account);
       const probeResult = await lark.probe();
       if (!probeResult.ok) {
-        ctx.setStatus({ accountId: ctx.accountId, port, connected: false, lastError: probeResult.error });
+        ctx.setStatus({
+          accountId: ctx.accountId,
+          port,
+          connected: false,
+          lastError: probeResult.error,
+        });
         throw new Error(`Feishu probe failed for ${ctx.accountId}: ${probeResult.error}`);
       }
       ctx.setStatus({ accountId: ctx.accountId, port, connected: true });
 
-      ctx.log?.info(`starting feishu[${ctx.accountId}] (mode: ${account.config?.connectionMode ?? 'websocket'})`);
+      ctx.log?.info(
+        `starting feishu[${ctx.accountId}] (mode: ${account.config?.connectionMode ?? "websocket"})`,
+      );
       return monitorFeishuProvider({
         config: ctx.cfg,
         runtime: ctx.runtime,

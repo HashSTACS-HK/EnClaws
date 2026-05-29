@@ -22,7 +22,13 @@
  */
 
 import pg from "pg";
-import { initSqliteDb, closeSqliteDb, sqliteQuery, getSqliteDb, withSqliteTransaction } from "./sqlite/index.js";
+import {
+  initSqliteDb,
+  closeSqliteDb,
+  sqliteQuery,
+  getSqliteDb,
+  withSqliteTransaction,
+} from "./sqlite/index.js";
 import type { SqliteQueryResult } from "./sqlite/index.js";
 
 const { Pool } = pg;
@@ -51,7 +57,9 @@ export interface DbConfig {
  * Get the active database type. Throws if not initialized.
  */
 export function getDbType(): DbType {
-  if (!dbType) {throw new Error("[db] Database not initialized. Call initDb() first.");}
+  if (!dbType) {
+    throw new Error("[db] Database not initialized. Call initDb() first.");
+  }
   return dbType;
 }
 
@@ -78,7 +86,9 @@ function resolveDbConfig(): DbConfig {
  * Initialize the database connection. Safe to call multiple times.
  */
 export function initDb(overrides?: DbConfig): DbPool | null {
-  if (dbType) {return pool;}
+  if (dbType) {
+    return pool;
+  }
 
   const url = process.env.ENCLAWS_DB_URL ?? "";
 
@@ -156,9 +166,7 @@ export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
 /**
  * Run a callback within a transaction.
  */
-export async function withTransaction<T>(
-  fn: (client: DbClient) => Promise<T>,
-): Promise<T> {
+export async function withTransaction<T>(fn: (client: DbClient) => Promise<T>): Promise<T> {
   if (dbType === DB_SQLITE) {
     // SQLite operations are synchronous, but the callback fn is async
     // (for interface compatibility with PgSQL). We manage BEGIN/COMMIT

@@ -30,9 +30,9 @@ import {
 import { assertSupportedRuntime } from "./infra/runtime-guard.js";
 import { installUnhandledRejectionHandler } from "./infra/unhandled-rejections.js";
 import { enableConsoleCapture } from "./logging.js";
-import { PRODUCT_NAME_LOWER } from "./version.js";
 import { runCommandWithTimeout, runExec } from "./process/exec.js";
 import { assertWebChannel, normalizeE164, toWhatsappJid } from "./utils.js";
+import { PRODUCT_NAME_LOWER } from "./version.js";
 
 loadDotEnv({ quiet: true });
 normalizeEnv();

@@ -156,8 +156,7 @@ describe("buildWorkspaceSkillsPrompt", () => {
       dir: skillDir,
       name: "nano-banana-pro",
       description: "Generates images",
-      metadata:
-        '{"enclaws":{"requires":{"env":["GEMINI_API_KEY"]},"primaryEnv":"GEMINI_API_KEY"}}',
+      metadata: '{"enclaws":{"requires":{"env":["GEMINI_API_KEY"]},"primaryEnv":"GEMINI_API_KEY"}}',
       body: "# Nano Banana\n",
     });
 

@@ -4,13 +4,13 @@
  * 负责私聊策略检查、配对流程
  */
 
-import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import type { WSClient, WsFrame } from "@wecom/aibot-node-sdk";
-import { getWeComRuntime } from "./runtime.js";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import { CHANNEL_ID } from "./const.js";
-import type { ResolvedWeComAccount } from "./utils.js";
-import { sendWeComReply } from "./message-sender.js";
 import { isSenderAllowed } from "./group-policy.js";
+import { sendWeComReply } from "./message-sender.js";
+import { getWeComRuntime } from "./runtime.js";
+import type { ResolvedWeComAccount } from "./utils.js";
 
 // ============================================================================
 // 检查结果类型
@@ -66,11 +66,13 @@ export async function checkDmPolicy(params: {
 
   // OpenClaw <= 2026.2.19 signature: readAllowFromStore(channel, env?, accountId?)
   // @ts-expect-error — 兼容旧版 SDK 的三参数签名，新版已改为单参数对象
-  const oldStoreAllowFrom = await core.channel.pairing.readAllowFromStore('wecom', undefined, account.accountId).catch(() => []);
+  const oldStoreAllowFrom = await core.channel.pairing
+    .readAllowFromStore("wecom", undefined, account.accountId)
+    .catch(() => []);
   // Compatibility fallback for newer OpenClaw implementations.
   const newStoreAllowFrom = await core.channel.pairing
-      .readAllowFromStore({ channel: CHANNEL_ID, accountId: account.accountId })
-      .catch(() => []);
+    .readAllowFromStore({ channel: CHANNEL_ID, accountId: account.accountId })
+    .catch(() => []);
 
   // 检查发送者是否在允许列表中
   const storeAllowFrom = [...oldStoreAllowFrom, ...newStoreAllowFrom];

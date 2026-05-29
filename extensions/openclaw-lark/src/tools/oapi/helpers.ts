@@ -7,8 +7,8 @@
  * 提供 OAPI 工具特有的功能（如时间转换），并复用通用辅助函数。
  */
 
-import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
-import type { Client as LarkClient } from '@larksuiteoapi/node-sdk';
+import type { Client as LarkClient } from "@larksuiteoapi/node-sdk";
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
 
 // ---------------------------------------------------------------------------
 // 通用功能（从 tools/helpers.ts 导入）
@@ -25,9 +25,9 @@ export {
   validateEnum,
   checkToolRegistration,
   registerTool,
-} from '../helpers';
+} from "../helpers";
 
-export type { ToolResult, ClientGetter, ToolContext } from '../helpers';
+export type { ToolResult, ClientGetter, ToolContext } from "../helpers";
 
 // ---------------------------------------------------------------------------
 // ToolClient（工具层统一客户端）
@@ -40,7 +40,7 @@ export {
   AppScopeMissingError,
   UserAuthRequiredError,
   UserScopeInsufficientError,
-} from '../../core/tool-client';
+} from "../../core/tool-client";
 export type {
   ApiFn,
   InvokeFn,
@@ -48,16 +48,16 @@ export type {
   InvokeByPathOptions,
   AuthHint,
   TryInvokeResult,
-} from '../../core/tool-client';
+} from "../../core/tool-client";
 
 // ---------------------------------------------------------------------------
 // OAPI 专用：客户端便捷创建
 // ---------------------------------------------------------------------------
 
-import { Type } from '@sinclair/typebox';
-import type { SchemaOptions, TUnsafe } from '@sinclair/typebox';
-import type { ToolResult } from '../helpers';
-import { createClientGetter, formatToolResult } from '../helpers';
+import { Type } from "@sinclair/typebox";
+import type { SchemaOptions, TUnsafe } from "@sinclair/typebox";
+import type { ToolResult } from "../helpers";
+import { createClientGetter, formatToolResult } from "../helpers";
 
 /**
  * 从配置直接创建飞书客户端（OAPI 工具常用模式）
@@ -90,7 +90,6 @@ export function createFeishuClientFromConfig(config: ClawdbotConfig): LarkClient
 // ---------------------------------------------------------------------------
 // OAPI 专用：返回值格式化（简化版）
 // ---------------------------------------------------------------------------
-
 
 /**
  * 格式化返回值为 JSON（OAPI 工具常用简化接口）
@@ -151,7 +150,7 @@ export function parseTimeToTimestamp(input: string): string | null {
 
     // 没有时区信息，当作北京时间处理
     // 支持格式：YYYY-MM-DD HH:mm 或 YYYY-MM-DD HH:mm:ss 或 YYYY-MM-DDTHH:mm:ss
-    const normalized = trimmed.replace('T', ' ');
+    const normalized = trimmed.replace("T", " ");
     const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
 
     if (!match) {
@@ -170,7 +169,7 @@ export function parseTimeToTimestamp(input: string): string | null {
         parseInt(day),
         parseInt(hour) - 8, // 北京时间减去 8 小时得到 UTC
         parseInt(minute),
-        parseInt(second ?? '0'),
+        parseInt(second ?? "0"),
       ),
     );
 
@@ -217,7 +216,7 @@ export function parseTimeToTimestampMs(input: string): string | null {
 
     // 没有时区信息，当作北京时间处理
     // 支持格式：YYYY-MM-DD HH:mm 或 YYYY-MM-DD HH:mm:ss 或 YYYY-MM-DDTHH:mm:ss
-    const normalized = trimmed.replace('T', ' ');
+    const normalized = trimmed.replace("T", " ");
     const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
 
     if (!match) {
@@ -236,7 +235,7 @@ export function parseTimeToTimestampMs(input: string): string | null {
         parseInt(day),
         parseInt(hour) - 8, // 北京时间减去 8 小时得到 UTC
         parseInt(minute),
-        parseInt(second ?? '0'),
+        parseInt(second ?? "0"),
       ),
     );
 
@@ -282,7 +281,7 @@ export function parseTimeToRFC3339(input: string): string | null {
 
     // 没有时区信息，当作北京时间处理，转换为 RFC 3339 格式
     // 支持格式：YYYY-MM-DD HH:mm 或 YYYY-MM-DD HH:mm:ss 或 YYYY-MM-DDTHH:mm:ss
-    const normalized = trimmed.replace('T', ' ');
+    const normalized = trimmed.replace("T", " ");
     const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
 
     if (!match) {
@@ -290,11 +289,11 @@ export function parseTimeToRFC3339(input: string): string | null {
       const date = new Date(trimmed);
       if (isNaN(date.getTime())) return null;
       // 如果能解析但没有时区，添加 +08:00
-      return trimmed.includes('T') ? `${trimmed}+08:00` : trimmed;
+      return trimmed.includes("T") ? `${trimmed}+08:00` : trimmed;
     }
 
     const [, year, month, day, hour, minute, second] = match;
-    const sec = second ?? '00';
+    const sec = second ?? "00";
 
     // 直接构造 RFC 3339 格式（北京时间 UTC+8）
     return `${year}-${month}-${day}T${hour}:${minute}:${sec}+08:00`;
@@ -324,12 +323,12 @@ export function parseTimeToRFC3339(input: string): string | null {
  */
 export function convertTimeRange(
   timeRange: { start?: string; end?: string } | undefined,
-  unit: 's' | 'ms' = 's',
+  unit: "s" | "ms" = "s",
 ): { start?: number; end?: number } | undefined {
   if (!timeRange) return undefined;
 
   const result: { start?: number; end?: number } = {};
-  const parseFn = unit === 'ms' ? parseTimeToTimestampMs : parseTimeToTimestamp;
+  const parseFn = unit === "ms" ? parseTimeToTimestampMs : parseTimeToTimestamp;
 
   if (timeRange.start) {
     const ts = parseFn(timeRange.start);
@@ -359,10 +358,10 @@ export function convertTimeRange(
 // ---------------------------------------------------------------------------
 
 export const SHANGHAI_UTC_OFFSET_HOURS = 8;
-export const SHANGHAI_OFFSET_SUFFIX = '+08:00';
+export const SHANGHAI_OFFSET_SUFFIX = "+08:00";
 
 export function pad2(value: number): string {
-  return String(value).padStart(2, '0');
+  return String(value).padStart(2, "0");
 }
 
 /**
@@ -376,7 +375,7 @@ export function pad2(value: number): string {
 export function unixTimestampToISO8601(raw: string | number | undefined): string | null {
   if (raw === undefined || raw == null) return null;
 
-  const text = typeof raw === 'number' ? String(raw) : String(raw).trim();
+  const text = typeof raw === "number" ? String(raw) : String(raw).trim();
   if (!/^-?\d+$/.test(text)) return null;
 
   const num = Number(text);
@@ -405,13 +404,17 @@ export function unixTimestampToISO8601(raw: string | number | undefined): string
  *
  * 这些函数专门用于处理飞书 Open API 的响应和错误。
  */
-export { assertLarkOk, formatLarkError } from '../../core/api-error';
+export { assertLarkOk, formatLarkError } from "../../core/api-error";
 
 // ---------------------------------------------------------------------------
 // OAPI 专用：invoke() 错误判断
 // ---------------------------------------------------------------------------
 
-import { AppScopeMissingError, UserAuthRequiredError, UserScopeInsufficientError } from '../../core/tool-client';
+import {
+  AppScopeMissingError,
+  UserAuthRequiredError,
+  UserScopeInsufficientError,
+} from "../../core/tool-client";
 
 /**
  * Check whether an error is a structured invoke-level auth/permission error.
@@ -434,12 +437,11 @@ export function isInvokeError(err: unknown): boolean {
 // 自动授权：handleInvokeErrorWithAutoAuth
 // ---------------------------------------------------------------------------
 
-export { handleInvokeErrorWithAutoAuth } from '../auto-auth';
+export { handleInvokeErrorWithAutoAuth } from "../auto-auth";
 
 // ---------------------------------------------------------------------------
 // Schema 辅助：LLM 友好的字符串枚举
 // ---------------------------------------------------------------------------
-
 
 /**
  * 创建 LLM 友好的字符串枚举 schema。
@@ -449,5 +451,5 @@ export { handleInvokeErrorWithAutoAuth } from '../auto-auth';
  * 兼容性更好。
  */
 export function StringEnum<T extends string>(values: T[], options?: SchemaOptions): TUnsafe<T> {
-  return Type.Unsafe<T>({ type: 'string', enum: values, ...options });
+  return Type.Unsafe<T>({ type: "string", enum: values, ...options });
 }

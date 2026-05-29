@@ -14,8 +14,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk';
-import { Type } from '@sinclair/typebox';
+import { Type } from "@sinclair/typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import {
   StringEnum,
   assertLarkOk,
@@ -24,8 +24,8 @@ import {
   json,
   parseTimeToTimestampMs,
   registerTool,
-} from '../helpers';
-import type { PaginatedData, TaskCreateData } from '../sdk-types';
+} from "../helpers";
+import type { PaginatedData, TaskCreateData } from "../sdk-types";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -34,29 +34,30 @@ import type { PaginatedData, TaskCreateData } from '../sdk-types';
 const FeishuTaskTaskSchema = Type.Union([
   // CREATE
   Type.Object({
-    action: Type.Literal('create'),
+    action: Type.Literal("create"),
     summary: Type.String({
-      description: '任务标题',
+      description: "任务标题",
     }),
     current_user_id: Type.Optional(
       Type.String({
         description:
-          '当前用户的 open_id（强烈建议，从消息上下文的 SenderId 获取）。如果 members 中不包含此用户，工具会自动添加为 follower，确保创建者可以编辑任务。',
+          "当前用户的 open_id（强烈建议，从消息上下文的 SenderId 获取）。如果 members 中不包含此用户，工具会自动添加为 follower，确保创建者可以编辑任务。",
       }),
     ),
     description: Type.Optional(
       Type.String({
-        description: '任务描述',
+        description: "任务描述",
       }),
     ),
     due: Type.Optional(
       Type.Object({
         timestamp: Type.String({
-          description: "截止时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
+          description:
+            "截止时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
         }),
         is_all_day: Type.Optional(
           Type.Boolean({
-            description: '是否为全天任务',
+            description: "是否为全天任务",
           }),
         ),
       }),
@@ -64,11 +65,12 @@ const FeishuTaskTaskSchema = Type.Union([
     start: Type.Optional(
       Type.Object({
         timestamp: Type.String({
-          description: "开始时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
+          description:
+            "开始时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
         }),
         is_all_day: Type.Optional(
           Type.Boolean({
-            description: '是否为全天',
+            description: "是否为全天",
           }),
         ),
       }),
@@ -77,100 +79,95 @@ const FeishuTaskTaskSchema = Type.Union([
       Type.Array(
         Type.Object({
           id: Type.String({
-            description: '成员 open_id',
+            description: "成员 open_id",
           }),
-          role: Type.Optional(StringEnum(['assignee', 'follower'])),
+          role: Type.Optional(StringEnum(["assignee", "follower"])),
         }),
         {
-          description: '任务成员列表（assignee=负责人，follower=关注人）',
+          description: "任务成员列表（assignee=负责人，follower=关注人）",
         },
       ),
     ),
     repeat_rule: Type.Optional(
       Type.String({
-        description: '重复规则（RRULE 格式）',
+        description: "重复规则（RRULE 格式）",
       }),
     ),
     tasklists: Type.Optional(
       Type.Array(
         Type.Object({
           tasklist_guid: Type.String({
-            description: '清单 GUID',
+            description: "清单 GUID",
           }),
           section_guid: Type.Optional(
             Type.String({
-              description: '分组 GUID',
+              description: "分组 GUID",
             }),
           ),
         }),
         {
-          description: '任务所属清单列表',
+          description: "任务所属清单列表",
         },
       ),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(["open_id", "union_id", "user_id"])),
   }),
 
   // GET
   Type.Object({
-    action: Type.Literal('get'),
+    action: Type.Literal("get"),
     task_guid: Type.String({
-      description: 'Task GUID',
+      description: "Task GUID",
     }),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(["open_id", "union_id", "user_id"])),
   }),
 
   // LIST
   Type.Object({
-    action: Type.Literal('list'),
+    action: Type.Literal("list"),
     page_size: Type.Optional(
       Type.Number({
-        description: '每页数量（默认 50，最大 100）。',
+        description: "每页数量（默认 50，最大 100）。",
       }),
     ),
     page_token: Type.Optional(
       Type.String({
-        description: '分页标记',
+        description: "分页标记",
       }),
     ),
     completed: Type.Optional(
       Type.Boolean({
-        description: '是否筛选已完成任务',
+        description: "是否筛选已完成任务",
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(["open_id", "union_id", "user_id"])),
   }),
 
   // PATCH
   Type.Object({
-    action: Type.Literal('patch'),
+    action: Type.Literal("patch"),
     task_guid: Type.String({
-      description: 'Task GUID',
+      description: "Task GUID",
     }),
     summary: Type.Optional(
       Type.String({
-        description: '新的任务标题',
+        description: "新的任务标题",
       }),
     ),
     description: Type.Optional(
       Type.String({
-        description: '新的任务描述',
+        description: "新的任务描述",
       }),
     ),
     due: Type.Optional(
       Type.Object({
         timestamp: Type.String({
-          description: "新的截止时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
+          description:
+            "新的截止时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
         }),
         is_all_day: Type.Optional(
           Type.Boolean({
-            description: '是否为全天任务',
+            description: "是否为全天任务",
           }),
         ),
       }),
@@ -178,11 +175,12 @@ const FeishuTaskTaskSchema = Type.Union([
     start: Type.Optional(
       Type.Object({
         timestamp: Type.String({
-          description: "新的开始时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
+          description:
+            "新的开始时间（ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'）",
         }),
         is_all_day: Type.Optional(
           Type.Boolean({
-            description: '是否为全天',
+            description: "是否为全天",
           }),
         ),
       }),
@@ -197,23 +195,21 @@ const FeishuTaskTaskSchema = Type.Union([
       Type.Array(
         Type.Object({
           id: Type.String({
-            description: '成员 open_id',
+            description: "成员 open_id",
           }),
-          role: Type.Optional(StringEnum(['assignee', 'follower'])),
+          role: Type.Optional(StringEnum(["assignee", "follower"])),
         }),
         {
-          description: '新的任务成员列表',
+          description: "新的任务成员列表",
         },
       ),
     ),
     repeat_rule: Type.Optional(
       Type.String({
-        description: '新的重复规则（RRULE 格式）',
+        description: "新的重复规则（RRULE 格式）",
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(["open_id", "union_id", "user_id"])),
   }),
 ]);
 
@@ -223,7 +219,7 @@ const FeishuTaskTaskSchema = Type.Union([
 
 type FeishuTaskTaskParams =
   | {
-      action: 'create';
+      action: "create";
       summary: string;
       current_user_id?: string;
       description?: string;
@@ -237,29 +233,29 @@ type FeishuTaskTaskParams =
       };
       members?: Array<{
         id: string;
-        role?: 'assignee' | 'follower';
+        role?: "assignee" | "follower";
       }>;
       repeat_rule?: string;
       tasklists?: Array<{
         tasklist_guid: string;
         section_guid?: string;
       }>;
-      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+      user_id_type?: "open_id" | "union_id" | "user_id";
     }
   | {
-      action: 'get';
+      action: "get";
       task_guid: string;
-      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+      user_id_type?: "open_id" | "union_id" | "user_id";
     }
   | {
-      action: 'list';
+      action: "list";
       page_size?: number;
       page_token?: string;
       completed?: boolean;
-      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+      user_id_type?: "open_id" | "union_id" | "user_id";
     }
   | {
-      action: 'patch';
+      action: "patch";
       task_guid: string;
       summary?: string;
       description?: string;
@@ -274,10 +270,10 @@ type FeishuTaskTaskParams =
       completed_at?: string;
       members?: Array<{
         id: string;
-        role?: 'assignee' | 'follower';
+        role?: "assignee" | "follower";
       }>;
       repeat_rule?: string;
-      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+      user_id_type?: "open_id" | "union_id" | "user_id";
     };
 
 // ---------------------------------------------------------------------------
@@ -288,13 +284,13 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
   if (!api.config) return;
   const cfg = api.config;
 
-  const { toolClient, log } = createToolContext(api, 'feishu_task_task');
+  const { toolClient, log } = createToolContext(api, "feishu_task_task");
 
   registerTool(
     api,
     {
-      name: 'feishu_task_task',
-      label: 'Feishu Task Management',
+      name: "feishu_task_task",
+      label: "Feishu Task Management",
       description:
         "【以用户身份】飞书任务管理工具。用于创建、查询、更新任务。Actions: create（创建任务）, get（获取任务详情）, list（查询任务列表，仅返回我负责的任务）, patch（更新任务）。时间参数使用ISO 8601 / RFC 3339 格式（包含时区），例如 '2024-01-01T00:00:00+08:00'。",
       parameters: FeishuTaskTaskSchema,
@@ -307,7 +303,7 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
             // -----------------------------------------------------------------
             // CREATE TASK
             // -----------------------------------------------------------------
-            case 'create': {
+            case "create": {
               log.info(`create: summary=${p.summary}`);
 
               const taskData: any = {
@@ -354,18 +350,18 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
               if (p.tasklists) taskData.tasklists = p.tasklists;
 
               const res = await client.invoke(
-                'feishu_task_task.create',
+                "feishu_task_task.create",
                 (sdk, opts) =>
                   sdk.task.v2.task.create(
                     {
                       data: taskData,
                       params: {
-                        user_id_type: (p.user_id_type || 'open_id') as any,
+                        user_id_type: (p.user_id_type || "open_id") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -380,22 +376,22 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
             // -----------------------------------------------------------------
             // GET TASK
             // -----------------------------------------------------------------
-            case 'get': {
+            case "get": {
               log.info(`get: task_guid=${p.task_guid}`);
 
               const res = await client.invoke(
-                'feishu_task_task.get',
+                "feishu_task_task.get",
                 (sdk, opts) =>
                   sdk.task.v2.task.get(
                     {
                       path: { task_guid: p.task_guid },
                       params: {
-                        user_id_type: (p.user_id_type || 'open_id') as any,
+                        user_id_type: (p.user_id_type || "open_id") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -409,11 +405,11 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
             // -----------------------------------------------------------------
             // LIST TASKS
             // -----------------------------------------------------------------
-            case 'list': {
+            case "list": {
               log.info(`list: page_size=${p.page_size ?? 50}, completed=${p.completed ?? false}`);
 
               const res = await client.invoke(
-                'feishu_task_task.list',
+                "feishu_task_task.list",
                 (sdk, opts) =>
                   sdk.task.v2.task.list(
                     {
@@ -421,12 +417,12 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
                         page_size: p.page_size,
                         page_token: p.page_token,
                         completed: p.completed,
-                        user_id_type: (p.user_id_type || 'open_id') as any,
+                        user_id_type: (p.user_id_type || "open_id") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -443,7 +439,7 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
             // -----------------------------------------------------------------
             // PATCH TASK
             // -----------------------------------------------------------------
-            case 'patch': {
+            case "patch": {
               log.info(`patch: task_guid=${p.task_guid}`);
 
               const updateData: any = {};
@@ -486,8 +482,8 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
               // Handle completed_at conversion
               if (p.completed_at !== undefined) {
                 // 特殊值：反完成（设为未完成）
-                if (p.completed_at === '0') {
-                  updateData.completed_at = '0';
+                if (p.completed_at === "0") {
+                  updateData.completed_at = "0";
                 }
                 // 数字字符串时间戳（直通）
                 else if (/^\d+$/.test(p.completed_at)) {
@@ -514,7 +510,7 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
               const updateFields = Object.keys(updateData);
 
               const res = await client.invoke(
-                'feishu_task_task.patch',
+                "feishu_task_task.patch",
                 (sdk, opts) =>
                   sdk.task.v2.task.patch(
                     {
@@ -524,12 +520,12 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
                         update_fields: updateFields,
                       },
                       params: {
-                        user_id_type: (p.user_id_type || 'open_id') as any,
+                        user_id_type: (p.user_id_type || "open_id") as any,
                       },
                     },
                     opts,
                   ),
-                { as: 'user' },
+                { as: "user" },
               );
               assertLarkOk(res);
 
@@ -545,7 +541,6 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
         }
       },
     },
-    { name: 'feishu_task_task' },
+    { name: "feishu_task_task" },
   );
-
 }

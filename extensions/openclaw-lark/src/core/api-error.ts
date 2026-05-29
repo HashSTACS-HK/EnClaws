@@ -17,8 +17,8 @@
  * and produce user-friendly messages with actionable authorization links.
  */
 
-import { extractPermissionGrantUrl, extractPermissionScopes } from './permission-url';
-import { LARK_ERROR } from './auth-errors';
+import { LARK_ERROR } from "./auth-errors";
+import { extractPermissionGrantUrl, extractPermissionScopes } from "./permission-url";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -34,7 +34,9 @@ function formatPermissionError(code: number, msg: string): string | null {
   const authUrl = extractPermissionGrantUrl(msg);
   const scopes = extractPermissionScopes(msg);
 
-  return `权限不足：应用缺少 [${scopes}] 权限。\n` + `请管理员点击以下链接申请并开通权限：\n${authUrl}`;
+  return (
+    `权限不足：应用缺少 [${scopes}] 权限。\n` + `请管理员点击以下链接申请并开通权限：\n${authUrl}`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -42,10 +44,10 @@ function formatPermissionError(code: number, msg: string): string | null {
 // ---------------------------------------------------------------------------
 
 function coerceCode(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) {
+  if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) return parsed;
   }
@@ -61,7 +63,7 @@ function coerceCode(value: unknown): number | undefined {
  * - `{ response: { data: { code } } }` — Axios 风格
  */
 export function extractLarkApiCode(err: unknown): number | undefined {
-  if (!err || typeof err !== 'object') return undefined;
+  if (!err || typeof err !== "object") return undefined;
 
   const e = err as {
     code?: unknown;
@@ -86,7 +88,7 @@ export function extractLarkApiCode(err: unknown): number | undefined {
 export function assertLarkOk(res: { code?: number; msg?: string }): void {
   if (!res.code || res.code === 0) return;
 
-  const permMsg = formatPermissionError(res.code, res.msg ?? '');
+  const permMsg = formatPermissionError(res.code, res.msg ?? "");
   if (permMsg) throw new Error(permMsg);
 
   throw new Error(res.msg ?? `Feishu API error (code: ${res.code})`);
@@ -102,7 +104,7 @@ export function assertLarkOk(res: { code?: number; msg?: string }): void {
  * back to `err.message` (the generic Axios text).
  */
 export function formatLarkError(err: unknown): string {
-  if (!err || typeof err !== 'object') {
+  if (!err || typeof err !== "object") {
     return String(err);
   }
   const e = err as {
@@ -113,7 +115,7 @@ export function formatLarkError(err: unknown): string {
   };
 
   // Path 1: Lark SDK merges Feishu fields onto the thrown error object.
-  if (typeof e.code === 'number' && e.msg) {
+  if (typeof e.code === "number" && e.msg) {
     const permMsg = formatPermissionError(e.code, e.msg);
     if (permMsg) return permMsg;
     return e.msg;
@@ -121,7 +123,7 @@ export function formatLarkError(err: unknown): string {
 
   // Path 2: Standard Axios error — dig into response.data.
   const data = e.response?.data;
-  if (data && typeof data.code === 'number' && data.msg) {
+  if (data && typeof data.code === "number" && data.msg) {
     const permMsg = formatPermissionError(data.code, data.msg);
     if (permMsg) return permMsg;
     return data.msg;

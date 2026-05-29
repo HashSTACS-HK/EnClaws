@@ -62,7 +62,7 @@
   padding-top: 0;
 }
 
-.shell--chat-focus .content>*+* {
+.shell--chat-focus .content > * + * {
   margin-top: 0;
 }
 
@@ -585,7 +585,7 @@
   padding-bottom: 0;
 }
 
-.content--chat>*+* {
+.content--chat > * + * {
   margin-top: 0;
 }
 
@@ -643,7 +643,7 @@
   gap: 16px;
 }
 
-.content--chat .content-header>div:first-child {
+.content--chat .content-header > div:first-child {
   text-align: left;
 }
 
@@ -737,7 +737,9 @@
     scrollbar-width: none;
   }
 
-  .nav::-webkit-scrollbar { display: none; }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
 
   /* scroll-area becomes transparent on mobile — items flow directly in nav */
   .nav-scroll-area {

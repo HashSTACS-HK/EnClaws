@@ -13,9 +13,9 @@
 
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
-import { tenantRpc } from "../views/tenant/rpc.ts";
 import { loadAuth } from "../auth-store.ts";
 import { generateUUID } from "../uuid.ts";
+import { tenantRpc } from "../views/tenant/rpc.ts";
 
 const VISITOR_ID_KEY = "ec_cs_visitor_id";
 
@@ -60,14 +60,16 @@ export class CSWidget extends LitElement {
       align-items: center;
       justify-content: center;
       font-size: 22px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s;
       outline: none;
     }
 
     .bubble:hover {
       transform: scale(1.08);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
     }
 
     /* Unread badge */
@@ -97,7 +99,7 @@ export class CSWidget extends LitElement {
       height: 480px;
       background: var(--cs-panel-bg, #fff);
       border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -106,8 +108,14 @@ export class CSWidget extends LitElement {
     }
 
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .panel-header {
@@ -124,27 +132,36 @@ export class CSWidget extends LitElement {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 16px;
     }
 
-    .panel-header .title { font-weight: 600; font-size: 14px; flex: 1; }
-    .panel-header .subtitle { font-size: 11px; opacity: 0.8; }
+    .panel-header .title {
+      font-weight: 600;
+      font-size: 14px;
+      flex: 1;
+    }
+    .panel-header .subtitle {
+      font-size: 11px;
+      opacity: 0.8;
+    }
 
     .close-btn {
       background: none;
       border: none;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255, 255, 255, 0.8);
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
       padding: 0 4px;
     }
 
-    .close-btn:hover { color: #fff; }
+    .close-btn:hover {
+      color: #fff;
+    }
 
     /* Messages area */
     .messages {
@@ -162,8 +179,14 @@ export class CSWidget extends LitElement {
       gap: 3px;
     }
 
-    .msg-wrap.customer { align-items: flex-end; }
-    .msg-wrap.ai, .msg-wrap.boss, .msg-wrap.system { align-items: flex-start; }
+    .msg-wrap.customer {
+      align-items: flex-end;
+    }
+    .msg-wrap.ai,
+    .msg-wrap.boss,
+    .msg-wrap.system {
+      align-items: flex-start;
+    }
 
     .msg-role {
       font-size: 11px;
@@ -203,7 +226,9 @@ export class CSWidget extends LitElement {
       border: none;
     }
 
-    .msg-bubble.pending { opacity: 0.6; }
+    .msg-bubble.pending {
+      opacity: 0.6;
+    }
 
     /* Typing indicator */
     .typing-dot {
@@ -224,12 +249,24 @@ export class CSWidget extends LitElement {
       animation: typing 1.2s infinite;
     }
 
-    .typing-dot span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot span:nth-child(3) { animation-delay: 0.4s; }
+    .typing-dot span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing-dot span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
 
     @keyframes typing {
-      0%, 60%, 100% { opacity: 0.3; transform: scale(0.85); }
-      30% { opacity: 1; transform: scale(1); }
+      0%,
+      60%,
+      100% {
+        opacity: 0.3;
+        transform: scale(0.85);
+      }
+      30% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     /* Input area */
@@ -279,8 +316,13 @@ export class CSWidget extends LitElement {
       transition: opacity 0.15s;
     }
 
-    .send-btn:hover { opacity: 0.85; }
-    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .send-btn:hover {
+      opacity: 0.85;
+    }
+    .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
 
     .connect-error {
       margin: 12px 14px;
@@ -335,11 +377,11 @@ export class CSWidget extends LitElement {
     this.connecting = true;
     this.connectError = null;
     try {
-      const result = await tenantRpc("cs.widget.connect", {
+      const result = (await tenantRpc("cs.widget.connect", {
         tenantId,
         visitorId: this._visitorId,
         channel: this.channel,
-      }) as { sessionId: string; messages: Array<{ id: string; role: string; content: string }> };
+      })) as { sessionId: string; messages: Array<{ id: string; role: string; content: string }> };
 
       this.sessionId = result.sessionId;
       // Load history
@@ -383,9 +425,13 @@ export class CSWidget extends LitElement {
     const text = this.inputText.trim();
     // Allow sending even without sessionId — session is created lazily on first message.
     // 允许在 sessionId 为空时发送，session 由后端在首条消息时按需创建。
-    if (!text || this.sending) {return;}
+    if (!text || this.sending) {
+      return;
+    }
     const tenantId = this.tenantId;
-    if (!tenantId) {return;}
+    if (!tenantId) {
+      return;
+    }
 
     const tempId = `tmp-${Date.now()}`;
     this.messages = [
@@ -405,11 +451,17 @@ export class CSWidget extends LitElement {
     this._scrollToBottom();
 
     try {
-      const result = await tenantRpc("cs.widget.send", {
+      const result = (await tenantRpc("cs.widget.send", {
         tenantId,
         visitorId: this._visitorId,
         text,
-      }) as { sessionId?: string; messageId: string; role: string; text: string; roleLabel: string };
+      })) as {
+        sessionId?: string;
+        messageId: string;
+        role: string;
+        text: string;
+        roleLabel: string;
+      };
 
       // Capture sessionId from first response (lazy session creation).
       // 从首次响应中捕获 sessionId（懒加载 session）。
@@ -428,7 +480,9 @@ export class CSWidget extends LitElement {
         },
       ];
 
-      if (!this.open) {this.unread++;}
+      if (!this.open) {
+        this.unread++;
+      }
     } catch (_err) {
       this.messages = this.messages.filter((m) => m.id !== typingId);
       this.messages = [
@@ -451,7 +505,9 @@ export class CSWidget extends LitElement {
   private _scrollToBottom() {
     requestAnimationFrame(() => {
       const el = this.shadowRoot?.querySelector(".messages");
-      if (el) {el.scrollTop = el.scrollHeight;}
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
     });
   }
 
@@ -466,7 +522,9 @@ export class CSWidget extends LitElement {
         </div>
       `;
     }
-    if (msg.role === "system" && !msg.text) {return nothing;}
+    if (msg.role === "system" && !msg.text) {
+      return nothing;
+    }
     return html`
       <div class="msg-wrap ${msg.role}">
         ${msg.role !== "customer" ? html`<div class="msg-role">${msg.roleLabel}</div>` : nothing}
@@ -483,12 +541,16 @@ export class CSWidget extends LitElement {
         <button class="bubble" @click=${this._togglePanel} title="AI 客服">
           ${this.open ? "✕" : "💬"}
         </button>
-        ${this.unread > 0 && !this.open
-          ? html`<div class="unread-badge">${this.unread}</div>`
-          : nothing}
+        ${
+          this.unread > 0 && !this.open
+            ? html`<div class="unread-badge">${this.unread}</div>`
+            : nothing
+        }
 
         <!-- Chat panel -->
-        ${this.open ? html`
+        ${
+          this.open
+            ? html`
           <div class="panel">
             <div class="panel-header">
               <div class="avatar">🤖</div>
@@ -499,19 +561,24 @@ export class CSWidget extends LitElement {
               <button class="close-btn" @click=${this._togglePanel}>✕</button>
             </div>
 
-            ${this.connectError
-              ? html`<div class="connect-error">${this.connectError}</div>`
-              : this.connecting
-                ? html`<div class="messages"><div class="connecting">连接中…</div></div>`
-                : html`
+            ${
+              this.connectError
+                ? html`<div class="connect-error">${this.connectError}</div>`
+                : this.connecting
+                  ? html`
+                      <div class="messages"><div class="connecting">连接中…</div></div>
+                    `
+                  : html`
                   <div class="messages">
-                    ${this.messages.length === 0
-                      ? html`
-                        <div class="msg-wrap ai">
-                          <div class="msg-role">🤖 AI 助手</div>
-                          <div class="msg-bubble">你好！我是 AI 客服助手，有什么可以帮您的吗？</div>
-                        </div>`
-                      : this.messages.map((m) => this._renderMessage(m))
+                    ${
+                      this.messages.length === 0
+                        ? html`
+                            <div class="msg-wrap ai">
+                              <div class="msg-role">🤖 AI 助手</div>
+                              <div class="msg-bubble">你好！我是 AI 客服助手，有什么可以帮您的吗？</div>
+                            </div>
+                          `
+                        : this.messages.map((m) => this._renderMessage(m))
                     }
                   </div>
                   <div class="input-area">
@@ -519,7 +586,9 @@ export class CSWidget extends LitElement {
                       rows="1"
                       placeholder="输入消息…（Enter 发送，Shift+Enter 换行）"
                       .value=${this.inputText}
-                      @input=${(e: Event) => { this.inputText = (e.target as HTMLTextAreaElement).value; }}
+                      @input=${(e: Event) => {
+                        this.inputText = (e.target as HTMLTextAreaElement).value;
+                      }}
                       @keydown=${this._onKeyDown}
                       ?disabled=${this.sending}
                     ></textarea>
@@ -532,7 +601,9 @@ export class CSWidget extends LitElement {
                 `
             }
           </div>
-        ` : nothing}
+        `
+            : nothing
+        }
       </div>
     `;
   }

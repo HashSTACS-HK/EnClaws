@@ -2,8 +2,8 @@
  * LLM Interaction Trace CRUD — SQLite implementation.
  */
 
-import { sqliteQuery, generateUUID } from "../index.js";
 import type { LlmInteractionTrace } from "../../types.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 
 function rowToTrace(row: Record<string, unknown>): LlmInteractionTrace {
   return {
@@ -19,10 +19,22 @@ function rowToTrace(row: Record<string, unknown>): LlmInteractionTrace {
     provider: (row.provider as string) ?? null,
     model: (row.model as string) ?? null,
     systemPrompt: (row.system_prompt as string) ?? null,
-    messages: (typeof row.messages === "string" ? JSON.parse(row.messages) : row.messages ?? []) as unknown[],
-    tools: row.tools ? (typeof row.tools === "string" ? JSON.parse(row.tools) : row.tools) as unknown[] : null,
-    requestParams: row.request_params ? (typeof row.request_params === "string" ? JSON.parse(row.request_params) : row.request_params) as Record<string, unknown> : null,
-    response: row.response ? (typeof row.response === "string" ? JSON.parse(row.response) : row.response) : null,
+    messages: (typeof row.messages === "string"
+      ? JSON.parse(row.messages)
+      : (row.messages ?? [])) as unknown[],
+    tools: row.tools
+      ? ((typeof row.tools === "string" ? JSON.parse(row.tools) : row.tools) as unknown[])
+      : null,
+    requestParams: row.request_params
+      ? ((typeof row.request_params === "string"
+          ? JSON.parse(row.request_params)
+          : row.request_params) as Record<string, unknown>)
+      : null,
+    response: row.response
+      ? typeof row.response === "string"
+        ? JSON.parse(row.response)
+        : row.response
+      : null,
     stopReason: (row.stop_reason as string) ?? null,
     errorMessage: (row.error_message as string) ?? null,
     inputTokens: Number(row.input_tokens ?? 0),
@@ -164,10 +176,7 @@ export async function getInteractionsByTurn(turnId: string): Promise<LlmInteract
 }
 
 export async function getInteractionTrace(id: string): Promise<LlmInteractionTrace | null> {
-  const result = sqliteQuery(
-    "SELECT * FROM llm_interaction_traces WHERE id = ?",
-    [id],
-  );
+  const result = sqliteQuery("SELECT * FROM llm_interaction_traces WHERE id = ?", [id]);
   return result.rows.length > 0 ? rowToTrace(result.rows[0]) : null;
 }
 

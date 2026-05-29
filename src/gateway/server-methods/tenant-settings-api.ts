@@ -12,17 +12,19 @@
  *   tenant.memory.delete   - Delete one enterprise knowledge Markdown file
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { isDbInitialized } from "../../db/index.js";
-import { getTenantById, updateTenant } from "../../db/models/tenant.js";
-import { createAuditLog } from "../../db/models/audit-log.js";
-import { assertPermission, RbacError } from "../../auth/rbac.js";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { TenantContext } from "../../auth/middleware.js";
+import { assertPermission, RbacError } from "../../auth/rbac.js";
+import { movePathToTrash } from "../../browser/trash.js";
 import {
   resolveTenantDir,
   resolveTenantMemoryIndexPath,
 } from "../../config/sessions/tenant-paths.js";
+import { isDbInitialized } from "../../db/index.js";
+import { createAuditLog } from "../../db/models/audit-log.js";
+import { getTenantById, updateTenant } from "../../db/models/tenant.js";
+import { isNotFoundPathError } from "../../infra/path-guards.js";
 import {
   extractKnowledgeText,
   isEditableKnowledgeTextFile,
@@ -30,12 +32,10 @@ import {
 } from "../../memory/document-ingest.js";
 import { getMemorySearchManager } from "../../memory/index.js";
 import { buildFileEntry, listMemoryFiles } from "../../memory/internal.js";
-import { movePathToTrash } from "../../browser/trash.js";
-import { isNotFoundPathError } from "../../infra/path-guards.js";
 import { DEFAULT_AGENT_ID } from "../../routing/session-key.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
 import { resolveRequestConfig } from "../tenant-session-utils.js";
-import fs from "node:fs/promises";
-import path from "node:path";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 const IDENTITY_FILENAME = "IDENTITY.md";
 const MEMORY_FILENAME = "MEMORY.md";
@@ -69,7 +69,11 @@ function getTenantCtx(
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -107,7 +111,9 @@ async function syncTenantKnowledgeIndex(ctx: TenantContext, reason: string): Pro
       defaultStorePath: resolveTenantMemoryIndexPath(ctx.tenantId),
     });
     if (!manager) {
-      console.warn(`[memory] tenant index sync skipped for ${ctx.tenantId}: ${error ?? "manager unavailable"}`);
+      console.warn(
+        `[memory] tenant index sync skipped for ${ctx.tenantId}: ${error ?? "manager unavailable"}`,
+      );
       return;
     }
     await manager.sync?.({ reason, force: true });
@@ -120,7 +126,9 @@ async function syncTenantKnowledgeIndex(ctx: TenantContext, reason: string): Pro
 export const tenantSettingsHandlers: GatewayRequestHandlers = {
   "tenant.settings.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -146,7 +154,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.settings.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.update");
@@ -164,8 +174,12 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
     };
 
     const updates: Record<string, unknown> = {};
-    if (name !== undefined) {updates.name = name;}
-    if (identityPrompt !== undefined) {updates.identityPrompt = identityPrompt;}
+    if (name !== undefined) {
+      updates.name = name;
+    }
+    if (identityPrompt !== undefined) {
+      updates.identityPrompt = identityPrompt;
+    }
 
     if (Object.keys(updates).length === 0) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "No fields to update"));
@@ -199,7 +213,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -225,7 +241,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.update": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.update");
@@ -272,7 +290,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.list": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -310,7 +330,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.file.get": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.read");
@@ -371,7 +393,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.file.set": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.update");
@@ -386,7 +410,11 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
     const raw = params as { name?: unknown; content?: unknown; contentBase64?: unknown };
     const name = readTenantMemoryFileName(params);
     if (!name || (typeof raw.content !== "string" && typeof raw.contentBase64 !== "string")) {
-      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "name and content are required"));
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_PARAMS, "name and content are required"),
+      );
       return;
     }
 
@@ -417,7 +445,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
       resource: `tenant:${ctx.tenantId}:memory:${resolved.rel}`,
       detail: {
         contentLength:
-          typeof raw.content === "string" ? raw.content.length : String(raw.contentBase64 ?? "").length,
+          typeof raw.content === "string"
+            ? raw.content.length
+            : String(raw.contentBase64 ?? "").length,
       },
     });
 
@@ -442,7 +472,9 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
 
   "tenant.memory.delete": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
-    if (!ctx) {return;}
+    if (!ctx) {
+      return;
+    }
 
     try {
       assertPermission(ctx.role, "tenant.update");

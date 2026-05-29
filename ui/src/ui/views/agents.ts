@@ -12,13 +12,13 @@ import type {
   SkillStatusReport,
   ToolsCatalogResult,
 } from "../types.ts";
+import { renderAgentKnowledge } from "./agents-panels-knowledge.ts";
+import { renderAgentPersona } from "./agents-panels-persona.ts";
 import {
   renderAgentFiles,
   renderAgentChannels,
   renderAgentCron,
 } from "./agents-panels-status-files.ts";
-import { renderAgentKnowledge } from "./agents-panels-knowledge.ts";
-import { renderAgentPersona } from "./agents-panels-persona.ts";
 import { renderAgentTools, renderAgentSkills } from "./agents-panels-tools-skills.ts";
 import {
   agentBadgeText,
@@ -34,7 +34,15 @@ import {
   resolveModelPrimary,
 } from "./agents-utils.ts";
 
-export type AgentsPanel = "overview" | "persona" | "files" | "tools" | "skills" | "channels" | "cron" | "knowledge";
+export type AgentsPanel =
+  | "overview"
+  | "persona"
+  | "files"
+  | "tools"
+  | "skills"
+  | "channels"
+  | "cron"
+  | "knowledge";
 
 export type AgentsProps = {
   loading: boolean;

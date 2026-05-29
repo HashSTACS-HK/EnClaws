@@ -3,7 +3,13 @@
  */
 
 import fs from "node:fs";
-import { sqliteQuery, generateUUID } from "../index.js";
+import { hashPassword } from "../../../auth/password.js";
+import {
+  resolveTenantDevicesDir,
+  resolveTenantCredentialsDir,
+  resolveTenantCronDir,
+} from "../../../config/sessions/tenant-paths.js";
+import { UserQuotaExceededError } from "../../models/user-quota-error.js";
 import type {
   User,
   SafeUser,
@@ -12,21 +18,19 @@ import type {
   UserRole,
   UserStatus,
 } from "../../types.js";
-import { hashPassword } from "../../../auth/password.js";
+import { sqliteQuery, generateUUID } from "../index.js";
 import { checkTenantQuota } from "./tenant.js";
-import { UserQuotaExceededError } from "../../models/user-quota-error.js";
-import {
-  resolveTenantDevicesDir,
-  resolveTenantCredentialsDir,
-  resolveTenantCronDir,
-} from "../../../config/sessions/tenant-paths.js";
 
 function rowToUser(row: Record<string, unknown>): User {
   let openIds: string[] = [];
   if (Array.isArray(row.open_ids)) {
     openIds = row.open_ids as string[];
   } else if (typeof row.open_ids === "string") {
-    try { openIds = JSON.parse(row.open_ids); } catch { openIds = []; }
+    try {
+      openIds = JSON.parse(row.open_ids);
+    } catch {
+      openIds = [];
+    }
   }
 
   return {
@@ -42,7 +46,9 @@ function rowToUser(row: Record<string, unknown>): User {
     status: row.status as UserStatus,
     avatarUrl: (row.avatar_url as string) ?? null,
     lastLoginAt: row.last_login_at ? new Date(row.last_login_at as string) : null,
-    settings: (typeof row.settings === "string" ? JSON.parse(row.settings) : row.settings ?? {}) as User["settings"],
+    settings: (typeof row.settings === "string"
+      ? JSON.parse(row.settings)
+      : (row.settings ?? {})) as User["settings"],
     forceChangePassword: Number(row.force_change_password ?? 0) === 1,
     passwordChangedAt: row.password_changed_at ? new Date(row.password_changed_at as string) : null,
     mfaSecret: (row.mfa_secret as string) ?? null,
@@ -121,14 +127,11 @@ export async function getUserByUnionId(unionId: string): Promise<User | null> {
   return result.rows.length > 0 ? rowToUser(result.rows[0]) : null;
 }
 
-export async function getUserByEmail(
-  tenantId: string,
-  email: string,
-): Promise<User | null> {
-  const result = sqliteQuery(
-    "SELECT * FROM users WHERE tenant_id = ? AND email = ?",
-    [tenantId, email.toLowerCase().trim()],
-  );
+export async function getUserByEmail(tenantId: string, email: string): Promise<User | null> {
+  const result = sqliteQuery("SELECT * FROM users WHERE tenant_id = ? AND email = ?", [
+    tenantId,
+    email.toLowerCase().trim(),
+  ]);
   return result.rows.length > 0 ? rowToUser(result.rows[0]) : null;
 }
 
@@ -157,8 +160,17 @@ export async function findUserByEmailAnyTenant(email: string): Promise<User | nu
 
 export async function listUsers(
   tenantId: string,
-  opts?: { status?: UserStatus; role?: UserRole; channelId?: string; limit?: number; offset?: number },
-): Promise<{ users: (SafeUser & { channelName: string | null; channelType: string | null })[]; total: number }> {
+  opts?: {
+    status?: UserStatus;
+    role?: UserRole;
+    channelId?: string;
+    limit?: number;
+    offset?: number;
+  },
+): Promise<{
+  users: (SafeUser & { channelName: string | null; channelType: string | null })[];
+  total: number;
+}> {
   const conditions: string[] = ["u.tenant_id = ?"];
   const values: unknown[] = [tenantId];
 
@@ -189,24 +201,22 @@ export async function listUsers(
        LIMIT ? OFFSET ?`,
     [...values, limit, offset],
   );
-  const countResult = sqliteQuery(
-    `SELECT COUNT(*) as count FROM users u ${where}`,
-    values,
-  );
+  const countResult = sqliteQuery(`SELECT COUNT(*) as count FROM users u ${where}`, values);
 
   return {
     users: dataResult.rows.map((row) => {
       const safe = toSafeUser(rowToUser(row));
-      return { ...safe, channelName: (row.channel_name as string) ?? null, channelType: (row.channel_type as string) ?? null };
+      return {
+        ...safe,
+        channelName: (row.channel_name as string) ?? null,
+        channelType: (row.channel_type as string) ?? null,
+      };
     }),
     total: Number(countResult.rows[0].count),
   };
 }
 
-export async function updateUser(
-  id: string,
-  updates: UpdateUserInput,
-): Promise<SafeUser | null> {
+export async function updateUser(id: string, updates: UpdateUserInput): Promise<SafeUser | null> {
   const sets: string[] = [];
   const values: unknown[] = [];
 
@@ -237,10 +247,7 @@ export async function updateUser(
   }
 
   values.push(id);
-  sqliteQuery(
-    `UPDATE users SET ${sets.join(", ")} WHERE id = ?`,
-    values,
-  );
+  sqliteQuery(`UPDATE users SET ${sets.join(", ")} WHERE id = ?`, values);
 
   const user = await getUserById(id);
   return user ? toSafeUser(user) : null;
@@ -281,7 +288,10 @@ export async function deleteUser(id: string): Promise<boolean> {
   return result.rowCount > 0;
 }
 
-export async function updateDisplayNameByOpenId(openId: string, displayName: string): Promise<void> {
+export async function updateDisplayNameByOpenId(
+  openId: string,
+  displayName: string,
+): Promise<void> {
   sqliteQuery(
     `UPDATE users SET display_name = ?, updated_at = datetime('now')
      WHERE status = 'active'
@@ -298,7 +308,6 @@ export async function findOrCreateUserByOpenId(
   unionId?: string,
   channelId?: string,
 ): Promise<{ user: User; created: boolean }> {
-
   // Helper: lazily backfill channel_id on legacy records (NULL → current channel)
   function backfillChannelId(user: User): void {
     if (channelId && !user.channelId) {
@@ -325,16 +334,23 @@ export async function findOrCreateUserByOpenId(
       // Append open_id to array if not already present
       if (openId && !user.openIds.includes(openId)) {
         const newOpenIds = [...user.openIds, openId];
-        sqliteQuery(
-          "UPDATE users SET open_ids = ? WHERE id = ?",
-          [JSON.stringify(newOpenIds), user.id],
-        );
+        sqliteQuery("UPDATE users SET open_ids = ? WHERE id = ?", [
+          JSON.stringify(newOpenIds),
+          user.id,
+        ]);
         user.openIds.push(openId);
       }
       // Update display_name if a real name is now available
       if (displayName && displayName !== user.displayName && !displayName.startsWith("ou_")) {
-        if (!user.displayName || user.displayName.startsWith("ou_") || user.displayName.startsWith("on_")) {
-          sqliteQuery("UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?", [displayName, user.id]);
+        if (
+          !user.displayName ||
+          user.displayName.startsWith("ou_") ||
+          user.displayName.startsWith("on_")
+        ) {
+          sqliteQuery(
+            "UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?",
+            [displayName, user.id],
+          );
           user.displayName = displayName;
         }
       }
@@ -365,8 +381,15 @@ export async function findOrCreateUserByOpenId(
     }
     // Update display_name if a real name is now available
     if (displayName && displayName !== user.displayName && !displayName.startsWith("ou_")) {
-      if (!user.displayName || user.displayName.startsWith("ou_") || user.displayName.startsWith("on_")) {
-        sqliteQuery("UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?", [displayName, user.id]);
+      if (
+        !user.displayName ||
+        user.displayName.startsWith("ou_") ||
+        user.displayName.startsWith("on_")
+      ) {
+        sqliteQuery(
+          "UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?",
+          [displayName, user.id],
+        );
         user.displayName = displayName;
       }
     }
@@ -386,7 +409,14 @@ export async function findOrCreateUserByOpenId(
     sqliteQuery(
       `INSERT INTO users (id, tenant_id, channel_id, open_ids, union_id, display_name, role)
        VALUES (?, ?, ?, ?, ?, ?, 'member')`,
-      [id, tenantId, channelId ?? null, JSON.stringify([openId]), unionId ?? null, displayName ?? openId],
+      [
+        id,
+        tenantId,
+        channelId ?? null,
+        JSON.stringify([openId]),
+        unionId ?? null,
+        displayName ?? openId,
+      ],
     );
     const result = sqliteQuery("SELECT * FROM users WHERE id = ?", [id]);
     const user = rowToUser(result.rows[0]);

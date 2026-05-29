@@ -65,10 +65,14 @@ if errorlevel 1 (
   )
 )
 set UPDATE_OK=1
-echo [%date% %time%] [enclaws-update] Update complete. >> "%LOGFILE%"${restartCmd ? `
+echo [%date% %time%] [enclaws-update] Update complete. >> "%LOGFILE%"${
+    restartCmd
+      ? `
 cd /d "${opts.cwd}"
 echo [%date% %time%] [enclaws-update] Restarting gateway... >> "%LOGFILE%"
-start "" ${restartCmd}` : ""}
+start "" ${restartCmd}`
+      : ""
+  }
 echo [%date% %time%] [enclaws-update] Done. >> "%LOGFILE%"
 :cleanup
 del "%~dp0update-deferred.vbs" 2>nul
@@ -95,10 +99,14 @@ while kill -0 ${opts.pid} 2>/dev/null; do sleep 1; done
 echo "[$(date)] [enclaws-update] Gateway process exited. Running update..." >> "$LOGFILE"
 if ${installCmd} >> "$LOGFILE" 2>&1 || ${installCmd} --omit=optional >> "$LOGFILE" 2>&1; then
   UPDATE_OK=1
-  echo "[$(date)] [enclaws-update] Update complete." >> "$LOGFILE"${restartCmd ? `
+  echo "[$(date)] [enclaws-update] Update complete." >> "$LOGFILE"${
+    restartCmd
+      ? `
   cd "${opts.cwd}"
   echo "[$(date)] [enclaws-update] Restarting gateway..." >> "$LOGFILE"
-  nohup ${restartCmd} > /dev/null 2>&1 &` : ""}
+  nohup ${restartCmd} > /dev/null 2>&1 &`
+      : ""
+  }
   echo "[$(date)] [enclaws-update] Done." >> "$LOGFILE"
 else
   echo "[$(date)] [enclaws-update] Update failed." >> "$LOGFILE"
@@ -108,7 +116,9 @@ rm -f "$0"
 `;
 }
 
-export async function spawnDeferredUpdate(opts: DeferredUpdateOptions): Promise<{ scriptPath: string }> {
+export async function spawnDeferredUpdate(
+  opts: DeferredUpdateOptions,
+): Promise<{ scriptPath: string }> {
   const isWindows = process.platform === "win32";
   const ext = isWindows ? ".bat" : ".sh";
   const script = isWindows ? buildBatScript(opts) : buildShScript(opts);

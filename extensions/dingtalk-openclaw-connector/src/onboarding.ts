@@ -1,22 +1,18 @@
-import type {
-  OpenClawConfig,
-  SecretInput,
-  WizardPrompter,
-} from "openclaw/plugin-sdk";
+import type { OpenClawConfig, SecretInput, WizardPrompter } from "openclaw/plugin-sdk";
 import type {
   ChannelSetupWizardAdapter,
   ChannelSetupDmPolicy,
   DmPolicy,
 } from "openclaw/plugin-sdk/setup";
+import { promptSingleChannelSecretInput } from "openclaw/plugin-sdk/setup";
+import { resolveDingtalkAccount, resolveDingtalkCredentials } from "./config/accounts.ts";
+import { probeDingtalk } from "./probe.ts";
 import {
   addWildcardAllowFrom,
   DEFAULT_ACCOUNT_ID,
   formatDocsLink,
   hasConfiguredSecretInput,
 } from "./sdk/helpers.ts";
-import { promptSingleChannelSecretInput } from "openclaw/plugin-sdk/setup";
-import { resolveDingtalkAccount, resolveDingtalkCredentials } from "./config/accounts.ts";
-import { probeDingtalk } from "./probe.ts";
 import type { DingtalkConfig } from "./types/index.ts";
 
 const channel = "dingtalk" as const;
@@ -41,7 +37,7 @@ function setDingtalkDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy): OpenClawC
     ...cfg,
     channels: {
       ...cfg.channels,
-      "dingtalk": {
+      dingtalk: {
         ...cfg.channels?.["dingtalk"],
         dmPolicy,
         ...(allowFrom ? { allowFrom } : {}),
@@ -55,7 +51,7 @@ function setDingtalkAllowFrom(cfg: OpenClawConfig, allowFrom: string[]): OpenCla
     ...cfg,
     channels: {
       ...cfg.channels,
-      "dingtalk": {
+      dingtalk: {
         ...cfg.channels?.["dingtalk"],
         allowFrom,
       },
@@ -146,7 +142,7 @@ function setDingtalkGroupPolicy(
     ...cfg,
     channels: {
       ...cfg.channels,
-      "dingtalk": {
+      dingtalk: {
         ...cfg.channels?.["dingtalk"],
         enabled: true,
         groupPolicy,
@@ -160,7 +156,7 @@ function setDingtalkGroupAllowFrom(cfg: OpenClawConfig, groupAllowFrom: string[]
     ...cfg,
     channels: {
       ...cfg.channels,
-      "dingtalk": {
+      dingtalk: {
         ...cfg.channels?.["dingtalk"],
         groupAllowFrom,
       },
@@ -173,7 +169,8 @@ const dmPolicy: ChannelSetupDmPolicy = {
   channel,
   policyKey: "channels.dingtalk.dmPolicy",
   allowFromKey: "channels.dingtalk.allowFrom",
-  getCurrent: (cfg) => (cfg.channels?.["dingtalk"] as DingtalkConfig | undefined)?.dmPolicy ?? "open",
+  getCurrent: (cfg) =>
+    (cfg.channels?.["dingtalk"] as DingtalkConfig | undefined)?.dmPolicy ?? "open",
   setPolicy: (cfg, policy) => setDingtalkDmPolicy(cfg, policy),
   promptAllowFrom: promptDingtalkAllowFrom,
 };
@@ -202,9 +199,7 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
     if (!configured) {
       statusLines.push("DingTalk: needs app credentials");
     } else if (probeResult?.ok) {
-      statusLines.push(
-        `DingTalk: connected as ${probeResult.botName ?? "bot"}`,
-      );
+      statusLines.push(`DingTalk: connected as ${probeResult.botName ?? "bot"}`);
     } else {
       statusLines.push("DingTalk: configured (connection not verified)");
     }
@@ -228,7 +223,9 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
       typeof dingtalkCfg?.clientId === "string" && dingtalkCfg.clientId.trim() && hasConfigSecret,
     );
     let canUseEnv = Boolean(
-      !hasConfigCreds && process.env.DINGTALK_CLIENT_ID?.trim() && process.env.DINGTALK_CLIENT_SECRET?.trim(),
+      !hasConfigCreds &&
+      process.env.DINGTALK_CLIENT_ID?.trim() &&
+      process.env.DINGTALK_CLIENT_SECRET?.trim(),
     );
 
     let next = cfg;
@@ -252,7 +249,7 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
           ...next,
           channels: {
             ...next.channels,
-            "dingtalk": { ...next.channels?.["dingtalk"], enabled: true },
+            dingtalk: { ...next.channels?.["dingtalk"], enabled: true },
           },
         };
         // Environment variables will be used, skip manual input
@@ -277,7 +274,8 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
           clientId = await promptDingtalkClientId({
             prompter,
             initialValue:
-              normalizeString(dingtalkCfg?.clientId) ?? normalizeString(process.env.DINGTALK_CLIENT_ID),
+              normalizeString(dingtalkCfg?.clientId) ??
+              normalizeString(process.env.DINGTALK_CLIENT_ID),
           });
 
           // Step 2: Then prompt for Client Secret
@@ -307,7 +305,8 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
         clientId = await promptDingtalkClientId({
           prompter,
           initialValue:
-            normalizeString(dingtalkCfg?.clientId) ?? normalizeString(process.env.DINGTALK_CLIENT_ID),
+            normalizeString(dingtalkCfg?.clientId) ??
+            normalizeString(process.env.DINGTALK_CLIENT_ID),
         });
 
         // Step 2: Then prompt for Client Secret
@@ -337,7 +336,7 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
         ...next,
         channels: {
           ...next.channels,
-          "dingtalk": {
+          dingtalk: {
             ...next.channels?.["dingtalk"],
             enabled: true,
             clientId,
@@ -353,10 +352,7 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
           clientSecret: clientSecretProbeValue ?? undefined,
         });
         if (probe.ok) {
-          await prompter.note(
-            `Connected as ${probe.botName ?? "bot"}`,
-            "DingTalk connection test",
-          );
+          await prompter.note(`Connected as ${probe.botName ?? "bot"}`, "DingTalk connection test");
         } else {
           await prompter.note(
             `Connection failed: ${probe.error ?? "unknown error"}`,
@@ -376,7 +372,8 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
         { value: "open", label: "Open - respond in all groups (requires mention)" },
         { value: "disabled", label: "Disabled - don't respond in groups" },
       ],
-      initialValue: (next.channels?.["dingtalk"] as DingtalkConfig | undefined)?.groupPolicy ?? "open",
+      initialValue:
+        (next.channels?.["dingtalk"] as DingtalkConfig | undefined)?.groupPolicy ?? "open",
     });
     if (groupPolicy) {
       next = setDingtalkGroupPolicy(next, groupPolicy as "open" | "allowlist" | "disabled");
@@ -384,7 +381,8 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
 
     // Group allowlist if needed
     if (groupPolicy === "allowlist") {
-      const existing = (next.channels?.["dingtalk"] as DingtalkConfig | undefined)?.groupAllowFrom ?? [];
+      const existing =
+        (next.channels?.["dingtalk"] as DingtalkConfig | undefined)?.groupAllowFrom ?? [];
       const entry = await prompter.text({
         message: "Group chat allowlist (conversation IDs)",
         placeholder: "cidxxxx, cidyyyy",
@@ -407,7 +405,7 @@ export const dingtalkOnboardingAdapter: ChannelSetupWizardAdapter = {
     ...cfg,
     channels: {
       ...cfg.channels,
-      "dingtalk": { ...cfg.channels?.["dingtalk"], enabled: false },
+      dingtalk: { ...cfg.channels?.["dingtalk"], enabled: false },
     },
   }),
 };

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 /**
  * feishu-create-doc: Create a Feishu cloud document using per-user OAuth token.
  *
@@ -16,11 +16,9 @@
  *   Error:   {"error":"...","message":"..."}
  */
 
-const path = require('path');
-const { getConfig, getValidToken } = require(
-  path.join(__dirname, '../feishu-auth/token-utils.js'),
-);
-const { sendCard } = require(path.join(__dirname, '../feishu-auth/send-card.js'));
+const path = require("path");
+const { getConfig, getValidToken } = require(path.join(__dirname, "../feishu-auth/token-utils.js"));
+const { sendCard } = require(path.join(__dirname, "../feishu-auth/send-card.js"));
 
 // ---------------------------------------------------------------------------
 // Arg parsing
@@ -28,25 +26,40 @@ const { sendCard } = require(path.join(__dirname, '../feishu-auth/send-card.js')
 
 function parseArgs() {
   const argv = process.argv.slice(2);
-  const r = { openId: null, title: '', markdown: '', folderToken: null, wikiNode: null };
+  const r = { openId: null, title: "", markdown: "", folderToken: null, wikiNode: null };
   for (let i = 0; i < argv.length; i++) {
     switch (argv[i]) {
-      case '--open-id':      r.openId      = argv[++i]; break;
-      case '--title':        r.title       = argv[++i]; break;
-      case '--markdown':     r.markdown    = argv[++i]; break;
-      case '--folder-token': r.folderToken = argv[++i]; break;
-      case '--wiki-node':    r.wikiNode    = argv[++i]; break;
+      case "--open-id":
+        r.openId = argv[++i];
+        break;
+      case "--title":
+        r.title = argv[++i];
+        break;
+      case "--markdown":
+        r.markdown = argv[++i];
+        break;
+      case "--folder-token":
+        r.folderToken = argv[++i];
+        break;
+      case "--wiki-node":
+        r.wikiNode = argv[++i];
+        break;
     }
   }
   return r;
 }
 
-function out(obj) { process.stdout.write(JSON.stringify(obj) + '\n'); }
-function die(obj) { out(obj); process.exit(1); }
+function out(obj) {
+  process.stdout.write(JSON.stringify(obj) + "\n");
+}
+function die(obj) {
+  out(obj);
+  process.exit(1);
+}
 
 /** User-visible reply with Markdown link (do not shorten or normalize title). */
 function replyCreated(title, docUrl) {
-  const t = title || '未命名文档';
+  const t = title || "未命名文档";
   return `文档「${t}」已创建。链接：[${t}](${docUrl})`;
 }
 
@@ -66,7 +79,12 @@ function replyCreated(title, docUrl) {
 // Feishu block_type constants
 const BT = {
   PARAGRAPH: 2,
-  H1: 3, H2: 4, H3: 5, H4: 6, H5: 7, H6: 8,
+  H1: 3,
+  H2: 4,
+  H3: 5,
+  H4: 6,
+  H5: 7,
+  H6: 8,
   BULLET: 12,
   ORDERED: 13,
   CODE: 14,
@@ -75,26 +93,76 @@ const BT = {
 
 // Language name → Feishu code language enum
 const LANG_MAP = {
-  'abap': 1, 'ada': 2, 'apache': 3, 'apex': 4, 'apiblueprint': 5,
-  'applescript': 6, 'bash': 27, 'sh': 27, 'shell': 27,
-  'c': 8, 'cpp': 9, 'c++': 9, 'csharp': 10, 'c#': 10,
-  'css': 11, 'coffeescript': 12, 'cmake': 13, 'd': 14,
-  'dart': 15, 'delphi': 16, 'dockerfile': 17,
-  'elixir': 18, 'elm': 19, 'erlang': 20,
-  'fortran': 21, 'fsharp': 22, 'f#': 22,
-  'go': 23, 'groovy': 24,
-  'html': 25, 'http': 26,
-  'java': 28, 'javascript': 29, 'js': 29,
-  'json': 30, 'julia': 31, 'kotlin': 32,
-  'latex': 33, 'lua': 34,
-  'makefile': 35, 'markdown': 36, 'matlab': 37,
-  'mermaid': 38, 'nginx': 39, 'objective-c': 40, 'objc': 40,
-  'ocaml': 41, 'pascal': 42, 'perl': 43, 'php': 44,
-  'powershell': 45, 'prolog': 46, 'protobuf': 47, 'python': 49,
-  'r': 50, 'ruby': 51, 'rust': 52, 'scala': 53, 'sql': 56,
-  'swift': 57, 'toml': 60, 'tsx': 61, 'typescript': 62, 'ts': 62,
-  'vb': 63, 'vbnet': 63, 'verilog': 64,
-  'xml': 65, 'yaml': 66, 'yml': 66,
+  abap: 1,
+  ada: 2,
+  apache: 3,
+  apex: 4,
+  apiblueprint: 5,
+  applescript: 6,
+  bash: 27,
+  sh: 27,
+  shell: 27,
+  c: 8,
+  cpp: 9,
+  "c++": 9,
+  csharp: 10,
+  "c#": 10,
+  css: 11,
+  coffeescript: 12,
+  cmake: 13,
+  d: 14,
+  dart: 15,
+  delphi: 16,
+  dockerfile: 17,
+  elixir: 18,
+  elm: 19,
+  erlang: 20,
+  fortran: 21,
+  fsharp: 22,
+  "f#": 22,
+  go: 23,
+  groovy: 24,
+  html: 25,
+  http: 26,
+  java: 28,
+  javascript: 29,
+  js: 29,
+  json: 30,
+  julia: 31,
+  kotlin: 32,
+  latex: 33,
+  lua: 34,
+  makefile: 35,
+  markdown: 36,
+  matlab: 37,
+  mermaid: 38,
+  nginx: 39,
+  "objective-c": 40,
+  objc: 40,
+  ocaml: 41,
+  pascal: 42,
+  perl: 43,
+  php: 44,
+  powershell: 45,
+  prolog: 46,
+  protobuf: 47,
+  python: 49,
+  r: 50,
+  ruby: 51,
+  rust: 52,
+  scala: 53,
+  sql: 56,
+  swift: 57,
+  toml: 60,
+  tsx: 61,
+  typescript: 62,
+  ts: 62,
+  vb: 63,
+  vbnet: 63,
+  verilog: 64,
+  xml: 65,
+  yaml: 66,
+  yml: 66,
 };
 const DEFAULT_LANG = 1; // plain text
 
@@ -129,7 +197,7 @@ function textBlock(type, keyName, elements) {
 }
 
 function paragraphBlock(elements) {
-  return textBlock(BT.PARAGRAPH, 'text', elements);
+  return textBlock(BT.PARAGRAPH, "text", elements);
 }
 
 function headingBlock(level, text) {
@@ -139,11 +207,11 @@ function headingBlock(level, text) {
 }
 
 function bulletBlock(elements) {
-  return textBlock(BT.BULLET, 'bullet', elements);
+  return textBlock(BT.BULLET, "bullet", elements);
 }
 
 function orderedBlock(elements) {
-  return textBlock(BT.ORDERED, 'ordered', elements);
+  return textBlock(BT.ORDERED, "ordered", elements);
 }
 
 function codeBlock(code, lang) {
@@ -167,7 +235,7 @@ function markdownToBlocks(md) {
   if (!md || !md.trim()) return [];
 
   const blocks = [];
-  const lines = md.split('\n');
+  const lines = md.split("\n");
   let i = 0;
 
   while (i < lines.length) {
@@ -176,15 +244,15 @@ function markdownToBlocks(md) {
     // --- Fenced code block ---
     const codeFenceMatch = line.match(/^```(\w*)/);
     if (codeFenceMatch) {
-      const lang = codeFenceMatch[1] || '';
+      const lang = codeFenceMatch[1] || "";
       const codeLines = [];
       i++;
-      while (i < lines.length && !lines[i].startsWith('```')) {
+      while (i < lines.length && !lines[i].startsWith("```")) {
         codeLines.push(lines[i]);
         i++;
       }
       i++; // skip closing ```
-      blocks.push(codeBlock(codeLines.join('\n'), lang));
+      blocks.push(codeBlock(codeLines.join("\n"), lang));
       continue;
     }
 
@@ -241,7 +309,7 @@ function markdownToBlocks(md) {
       i++;
     }
     if (paraLines.length > 0) {
-      blocks.push(paragraphBlock(parseInline(paraLines.join('\n'))));
+      blocks.push(paragraphBlock(parseInline(paraLines.join("\n"))));
     }
   }
 
@@ -256,7 +324,7 @@ async function apiCall(method, urlPath, token, body) {
   const res = await fetch(`https://open.feishu.cn/open-apis${urlPath}`, {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -268,7 +336,7 @@ async function createDocument(token, title, folderToken) {
   const body = {};
   if (title) body.title = title;
   if (folderToken) body.folder_token = folderToken;
-  const data = await apiCall('POST', '/docx/v1/documents', token, body);
+  const data = await apiCall("POST", "/docx/v1/documents", token, body);
   if (data.code !== 0) {
     throw new Error(`Create document failed: code=${data.code} msg=${data.msg}`);
   }
@@ -282,7 +350,7 @@ async function appendBlocks(token, documentId, blocks) {
   for (let i = 0; i < blocks.length; i += BATCH) {
     const batch = blocks.slice(i, i + BATCH);
     const data = await apiCall(
-      'POST',
+      "POST",
       `/docx/v1/documents/${documentId}/blocks/${documentId}/children`,
       token,
       { children: batch, index: -1 },
@@ -295,13 +363,11 @@ async function appendBlocks(token, documentId, blocks) {
 
 async function moveToWikiNode(token, documentId, wikiNode) {
   // Extract token from URL if full URL is given
-  const nodeToken = wikiNode.includes('/')
-    ? wikiNode.split('/').pop().split('?')[0]
-    : wikiNode;
+  const nodeToken = wikiNode.includes("/") ? wikiNode.split("/").pop().split("?")[0] : wikiNode;
 
-  const data = await apiCall('POST', '/wiki/v2/spaces/move_docs_to_wiki', token, {
+  const data = await apiCall("POST", "/wiki/v2/spaces/move_docs_to_wiki", token, {
     parent_wiki_token: nodeToken,
-    obj_type: 'docx',
+    obj_type: "docx",
     obj_token: documentId,
   });
   if (data.code !== 0) {
@@ -318,14 +384,14 @@ async function main() {
   const args = parseArgs();
 
   if (!args.openId) {
-    die({ error: 'missing_param', message: '--open-id 参数必填' });
+    die({ error: "missing_param", message: "--open-id 参数必填" });
   }
 
   let cfg;
   try {
     cfg = getConfig(__dirname);
   } catch (err) {
-    die({ error: 'config_error', message: err.message });
+    die({ error: "config_error", message: err.message });
   }
 
   // Get valid user access token (auto-refresh if needed)
@@ -333,21 +399,21 @@ async function main() {
   try {
     accessToken = await getValidToken(args.openId, cfg.appId, cfg.appSecret);
   } catch (err) {
-    die({ error: 'token_error', message: err.message });
+    die({ error: "token_error", message: err.message });
   }
 
   if (!accessToken) {
     die({
-      error: 'auth_required',
+      error: "auth_required",
       message:
-        '用户未完成飞书授权或授权已过期。请调用 feishu-auth skill 完成授权后重试。\n' +
+        "用户未完成飞书授权或授权已过期。请调用 feishu-auth skill 完成授权后重试。\n" +
         `用户 open_id: ${args.openId}`,
     });
   }
 
   try {
     // 1. Create the document
-    const doc = await createDocument(accessToken, args.title || '未命名文档', args.folderToken);
+    const doc = await createDocument(accessToken, args.title || "未命名文档", args.folderToken);
     const documentId = doc.document_id;
     const docUrl = `https://www.feishu.cn/docx/${documentId}`;
 
@@ -365,14 +431,14 @@ async function main() {
         await moveToWikiNode(accessToken, documentId, args.wikiNode);
       } catch (wikiErr) {
         // Non-fatal: document is created, just report the move failure
-        const warnTitle = args.title || doc.title || '未命名文档';
+        const warnTitle = args.title || doc.title || "未命名文档";
         await sendCard({
           openId: args.openId,
-          title: '📄 文档已创建',
+          title: "📄 文档已创建",
           body: `文档「${warnTitle}」已创建（移动到知识库失败：${wikiErr.message}）`,
-          buttonText: '点击查看文档',
+          buttonText: "点击查看文档",
           buttonUrl: docUrl,
-          color: 'orange',
+          color: "orange",
         }).catch(() => {});
         out({
           doc_id: documentId,
@@ -385,14 +451,14 @@ async function main() {
       }
     }
 
-    const finalTitle = args.title || doc.title || '未命名文档';
+    const finalTitle = args.title || doc.title || "未命名文档";
     await sendCard({
       openId: args.openId,
-      title: '📄 文档已创建',
+      title: "📄 文档已创建",
       body: `文档「${finalTitle}」创建成功`,
-      buttonText: '点击查看文档',
+      buttonText: "点击查看文档",
       buttonUrl: docUrl,
-      color: 'green',
+      color: "green",
     }).catch(() => {});
     out({
       doc_id: documentId,
@@ -402,25 +468,29 @@ async function main() {
     });
   } catch (err) {
     // Token may have been revoked server-side
-    if (err.message && err.message.includes('99991663')) {
+    if (err.message && err.message.includes("99991663")) {
       die({
-        error: 'auth_required',
-        message: '飞书 token 已失效，请重新授权（调用 feishu-auth --init）',
+        error: "auth_required",
+        message: "飞书 token 已失效，请重新授权（调用 feishu-auth --init）",
       });
     }
-    const msg = err.message || '';
-    if (msg.includes('99991400')) {
-      die({ error: 'rate_limited', message: msg || '请求频率超限，请稍后重试' });
+    const msg = err.message || "";
+    if (msg.includes("99991400")) {
+      die({ error: "rate_limited", message: msg || "请求频率超限，请稍后重试" });
     }
-    if (msg.includes('99991672') || msg.includes('99991679') || /permission|scope|not support|tenant/i.test(msg)) {
+    if (
+      msg.includes("99991672") ||
+      msg.includes("99991679") ||
+      /permission|scope|not support|tenant/i.test(msg)
+    ) {
       die({
-        error: 'permission_required',
+        error: "permission_required",
         message: msg,
-        required_scopes: ['docx:document', 'docx:document:create', 'docs:doc', 'drive:drive'],
-        reply: '⚠️ **权限不足，需要重新授权以获取所需权限。**',
+        required_scopes: ["docx:document", "docx:document:create", "docs:doc", "drive:drive"],
+        reply: "⚠️ **权限不足，需要重新授权以获取所需权限。**",
       });
     }
-    die({ error: 'api_error', message: err.message });
+    die({ error: "api_error", message: err.message });
   }
 }
 

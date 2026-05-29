@@ -39,7 +39,9 @@ const REQUIRED_CLASS_COUNT = 3;
 let blacklistCache: Set<string> | null = null;
 
 function loadBlacklist(): Set<string> {
-  if (blacklistCache) {return blacklistCache;}
+  if (blacklistCache) {
+    return blacklistCache;
+  }
   const set = new Set<string>();
 
   // 1. Bundled list
@@ -49,7 +51,9 @@ function loadBlacklist(): Set<string> {
     const parsed = JSON.parse(raw) as unknown;
     if (Array.isArray(parsed)) {
       for (const entry of parsed) {
-        if (typeof entry === "string") {set.add(entry.toLowerCase());}
+        if (typeof entry === "string") {
+          set.add(entry.toLowerCase());
+        }
       }
     }
   } catch {
@@ -64,11 +68,15 @@ function loadBlacklist(): Set<string> {
       const parsed = raw.startsWith("[") ? JSON.parse(raw) : raw.split(/\r?\n/);
       if (Array.isArray(parsed)) {
         for (const entry of parsed) {
-          if (typeof entry === "string" && entry.trim()) {set.add(entry.trim().toLowerCase());}
+          if (typeof entry === "string" && entry.trim()) {
+            set.add(entry.trim().toLowerCase());
+          }
         }
       }
     } catch (err) {
-      console.warn(`[password-policy] Failed to load extra weak password list at ${extraPath}: ${err instanceof Error ? err.message : String(err)}`);
+      console.warn(
+        `[password-policy] Failed to load extra weak password list at ${extraPath}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -129,11 +137,19 @@ export interface PasswordValidationResult {
 
 function classCount(password: string): number {
   let n = 0;
-  if (/[a-z]/.test(password)) {n++;}
-  if (/[A-Z]/.test(password)) {n++;}
-  if (/[0-9]/.test(password)) {n++;}
+  if (/[a-z]/.test(password)) {
+    n++;
+  }
+  if (/[A-Z]/.test(password)) {
+    n++;
+  }
+  if (/[0-9]/.test(password)) {
+    n++;
+  }
   // eslint-disable-next-line no-useless-escape
-  if (/[^a-zA-Z0-9]/.test(password)) {n++;}
+  if (/[^a-zA-Z0-9]/.test(password)) {
+    n++;
+  }
   return n;
 }
 
@@ -146,7 +162,9 @@ function hasRepeatedRun(password: string, runLength = 3): boolean {
         break;
       }
     }
-    if (same) {return true;}
+    if (same) {
+      return true;
+    }
   }
   return false;
 }

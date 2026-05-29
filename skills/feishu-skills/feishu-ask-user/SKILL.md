@@ -7,6 +7,7 @@ inline: true
 ---
 
 # feishu-ask-user
+
 > **模块兼容**：所有脚本均提供 `.js` 和 `.mjs` 两个版本。优先使用 `.js`，若报 `require is not defined` 错误则改用同名 `.mjs` 文件。
 
 通过飞书交互式卡片向用户提问，收集选择或文本输入。
@@ -14,6 +15,7 @@ inline: true
 ## 工具行为
 
 该工具是**非阻塞**的：
+
 1. 调用后立即发送交互式卡片给用户
 2. 工具返回 `{ status: 'pending' }`
 3. 用户在卡片上填写并提交
@@ -42,25 +44,28 @@ inline: true
 
 ## 参数说明
 
-| 参数 | 类型 | 说明 |
-|---|---|---|
-| `questions` | Array(1-6) | 问题列表，最少 1 个，最多 6 个 |
-| `questions[].question` | String | 完整的问题描述 |
-| `questions[].header` | String | 短标签（最多 12 字符），显示在卡片左侧 |
-| `questions[].options` | Array | 选项列表；**留空 `[]` 表示自由文本输入** |
-| `questions[].options[].label` | String | 选项的显示文本 |
-| `questions[].options[].description` | String | 选项的补充说明 |
-| `questions[].multiSelect` | Boolean | `true` = 多选下拉，`false` = 单选下拉（`options` 为空时忽略） |
+| 参数                                | 类型       | 说明                                                          |
+| ----------------------------------- | ---------- | ------------------------------------------------------------- |
+| `questions`                         | Array(1-6) | 问题列表，最少 1 个，最多 6 个                                |
+| `questions[].question`              | String     | 完整的问题描述                                                |
+| `questions[].header`                | String     | 短标签（最多 12 字符），显示在卡片左侧                        |
+| `questions[].options`               | Array      | 选项列表；**留空 `[]` 表示自由文本输入**                      |
+| `questions[].options[].label`       | String     | 选项的显示文本                                                |
+| `questions[].options[].description` | String     | 选项的补充说明                                                |
+| `questions[].multiSelect`           | Boolean    | `true` = 多选下拉，`false` = 单选下拉（`options` 为空时忽略） |
 
 ## 输入类型
 
 ### 单选下拉（默认）
+
 提供 `options` 数组 + `multiSelect: false`，用户从下拉列表中选一个。
 
 ### 多选下拉
+
 提供 `options` 数组 + `multiSelect: true`，用户可选多个，答案以逗号分隔返回。
 
 ### 自由文本输入
+
 将 `options` 设为空数组 `[]`，用户看到文本输入框。
 
 ## 关键约束
@@ -75,44 +80,54 @@ inline: true
 ## 典型场景
 
 ### 需要用户确认操作
+
 当执行删除、覆盖等高风险操作前，用此工具确认。
 
 ### 需要用户选择
+
 当有多个候选项（如知识库空间、文件夹）需要用户指定时使用。
 
 ### 需要用户补充信息
+
 当缺少必要参数且无法自动推断时，用此工具收集。
 
 ## 示例
 
 ### 单选确认
+
 ```json
 {
-  "questions": [{
-    "question": "确认要删除「项目文档」吗？此操作不可恢复。",
-    "header": "确认删除",
-    "options": [
-      { "label": "确认删除", "description": "永久删除该文档" },
-      { "label": "取消", "description": "保留文档不做改动" }
-    ],
-    "multiSelect": false
-  }]
+  "questions": [
+    {
+      "question": "确认要删除「项目文档」吗？此操作不可恢复。",
+      "header": "确认删除",
+      "options": [
+        { "label": "确认删除", "description": "永久删除该文档" },
+        { "label": "取消", "description": "保留文档不做改动" }
+      ],
+      "multiSelect": false
+    }
+  ]
 }
 ```
 
 ### 自由文本输入
+
 ```json
 {
-  "questions": [{
-    "question": "请输入新文档的标题",
-    "header": "文档标题",
-    "options": [],
-    "multiSelect": false
-  }]
+  "questions": [
+    {
+      "question": "请输入新文档的标题",
+      "header": "文档标题",
+      "options": [],
+      "multiSelect": false
+    }
+  ]
 }
 ```
 
 ### 混合问题
+
 ```json
 {
   "questions": [

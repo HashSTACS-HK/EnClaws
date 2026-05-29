@@ -17,20 +17,22 @@ description: |
 返回的 Markdown 中，媒体文件以 HTML 标签形式出现：
 
 - **图片**：
+
   ```html
-  <image token="Z1FjxxxxxxxxxxxxxxxxxxxtnAc" width="1833" height="2491" align="center"/>
+  <image token="Z1FjxxxxxxxxxxxxxxxxxxxtnAc" width="1833" height="2491" align="center" />
   ```
 
 - **文件**：
+
   ```html
   <view type="1">
-    <file token="Z1FjxxxxxxxxxxxxxxxxxxxtnAc" name="skills.zip"/>
+    <file token="Z1FjxxxxxxxxxxxxxxxxxxxtnAc" name="skills.zip" />
   </view>
   ```
 
 - **画板**：
   ```html
-  <whiteboard token="Z1FjxxxxxxxxxxxxxxxxxxxtnAc"/>
+  <whiteboard token="Z1FjxxxxxxxxxxxxxxxxxxxtnAc" />
   ```
 
 ### 获取步骤
@@ -66,13 +68,12 @@ description: |
 2. **从返回的 `node` 中获取 `obj_type`（实际文档类型）和 `obj_token`（实际文档 token）**
 3. **根据 `obj_type` 调用对应工具**：
 
-| obj_type | 工具 | 传参 |
-|----------|------|------|
-| `docx` | `feishu_mcp_fetch_doc` | doc_id = obj_token |
-| `sheet` | `feishu_sheet` | spreadsheet_token = obj_token |
-| `bitable` | `feishu_bitable_*` 系列 | app_token = obj_token |
-| 其他 | 告知用户暂不支持该类型 | — |
-
+| obj_type  | 工具                    | 传参                          |
+| --------- | ----------------------- | ----------------------------- |
+| `docx`    | `feishu_mcp_fetch_doc`  | doc_id = obj_token            |
+| `sheet`   | `feishu_sheet`          | spreadsheet_token = obj_token |
+| `bitable` | `feishu_bitable_*` 系列 | app_token = obj_token         |
+| 其他      | 告知用户暂不支持该类型  | —                             |
 
 ### 示例
 
@@ -84,10 +85,10 @@ description: |
 
 ## 工具组合
 
-| 需求 | 工具 |
-|------|------|
-| 获取文档文本 | `feishu_mcp_fetch_doc` |
-| 下载图片/文件/画板 | `feishu_doc_media`（action: download） |
+| 需求                 | 工具                                    |
+| -------------------- | --------------------------------------- |
+| 获取文档文本         | `feishu_mcp_fetch_doc`                  |
+| 下载图片/文件/画板   | `feishu_doc_media`（action: download）  |
 | 解析 wiki token 类型 | `feishu_wiki_space_node`（action: get） |
-| 读写电子表格 | `feishu_sheet` |
-| 操作多维表格 | `feishu_bitable_*` 系列 |
+| 读写电子表格         | `feishu_sheet`                          |
+| 操作多维表格         | `feishu_bitable_*` 系列                 |

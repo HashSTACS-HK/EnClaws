@@ -12,10 +12,8 @@
  * All methods require platform-admin role.
  */
 
-import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
-import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { isDbInitialized } from "../../db/index.js";
 import type { TenantContext } from "../../auth/middleware.js";
+import { isDbInitialized } from "../../db/index.js";
 import {
   getPlatformSummary,
   getTokenTrend,
@@ -24,13 +22,19 @@ import {
   getChannelDistribution,
   getUserActivity,
 } from "../../db/models/platform-stats.js";
+import { ErrorCodes, errorShape } from "../protocol/index.js";
+import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
 
 function requirePlatformAdmin(
   client: GatewayRequestHandlerOptions["client"],
   respond: GatewayRequestHandlerOptions["respond"],
 ): TenantContext | null {
   if (!isDbInitialized()) {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Multi-tenant mode not enabled"),
+    );
     return null;
   }
   const tenant = (client as unknown as { tenant?: TenantContext })?.tenant;
@@ -39,7 +43,11 @@ function requirePlatformAdmin(
     return null;
   }
   if (tenant.role !== "platform-admin") {
-    respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Platform admin access required"));
+    respond(
+      false,
+      undefined,
+      errorShape(ErrorCodes.INVALID_REQUEST, "Platform admin access required"),
+    );
     return null;
   }
   return tenant;
@@ -47,7 +55,9 @@ function requirePlatformAdmin(
 
 export const platformOverviewHandlers: GatewayRequestHandlers = {
   "platform.overview.summary": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) {return;}
+    if (!requirePlatformAdmin(client, respond)) {
+      return;
+    }
 
     try {
       const summary = await getPlatformSummary();
@@ -60,12 +70,25 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
         ...summary,
       });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, err instanceof Error ? err.message : "Failed to load summary"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INTERNAL_ERROR,
+          err instanceof Error ? err.message : "Failed to load summary",
+        ),
+      );
     }
   },
 
-  "platform.overview.tokenTrend": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) {return;}
+  "platform.overview.tokenTrend": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
+    if (!requirePlatformAdmin(client, respond)) {
+      return;
+    }
 
     const { days } = params as { days?: number };
     const d = days === 7 ? 7 : 30;
@@ -74,58 +97,112 @@ export const platformOverviewHandlers: GatewayRequestHandlers = {
       const trend = await getTokenTrend(d);
       respond(true, { trend });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, err instanceof Error ? err.message : "Failed to load token trend"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INTERNAL_ERROR,
+          err instanceof Error ? err.message : "Failed to load token trend",
+        ),
+      );
     }
   },
 
-  "platform.overview.tokenRank": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) {return;}
+  "platform.overview.tokenRank": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
+    if (!requirePlatformAdmin(client, respond)) {
+      return;
+    }
 
     const { period, limit } = params as { period?: string; limit?: number };
-    const p = (period === "month" || period === "today") ? period : "all";
+    const p = period === "month" || period === "today" ? period : "all";
     const l = Math.min(Math.max(limit ?? 5, 1), 20);
 
     try {
       const rank = await getTokenRank(p, l);
       respond(true, rank);
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, err instanceof Error ? err.message : "Failed to load token rank"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INTERNAL_ERROR,
+          err instanceof Error ? err.message : "Failed to load token rank",
+        ),
+      );
     }
   },
 
-  "platform.overview.llmStats": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) {return;}
+  "platform.overview.llmStats": async ({
+    params,
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
+    if (!requirePlatformAdmin(client, respond)) {
+      return;
+    }
 
     const { period } = params as { period?: string };
-    const p = (period === "month" || period === "today") ? period : "all";
+    const p = period === "month" || period === "today" ? period : "all";
 
     try {
       const stats = await getLlmStats(p);
       respond(true, stats);
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, err instanceof Error ? err.message : "Failed to load LLM stats"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INTERNAL_ERROR,
+          err instanceof Error ? err.message : "Failed to load LLM stats",
+        ),
+      );
     }
   },
 
-  "platform.overview.channelDistribution": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) {return;}
+  "platform.overview.channelDistribution": async ({
+    client,
+    respond,
+  }: GatewayRequestHandlerOptions) => {
+    if (!requirePlatformAdmin(client, respond)) {
+      return;
+    }
 
     try {
       const channels = await getChannelDistribution();
       respond(true, { channels });
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, err instanceof Error ? err.message : "Failed to load channel distribution"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INTERNAL_ERROR,
+          err instanceof Error ? err.message : "Failed to load channel distribution",
+        ),
+      );
     }
   },
 
   "platform.overview.userActivity": async ({ client, respond }: GatewayRequestHandlerOptions) => {
-    if (!requirePlatformAdmin(client, respond)) {return;}
+    if (!requirePlatformAdmin(client, respond)) {
+      return;
+    }
 
     try {
       const activity = await getUserActivity();
       respond(true, activity);
     } catch (err) {
-      respond(false, undefined, errorShape(ErrorCodes.INTERNAL_ERROR, err instanceof Error ? err.message : "Failed to load user activity"));
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INTERNAL_ERROR,
+          err instanceof Error ? err.message : "Failed to load user activity",
+        ),
+      );
     }
   },
 };
