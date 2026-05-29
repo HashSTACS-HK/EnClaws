@@ -1233,7 +1233,7 @@ export const pt_BR: TranslationMap = {
         warning: "Esta é sua única chance de copiar o App Secret. Ele é armazenado como hash unidirecional — o servidor não pode mostrá-lo novamente.",
         appId: "App ID",
         appSecret: "App Secret",
-        endpointUrl: "URL do Endpoint",
+        endpointUrl: "URL completa do endpoint",
         copy: "Copiar",
         copied: "Copiado",
         doneBtn: "Já Salvei",

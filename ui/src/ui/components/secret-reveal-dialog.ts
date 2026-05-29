@@ -15,6 +15,7 @@
 import { html, css, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { caretFix } from "../shared-styles.ts";
+import { t, I18nController } from "../../i18n/index.ts";
 
 export interface SecretRevealOptions {
   appId: string;
@@ -108,6 +109,9 @@ export class SecretRevealDialog extends LitElement {
   /** Tracks which field was just copied (for feedback). 记录刚复制的字段名。 */
   @state() private _copied: string | null = null;
 
+  // Re-renders when the active locale changes. 语言切换时触发重新渲染。
+  private _i18n = new I18nController(this);
+
   private _resolve?: () => void;
   private _copyTimer?: ReturnType<typeof setTimeout>;
 
@@ -171,7 +175,7 @@ export class SecretRevealDialog extends LitElement {
           <div class="fields">
             ${this._renderField("App ID", "appId", this.appId)}
             ${this._renderField("App Secret", "appSecret", this.appSecret)}
-            ${this._renderField("Endpoint URL", "endpointUrl", this.endpointUrl)}
+            ${this._renderField(t("cs.apiMode.secretDialog.endpointUrl"), "endpointUrl", this.endpointUrl)}
           </div>
 
           <div class="footer">

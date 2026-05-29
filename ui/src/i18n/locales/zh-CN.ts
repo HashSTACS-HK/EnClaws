@@ -1690,7 +1690,7 @@ export const zh_CN: TranslationMap = {
         warning: "这是您唯一一次查看 App Secret 的机会。密钥以单向哈希存储，服务器无法再次显示。",
         appId: "App ID",
         appSecret: "App Secret",
-        endpointUrl: "接口地址",
+        endpointUrl: "完整调用地址",
         copy: "复制",
         copied: "已复制",
         doneBtn: "我已保存",

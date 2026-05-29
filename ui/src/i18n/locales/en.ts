@@ -1669,7 +1669,7 @@ export const en: TranslationMap = {
         warning: "This is your only chance to copy the App Secret. It is stored as a one-way hash — the server cannot show it again.",
         appId: "App ID",
         appSecret: "App Secret",
-        endpointUrl: "Endpoint URL",
+        endpointUrl: "Full Endpoint URL",
         copy: "Copy",
         copied: "Copied",
         doneBtn: "I've Saved It",

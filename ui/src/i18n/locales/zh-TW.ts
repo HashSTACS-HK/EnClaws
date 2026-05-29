@@ -1230,7 +1230,7 @@ export const zh_TW: TranslationMap = {
         warning: "這是您唯一一次查看 App Secret 的機會。密鑰以單向雜湊儲存，伺服器無法再次顯示。",
         appId: "App ID",
         appSecret: "App Secret",
-        endpointUrl: "端點網址",
+        endpointUrl: "完整呼叫地址",
         copy: "複製",
         copied: "已複製",
         doneBtn: "我已儲存",

@@ -1234,7 +1234,7 @@ export const de: TranslationMap = {
         warning: "Dies ist Ihre einzige Möglichkeit, das App Secret zu kopieren. Es wird als Einweg-Hash gespeichert — der Server kann es nicht erneut anzeigen.",
         appId: "App ID",
         appSecret: "App Secret",
-        endpointUrl: "Endpunkt-URL",
+        endpointUrl: "Vollständige Endpunkt-URL",
         copy: "Kopieren",
         copied: "Kopiert",
         doneBtn: "Gespeichert",
