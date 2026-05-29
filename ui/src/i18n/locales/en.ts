@@ -1,6 +1,12 @@
 import type { TranslationMap } from "../lib/types.ts";
 
 export const en: TranslationMap = {
+  rpc: {
+    errors: {
+      requestTimeout: "Request timed out after 60s. Backend may still be processing — click 'Refresh' shortly to check the result.",
+      connectionFailed: "Connection failed. Please check the gateway URL and network status.",
+    },
+  },
   channels: {
     feishu: "Feishu",
     dingtalk: "DingTalk",

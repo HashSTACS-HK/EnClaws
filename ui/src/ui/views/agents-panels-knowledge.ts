@@ -93,9 +93,8 @@ export function renderAgentKnowledge(params: {
           : nothing
       }
       ${
-        list
-          ? html`<div class="muted mono" style="margin-top: 16px;">${t("agents.knowledge.workspace", { workspace: list.workspace })}</div>`
-          : nothing
+        /* workspace 路径已隐藏（租户管理员视角无用，debug 走日志） */
+        nothing
       }
       ${
         params.agentKnowledgeError

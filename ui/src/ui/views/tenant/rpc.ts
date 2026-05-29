@@ -4,6 +4,7 @@
  * Handles the mandatory connect handshake before sending the actual request.
  */
 
+import { t } from "../../../i18n/index.ts";
 import { clearAuth, getAccessToken, loadAuth, refreshAccessToken } from "../../auth-store.ts";
 import { loadSettings } from "../../storage.ts";
 import { generateUUID } from "../../uuid.ts";
@@ -110,8 +111,8 @@ export async function tenantRpc(
       }
     };
 
-    ws.onerror = () => reject(new Error("连接失败"));
-    setTimeout(() => { ws.close(); reject(new Error("请求超时")); }, 15_000);
+    ws.onerror = () => reject(new Error(t("rpc.errors.connectionFailed")));
+    setTimeout(() => { ws.close(); reject(new Error(t("rpc.errors.requestTimeout"))); }, 60_000);
   });
 }
 

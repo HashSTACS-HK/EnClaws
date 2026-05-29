@@ -368,7 +368,7 @@ export class TenantKnowledgeView extends LitElement {
           <div class="panel-head">
             <div>
               <div class="panel-title">${active ?? "选择文件"}</div>
-              ${this.list?.workspace ? html`<div class="sub">${this.list.workspace}</div>` : nothing}
+              ${/* workspace 路径已隐藏（租户视角无用） */ nothing}
             </div>
             ${active ? html`
               <div class="actions">

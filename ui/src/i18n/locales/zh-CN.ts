@@ -1,6 +1,12 @@
 import type { TranslationMap } from "../lib/types.ts";
 
 export const zh_CN: TranslationMap = {
+  rpc: {
+    errors: {
+      requestTimeout: "请求超时（已等 60 秒）。后端可能仍在处理，请稍后点'刷新'查看结果。",
+      connectionFailed: "连接失败，请检查网关地址或网络状态。",
+    },
+  },
   channels: {
     feishu: "飞书",
     dingtalk: "钉钉",
