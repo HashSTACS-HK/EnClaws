@@ -138,9 +138,23 @@ export async function findActiveCSSession(
 
 // -- Update state --
 
+/**
+ * Update a session's state column verbatim.
+ *
+ * `state` is intentionally typed as `string` (not `CSSessionState`) so the
+ * cs-api endpoint layer can write the 4-value enum
+ * (`ai-handling` | `notifying` | `human-handling` | `closed`) while S1 widget
+ * paths keep writing legacy values (`ai_active` | `human_active`). The DB
+ * column has no CHECK constraint so any string is accepted; reads remain
+ * unchanged (rowToSession preserves legacy values), and cs-api responses go
+ * through `dbStateToCsApi()` (state-mapping.ts) for normalization.
+ *
+ * 把状态字面量直接写入 state 列：cs-api 用新四值枚举，S1 widget 仍用旧值。
+ * DB 列无 CHECK 约束，rowToSession 不变，cs-api 出参经 dbStateToCsApi 归一化。
+ */
 export async function updateCSSessionState(
   id: string,
-  state: CSSessionState,
+  state: string,
 ): Promise<void> {
   if (getDbType() === DB_SQLITE) {
     sqliteQuery(
@@ -236,9 +250,16 @@ export async function updateCSSessionNotifiedAt(id: string, notifiedAt: string):
 
 /**
  * Count active sessions linked to a specific CS API object.
- * "Active" = state IN ('ai-handling', 'human-handling').
+ * "Active" = state IN ('ai-handling', 'notifying', 'human-handling').
  *
- * 统计与指定 API 对象关联的活跃会话数量（state 为 ai-handling 或 human-handling）。
+ * Note: only the 3 cs-api new values are listed because cs-api sessions are
+ * the only rows with a non-null `app_object_id`; legacy S1 values
+ * (`ai_active`, `human_active`) only appear on widget sessions, which never
+ * carry an `app_object_id`. Including them would be a no-op but is omitted
+ * to keep the SQL aligned with the cs-api §F.2 enum (Task 5 / Phase 2 DB).
+ *
+ * 统计指定 cs-api 对象下的活跃会话数（含 ai-handling / notifying / human-handling）。
+ * 旧版 S1 值不会出现在 app_object_id 非空的行里，故无需列入。
  */
 export async function countActiveSessionsForApiObject(
   tenantId: string,
@@ -248,7 +269,7 @@ export async function countActiveSessionsForApiObject(
     const result = sqliteQuery(
       `SELECT COUNT(*) as cnt FROM cs_sessions
        WHERE tenant_id = ? AND app_object_id = ?
-         AND state IN ('ai-handling', 'human-handling')`,
+         AND state IN ('ai-handling', 'notifying', 'human-handling')`,
       [tenantId, appObjectId],
     );
     const row = result.rows[0] as Record<string, unknown> | undefined;
@@ -257,7 +278,7 @@ export async function countActiveSessionsForApiObject(
   const result = await query(
     `SELECT COUNT(*)::int AS cnt FROM cs_sessions
      WHERE tenant_id = $1 AND app_object_id = $2
-       AND state IN ('ai-handling', 'human-handling')`,
+       AND state IN ('ai-handling', 'notifying', 'human-handling')`,
     [tenantId, appObjectId],
   );
   return Number(result.rows[0]?.cnt ?? 0);

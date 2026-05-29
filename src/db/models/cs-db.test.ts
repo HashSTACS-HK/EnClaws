@@ -27,6 +27,7 @@ let tenantC: Tenant;   // pagination
 let tenantMsgList: Tenant;
 let tenantMsgBefore: Tenant;
 let tenantMsgLimit: Tenant;
+let tenantCsApiState: Tenant;   // §F.2 cs-api state widening tests
 
 beforeAll(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cs-db-test-"));
@@ -41,7 +42,7 @@ beforeAll(async () => {
 
   // Create all tenant fixtures upfront so FK constraints are satisfied.
   // 先建好租户记录，满足 cs_sessions.tenant_id 外键约束。
-  [tenantA, tenantB, tenantC, tenantMsgList, tenantMsgBefore, tenantMsgLimit] =
+  [tenantA, tenantB, tenantC, tenantMsgList, tenantMsgBefore, tenantMsgLimit, tenantCsApiState] =
     await Promise.all([
       createTenant({ name: "Tenant A", slug: "tenant-a" }),
       createTenant({ name: "Tenant B", slug: "tenant-b" }),
@@ -49,6 +50,7 @@ beforeAll(async () => {
       createTenant({ name: "Tenant Msg List", slug: "tenant-msg-list" }),
       createTenant({ name: "Tenant Msg Before", slug: "tenant-msg-before" }),
       createTenant({ name: "Tenant Msg Limit", slug: "tenant-msg-limit" }),
+      createTenant({ name: "Tenant CsApi State", slug: "tenant-csapi-state" }),
     ]);
 });
 
@@ -155,6 +157,90 @@ describe("cs-session SQLite CRUD", () => {
     await updateCSSessionState(session.id, "human_active");
     const updated = await getCSSession(session.id);
     expect(updated!.state).toBe("human_active");
+  });
+});
+
+// ── §F.2 cs-api state widening ───────────────────────────────────────────────
+//
+// Task 5 (Phase 2 DB work) — let cs-api endpoint layer use the 4-value enum
+// (ai-handling / notifying / human-handling / closed) without disturbing S1
+// widget paths. We do NOT touch rowToSession or CSSessionState type.
+//
+// 验证 cs-api 边界放宽：state 列接受 "notifying" 新值，
+// 且 countActiveSessionsForApiObject 统计含 notifying 的会话。
+
+describe("§F.2 cs-api state widening", () => {
+  it("updateCSSessionState accepts cs-api new value 'notifying'", async () => {
+    // Setup: create a cs-api session via findOrCreateCsApiSession (writes state='ai-handling').
+    // 通过 cs-api 路径建会话，state 列直接接受新值，无 CHECK 约束。
+    const { createCsApiObject } = await import("./cs-api-object.js");
+    const { findOrCreateCsApiSession, updateCSSessionState } = await import("./cs-session.js");
+    const { query, getDbType, DB_SQLITE } = await import("../index.js");
+    const { sqliteQuery } = await import("../sqlite/index.js");
+
+    const obj = await createCsApiObject({
+      tenantId: tenantCsApiState.id,
+      name: "F2 Update Test App",
+      agentId: "agent-f2-update",
+      appSecretHash: "hash-f2-update",
+      endpointUrl: "https://example.com/f2-update",
+    });
+    const sess = await findOrCreateCsApiSession({
+      tenantId: tenantCsApiState.id,
+      appObjectId: obj.id,
+      agentId: "agent-f2-update",
+      customerId: "cust-f2-update",
+    });
+
+    // The point: updateCSSessionState must accept "notifying" without throwing
+    // at TS time (parameter type wide enough) AND at runtime (no DB CHECK).
+    // 关键：参数类型放宽到 string，运行时写入应成功，DB 列存储字面量 'notifying'。
+    await updateCSSessionState(sess.id, "notifying");
+
+    // Verify raw DB row holds "notifying" (we bypass rowToSession which is unchanged).
+    // 直接读 DB 行验证，rowToSession 不被修改，所以走原始 SQL。
+    let rawState: string | undefined;
+    if (getDbType() === DB_SQLITE) {
+      const r = sqliteQuery("SELECT state FROM cs_sessions WHERE id = ?", [sess.id]);
+      rawState = r.rows[0]?.state as string | undefined;
+    } else {
+      const r = await query("SELECT state FROM cs_sessions WHERE id = $1", [sess.id]);
+      rawState = r.rows[0]?.state as string | undefined;
+    }
+    expect(rawState).toBe("notifying");
+  });
+
+  it("countActiveSessionsForApiObject counts 'notifying' state rows", async () => {
+    // Setup: create cs-api object + session, transition to 'notifying',
+    // then ensure the count includes it.
+    // 建一个 cs-api session → 切到 notifying → 检验 count >= 1。
+    const { createCsApiObject } = await import("./cs-api-object.js");
+    const { findOrCreateCsApiSession, updateCSSessionState, countActiveSessionsForApiObject } =
+      await import("./cs-session.js");
+
+    const obj = await createCsApiObject({
+      tenantId: tenantCsApiState.id,
+      name: "F2 Count Test App",
+      agentId: "agent-f2-count",
+      appSecretHash: "hash-f2-count",
+      endpointUrl: "https://example.com/f2-count",
+    });
+
+    const sess = await findOrCreateCsApiSession({
+      tenantId: tenantCsApiState.id,
+      appObjectId: obj.id,
+      agentId: "agent-f2-count",
+      customerId: "cust-f2-count",
+    });
+    // Initially state='ai-handling' → count == 1
+    const baseline = await countActiveSessionsForApiObject(tenantCsApiState.id, obj.id);
+    expect(baseline).toBe(1);
+
+    // Transition to 'notifying' — should still be counted as active.
+    // 切到 notifying 也应被视为活跃。
+    await updateCSSessionState(sess.id, "notifying");
+    const after = await countActiveSessionsForApiObject(tenantCsApiState.id, obj.id);
+    expect(after).toBe(1);
   });
 });
 
