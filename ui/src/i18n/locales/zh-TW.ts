@@ -1236,6 +1236,11 @@ export const zh_TW: TranslationMap = {
         name: "名稱",
         agent: "Agent",
         appId: "App ID",
+        status: "狀態",
+        statusEnabled: "啟用",
+        statusDisabled: "停用",
+        toggleEnableBtn: "啟用",
+        toggleDisableBtn: "停用",
         lastUsed: "最近使用",
         actions: "操作",
         regenerateBtn: "重新生成密鑰",
@@ -1268,6 +1273,9 @@ export const zh_TW: TranslationMap = {
         confirmBtn: "刪除",
         activeSessionsError: "無法刪除：該 AI 服務存在活躍會話，請先關閉這些會話。",
         error: "刪除 AI 服務失敗",
+      },
+      toggle: {
+        error: "更新 AI 服務狀態失敗",
       },
       secretDialog: {
         title: "API 憑證",

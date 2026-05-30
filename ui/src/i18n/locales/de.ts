@@ -1318,6 +1318,11 @@ export const de: TranslationMap = {
         name: "Name",
         agent: "Agent",
         appId: "App ID",
+        status: "Status",
+        statusEnabled: "Aktiviert",
+        statusDisabled: "Deaktiviert",
+        toggleEnableBtn: "Aktivieren",
+        toggleDisableBtn: "Deaktivieren",
         lastUsed: "Zuletzt verwendet",
         actions: "Aktionen",
         regenerateBtn: "Secret neu generieren",
@@ -1351,6 +1356,9 @@ export const de: TranslationMap = {
         activeSessionsError:
           "Löschen nicht möglich: Dieser KI-Dienst hat aktive Sitzungen. Bitte zuerst schließen.",
         error: "KI-Dienst konnte nicht gelöscht werden",
+      },
+      toggle: {
+        error: "KI-Dienst-Status konnte nicht aktualisiert werden",
       },
       secretDialog: {
         title: "API-Anmeldedaten",

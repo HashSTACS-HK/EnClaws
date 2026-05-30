@@ -1692,6 +1692,11 @@ export const en: TranslationMap = {
         name: "Name",
         agent: "Agent",
         appId: "App ID",
+        status: "Status",
+        statusEnabled: "Enabled",
+        statusDisabled: "Disabled",
+        toggleEnableBtn: "Enable",
+        toggleDisableBtn: "Disable",
         lastUsed: "Last Used",
         actions: "Actions",
         regenerateBtn: "Regenerate Secret",
@@ -1725,6 +1730,9 @@ export const en: TranslationMap = {
         activeSessionsError:
           "Cannot delete: this AI Service has active sessions. Close them first.",
         error: "Failed to delete AI Service",
+      },
+      toggle: {
+        error: "Failed to update AI Service status",
       },
       secretDialog: {
         title: "API Credentials",

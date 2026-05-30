@@ -1309,6 +1309,11 @@ export const pt_BR: TranslationMap = {
         name: "Nome",
         agent: "Agente",
         appId: "App ID",
+        status: "Status",
+        statusEnabled: "Ativado",
+        statusDisabled: "Desativado",
+        toggleEnableBtn: "Ativar",
+        toggleDisableBtn: "Desativar",
         lastUsed: "Último Uso",
         actions: "Ações",
         regenerateBtn: "Regenerar Secret",
@@ -1342,6 +1347,9 @@ export const pt_BR: TranslationMap = {
         activeSessionsError:
           "Não é possível excluir: este Serviço de IA possui sessões ativas. Feche-as primeiro.",
         error: "Falha ao excluir Serviço de IA",
+      },
+      toggle: {
+        error: "Falha ao atualizar o status do Serviço de IA",
       },
       secretDialog: {
         title: "Credenciais de API",

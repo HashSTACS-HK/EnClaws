@@ -53,6 +53,12 @@ describe("cs-api-mode navigation constants (inline verification)", () => {
       "cs.apiMode.table.name",
       "cs.apiMode.table.agent",
       "cs.apiMode.table.appId",
+      // T1: status toggle column keys
+      "cs.apiMode.table.status",
+      "cs.apiMode.table.statusEnabled",
+      "cs.apiMode.table.statusDisabled",
+      "cs.apiMode.table.toggleEnableBtn",
+      "cs.apiMode.table.toggleDisableBtn",
       "cs.apiMode.table.lastUsed",
       "cs.apiMode.table.actions",
       "cs.apiMode.table.regenerateBtn",
@@ -78,6 +84,8 @@ describe("cs-api-mode navigation constants (inline verification)", () => {
       "cs.apiMode.delete.confirmBtn",
       "cs.apiMode.delete.activeSessionsError",
       "cs.apiMode.delete.error",
+      // T1: toggle error key
+      "cs.apiMode.toggle.error",
     ];
     for (const key of keys) {
       expect(key.startsWith("cs.apiMode.")).toBe(true);

@@ -1663,6 +1663,11 @@ export const zh_CN: TranslationMap = {
         name: "名称",
         agent: "Agent",
         appId: "App ID",
+        status: "状态",
+        statusEnabled: "启用",
+        statusDisabled: "停用",
+        toggleEnableBtn: "启用",
+        toggleDisableBtn: "停用",
         lastUsed: "最近使用",
         actions: "操作",
         regenerateBtn: "重新生成密钥",
@@ -1695,6 +1700,9 @@ export const zh_CN: TranslationMap = {
         confirmBtn: "删除",
         activeSessionsError: "无法删除：该 AI 服务存在活跃会话，请先关闭这些会话。",
         error: "删除 AI 服务失败",
+      },
+      toggle: {
+        error: "更新 AI 服务状态失败",
       },
       secretDialog: {
         title: "API 凭据",

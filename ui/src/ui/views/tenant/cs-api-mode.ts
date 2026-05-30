@@ -232,6 +232,43 @@ export class CsApiModeView extends LitElement {
         flex-wrap: wrap;
       }
 
+      /* Status badge */
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .badge-enabled {
+        background: rgba(26, 127, 55, 0.12);
+        color: var(--color-success, #1a7f37);
+      }
+      .badge-disabled {
+        background: rgba(106, 115, 125, 0.12);
+        color: var(--color-text-secondary, #6a737d);
+      }
+
+      /* Disabled row dimming */
+      tr.row-inactive td {
+        opacity: 0.55;
+      }
+      tr.row-inactive td.cell-actions-col {
+        opacity: 1;
+      }
+
+      .btn-toggle-enable {
+        background: transparent;
+        color: var(--color-success, #1a7f37);
+        border-color: var(--color-success, #1a7f37);
+      }
+      .btn-toggle-disable {
+        background: transparent;
+        color: var(--color-text-secondary, #6a737d);
+        border-color: var(--color-border, #e1e4e8);
+      }
+
       /* Buttons */
       .btn {
         padding: 6px 14px;
@@ -500,6 +537,31 @@ export class CsApiModeView extends LitElement {
     }
   }
 
+  // ── Toggle active ───────────────────────────────────────────────────────────
+
+  private async _toggleActive(obj: ApiObject) {
+    if (this._busyId !== null) {
+      return;
+    }
+    this._busyId = obj.id;
+    this._error = "";
+    try {
+      const res = await apiFetch(`/api/cs-api/objects/${encodeURIComponent(obj.id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: !obj.isActive }),
+      });
+      if (!res.ok) {
+        const errBody = (await res.json().catch(() => ({}))) as { message?: string };
+        throw new Error(errBody.message ?? `HTTP ${res.status}`);
+      }
+      await this._fetchObjects();
+    } catch (err) {
+      this._error = err instanceof Error ? err.message : t("cs.apiMode.toggle.error");
+    } finally {
+      this._busyId = null;
+    }
+  }
+
   // ── Render helpers ──────────────────────────────────────────────────────────
 
   private _renderError() {
@@ -613,6 +675,7 @@ export class CsApiModeView extends LitElement {
               <th>${t("cs.apiMode.table.name")}</th>
               <th>${t("cs.apiMode.table.agent")}</th>
               <th>${t("cs.apiMode.table.appId")}</th>
+              <th>${t("cs.apiMode.table.status")}</th>
               <th>${t("cs.apiMode.table.lastUsed")}</th>
               <th>${t("cs.apiMode.table.actions")}</th>
             </tr>
@@ -620,13 +683,23 @@ export class CsApiModeView extends LitElement {
           <tbody>
             ${this._objects.map(
               (obj) => html`
-              <tr>
+              <tr class=${obj.isActive ? "" : "row-inactive"}>
                 <td>${obj.name}</td>
                 <td>${this._agentName(obj.agentId)}</td>
                 <td class="cell-mono">${obj.appId}</td>
-                <td>${this._formatDate(obj.lastUsedAt)}</td>
                 <td>
+                  <span class=${obj.isActive ? "badge badge-enabled" : "badge badge-disabled"}>
+                    ${obj.isActive ? t("cs.apiMode.table.statusEnabled") : t("cs.apiMode.table.statusDisabled")}
+                  </span>
+                </td>
+                <td>${this._formatDate(obj.lastUsedAt)}</td>
+                <td class="cell-actions-col">
                   <div class="cell-actions">
+                    <button
+                      class=${obj.isActive ? "btn btn-toggle-disable" : "btn btn-toggle-enable"}
+                      ?disabled=${this._busyId !== null}
+                      @click=${() => this._toggleActive(obj)}
+                    >${obj.isActive ? t("cs.apiMode.table.toggleDisableBtn") : t("cs.apiMode.table.toggleEnableBtn")}</button>
                     <button
                       class="btn btn-ghost"
                       ?disabled=${this._busyId !== null}
