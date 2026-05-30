@@ -2,14 +2,16 @@
  * Unit tests for CS config read/write normalization (P5 widget data model).
  *
  * Covers backward compatibility: OLD-shape config.json (channels with only
- * {label, html}, no csMode) must be normalized on read — every channel gains a
- * stable `id` + `enabled: true`, `agentId` stays undefined, `csMode` stays
- * undefined. New-shape configs must round-trip unchanged.
+ * {label, html}) must be normalized on read — every channel gains a stable
+ * `id` + `enabled: true`, `agentId` stays undefined. New-shape configs
+ * must round-trip unchanged. ST-C0: csMode is a dead field — old configs
+ * containing it must be normalized WITHOUT csMode (field dropped on read).
  *
  * 客服配置读写规范化单测（P5 widget 数据模型）。重点验证向后兼容：
- * 旧结构 config.json（channel 只有 label/html，无 csMode）读取时必须被规范化——
- * 每个 channel 补上稳定 id + enabled:true，agentId 保持 undefined，csMode 保持
- * undefined。新结构配置必须无损往返。
+ * 旧结构 config.json（channel 只有 label/html）读取时必须被规范化——
+ * 每个 channel 补上稳定 id + enabled:true，agentId 保持 undefined。
+ * 新结构配置必须无损往返。ST-C0：csMode 是死字段——旧配置中的 csMode
+ * 在读取时必须被丢弃（不携带到规范化结果中）。
  */
 
 import fs from "node:fs/promises";
@@ -45,8 +47,8 @@ describe("CS config normalization (backward compat)", () => {
     expect(cfg).toEqual({});
   });
 
-  it("normalizes an OLD-shape config: channels get id + enabled, csMode undefined", async () => {
-    // OLD shape: channels have only label + html, no id/enabled, no csMode.
+  it("normalizes an OLD-shape config: channels get id + enabled, no csMode in output", async () => {
+    // OLD shape: channels have only label + html, no id/enabled.
     await writeRawConfig({
       feishu: { appId: "cli_x", appSecret: "secret", chatId: "oc_x" },
       channels: [
@@ -67,8 +69,8 @@ describe("CS config normalization (backward compat)", () => {
     // Labels/html preserved
     expect(cfg.channels?.[0]).toMatchObject({ label: "官网", html: "<div>a</div>" });
     expect(cfg.channels?.[1]).toMatchObject({ label: "App", html: "<div>b</div>" });
-    // csMode not invented on read
-    expect(cfg.csMode).toBeUndefined();
+    // csMode is a dead field — not present in output (ST-C0)
+    expect("csMode" in cfg).toBe(false);
     // Other fields untouched
     expect(cfg.feishu?.appId).toBe("cli_x");
   });
@@ -108,19 +110,21 @@ describe("CS config normalization (backward compat)", () => {
     expect(cfg.channels?.[0].enabled).toBe(false);
   });
 
-  it("round-trips a NEW-shape config with id/agentId/enabled + csMode", async () => {
+  it("round-trips a NEW-shape config with id/agentId/enabled (no csMode — ST-C0 dropped)", async () => {
+    // ST-C0: csMode is a dead field. New configs must NOT carry it.
+    // 新配置中不携带 csMode（ST-C0 已删除该字段）。
     const config = {
       channels: [
         { id: "w1", label: "官网", html: "<div>a</div>", agentId: "agent-x", enabled: true },
         { id: "w2", label: "App", html: "<div>b</div>", enabled: false },
       ],
-      csMode: "widget" as const,
     };
 
     await writeCSConfig(tenantId, config);
     const cfg = await readCSConfig(tenantId);
 
-    expect(cfg.csMode).toBe("widget");
+    // csMode must NOT appear in output (ST-C0)
+    expect("csMode" in cfg).toBe(false);
     expect(cfg.channels?.[0]).toMatchObject({
       id: "w1",
       label: "官网",
@@ -136,9 +140,17 @@ describe("CS config normalization (backward compat)", () => {
     expect(cfg.channels?.[1].agentId).toBeUndefined();
   });
 
-  it("accepts csMode = 'api' and round-trips it", async () => {
-    await writeCSConfig(tenantId, { csMode: "api", channels: [] });
+  it("drops csMode when an OLD config containing it is read (ST-C0 backward compat)", async () => {
+    // Old configs on disk may contain csMode. On read it must be stripped.
+    // 磁盘上的旧配置可能含 csMode，读取时必须丢弃该字段。
+    await writeRawConfig({ csMode: "widget", channels: [] });
     const cfg = await readCSConfig(tenantId);
-    expect(cfg.csMode).toBe("api");
+    expect("csMode" in cfg).toBe(false);
+  });
+
+  it("drops csMode='api' legacy value on read (ST-C0)", async () => {
+    await writeRawConfig({ csMode: "api", channels: [] });
+    const cfg = await readCSConfig(tenantId);
+    expect("csMode" in cfg).toBe(false);
   });
 });

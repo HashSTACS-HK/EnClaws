@@ -149,4 +149,47 @@ describe("cs.widget.send → per-widget agentId wiring (P5-T3b)", () => {
     expect(runCSAgentReplyMock).toHaveBeenCalledTimes(1);
     expect(runCSAgentReplyMock.mock.calls[0][0].agentId).toBeUndefined();
   });
+
+  // ST-C0: widget runtime enable-gate — enabled=false → reject before calling runCSAgentReply
+  it("rejects with WIDGET_DISABLED error when the matched channel has enabled=false (ST-C0 widget gate)", async () => {
+    // Add a disabled channel to the config
+    // 在配置中添加一个 disabled channel，验证请求被拒绝
+    const disabledChannels = [
+      ...channels,
+      { id: "ch_disabled", label: "Disabled", html: "<cs-widget></cs-widget>", agentId: "cs-bound-agent", enabled: false },
+    ];
+    readCSConfigMock.mockResolvedValue({ channels: disabledChannels });
+
+    const result = await invokeSend({
+      tenantId: "tenant-1",
+      visitorId: "visitor-1",
+      text: "hello",
+      widgetId: "ch_disabled",
+    });
+
+    expect(result?.ok).toBe(false);
+    expect(result?.error).toMatchObject({ code: "WIDGET_DISABLED" });
+    // runCSAgentReply must NOT have been called
+    expect(runCSAgentReplyMock).not.toHaveBeenCalled();
+  });
+
+  it("proceeds normally (S1) when widgetId is absent even if some channels are disabled", async () => {
+    // Legacy embed without widgetId: not blocked even when disabled channels exist
+    // 无 widgetId 的旧 embed：即使有 disabled channel 也不阻断（保持 S1）
+    const disabledChannels = [
+      ...channels,
+      { id: "ch_disabled2", label: "Disabled2", html: "<cs-widget></cs-widget>", enabled: false },
+    ];
+    readCSConfigMock.mockResolvedValue({ channels: disabledChannels });
+
+    const result = await invokeSend({
+      tenantId: "tenant-1",
+      visitorId: "visitor-1",
+      text: "hello",
+      // no widgetId
+    });
+
+    expect(result?.ok).toBe(true);
+    expect(runCSAgentReplyMock).toHaveBeenCalledTimes(1);
+  });
 });

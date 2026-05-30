@@ -32,6 +32,8 @@ export const ErrorCodes = {
   OBJECT_HAS_ACTIVE_SESSIONS: "OBJECT_HAS_ACTIVE_SESSIONS",
   /** A session mode change was attempted while a conflicting transition is in progress. */
   MODE_CHANGE_CONFLICT: "MODE_CHANGE_CONFLICT",
+  /** The widget channel referenced by widgetId has been explicitly disabled and cannot accept messages. */
+  WIDGET_DISABLED: "WIDGET_DISABLED",
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

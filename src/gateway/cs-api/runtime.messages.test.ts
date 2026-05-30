@@ -418,6 +418,43 @@ describe("POST /{appId}/messages", () => {
       expect.objectContaining({ agentId: "cs-test-agent" }),
     );
   });
+
+  // ST-C0: cs-api runtime enable-gate — is_active=false → 403 SERVICE_DISABLED
+  it("returns 403 OBJECT_INACTIVE when the AI service is_active=false (ST-C0 cs-api gate)", async () => {
+    // Create a second object that starts active, then deactivate it.
+    // 创建一个对象，初始 active，然后停用，验证 is_active=false 时拒绝请求。
+    const bcrypt = (await import("bcryptjs")).default;
+    const { createTenant } = await import("../../db/models/tenant.js");
+    const { createCsApiObject, updateCsApiObject } = await import(
+      "../../db/models/cs-api-object.js"
+    );
+
+    const tenant2 = await createTenant({ name: "Inactive Gate Tenant" });
+    const inactiveSecret = "inactive-secret-xyz";
+    const inactiveHash = await bcrypt.hash(inactiveSecret, 10);
+    const inactiveObj = await createCsApiObject({
+      tenantId: tenant2.id,
+      name: "Inactive App",
+      agentId: "agent-inactive",
+      appSecretHash: inactiveHash,
+      endpointUrl: "https://example.com",
+    });
+    // Deactivate the object
+    await updateCsApiObject(inactiveObj.id, tenant2.id, { isActive: false });
+
+    const { handleMessages } = await import("./runtime.js");
+    const req = makeRequest({
+      authorization: `Bearer ${inactiveSecret}`,
+      body: { customerId: "cust-inactive-001", content: "hello" },
+    });
+    // Need a fake appId for the inactive object
+    const mockRes = makePlainResponse();
+    await handleMessages(req, mockRes.res, inactiveObj.appId);
+
+    expect(mockRes.statusCode).toBe(401);
+    const body = JSON.parse(mockRes.body || "{}") as { error?: { code?: string } };
+    expect(body.error?.code).toBe("OBJECT_INACTIVE");
+  });
 });
 
 describe("findOrCreateCsApiSession / appendCsApiMessage / setSessionState", () => {

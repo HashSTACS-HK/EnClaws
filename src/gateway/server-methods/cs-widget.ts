@@ -143,15 +143,31 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
         // Read CS config for skillsEnabled flag (and notify settings used below).
         // 读客服配置获取 skillsEnabled，与飞书通知配置一并加载。
         const csCfg = await readCSConfig(tenantId);
+        // ST-C0: Widget runtime enable-gate. When widgetId is provided and
+        // matches a channel with enabled=false, reject immediately before
+        // touching the RAG stack. Legacy embeds without widgetId keep working
+        // (S1 preserved): no widgetId means no channel match, no gate check.
+        // ST-C0：widget 运行时启用门控。widgetId 匹配到 enabled=false 的 channel
+        // 时立即拒绝，不进入 RAG。无 widgetId 的旧 embed 不受影响（保持 S1）。
+        const widgetId = params.widgetId as string | undefined;
+        if (widgetId) {
+          const matchedChannel = csCfg.channels?.find((ch) => ch.id === widgetId);
+          if (matchedChannel && !matchedChannel.enabled) {
+            respond(
+              false,
+              undefined,
+              errorShape(ErrorCodes.WIDGET_DISABLED, "This widget has been disabled"),
+            );
+            return;
+          }
+        }
         // Resolve the per-widget bound agent (P5-T3b). The embedded widget forwards
         // its data-widget-id as `widgetId`; resolveWidgetAgentId returns undefined
         // when widgetId is absent / unmatched / unbound, so runCSAgentReply falls back
-        // to the tenant default agent (S1 unchanged). Soft isolation only — disabled
-        // widgets are not hard-blocked here.
+        // to the tenant default agent (S1 unchanged).
         // 解析每 widget 绑定 agent（P5-T3b）。嵌入 widget 把 data-widget-id 作为 widgetId
         // 上送；缺失/匹配不到/未绑定时返回 undefined，runCSAgentReply 回退租户默认 agent
-        // （保持 S1）。仅软隔离，不在此硬阻断已禁用 widget。
-        const widgetId = params.widgetId as string | undefined;
+        // （保持 S1）。
         const agentId = resolveWidgetAgentId(csCfg.channels, widgetId);
         const { reply, sourceChunks } = await runCSAgentReply({
           tenantId,
