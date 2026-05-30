@@ -22,7 +22,7 @@ import {
 } from "../../db/models/cs-session.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
-import { readCSConfig } from "./cs-admin.js";
+import { readCSConfig, resolveWidgetAgentId } from "./cs-admin.js";
 import type { GatewayRequestHandlers } from "./types.js";
 
 const log = createSubsystemLogger("cs-widget-handler");
@@ -143,6 +143,16 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
         // Read CS config for skillsEnabled flag (and notify settings used below).
         // 读客服配置获取 skillsEnabled，与飞书通知配置一并加载。
         const csCfg = await readCSConfig(tenantId);
+        // Resolve the per-widget bound agent (P5-T3b). The embedded widget forwards
+        // its data-widget-id as `widgetId`; resolveWidgetAgentId returns undefined
+        // when widgetId is absent / unmatched / unbound, so runCSAgentReply falls back
+        // to the tenant default agent (S1 unchanged). Soft isolation only — disabled
+        // widgets are not hard-blocked here.
+        // 解析每 widget 绑定 agent（P5-T3b）。嵌入 widget 把 data-widget-id 作为 widgetId
+        // 上送；缺失/匹配不到/未绑定时返回 undefined，runCSAgentReply 回退租户默认 agent
+        // （保持 S1）。仅软隔离，不在此硬阻断已禁用 widget。
+        const widgetId = params.widgetId as string | undefined;
+        const agentId = resolveWidgetAgentId(csCfg.channels, widgetId);
         const { reply, sourceChunks } = await runCSAgentReply({
           tenantId,
           sessionId: session.id,
@@ -151,6 +161,7 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
           cfg,
           restrictions: csCfg.restrictions,
           customSystemPrompt: csCfg.customSystemPrompt,
+          agentId,
         });
 
         // Save AI reply

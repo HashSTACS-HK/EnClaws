@@ -351,6 +351,16 @@ export class CSWidget extends LitElement {
   /** Channel label, forwarded to cs.widget.connect. Default: "default". */
   @property() channel = "default";
 
+  /**
+   * Stable widget instance id from the embed snippet (`data-widget-id`).
+   * Forwarded to cs.widget.send so the gateway can resolve the per-widget bound
+   * agent (P5-T3b). Absent for legacy embeds → gateway falls back to the default
+   * agent (S1 unchanged).
+   * 嵌入代码中的稳定 widget id（data-widget-id），随 cs.widget.send 上送，供 gateway
+   * 解析每 widget 绑定 agent（P5-T3b）。旧嵌入代码无此属性时 gateway 回退默认 agent。
+   */
+  @property({ attribute: "data-widget-id" }) widgetId?: string;
+
   /** For external embed: WebSocket gateway URL override. */
   @property({ attribute: "gateway-url" }) gatewayUrlOverride?: string;
 
@@ -455,6 +465,10 @@ export class CSWidget extends LitElement {
         tenantId,
         visitorId: this._visitorId,
         text,
+        // Forward the embed widget id so the gateway resolves the bound agent
+        // (P5-T3b). Omitted when absent → gateway falls back to default agent.
+        // 上送嵌入 widget id 供 gateway 解析绑定 agent（P5-T3b）；缺省时 gateway 回退默认。
+        ...(this.widgetId ? { widgetId: this.widgetId } : {}),
       })) as {
         sessionId?: string;
         messageId: string;
