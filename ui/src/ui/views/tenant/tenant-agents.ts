@@ -1359,6 +1359,7 @@ export class TenantAgentsView extends LitElement {
   }> = [];
   @state() private personaFilesWorkspace: string | null = null;
   @state() private personaFileActive: string | null = null;
+  @state() private personaRecommendApplying = false;
   @state() private personaFileContents: Record<string, string> = {};
   @state() private personaFileDrafts: Record<string, string> = {};
   @state() private personaFileSaving = false;
@@ -1840,6 +1841,45 @@ export class TenantAgentsView extends LitElement {
       this.personaFilesError = String(err);
     } finally {
       this.personaFileSaving = false;
+    }
+  }
+
+  // Fill the agent's IDENTITY/SOUL/AGENTS with the recommended CS defaults.
+  // 用推荐的客服默认配置填充 agent 的 IDENTITY/SOUL/AGENTS（会覆盖现有内容）。
+  private async applyRecommendedPersona(agentId: string) {
+    const ok = await showConfirm({
+      title: t("agents.persona.recommended.confirmTitle"),
+      message: t("agents.persona.recommended.confirmMessage"),
+      confirmText: t("agents.persona.recommended.confirmBtn"),
+      danger: true,
+    });
+    if (!ok) {
+      return;
+    }
+    this.personaRecommendApplying = true;
+    this.personaFilesError = null;
+    try {
+      const p = (await this.rpc("tenant.cs.recommended-persona.get", {})) as {
+        identity: string;
+        soul: string;
+        agents: string;
+      };
+      const writes: Array<[string, string]> = [
+        ["IDENTITY.md", p.identity],
+        ["SOUL.md", p.soul],
+        ["AGENTS.md", p.agents],
+      ];
+      for (const [name, content] of writes) {
+        await this.rpc("agents.files.set", { agentId, name, content });
+      }
+      this.personaFileActive = null;
+      this.personaFileContents = {};
+      this.personaFileDrafts = {};
+      await this.loadPersonaFiles(agentId);
+    } catch (err) {
+      this.personaFilesError = err instanceof Error ? err.message : String(err);
+    } finally {
+      this.personaRecommendApplying = false;
     }
   }
 
@@ -2534,6 +2574,22 @@ export class TenantAgentsView extends LitElement {
           ? html`<div style="color: var(--danger, #ef4444); font-size: 0.85rem; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid var(--danger, #ef4444); border-radius: 4px;">${this.personaFilesError}</div>`
           : nothing
       }
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+        <button type="button"
+          ?disabled=${this.personaRecommendApplying || !this.selectedAgentId}
+          @click=${() => {
+            if (this.selectedAgentId) {
+              void this.applyRecommendedPersona(this.selectedAgentId);
+            }
+          }}
+          style="padding: 0.4rem 0.9rem; background: var(--accent, #3b82f6); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+          ${
+            this.personaRecommendApplying
+              ? t("agents.persona.recommended.applying")
+              : t("agents.persona.recommended.btn")
+          }
+        </button>
+      </div>
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         ${cards.map((card) => {
           const fileEntry = this.personaFilesList.find((f) => f.name === card.id);

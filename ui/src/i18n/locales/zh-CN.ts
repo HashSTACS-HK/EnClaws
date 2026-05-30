@@ -694,6 +694,14 @@ export const zh_CN: TranslationMap = {
       promptNewFile: "输入新文件名 (例如: guide.md):",
     },
     persona: {
+      recommended: {
+        btn: "启用推荐配置",
+        applying: "应用中…",
+        confirmTitle: "确认启用推荐配置",
+        confirmMessage:
+          "将覆盖当前 IDENTITY / SOUL / AGENTS 为推荐的客服默认配置（身份：客服助手；行为准则：优先查询知识库、诚实作答、无法解答时引导转人工；语气：专业友善）。启用后仍可随时手动调整。",
+        confirmBtn: "确认启用",
+      },
       title: "人设与规范",
       subtitle: "定义这个 Agent 的身份、行为边界和工作方式。",
       refresh: "刷新",
