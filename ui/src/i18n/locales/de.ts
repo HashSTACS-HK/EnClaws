@@ -1307,6 +1307,9 @@ export const de: TranslationMap = {
       widgetModeBtn: "Widget-Modus",
       apiModeBtn: "API-Modus",
     },
+    setup: {
+      notifSharedHint: "Geteilt von allen Widgets -- Aenderungen gelten fuer den gesamten Mandanten.",
+    },
     widget: {
       sectionTitle: "Widget-Verwaltung",
       sectionHint:

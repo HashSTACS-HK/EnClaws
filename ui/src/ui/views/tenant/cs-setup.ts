@@ -641,9 +641,7 @@ export class CSSetupView extends LitElement {
   @state() private chatId = "";
   @state() private notifyIntervalMinutes = 10;
   @state() private restrictions = {
-    disableSkills: true,
     strictKnowledgeBase: true,
-    disableMarkdown: true,
     hideInternals: true,
   };
   @state() private saving = false;
@@ -746,9 +744,7 @@ export class CSSetupView extends LitElement {
           }>;
           notifyIntervalMinutes?: number;
           restrictions?: {
-            disableSkills?: boolean;
             strictKnowledgeBase?: boolean;
-            disableMarkdown?: boolean;
             hideInternals?: boolean;
           };
           companyName?: string;
@@ -772,9 +768,7 @@ export class CSSetupView extends LitElement {
       this.notifyIntervalMinutes = cfg.notifyIntervalMinutes ?? 10;
       const r = cfg.restrictions;
       this.restrictions = {
-        disableSkills: r?.disableSkills ?? true,
         strictKnowledgeBase: r?.strictKnowledgeBase ?? true,
-        disableMarkdown: r?.disableMarkdown ?? true,
         hideInternals: r?.hideInternals ?? true,
       };
 
@@ -1254,6 +1248,7 @@ export class CSSetupView extends LitElement {
     return html`
       <div>
         <h3>通知配置</h3>
+        <p class="hint" style="margin-bottom:10px">${t("cs.setup.notifSharedHint")}</p>
 
         <div class="form-group">
           <label>客服 Agent</label>
@@ -1374,19 +1369,9 @@ export class CSSetupView extends LitElement {
             ${(
               [
                 {
-                  key: "disableSkills",
-                  label: "禁用 Skill 工具调用",
-                  hint: "只做问答，不执行系统操作（代码级）",
-                },
-                {
                   key: "strictKnowledgeBase",
                   label: "严格知识库模式",
                   hint: "知识库无内容时必须告知客户并转人工",
-                },
-                {
-                  key: "disableMarkdown",
-                  label: "禁止 Markdown 格式",
-                  hint: "纯文本回复，适合聊天窗口",
                 },
                 {
                   key: "hideInternals",

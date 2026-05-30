@@ -1299,6 +1299,9 @@ export const pt_BR: TranslationMap = {
       widgetModeBtn: "Modo Widget",
       apiModeBtn: "Modo API",
     },
+    setup: {
+      notifSharedHint: "Compartilhado por todos os widgets — alteracoes afetam todo o tenant.",
+    },
     widget: {
       sectionTitle: "Gerenciamento de Widgets",
       sectionHint:

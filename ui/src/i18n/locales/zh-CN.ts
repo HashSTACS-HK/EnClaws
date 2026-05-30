@@ -1653,6 +1653,9 @@ export const zh_CN: TranslationMap = {
       widgetModeBtn: "Widget 模式",
       apiModeBtn: "API 模式",
     },
+    setup: {
+      notifSharedHint: "所有 widget 共用此通知配置，修改后对整个租户生效。",
+    },
     widget: {
       sectionTitle: "组件管理",
       sectionHint:

@@ -1226,6 +1226,9 @@ export const zh_TW: TranslationMap = {
       widgetModeBtn: "Widget 模式",
       apiModeBtn: "API 模式",
     },
+    setup: {
+      notifSharedHint: "所有 widget 共用此通知設定，修改後對整個租戶生效。",
+    },
     widget: {
       sectionTitle: "元件管理",
       sectionHint:

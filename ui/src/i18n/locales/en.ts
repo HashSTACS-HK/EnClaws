@@ -1682,6 +1682,9 @@ export const en: TranslationMap = {
       widgetModeBtn: "Widget Mode",
       apiModeBtn: "API Mode",
     },
+    setup: {
+      notifSharedHint: "Shared across all widgets — changing this affects the whole tenant.",
+    },
     widget: {
       sectionTitle: "Widget Management",
       sectionHint:
