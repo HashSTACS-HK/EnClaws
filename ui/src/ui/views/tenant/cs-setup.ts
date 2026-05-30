@@ -26,15 +26,34 @@ interface CheckResult {
   message: string;
 }
 
+/** A tenant agent that can be bound to a widget. 可绑定到 widget 的租户 agent。 */
+interface TenantAgent {
+  agentId: string;
+  name: string | null;
+}
+
 type ChannelMode = "initial" | "locked" | "editing";
 
+/**
+ * A widget instance (a "渠道") managed on this page.
+ * Mirrors the persisted `CSConfig.channels[]` shape (id/label/html/agentId/enabled)
+ * plus local-only UI state (mode/prevLabel/prevHtml/expanded) for the edit lifecycle.
+ *
+ * Widget（渠道）实例，与持久化的 channels[] 字段一一对应，额外携带编辑生命周期的本地 UI 状态。
+ */
 interface Channel {
+  /** Stable widget id. Empty for a not-yet-saved new widget; server assigns on save. 稳定 id；新建未保存时为空，保存时服务端分配。 */
+  id: string;
   label: string;
   html: string | null;
+  /** Per-widget bound AI 员工; undefined → use tenant default. 绑定的 AI 员工，未设置则用租户默认。 */
+  agentId?: string;
+  /** Widget status. 启用状态。 */
+  enabled: boolean;
   mode: ChannelMode;
   prevLabel: string;
   prevHtml: string | null;
-  /** Whether the code block is expanded. Default false (collapsed). */
+  /** Whether the code block is expanded. Default false (collapsed). 嵌入代码是否展开，默认折叠。 */
   expanded: boolean;
 }
 
@@ -437,6 +456,86 @@ export class CSSetupView extends LitElement {
         color: var(--color-danger, #cf222e);
       }
 
+      /* Disabled widget — dim the card to signal inactive state */
+      .channel-block.disabled {
+        opacity: 0.6;
+      }
+
+      /* Page-level widget error banner */
+      .widget-error-banner {
+        font-size: 13px;
+        color: var(--color-danger, #cf222e);
+        background: var(--color-danger-muted, #ffebe9);
+        border: 1px solid var(--color-danger, #cf222e);
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin-bottom: 12px;
+      }
+
+      /* Per-widget controls row: agent select + status toggle */
+      .widget-controls {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .widget-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .widget-field-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text-secondary, #6a737d);
+      }
+
+      .widget-field select {
+        width: 240px;
+        max-width: 240px;
+      }
+
+      .status-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        border: 1px solid var(--color-border, #e1e4e8);
+        background: var(--color-bg, #fff);
+        color: var(--color-text, #1c1c1e);
+      }
+
+      .status-toggle .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .status-toggle.on {
+        border-color: var(--color-success, #1a7f37);
+        color: var(--color-success, #1a7f37);
+      }
+      .status-toggle.on .status-dot {
+        background: var(--color-success, #1a7f37);
+      }
+      .status-toggle.off {
+        color: var(--color-text-secondary, #6a737d);
+      }
+      .status-toggle.off .status-dot {
+        background: var(--color-text-secondary, #6a737d);
+      }
+      .status-toggle:hover {
+        background: var(--color-bg-hover, #eaeef2);
+      }
+
       /* Generated HTML code */
       .code-block {
         background: var(--color-bg-secondary, #f6f8fa);
@@ -554,8 +653,11 @@ export class CSSetupView extends LitElement {
   @state() private loading = true;
   @state() private channels: Channel[] = [
     {
+      id: "",
       label: "default",
       html: null,
+      agentId: undefined,
+      enabled: true,
       mode: "initial",
       prevLabel: "default",
       prevHtml: null,
@@ -564,6 +666,10 @@ export class CSSetupView extends LitElement {
   ];
   @state() private channelErrors: Record<number, string> = {};
   @state() private copiedIdx: number | null = null;
+  /** Page-level widget error banner (save/delete/toggle failures). 组件管理区错误提示。 */
+  @state() private widgetError = "";
+  /** Tenant agents for the per-widget agent dropdown. 用于 widget 关联 AI 员工下拉。 */
+  @state() private _agents: TenantAgent[] = [];
   @state() private toast: { text: string; ok: boolean } | null = null;
 
   private _toastTimer?: ReturnType<typeof setTimeout>;
@@ -581,6 +687,30 @@ export class CSSetupView extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     void this._loadConfig();
+    void this._fetchAgents();
+  }
+
+  /**
+   * Fetch tenant agents for the per-widget agent dropdown.
+   * Best-effort: on failure the select just shows the "default" option only.
+   * 拉取租户 agent 列表用于 widget 关联下拉；失败时下拉仅保留"默认"项，不阻塞页面。
+   */
+  private async _fetchAgents() {
+    try {
+      const result = (await tenantRpc("tenant.agents.list", {})) as { agents: TenantAgent[] };
+      this._agents = result.agents ?? [];
+    } catch {
+      this._agents = [];
+    }
+  }
+
+  /** Resolve an agentId to its display name; falls back to the id, then "default". 将 agentId 解析为名称。 */
+  private _agentName(agentId: string | undefined): string {
+    if (!agentId) {
+      return t("cs.widget.agentDefault");
+    }
+    const agent = this._agents.find((a) => a.agentId === agentId);
+    return agent?.name ?? agentId;
   }
 
   disconnectedCallback() {
@@ -607,7 +737,13 @@ export class CSSetupView extends LitElement {
         config: {
           notificationChannel?: string;
           feishu: { appId: string; appSecretMasked: string; chatId: string; hasSecret: boolean };
-          channels?: Array<{ label: string; html: string }>;
+          channels?: Array<{
+            id: string;
+            label: string;
+            html: string;
+            agentId?: string;
+            enabled: boolean;
+          }>;
           notifyIntervalMinutes?: number;
           restrictions?: {
             disableSkills?: boolean;
@@ -642,13 +778,16 @@ export class CSSetupView extends LitElement {
         hideInternals: r?.hideInternals ?? true,
       };
 
-      // Restore saved channels as locked
-      // 从配置恢复已保存的渠道，初始状态为锁定（只读）
+      // Restore saved widgets as locked. Carry the new id/agentId/enabled fields.
+      // 从配置恢复已保存的 widget，初始锁定（只读），携带 id/agentId/enabled 新字段。
       const saved = result.config.channels ?? [];
       if (saved.length > 0) {
         this.channels = saved.map((ch) => ({
+          id: ch.id,
           label: ch.label,
           html: ch.html,
+          agentId: ch.agentId,
+          enabled: ch.enabled,
           mode: "locked" as ChannelMode,
           prevLabel: ch.label,
           prevHtml: ch.html,
@@ -662,22 +801,77 @@ export class CSSetupView extends LitElement {
     }
   }
 
-  /** Persist current locked channels to backend config.
-   *  仅保存已生成（locked/editing）状态下有 html 的渠道。
+  /**
+   * Persist current widgets to backend config and re-sync from the saved result so
+   * that server-assigned ids land back in local state. Only widgets that have a
+   * generated embed (html !== null) are saved. Throws on RPC failure so callers
+   * can surface an explicit error — no silent swallow.
+   *
+   * 持久化当前 widget 到后端，并从保存结果回读，使服务端分配的 id 写回本地状态。
+   * 仅保存已生成嵌入代码（html !== null）的 widget。RPC 失败时抛出，由调用方显式提示，不静默吞错。
    */
   private async _saveChannels() {
     const tenantId = this.tenantId;
     if (!tenantId) {
+      throw new Error(t("cs.widget.noTenant"));
+    }
+    const channelsToSave = this.channels
+      .filter((ch) => ch.html !== null)
+      .map((ch) => ({
+        // Omit empty id so the server assigns a fresh one on create.
+        // 新建时 id 为空，省略字段让服务端分配。
+        ...(ch.id ? { id: ch.id } : {}),
+        label: ch.label,
+        html: ch.html as string,
+        // Omit agentId entirely when unset → falls back to tenant default.
+        // 未绑定时省略 agentId → 回退到租户默认 agent。
+        ...(ch.agentId ? { agentId: ch.agentId } : {}),
+        enabled: ch.enabled,
+      }));
+    await tenantRpc("cs.config.set", { tenantId, channels: channelsToSave });
+    // Re-read so server-assigned ids/normalization flow back into local state,
+    // preserving any in-progress (html === null) draft widget that wasn't saved.
+    // 回读，使服务端分配的 id / 规范化结果写回本地；保留未保存的草稿 widget（html === null）。
+    await this._reloadChannels();
+  }
+
+  /**
+   * Reload only the widget list from backend, merging server ids/fields back while
+   * preserving any local draft widget (one being created, html still null).
+   * 仅从后端重载 widget 列表，回填服务端 id/字段，同时保留本地正在创建的草稿 widget。
+   */
+  private async _reloadChannels() {
+    const tenantId = this.tenantId;
+    if (!tenantId) {
       return;
     }
-    try {
-      const channelsToSave = this.channels
-        .filter((ch) => ch.html !== null)
-        .map((ch) => ({ label: ch.label, html: ch.html as string }));
-      await tenantRpc("cs.config.set", { tenantId, channels: channelsToSave });
-    } catch {
-      // Best-effort; don't block UX on save error
-    }
+    const result = (await tenantRpc("cs.config.get", { tenantId })) as {
+      config: {
+        channels?: Array<{
+          id: string;
+          label: string;
+          html: string;
+          agentId?: string;
+          enabled: boolean;
+        }>;
+      };
+    };
+    const saved = result.config.channels ?? [];
+    const drafts = this.channels.filter((ch) => ch.html === null);
+    this.channels = [
+      ...saved.map((ch) => ({
+        id: ch.id,
+        label: ch.label,
+        html: ch.html,
+        agentId: ch.agentId,
+        enabled: ch.enabled,
+        mode: "locked" as ChannelMode,
+        prevLabel: ch.label,
+        prevHtml: ch.html,
+        expanded: false,
+      })),
+      ...drafts,
+    ];
   }
 
   private _validateConfig(): string | null {
@@ -760,36 +954,36 @@ export class CSSetupView extends LitElement {
     }
   }
 
-  private _generateHtml(channelIdx: number) {
-    const ch = this.channels[channelIdx];
-    const label = ch.label.trim();
+  /**
+   * Generate a client-side widget id. The id is embedded into the snippet
+   * (data-widget-id) so the runtime (T3b) can resolve the widget; it is also sent
+   * to the backend, which preserves existing ids during normalization.
+   * 生成客户端 widget id，写入嵌入代码（data-widget-id）供运行时（T3b）识别；
+   * 同时发往后端，规范化时服务端保留已有 id。
+   */
+  private _newWidgetId(): string {
+    const rnd =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID().replace(/-/g, "").slice(0, 12)
+        : Math.random().toString(36).slice(2, 14);
+    return `ch_${rnd}`;
+  }
 
-    if (!label) {
-      this.channelErrors = { ...this.channelErrors, [channelIdx]: "渠道标签不能为空" };
-      return;
-    }
-    if (/\s/.test(label)) {
-      this.channelErrors = { ...this.channelErrors, [channelIdx]: "渠道标签不能包含空格" };
-      return;
-    }
-    // Uniqueness check
-    const duplicate = this.channels.some((c, i) => i !== channelIdx && c.label.trim() === label);
-    if (duplicate) {
-      this.channelErrors = {
-        ...this.channelErrors,
-        [channelIdx]: "渠道标签已存在，请使用唯一标签",
-      };
-      return;
-    }
-
+  /**
+   * Build the embed snippet for a widget. The snippet carries `data-widget-id`
+   * (the stable widget id) so the runtime can later identify which widget a visitor
+   * connected through (T3b), alongside the existing tenant-id / channel / gateway-url.
+   * 构建 widget 嵌入代码，携带 data-widget-id（稳定 id）供运行时识别（T3b），
+   * 以及既有 tenant-id / channel / gateway-url。
+   */
+  private _buildEmbedHtml(widgetId: string, label: string): string {
     const tenantId = this.tenantId ?? "YOUR_TENANT_ID";
     const gatewayUrl = loadSettings().gatewayUrl || "wss://YOUR_EC_DOMAIN";
     // Convert ws(s):// to http(s):// for script src
     const baseUrl = gatewayUrl.replace(/^wss?:\/\//, (m) =>
       m.startsWith("wss") ? "https://" : "http://",
     );
-
-    const embedHtml = [
+    return [
       `<!-- EC AI 客服 Widget · 渠道: ${label} -->`,
       `<!-- 说明: 将以下代码嵌入到目标页面 <body> 末尾 -->`,
       `<script type="module">`,
@@ -798,11 +992,41 @@ export class CSSetupView extends LitElement {
       `<cs-widget`,
       `  tenant-id="${tenantId}"`,
       `  channel="${label}"`,
+      `  data-widget-id="${widgetId}"`,
       `  gateway-url="${gatewayUrl}"`,
       `></cs-widget>`,
     ].join("\n");
+  }
 
-    // Clear error, lock channel
+  private async _generateHtml(channelIdx: number) {
+    const ch = this.channels[channelIdx];
+    const label = ch.label.trim();
+
+    if (!label) {
+      this.channelErrors = { ...this.channelErrors, [channelIdx]: t("cs.widget.errLabelEmpty") };
+      return;
+    }
+    if (/\s/.test(label)) {
+      this.channelErrors = { ...this.channelErrors, [channelIdx]: t("cs.widget.errLabelSpace") };
+      return;
+    }
+    // Uniqueness check
+    const duplicate = this.channels.some((c, i) => i !== channelIdx && c.label.trim() === label);
+    if (duplicate) {
+      this.channelErrors = {
+        ...this.channelErrors,
+        [channelIdx]: t("cs.widget.errLabelDup"),
+      };
+      return;
+    }
+
+    // Reuse an existing id (edit) or mint one (create). The embed snippet must
+    // carry this id so the runtime can identify the widget (T3b).
+    // 编辑时复用已有 id，新建时生成；嵌入代码必须携带该 id 供运行时识别（T3b）。
+    const widgetId = ch.id || this._newWidgetId();
+    const embedHtml = this._buildEmbedHtml(widgetId, label);
+
+    // Clear error, lock widget
     const errs = { ...this.channelErrors };
     delete errs[channelIdx];
     this.channelErrors = errs;
@@ -811,6 +1035,7 @@ export class CSSetupView extends LitElement {
       i === channelIdx
         ? {
             ...c,
+            id: widgetId,
             label,
             html: embedHtml,
             mode: "locked",
@@ -821,8 +1046,14 @@ export class CSSetupView extends LitElement {
         : c,
     );
 
-    // Persist to backend
-    void this._saveChannels();
+    // Persist to backend; surface failures explicitly.
+    // 持久化到后端；失败显式提示。
+    this.widgetError = "";
+    try {
+      await this._saveChannels();
+    } catch (err) {
+      this.widgetError = err instanceof Error ? err.message : t("cs.widget.saveError");
+    }
   }
 
   private _startEditChannel(idx: number) {
@@ -852,11 +1083,21 @@ export class CSSetupView extends LitElement {
     }
     this.channels = [
       ...this.channels,
-      { label: "", html: null, mode: "initial", prevLabel: "", prevHtml: null, expanded: false },
+      {
+        id: "",
+        label: "",
+        html: null,
+        agentId: undefined,
+        enabled: true,
+        mode: "initial",
+        prevLabel: "",
+        prevHtml: null,
+        expanded: false,
+      },
     ];
   }
 
-  private _removeChannel(idx: number) {
+  private async _removeChannel(idx: number) {
     this.channels = this.channels.filter((_, i) => i !== idx);
     // Re-index errors
     const errs: Record<number, string> = {};
@@ -869,8 +1110,65 @@ export class CSSetupView extends LitElement {
       }
     });
     this.channelErrors = errs;
-    // Persist after remove
-    void this._saveChannels();
+    // Persist after remove; surface failures explicitly.
+    // 删除后持久化；失败显式提示。
+    this.widgetError = "";
+    try {
+      await this._saveChannels();
+    } catch (err) {
+      this.widgetError = err instanceof Error ? err.message : t("cs.widget.saveError");
+    }
+  }
+
+  /**
+   * Change a widget's bound AI 员工. Empty string → undefined (use tenant default).
+   * Persists immediately for a locked widget; for a draft (not yet generated) it just
+   * updates local state and is saved on generate.
+   * 修改 widget 绑定的 AI 员工；空串 → undefined（用租户默认）。已锁定 widget 立即持久化，
+   * 草稿（未生成）仅更新本地状态，生成时再保存。
+   */
+  private async _updateChannelAgent(idx: number, value: string) {
+    const agentId = value || undefined;
+    const ch = this.channels[idx];
+    this.channels = this.channels.map((c, i) => (i === idx ? { ...c, agentId } : c));
+    // Only persist if the widget has been generated (has an id/html).
+    // 仅当 widget 已生成（有 id/html）时才持久化。
+    if (ch.html === null) {
+      return;
+    }
+    this.widgetError = "";
+    try {
+      await this._saveChannels();
+    } catch (err) {
+      // Revert optimistic change on failure.
+      // 失败时回滚乐观更新。
+      this.channels = this.channels.map((c, i) =>
+        i === idx ? { ...c, agentId: ch.agentId } : c,
+      );
+      this.widgetError = err instanceof Error ? err.message : t("cs.widget.saveError");
+    }
+  }
+
+  /**
+   * Toggle a widget's enabled status. Persists immediately; reverts on failure.
+   * Only meaningful for a generated widget. 切换 widget 启用状态，立即持久化，失败回滚。
+   */
+  private async _toggleChannelEnabled(idx: number) {
+    const ch = this.channels[idx];
+    const next = !ch.enabled;
+    this.channels = this.channels.map((c, i) => (i === idx ? { ...c, enabled: next } : c));
+    if (ch.html === null) {
+      return;
+    }
+    this.widgetError = "";
+    try {
+      await this._saveChannels();
+    } catch (err) {
+      this.channels = this.channels.map((c, i) =>
+        i === idx ? { ...c, enabled: ch.enabled } : c,
+      );
+      this.widgetError = err instanceof Error ? err.message : t("cs.widget.saveError");
+    }
   }
 
   private _toggleChannelCode(idx: number) {
@@ -1125,46 +1423,92 @@ export class CSSetupView extends LitElement {
     `;
   }
 
+  /** Render the agent-select dropdown for a widget. 渲染单个 widget 的关联 AI 员工下拉。 */
+  private _renderAgentSelect(ch: Channel, idx: number) {
+    return html`
+      <div class="widget-field">
+        <span class="widget-field-label">${t("cs.widget.agentLabel")}</span>
+        <select
+          .value=${ch.agentId ?? ""}
+          @change=${(e: Event) =>
+            this._updateChannelAgent(idx, (e.target as HTMLSelectElement).value)}
+        >
+          <option value="">${t("cs.widget.agentDefault")}</option>
+          ${this._agents.map(
+            (a) => html`<option value=${a.agentId} ?selected=${a.agentId === ch.agentId}>${a.name ?? a.agentId}</option>`,
+          )}
+        </select>
+      </div>
+    `;
+  }
+
+  /** Render the enabled/disabled status toggle for a widget. 渲染 widget 的启用/停用切换。 */
+  private _renderStatusToggle(ch: Channel, idx: number) {
+    return html`
+      <div class="widget-field">
+        <span class="widget-field-label">${t("cs.widget.statusLabel")}</span>
+        <button
+          class="status-toggle ${ch.enabled ? "on" : "off"}"
+          @click=${() => this._toggleChannelEnabled(idx)}
+          title=${ch.enabled ? t("cs.widget.statusDisableHint") : t("cs.widget.statusEnableHint")}
+        >
+          <span class="status-dot"></span>
+          ${ch.enabled ? t("cs.widget.statusEnabled") : t("cs.widget.statusDisabled")}
+        </button>
+      </div>
+    `;
+  }
+
   private _renderChannels() {
     return html`
       <div class="section">
-        <h3>嵌入代码生成</h3>
+        <h3>${t("cs.widget.sectionTitle")}</h3>
+        <p class="hint" style="margin-bottom:14px">${t("cs.widget.sectionHint")}</p>
+
+        ${
+          this.widgetError
+            ? html`<div class="widget-error-banner">${this.widgetError}</div>`
+            : nothing
+        }
 
         ${this.channels.map((ch, idx) => {
           const isLocked = ch.mode === "locked";
           const isEditing = ch.mode === "editing";
           const canGenerate = ch.mode === "initial" || ch.mode === "editing";
+          const isGenerated = ch.html !== null;
 
           return html`
-            <div class="channel-block">
+            <div class="channel-block ${isGenerated && !ch.enabled ? "disabled" : ""}">
               <div class="channel-header">
-                <span class="channel-num">渠道 ${idx + 1}</span>
+                <span class="channel-num">${t("cs.widget.widgetN", { n: String(idx + 1) })}</span>
                 <input
                   class="channel-label-input"
                   type="text"
-                  placeholder=${idx === 0 ? "default" : "输入渠道标签（不含空格）"}
+                  placeholder=${idx === 0 ? "default" : t("cs.widget.labelPlaceholder")}
                   .value=${ch.label}
                   ?readonly=${isLocked}
                   @input=${(e: Event) => this._updateChannelLabel(idx, (e.target as HTMLInputElement).value)}
                 />
                 ${
                   canGenerate
-                    ? html`<button class="btn btn-primary" @click=${() => this._generateHtml(idx)}>生成</button>`
+                    ? html`<button class="btn btn-primary" @click=${() => this._generateHtml(idx)}>${
+                        ch.id ? t("cs.widget.saveBtn") : t("cs.widget.createBtn")
+                      }</button>`
                     : nothing
                 }
                 ${
                   isLocked
-                    ? html`<button class="btn btn-secondary" @click=${() => this._startEditChannel(idx)}>修改</button>`
+                    ? html`<button class="btn btn-secondary" @click=${() => this._startEditChannel(idx)}>${t("cs.widget.editBtn")}</button>`
                     : nothing
                 }
                 ${
                   isEditing
-                    ? html`<button class="btn btn-ghost" @click=${() => this._cancelEditChannel(idx)}>取消</button>`
+                    ? html`<button class="btn btn-ghost" @click=${() => this._cancelEditChannel(idx)}>${t("cs.widget.cancelBtn")}</button>`
                     : nothing
                 }
                 ${
                   idx > 0
-                    ? html`<button class="btn btn-ghost" @click=${() => this._removeChannel(idx)}>删除</button>`
+                    ? html`<button class="btn btn-ghost" @click=${() => this._removeChannel(idx)}>${t("cs.widget.deleteBtn")}</button>`
                     : nothing
                 }
                 ${
@@ -1174,15 +1518,20 @@ export class CSSetupView extends LitElement {
                 }
               </div>
 
+              <div class="widget-controls">
+                ${this._renderAgentSelect(ch, idx)}
+                ${isGenerated ? this._renderStatusToggle(ch, idx) : nothing}
+              </div>
+
               ${
                 ch.html && isLocked
                   ? html`
                 <div class="code-actions">
                   <button class="btn btn-ghost" @click=${() => this._copyHtml(idx)}>
-                    ${this.copiedIdx === idx ? "✓ 已复制" : "复制代码"}
+                    ${this.copiedIdx === idx ? t("cs.widget.copied") : t("cs.widget.copyCode")}
                   </button>
                   <button class="btn btn-ghost" @click=${() => this._toggleChannelCode(idx)}>
-                    ${ch.expanded ? "收起 ▲" : "展开代码 ▼"}
+                    ${ch.expanded ? t("cs.widget.collapseCode") : t("cs.widget.expandCode")}
                   </button>
                 </div>
                 ${ch.expanded ? html`<div class="code-block">${ch.html}</div>` : nothing}
@@ -1198,10 +1547,10 @@ export class CSSetupView extends LitElement {
             ? html`
             <div class="add-channel-row">
               <button class="btn btn-ghost" @click=${this._addChannel}>
-                + 增加新渠道（最多 ${MAX_CHANNELS} 个）
+                ${t("cs.widget.addBtn", { max: String(MAX_CHANNELS) })}
               </button>
             </div>`
-            : nothing
+            : html`<p class="hint">${t("cs.widget.capReached", { max: String(MAX_CHANNELS) })}</p>`
         }
       </div>
     `;
