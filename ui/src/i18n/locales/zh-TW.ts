@@ -1347,4 +1347,13 @@ export const zh_TW: TranslationMap = {
       },
     },
   },
+  tenantWorkshop: {
+    modelsTab: "模型管理",
+    channelsTab: "IM接入",
+    cronTab: "定時任務",
+    skillsTab: "技能",
+    workflowTab: "工作流程",
+    operationsTab: "智慧操作",
+    comingSoonLabel: "即將上線",
+  },
 };

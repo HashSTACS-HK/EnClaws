@@ -1422,4 +1422,13 @@ export const pt_BR: TranslationMap = {
       },
     },
   },
+  tenantWorkshop: {
+    modelsTab: "Modelos",
+    channelsTab: "Canais IM",
+    cronTab: "Tarefas Cron",
+    skillsTab: "Habilidades",
+    workflowTab: "Fluxo de Trabalho",
+    operationsTab: "Operacoes Inteligentes",
+    comingSoonLabel: "Em Breve",
+  },
 };

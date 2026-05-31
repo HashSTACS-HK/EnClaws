@@ -1431,4 +1431,13 @@ export const de: TranslationMap = {
       },
     },
   },
+  tenantWorkshop: {
+    modelsTab: "Modelle",
+    channelsTab: "IM-Kanäle",
+    cronTab: "Cron-Aufgaben",
+    skillsTab: "Fähigkeiten",
+    workflowTab: "Workflow",
+    operationsTab: "Intelligente Operationen",
+    comingSoonLabel: "Demnächst verfügbar",
+  },
 };

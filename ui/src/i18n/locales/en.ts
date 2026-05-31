@@ -1813,4 +1813,13 @@ export const en: TranslationMap = {
       },
     },
   },
+  tenantWorkshop: {
+    modelsTab: "Models",
+    channelsTab: "IM Channels",
+    cronTab: "Cron Jobs",
+    skillsTab: "Skills",
+    workflowTab: "Workflow",
+    operationsTab: "Smart Operations",
+    comingSoonLabel: "Coming Soon",
+  },
 };

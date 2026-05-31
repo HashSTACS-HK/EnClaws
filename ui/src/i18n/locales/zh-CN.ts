@@ -1782,4 +1782,13 @@ export const zh_CN: TranslationMap = {
       },
     },
   },
+  tenantWorkshop: {
+    modelsTab: "模型管理",
+    channelsTab: "IM接入",
+    cronTab: "定时任务",
+    skillsTab: "技能",
+    workflowTab: "工作流",
+    operationsTab: "智能操作",
+    comingSoonLabel: "即将上线",
+  },
 };

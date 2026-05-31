@@ -107,6 +107,7 @@ import "./views/tenant/cs-setup.ts";
 import "./views/tenant/cs-sessions.ts";
 import "./views/tenant/cs-api-mode.ts";
 import "./views/tenant/cs-widget-management.ts";
+import "./views/tenant/tenant-workshop.ts";
 import "./components/cs-widget.ts";
 import "./views/tenant/tenant-cron.ts";
 import "./views/platform-overview.ts";
@@ -316,7 +317,6 @@ export function renderApp(state: AppViewState) {
     "debug",
     "scheduler-placeholder",
     "tenant-audit",
-    "tenant-workshop",
   ]);
   const isComingSoon = COMING_SOON_TABS.has(state.tab);
   const isChat = state.tab === "chat";
@@ -1747,7 +1747,8 @@ export function renderApp(state: AppViewState) {
                       state.tab === "cs-setup" ||
                       state.tab === "cs-sessions" ||
                       state.tab === "cs-api-management" ||
-                      state.tab === "cs-widget-management")
+                      state.tab === "cs-widget-management" ||
+                      state.tab === "tenant-workshop")
                       ? html`
                                       <section class="card">
                                           ${
@@ -1892,6 +1893,33 @@ export function renderApp(state: AppViewState) {
                                                   <cs-widget-management-view
                                                     .gatewayUrl=${state.settings.gatewayUrl}
                                                   ></cs-widget-management-view>
+                                                `
+                                              : nothing
+                                          }
+                                          ${
+                                            state.tab === "tenant-workshop"
+                                              ? html`
+                                                  <tenant-workshop-view
+                                                    .gatewayUrl=${state.settings.gatewayUrl}
+                                                    @navigate-to-agent=${(
+                                                      e: CustomEvent<{ agentId: string }>,
+                                                    ) => {
+                                                      _pendingAgentNav = {
+                                                        agentId: e.detail.agentId,
+                                                        panel: "channels",
+                                                      };
+                                                      state.setTab("tenant-agents" as any);
+                                                    }}
+                                                    @navigate-to-agent-cron=${(
+                                                      e: CustomEvent<{ agentId: string }>,
+                                                    ) => {
+                                                      _pendingAgentNav = {
+                                                        agentId: e.detail.agentId,
+                                                        panel: "cron",
+                                                      };
+                                                      state.setTab("tenant-agents" as any);
+                                                    }}
+                                                  ></tenant-workshop-view>
                                                 `
                                               : nothing
                                           }
