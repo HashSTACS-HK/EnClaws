@@ -1438,4 +1438,8 @@ export const de: TranslationMap = {
     operationsTab: "Intelligente Operationen",
     comingSoonLabel: "Demnächst verfügbar",
   },
+  tenantAudit: {
+    sessionsTab: "Sitzungen",
+    tracesTab: "LLM-Audit",
+  },
 };

@@ -1354,4 +1354,8 @@ export const zh_TW: TranslationMap = {
     operationsTab: "智慧操作",
     comingSoonLabel: "即將上線",
   },
+  tenantAudit: {
+    sessionsTab: "會話記錄",
+    tracesTab: "LLM審計",
+  },
 };

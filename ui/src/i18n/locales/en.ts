@@ -1819,4 +1819,8 @@ export const en: TranslationMap = {
     operationsTab: "Smart Operations",
     comingSoonLabel: "Coming Soon",
   },
+  tenantAudit: {
+    sessionsTab: "Sessions",
+    tracesTab: "LLM Audit",
+  },
 };

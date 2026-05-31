@@ -1789,4 +1789,8 @@ export const zh_CN: TranslationMap = {
     operationsTab: "智能操作",
     comingSoonLabel: "即将上线",
   },
+  tenantAudit: {
+    sessionsTab: "会话记录",
+    tracesTab: "LLM审计",
+  },
 };

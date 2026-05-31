@@ -107,6 +107,7 @@ import "./views/tenant/cs-sessions.ts";
 import "./views/tenant/cs-api-mode.ts";
 import "./views/tenant/cs-widget-management.ts";
 import "./views/tenant/tenant-workshop.ts";
+import "./views/tenant/tenant-audit.ts";
 import "./components/cs-widget.ts";
 import "./views/tenant/tenant-cron.ts";
 import "./views/platform-overview.ts";
@@ -315,7 +316,6 @@ export function renderApp(state: AppViewState) {
     "config",
     "debug",
     "scheduler-placeholder",
-    "tenant-audit",
   ]);
   const isComingSoon = COMING_SOON_TABS.has(state.tab);
   const isChat = state.tab === "chat";
@@ -1777,7 +1777,8 @@ export function renderApp(state: AppViewState) {
                       state.tab === "cs-sessions" ||
                       state.tab === "cs-api-management" ||
                       state.tab === "cs-widget-management" ||
-                      state.tab === "tenant-workshop")
+                      state.tab === "tenant-workshop" ||
+                      state.tab === "tenant-audit")
                       ? html`
                                       <section class="card">
                                           ${
@@ -1943,6 +1944,41 @@ export function renderApp(state: AppViewState) {
                                                       state.setTab("tenant-agents" as any);
                                                     }}
                                                   ></tenant-workshop-view>
+                                                `
+                                              : nothing
+                                          }
+                                          ${
+                                            state.tab === "tenant-audit"
+                                              ? html`
+                                                  <tenant-audit-view
+                                                    .gatewayUrl=${state.settings.gatewayUrl}
+                                                    .sessionsProps=${{
+                                                      loading: state.sessionsLoading,
+                                                      result: state.sessionsResult,
+                                                      error: state.sessionsError,
+                                                      activeMinutes: state.sessionsFilterActive,
+                                                      limit: state.sessionsFilterLimit,
+                                                      includeGlobal: state.sessionsIncludeGlobal,
+                                                      includeUnknown: state.sessionsIncludeUnknown,
+                                                      basePath: state.basePath,
+                                                      onFiltersChange: (next: {
+                                                        activeMinutes: string;
+                                                        limit: string;
+                                                        includeGlobal: boolean;
+                                                        includeUnknown: boolean;
+                                                      }) => {
+                                                        state.sessionsFilterActive = next.activeMinutes;
+                                                        state.sessionsFilterLimit = next.limit;
+                                                        state.sessionsIncludeGlobal = next.includeGlobal;
+                                                        state.sessionsIncludeUnknown = next.includeUnknown;
+                                                      },
+                                                      onRefresh: () => loadSessions(state),
+                                                      onPatch: (key: string, patch: Parameters<typeof patchSession>[2]) =>
+                                                        patchSession(state, key, patch),
+                                                      onDelete: (key: string) =>
+                                                        deleteSessionAndRefresh(state, key),
+                                                    }}
+                                                  ></tenant-audit-view>
                                                 `
                                               : nothing
                                           }

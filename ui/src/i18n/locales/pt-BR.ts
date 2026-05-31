@@ -1428,4 +1428,8 @@ export const pt_BR: TranslationMap = {
     operationsTab: "Operacoes Inteligentes",
     comingSoonLabel: "Em Breve",
   },
+  tenantAudit: {
+    sessionsTab: "Sessoes",
+    tracesTab: "Auditoria LLM",
+  },
 };
