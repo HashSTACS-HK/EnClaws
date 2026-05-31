@@ -11,27 +11,22 @@ export const TAB_GROUPS = [
     tabs: ["tenant-overview"],
   },
   {
-    label: "workspace",
-    tabs: ["tenant-agents", "chat", "sessions"],
+    label: "workbench",
+    tabs: ["chat", "scheduler-placeholder", "cs-sessions", "tenant-audit"],
   },
   {
-    label: "resources",
-    tabs: ["tenant-channels", "tenant-models"],
-  },
-  {
-    label: "enterprise",
+    label: "config",
     tabs: [
-      "tenant-settings",
+      "tenant-agents",
+      "tenant-workshop",
       "tenant-knowledge",
-      "tenant-users",
-      "tenant-traces",
-      "tenant-usage",
-      "tenant-cron",
+      "cs-api-management",
+      "cs-widget-management",
     ],
   },
   {
-    label: "cs",
-    tabs: ["cs-setup", "cs-sessions"],
+    label: "workspace-group",
+    tabs: ["tenant-settings", "tenant-users", "tenant-usage"],
   },
   {
     label: "platform",
@@ -73,7 +68,12 @@ export type Tab =
   | "platform-tools"
   | "platform-tenants"
   | "cs-setup"
-  | "cs-sessions";
+  | "cs-sessions"
+  | "scheduler-placeholder"
+  | "tenant-audit"
+  | "tenant-workshop"
+  | "cs-api-management"
+  | "cs-widget-management";
 
 const TAB_PATHS: Record<Tab, string> = {
   agents: "/agents",
@@ -106,6 +106,11 @@ const TAB_PATHS: Record<Tab, string> = {
   "platform-tenants": "/platform-tenants",
   "cs-setup": "/cs-setup",
   "cs-sessions": "/cs-sessions",
+  "scheduler-placeholder": "/scheduler-placeholder",
+  "tenant-audit": "/tenant-audit",
+  "tenant-workshop": "/tenant-workshop",
+  "cs-api-management": "/cs-api-management",
+  "cs-widget-management": "/cs-widget-management",
 };
 
 const PATH_TO_TAB = new Map(Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]));
@@ -251,6 +256,16 @@ export function iconForTab(tab: Tab): IconName {
       return "settings";
     case "cs-sessions":
       return "messageSquare";
+    case "scheduler-placeholder":
+      return "loader";
+    case "tenant-audit":
+      return "scrollText";
+    case "tenant-workshop":
+      return "zap";
+    case "cs-api-management":
+      return "settings";
+    case "cs-widget-management":
+      return "puzzle";
     default:
       return "folder";
   }

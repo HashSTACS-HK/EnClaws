@@ -313,6 +313,10 @@ export function renderApp(state: AppViewState) {
     "cron",
     "config",
     "debug",
+    "scheduler-placeholder",
+    "tenant-audit",
+    "tenant-workshop",
+    "cs-widget-management",
   ]);
   const isComingSoon = COMING_SOON_TABS.has(state.tab);
   const isChat = state.tab === "chat";
@@ -548,6 +552,11 @@ export function renderApp(state: AppViewState) {
                   "tenant-cron",
                   "cs-setup",
                   "cs-sessions",
+                  "scheduler-placeholder",
+                  "tenant-audit",
+                  "tenant-workshop",
+                  "cs-api-management",
+                  "cs-widget-management",
                 ]);
                 const platformOnlyTabs = new Set([
                   "overview",
@@ -1736,7 +1745,8 @@ export function renderApp(state: AppViewState) {
                       state.tab === "tenant-usage" ||
                       state.tab === "tenant-cron" ||
                       state.tab === "cs-setup" ||
-                      state.tab === "cs-sessions")
+                      state.tab === "cs-sessions" ||
+                      state.tab === "cs-api-management")
                       ? html`
                                       <section class="card">
                                           ${
@@ -1863,6 +1873,15 @@ export function renderApp(state: AppViewState) {
                                             state.tab === "cs-sessions"
                                               ? html`
                                                   <cs-sessions-view></cs-sessions-view>
+                                                `
+                                              : nothing
+                                          }
+                                          ${
+                                            state.tab === "cs-api-management"
+                                              ? html`
+                                                  <cs-api-mode-view
+                                                    .gatewayUrl=${state.settings.gatewayUrl}
+                                                  ></cs-api-mode-view>
                                                 `
                                               : nothing
                                           }

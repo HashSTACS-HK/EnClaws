@@ -175,10 +175,30 @@ describe("inferBasePathFromPathname", () => {
 describe("TAB_GROUPS", () => {
   it("contains all expected groups", () => {
     const labels = TAB_GROUPS.map((g) => g.label);
-    expect(labels).toContain("Chat");
-    expect(labels).toContain("Control");
-    expect(labels).toContain("Agent");
-    expect(labels).toContain("Settings");
+    expect(labels).toContain("workbench");
+    expect(labels).toContain("config");
+    expect(labels).toContain("workspace-group");
+    expect(labels).toContain("platform");
+    expect(labels).toContain("system");
+  });
+
+  it("workbench group contains expected tabs", () => {
+    const workbench = TAB_GROUPS.find((g) => g.label === "workbench");
+    expect(workbench).toBeDefined();
+    expect(workbench!.tabs).toContain("chat");
+    expect(workbench!.tabs).toContain("cs-sessions");
+    expect(workbench!.tabs).toContain("scheduler-placeholder");
+    expect(workbench!.tabs).toContain("tenant-audit");
+  });
+
+  it("config group contains expected tabs", () => {
+    const config = TAB_GROUPS.find((g) => g.label === "config");
+    expect(config).toBeDefined();
+    expect(config!.tabs).toContain("tenant-agents");
+    expect(config!.tabs).toContain("tenant-knowledge");
+    expect(config!.tabs).toContain("cs-api-management");
+    expect(config!.tabs).toContain("cs-widget-management");
+    expect(config!.tabs).toContain("tenant-workshop");
   });
 
   it("all tabs are unique", () => {

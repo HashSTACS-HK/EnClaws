@@ -38,6 +38,9 @@ export const en: TranslationMap = {
     enterprise: "Enterprise",
     system: "System",
     cs: "AI Customer Service",
+    workbench: "Workbench",
+    config: "Configuration",
+    "workspace-group": "Workspace",
     expand: "Expand sidebar",
     collapse: "Collapse sidebar",
     logout: "Logout",
@@ -80,6 +83,11 @@ export const en: TranslationMap = {
     "platform-tenants": "Tenants",
     "cs-setup": "CS Console",
     "cs-sessions": "CS Sessions",
+    "scheduler-placeholder": "AI Scheduler",
+    "tenant-audit": "AI Employee Audit",
+    "tenant-workshop": "AI Workshop",
+    "cs-api-management": "AI Service Management",
+    "cs-widget-management": "Widget Management",
   },
   subtitles: {
     agents: "Manage agent workspaces, tools, and identities.",
@@ -114,6 +122,11 @@ export const en: TranslationMap = {
     "cs-setup":
       "Configure AI customer service console — Widget embed mode and API integration mode.",
     "cs-sessions": "View AI customer service session records and message threads.",
+    "scheduler-placeholder": "AI scheduling dispatch center — coming soon.",
+    "tenant-audit": "Audit AI employee actions and trace all agent activities.",
+    "tenant-workshop": "Build and manage AI workflows and automation templates.",
+    "cs-api-management": "Manage AI service credentials for API integration mode.",
+    "cs-widget-management": "Manage and embed customer service widgets on your site.",
   },
   platformTools: {
     infoBanner:

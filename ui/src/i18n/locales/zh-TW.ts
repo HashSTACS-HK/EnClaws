@@ -36,6 +36,9 @@ export const zh_TW: TranslationMap = {
     resources: "資源管理",
     enterprise: "企業管理",
     system: "系統",
+    workbench: "工作台",
+    config: "基礎配置",
+    "workspace-group": "工作空間",
     expand: "展開側邊欄",
     collapse: "折疊側邊欄",
     logout: "登出",
@@ -71,6 +74,11 @@ export const zh_TW: TranslationMap = {
     "platform-tenants": "企業管理",
     "cs-setup": "客服控制台",
     "cs-sessions": "客服會話",
+    "scheduler-placeholder": "AI 調度台",
+    "tenant-audit": "AI 員工審計",
+    "tenant-workshop": "AI 工坊",
+    "cs-api-management": "AI 服務管理",
+    "cs-widget-management": "Widget 管理",
   },
   subtitles: {
     agents: "管理代理工作區、工具和身份。",
@@ -100,6 +108,11 @@ export const zh_TW: TranslationMap = {
     "platform-tenants": "管理平台所有企業的方案、配額和狀態。",
     "cs-setup": "AI 客服控制台 — Widget 嵌入模式和 API 整合模式。",
     "cs-sessions": "查看 AI 客服會話紀錄和訊息詳情。",
+    "scheduler-placeholder": "AI 調度中心 — 即將上線。",
+    "tenant-audit": "審計 AI 員工行為，追蹤所有 Agent 活動記錄。",
+    "tenant-workshop": "建構和管理 AI 工作流與自動化範本。",
+    "cs-api-management": "管理 API 整合模式下的 AI 服務憑證。",
+    "cs-widget-management": "管理並嵌入客服 Widget 到您的網站。",
   },
   platformTools: {
     infoBanner:

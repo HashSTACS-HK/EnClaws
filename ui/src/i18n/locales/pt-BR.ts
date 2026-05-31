@@ -33,10 +33,13 @@ export const pt_BR: TranslationMap = {
   nav: {
     chat: "Chat",
     platform: "Plataforma",
-    workspace: "Área de Trabalho",
+    workspace: "Area de Trabalho",
     resources: "Recursos",
     enterprise: "Empresa",
     system: "Sistema",
+    workbench: "Bancada de Trabalho",
+    config: "Configuracao",
+    "workspace-group": "Espaco de Trabalho",
     expand: "Expandir barra lateral",
     collapse: "Recolher barra lateral",
     logout: "Sair",
@@ -71,7 +74,12 @@ export const pt_BR: TranslationMap = {
     "platform-tools": "Gerenciamento de Ferramentas",
     "platform-tenants": "Inquilinos",
     "cs-setup": "Console do CS",
-    "cs-sessions": "Sessões do CS",
+    "cs-sessions": "Sessoes do CS",
+    "scheduler-placeholder": "Agendador de IA",
+    "tenant-audit": "Auditoria de Funcionario de IA",
+    "tenant-workshop": "Oficina de IA",
+    "cs-api-management": "Gerenciamento de Servicos de IA",
+    "cs-widget-management": "Gerenciamento de Widget",
   },
   subtitles: {
     agents: "Gerenciar espaços de trabalho, ferramentas e identidades de agentes.",
@@ -103,9 +111,14 @@ export const pt_BR: TranslationMap = {
       "Configurar política de acesso a ferramentas em nível de plataforma, aplicada a todos os agentes por padrão.",
     "platform-tenants": "Gerenciar planos, cotas e status de todos os inquilinos.",
     "cs-setup":
-      "Console de atendimento ao cliente com IA — modo Widget e modo de integração de API.",
+      "Console de atendimento ao cliente com IA — modo Widget e modo de integracao de API.",
     "cs-sessions":
-      "Visualizar registros de sessões e threads de mensagens do atendimento ao cliente com IA.",
+      "Visualizar registros de sessoes e threads de mensagens do atendimento ao cliente com IA.",
+    "scheduler-placeholder": "Central de agendamento de IA — em breve.",
+    "tenant-audit": "Auditar acoes de funcionarios de IA e rastrear atividades de agentes.",
+    "tenant-workshop": "Criar e gerenciar fluxos de trabalho de IA e modelos de automacao.",
+    "cs-api-management": "Gerenciar credenciais de servico de IA para modo de integracao de API.",
+    "cs-widget-management": "Gerenciar e incorporar widgets de atendimento ao cliente no seu site.",
   },
   platformTools: {
     infoBanner:
