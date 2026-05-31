@@ -274,3 +274,23 @@ export function titleForTab(tab: Tab) {
 export function subtitleForTab(tab: Tab) {
   return t(`subtitles.${tab}`);
 }
+
+/**
+ * Returns true when the page is loaded with `?embed=1` in the URL search
+ * params. In embed mode the app chrome (sidebar + header) is hidden so the
+ * routed page fills the full viewport inside a host iframe.
+ *
+ * @param url - URL to inspect; defaults to `window.location.href` in browser
+ *              environments. Pass an explicit URL in tests.
+ */
+export function isEmbedMode(url?: URL): boolean {
+  try {
+    const target = url ?? (typeof window !== "undefined" ? new URL(window.location.href) : null);
+    if (!target) {
+      return false;
+    }
+    return target.searchParams.get("embed") === "1";
+  } catch {
+    return false;
+  }
+}

@@ -3,6 +3,7 @@ import {
   TAB_GROUPS,
   iconForTab,
   inferBasePathFromPathname,
+  isEmbedMode,
   normalizeBasePath,
   normalizePath,
   pathForTab,
@@ -205,5 +206,30 @@ describe("TAB_GROUPS", () => {
     const allTabs = TAB_GROUPS.flatMap((g) => g.tabs);
     const uniqueTabs = new Set(allTabs);
     expect(uniqueTabs.size).toBe(allTabs.length);
+  });
+});
+
+describe("isEmbedMode", () => {
+  it("returns true when ?embed=1 is present", () => {
+    expect(isEmbedMode(new URL("https://example.com/tenant-overview?embed=1"))).toBe(true);
+  });
+
+  it("returns true when ?embed=1 is combined with other params", () => {
+    expect(isEmbedMode(new URL("https://example.com/chat?session=abc&embed=1"))).toBe(true);
+  });
+
+  it("returns false when embed param is absent", () => {
+    expect(isEmbedMode(new URL("https://example.com/tenant-overview"))).toBe(false);
+  });
+
+  it("returns false when embed param is not '1'", () => {
+    expect(isEmbedMode(new URL("https://example.com/?embed=true"))).toBe(false);
+    expect(isEmbedMode(new URL("https://example.com/?embed=0"))).toBe(false);
+    expect(isEmbedMode(new URL("https://example.com/?embed="))).toBe(false);
+  });
+
+  it("returns false when url argument is undefined and window is not defined", () => {
+    // In a Node/Vitest environment window is undefined — expect graceful false
+    expect(isEmbedMode(undefined)).toBe(false);
   });
 });

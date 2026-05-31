@@ -66,6 +66,38 @@
   margin-top: 0;
 }
 
+/* Embed mode: hide sidebar + header, routed page fills full viewport */
+.shell--embed {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  .shell--embed {
+    height: 100dvh;
+  }
+}
+
+.shell--embed .nav {
+  display: none;
+}
+
+.shell--embed .page-container {
+  height: 100%;
+  overflow: hidden;
+}
+
+.shell--embed .page-header {
+  display: none;
+}
+
+.shell--embed .content {
+  height: 100%;
+  padding: 0;
+  overflow: auto;
+}
+
 /* ===========================================
    Page Container & Header
    =========================================== */
