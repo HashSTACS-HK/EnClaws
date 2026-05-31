@@ -75,7 +75,7 @@ import {
 } from "./controllers/skills.ts";
 import { buildExternalLinkRel, EXTERNAL_LINK_TARGET } from "./external-link.ts";
 import { icons } from "./icons.ts";
-import { isEmbedMode, normalizeBasePath, TAB_GROUPS, subtitleForTab, titleForTab } from "./navigation.ts";
+import { isEmbedMode, normalizeBasePath, TAB_GROUPS, subtitleForTab, tabFromPath, titleForTab } from "./navigation.ts";
 import { loadSettings } from "./storage.ts";
 import { resolveConfiguredCronModelSuggestions } from "./views/agents-utils.ts";
 import { renderAgents } from "./views/agents.ts";
@@ -394,7 +394,18 @@ export function renderApp(state: AppViewState) {
       // Preserve the hash (for email reset / temp-password landing pages) and
       // the search string (for session params). A naive replaceState(null, "", "/login")
       // would strip them and break new-tab landings like /#/auth/reset-password?token=xxx.
-      const preserved = `/login${window.location.search}${window.location.hash}`;
+      //
+      // ST-D2: also encode the original path as ?redirect=<path> so the post-login
+      // handler can restore the full original URL (including embed mode) after
+      // credentials are accepted. Only encode when the path resolves to a known tab
+      // so we don't open arbitrary redirect targets.
+      const loginParams = new URLSearchParams(window.location.search);
+      const originalPath = window.location.pathname;
+      if (tabFromPath(originalPath, state.basePath) !== null) {
+        loginParams.set("redirect", originalPath);
+      }
+      const loginSearch = loginParams.toString() ? `?${loginParams.toString()}` : "";
+      const preserved = `/login${loginSearch}${window.location.hash}`;
       window.history.replaceState(null, "", preserved);
     }
     // Phase 1: route to forgot-password / reset-password / temp-password views
@@ -430,7 +441,27 @@ export function renderApp(state: AppViewState) {
           return;
         }
         const role = loadAuth()?.user?.role;
-        state.setTab(role === "platform-admin" ? "overview" : "tenant-overview");
+
+        // ST-D2: restore original pre-login URL (including ?embed=1) when a
+        // validated `redirect` param was stored during the pre-login gate
+        // redirect. The redirect path is validated against known tabs to
+        // prevent open redirects.  Only honoured for non-admin roles (admins
+        // always land on the platform overview regardless).
+        const loginParams = new URLSearchParams(
+          typeof window !== "undefined" ? window.location.search : "",
+        );
+        const redirectPath = loginParams.get("redirect");
+        const redirectTab =
+          redirectPath && role !== "platform-admin"
+            ? tabFromPath(redirectPath, state.basePath)
+            : null;
+
+        if (redirectTab) {
+          state.setTab(redirectTab);
+        } else {
+          state.setTab(role === "platform-admin" ? "overview" : "tenant-overview");
+        }
+
         if (e.detail?.isNewRegistration) {
           state.showOnboarding = true;
         } else if (role === "platform-admin") {

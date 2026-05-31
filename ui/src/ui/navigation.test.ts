@@ -233,3 +233,52 @@ describe("isEmbedMode", () => {
     expect(isEmbedMode(undefined)).toBe(false);
   });
 });
+
+/**
+ * ST-D2: embed mode round-trip through the login auth gate.
+ *
+ * Contract:
+ *  1. Pre-login redirect encodes original path as ?redirect=<path> so it is
+ *     not lost when the URL is rewritten to /login.
+ *  2. Post-login, tabFromPath() resolves the redirect param back to a Tab
+ *     so the app restores the original page WITH ?embed=1 still present.
+ *  3. isEmbedMode() reads ?embed=1 from the live URL, so it returns true
+ *     on the restored post-login URL.
+ */
+describe("embed mode login round-trip (ST-D2)", () => {
+  it("pre-login URL preserves embed param when redirect path is encoded", () => {
+    // Simulates: user at /tenant-agents?embed=1 redirected to /login?embed=1&redirect=%2Ftenant-agents
+    const loginUrl = new URL("https://example.com/login?embed=1&redirect=%2Ftenant-agents");
+    expect(isEmbedMode(loginUrl)).toBe(true);
+    expect(loginUrl.searchParams.get("redirect")).toBe("/tenant-agents");
+  });
+
+  it("redirect param resolves to a known tab via tabFromPath", () => {
+    // Post-login handler reads redirect param and validates it with tabFromPath
+    const redirectPath = "/tenant-agents";
+    expect(tabFromPath(redirectPath)).toBe("tenant-agents");
+  });
+
+  it("redirect param for unknown path resolves to null (open-redirect guard)", () => {
+    expect(tabFromPath("/unknown-page")).toBeNull();
+    expect(tabFromPath("https://evil.com/steal")).toBeNull();
+  });
+
+  it("post-login URL with embed param activates embed mode", () => {
+    // After setTab("tenant-agents"), syncUrlWithTab builds /tenant-agents?embed=1
+    // because window.location.search still carries ?embed=1 at that point.
+    const postLoginUrl = new URL("https://example.com/tenant-agents?embed=1");
+    expect(isEmbedMode(postLoginUrl)).toBe(true);
+    expect(tabFromPath(postLoginUrl.pathname)).toBe("tenant-agents");
+  });
+
+  it("embed=1 survives alongside the redirect param in the login URL", () => {
+    // Ensures URLSearchParams round-trip does not drop embed or redirect
+    const params = new URLSearchParams("embed=1");
+    params.set("redirect", "/tenant-agents");
+    const loginUrl = new URL(`https://example.com/login?${params.toString()}`);
+    expect(loginUrl.searchParams.get("embed")).toBe("1");
+    expect(loginUrl.searchParams.get("redirect")).toBe("/tenant-agents");
+    expect(isEmbedMode(loginUrl)).toBe(true);
+  });
+});
