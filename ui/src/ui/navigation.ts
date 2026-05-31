@@ -67,7 +67,6 @@ export type Tab =
   | "tenant-cron"
   | "platform-tools"
   | "platform-tenants"
-  | "cs-setup"
   | "cs-sessions"
   | "scheduler-placeholder"
   | "tenant-audit"
@@ -104,7 +103,6 @@ const TAB_PATHS: Record<Tab, string> = {
   "tenant-cron": "/tenant-cron",
   "platform-tools": "/platform-tools",
   "platform-tenants": "/platform-tenants",
-  "cs-setup": "/cs-setup",
   "cs-sessions": "/cs-sessions",
   "scheduler-placeholder": "/scheduler-placeholder",
   "tenant-audit": "/tenant-audit",
@@ -252,8 +250,6 @@ export function iconForTab(tab: Tab): IconName {
       return "zap";
     case "platform-tenants":
       return "folder";
-    case "cs-setup":
-      return "settings";
     case "cs-sessions":
       return "messageSquare";
     case "scheduler-placeholder":

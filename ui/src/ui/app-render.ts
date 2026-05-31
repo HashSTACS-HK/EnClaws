@@ -103,7 +103,6 @@ import "./views/tenant/tenant-models.ts";
 import "./views/tenant/tenant-skills.ts";
 import "./views/tenant/tenant-traces.ts";
 import "./views/tenant/tenant-usage.ts";
-import "./views/tenant/cs-setup.ts";
 import "./views/tenant/cs-sessions.ts";
 import "./views/tenant/cs-api-mode.ts";
 import "./views/tenant/cs-widget-management.ts";
@@ -550,7 +549,6 @@ export function renderApp(state: AppViewState) {
                   "tenant-traces",
                   "tenant-usage",
                   "tenant-cron",
-                  "cs-setup",
                   "cs-sessions",
                   "scheduler-placeholder",
                   "tenant-audit",
@@ -1744,7 +1742,6 @@ export function renderApp(state: AppViewState) {
                       state.tab === "tenant-traces" ||
                       state.tab === "tenant-usage" ||
                       state.tab === "tenant-cron" ||
-                      state.tab === "cs-setup" ||
                       state.tab === "cs-sessions" ||
                       state.tab === "cs-api-management" ||
                       state.tab === "cs-widget-management" ||
@@ -1863,12 +1860,6 @@ export function renderApp(state: AppViewState) {
                                                         };
                                                         state.setTab("tenant-agents" as any);
                                                       }}></tenant-cron-view>`
-                                              : nothing
-                                          }
-                                          ${
-                                            state.tab === "cs-setup"
-                                              ? html`
-                                              <cs-setup-view .gatewayUrl=${state.settings.gatewayUrl}></cs-setup-view>`
                                               : nothing
                                           }
                                           ${

@@ -73,7 +73,6 @@ export const pt_BR: TranslationMap = {
     "tenant-usage": "Meu Plano",
     "platform-tools": "Gerenciamento de Ferramentas",
     "platform-tenants": "Inquilinos",
-    "cs-setup": "Console do CS",
     "cs-sessions": "Sessoes do CS",
     "scheduler-placeholder": "Agendador de IA",
     "tenant-audit": "Auditoria de Funcionario de IA",
@@ -110,8 +109,6 @@ export const pt_BR: TranslationMap = {
     "platform-tools":
       "Configurar política de acesso a ferramentas em nível de plataforma, aplicada a todos os agentes por padrão.",
     "platform-tenants": "Gerenciar planos, cotas e status de todos os inquilinos.",
-    "cs-setup":
-      "Console de atendimento ao cliente com IA — modo Widget e modo de integracao de API.",
     "cs-sessions":
       "Visualizar registros de sessoes e threads de mensagens do atendimento ao cliente com IA.",
     "scheduler-placeholder": "Central de agendamento de IA — em breve.",

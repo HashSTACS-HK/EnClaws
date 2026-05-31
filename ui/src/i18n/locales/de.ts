@@ -74,7 +74,6 @@ export const de: TranslationMap = {
     "tenant-usage": "Mein Tarif",
     "platform-tools": "Werkzeugverwaltung",
     "platform-tenants": "Mandanten",
-    "cs-setup": "CS-Konsole",
     "cs-sessions": "CS-Sitzungen",
     "scheduler-placeholder": "KI-Zeitplaner",
     "tenant-audit": "KI-Mitarbeiter-Audit",
@@ -110,7 +109,6 @@ export const de: TranslationMap = {
     "platform-tools":
       "Plattformweite Tool-Zugriffsrichtlinie konfigurieren, die standardmäßig für alle Agenten gilt.",
     "platform-tenants": "Alle Mandanten-Tarife, Kontingente und Status verwalten.",
-    "cs-setup": "KI-Kundenservice-Konsole -- Widget-Einbettungsmodus und API-Integrationsmodus.",
     "cs-sessions": "KI-Kundenservice-Sitzungsaufzeichnungen und Nachrichtenverlaeufe anzeigen.",
     "scheduler-placeholder": "KI-Planungszentrale -- demnachst verfugbar.",
     "tenant-audit": "KI-Mitarbeiteraktionen prufen und alle Agentaktivitaten verfolgen.",

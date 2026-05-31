@@ -81,7 +81,6 @@ export const en: TranslationMap = {
     "tenant-cron": "Cron Overview",
     "platform-tools": "Tool Management",
     "platform-tenants": "Tenants",
-    "cs-setup": "CS Console",
     "cs-sessions": "CS Sessions",
     "scheduler-placeholder": "AI Scheduler",
     "tenant-audit": "AI Employee Audit",
@@ -119,8 +118,6 @@ export const en: TranslationMap = {
     "platform-tools":
       "Configure platform-level tool access policy applied to all agents by default.",
     "platform-tenants": "Manage all tenant plans, quotas, and statuses.",
-    "cs-setup":
-      "Configure AI customer service console — Widget embed mode and API integration mode.",
     "cs-sessions": "View AI customer service session records and message threads.",
     "scheduler-placeholder": "AI scheduling dispatch center — coming soon.",
     "tenant-audit": "Audit AI employee actions and trace all agent activities.",
