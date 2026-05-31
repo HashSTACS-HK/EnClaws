@@ -454,6 +454,7 @@ CREATE TABLE IF NOT EXISTS cs_messages (
   confidence     TEXT,
   feedback_type  TEXT,
   source_chunks  TEXT,
+  turn_id        TEXT,
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_cs_messages_session ON cs_messages(session_id, created_at);

@@ -395,3 +395,55 @@ describe("cs-message SQLite CRUD", () => {
     expect(limited.length).toBe(3);
   });
 });
+
+// ── P7-B1: cs_messages.turn_id persistence ───────────────────────────────────
+
+describe("cs-message turn_id (P7-B1)", () => {
+  let sessionId: string;
+  let tenantId: string;
+
+  beforeAll(async () => {
+    const { createTenant } = await import("./tenant.js");
+    const { createCSSession } = await import("./cs-session.js");
+    const tenant = await createTenant({ name: "Tenant TurnId", slug: "tenant-turn-id" });
+    tenantId = tenant.id;
+    const session = await createCSSession({ tenantId, visitorId: "visitor-turn-id" });
+    sessionId = session.id;
+  });
+
+  it("appendCsApiMessage — persists turnId; rowToMessage maps turn_id → turnId", async () => {
+    const { appendCsApiMessage } = await import("./cs-session.js");
+    const { getCSMessage } = await import("./cs-message.js");
+
+    const turnId = "cs-run-1700000000001";
+    const { id } = await appendCsApiMessage({
+      sessionId,
+      tenantId,
+      role: "ai",
+      source: "agenora-ai",
+      content: "AI reply with turn linkage",
+      turnId,
+    });
+
+    const msg = await getCSMessage(id);
+    expect(msg).not.toBeNull();
+    expect(msg!.turnId).toBe(turnId);
+  });
+
+  it("appendCsApiMessage — turnId null when not provided", async () => {
+    const { appendCsApiMessage } = await import("./cs-session.js");
+    const { getCSMessage } = await import("./cs-message.js");
+
+    const { id } = await appendCsApiMessage({
+      sessionId,
+      tenantId,
+      role: "customer",
+      source: "upper-app-relay",
+      content: "customer message, no turnId",
+    });
+
+    const msg = await getCSMessage(id);
+    expect(msg).not.toBeNull();
+    expect(msg!.turnId).toBeNull();
+  });
+});

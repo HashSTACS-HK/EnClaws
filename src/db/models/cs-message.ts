@@ -31,6 +31,9 @@ function rowToMessage(row: Record<string, unknown>): CSMessage {
     confidence: parseJson(row.confidence) as CSConfidence | null,
     feedbackType: (row.feedback_type as string) ?? null,
     sourceChunks: parseJson(row.source_chunks) as unknown[] | null,
+    // Link to llm_interaction_traces.turn_id; null for customer/human/legacy messages.
+    // 关联 llm_interaction_traces.turn_id；客户/人工/历史消息为 null。
+    turnId: (row.turn_id as string) ?? null,
     createdAt: row.created_at as Date,
   };
 }

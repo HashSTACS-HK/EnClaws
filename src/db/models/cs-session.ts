@@ -590,33 +590,37 @@ export async function appendCsApiMessage(params: {
   content: string;
   senderParty?: string;
   metadata?: Record<string, unknown>;
+  /** Link to llm_interaction_traces.turn_id. Present for AI messages; null otherwise. */
+  // 关联 llm_interaction_traces.turn_id；AI 消息携带，客户/人工消息为 null。
+  turnId?: string | null;
 }): Promise<{ id: string }> {
-  const { sessionId, tenantId, role, source, content, senderParty, metadata } = params;
+  const { sessionId, tenantId, role, source, content, senderParty, metadata, turnId } = params;
   const confidenceJson = null;
   const sourceChunksJson = senderParty
     ? JSON.stringify([{ senderParty }])
     : metadata
       ? JSON.stringify([{ metadata }])
       : null;
+  const turnIdVal = turnId ?? null;
 
   if (getDbType() === DB_SQLITE) {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     sqliteQuery(
       `INSERT INTO cs_messages
-         (id, session_id, tenant_id, role, content, confidence, source_chunks, source, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source, now],
+         (id, session_id, tenant_id, role, content, confidence, source_chunks, source, turn_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source, turnIdVal, now],
     );
     return { id };
   }
 
   const r = await query(
     `INSERT INTO cs_messages
-       (session_id, tenant_id, role, content, confidence, source_chunks, source)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (session_id, tenant_id, role, content, confidence, source_chunks, source, turn_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
-    [sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source],
+    [sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source, turnIdVal],
   );
   return { id: r.rows[0].id as string };
 }

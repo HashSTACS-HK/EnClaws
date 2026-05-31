@@ -148,7 +148,8 @@ export async function handleMessages(
     return;
   }
 
-  // 8. Extract confidence, append AI message
+  // 8. Extract confidence, append AI message (P7-B1: persist turnId for trace linkage)
+  // 提取置信度，追加 AI 消息（P7-B1：持久化 turnId，用于推理轨迹关联）
   const { stripped, confidence } = extractConfidence(reply);
   try {
     await appendCsApiMessage({
@@ -158,6 +159,7 @@ export async function handleMessages(
       source: "agenora-ai",
       content: stripped,
       metadata: { confidence },
+      turnId: agentResult.turnId,
     });
   } catch (err) {
     log.warn(`cs-api: failed to persist AI message: ${String(err)}`);
