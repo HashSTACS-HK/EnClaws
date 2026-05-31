@@ -106,6 +106,7 @@ import "./views/tenant/tenant-usage.ts";
 import "./views/tenant/cs-setup.ts";
 import "./views/tenant/cs-sessions.ts";
 import "./views/tenant/cs-api-mode.ts";
+import "./views/tenant/cs-widget-management.ts";
 import "./components/cs-widget.ts";
 import "./views/tenant/tenant-cron.ts";
 import "./views/platform-overview.ts";
@@ -316,7 +317,6 @@ export function renderApp(state: AppViewState) {
     "scheduler-placeholder",
     "tenant-audit",
     "tenant-workshop",
-    "cs-widget-management",
   ]);
   const isComingSoon = COMING_SOON_TABS.has(state.tab);
   const isChat = state.tab === "chat";
@@ -1746,7 +1746,8 @@ export function renderApp(state: AppViewState) {
                       state.tab === "tenant-cron" ||
                       state.tab === "cs-setup" ||
                       state.tab === "cs-sessions" ||
-                      state.tab === "cs-api-management")
+                      state.tab === "cs-api-management" ||
+                      state.tab === "cs-widget-management")
                       ? html`
                                       <section class="card">
                                           ${
@@ -1882,6 +1883,15 @@ export function renderApp(state: AppViewState) {
                                                   <cs-api-mode-view
                                                     .gatewayUrl=${state.settings.gatewayUrl}
                                                   ></cs-api-mode-view>
+                                                `
+                                              : nothing
+                                          }
+                                          ${
+                                            state.tab === "cs-widget-management"
+                                              ? html`
+                                                  <cs-widget-management-view
+                                                    .gatewayUrl=${state.settings.gatewayUrl}
+                                                  ></cs-widget-management-view>
                                                 `
                                               : nothing
                                           }
