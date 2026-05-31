@@ -25,6 +25,7 @@ import {
   handleMarkNotifying,
   handleObserver,
   handleGetObject,
+  handleReasoning,
 } from "./cs-api/runtime.js";
 
 const PREFIX = "/api/cs-api";
@@ -108,6 +109,17 @@ export async function handleCsApiRequest(
   const notifyingMatch = path.match(/^\/([^/]+)\/sessions\/([^/]+)\/mark-notifying$/);
   if (notifyingMatch && req.method === "POST") {
     await handleMarkNotifying(req, res, notifyingMatch[1], notifyingMatch[2]);
+    return true;
+  }
+
+  // GET /api/cs-api/{appId}/sessions/{sessionId}/messages/{messageId}/reasoning (P7-B2)
+  // IMPORTANT: registered BEFORE messages/observer (more specific path — 4 segments vs 3).
+  // GET 推理端点：比 messages/observer 路径更具体，必须优先注册。
+  const reasoningMatch = path.match(
+    /^\/([^/]+)\/sessions\/([^/]+)\/messages\/([^/]+)\/reasoning$/,
+  );
+  if (reasoningMatch && req.method === "GET") {
+    await handleReasoning(req, res, reasoningMatch[1], reasoningMatch[2], reasoningMatch[3]);
     return true;
   }
 

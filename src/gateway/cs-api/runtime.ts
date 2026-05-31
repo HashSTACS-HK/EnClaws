@@ -1,13 +1,14 @@
 /**
- * CS-API runtime endpoints — SSE messages + handoff/release/observer.
+ * CS-API runtime endpoints — SSE messages + handoff/release/observer + reasoning.
  *
- * CS-API 运行时端点：SSE 消息流、接管/释放/观察者消息。
+ * CS-API 运行时端点：SSE 消息流、接管/释放/观察者消息、推理摘要。
  *
  * Endpoints:
- *   POST /{appId}/messages                          — SSE stream to AI
+ *   POST /{appId}/messages                                              — SSE stream to AI
  *   POST /{appId}/sessions/{sessionId}/handoff-to-human
  *   POST /{appId}/sessions/{sessionId}/release-to-ai
  *   POST /{appId}/sessions/{sessionId}/messages/observer
+ *   GET  /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning  — LLM reasoning (P7-B2)
  */
 
 import { randomUUID } from "node:crypto";
@@ -20,11 +21,13 @@ import { runCSAgentReply } from "../../customer-service/rag/cs-agent-runner.js";
 import { summarizeKnowledgeHits } from "../../customer-service/rag/cs-knowledge-summary.js";
 import { dbStateToCsApi } from "../../customer-service/state-mapping.js";
 import { getCsApiObjectById } from "../../db/models/cs-api-object.js";
+import { getCSMessage } from "../../db/models/cs-message.js";
 import {
   findOrCreateCsApiSession,
   appendCsApiMessage,
   setSessionState,
 } from "../../db/models/cs-session.js";
+import { getInteractionsByTurn } from "../../db/models/interaction-trace.js";
 import { getTenantAgent } from "../../db/models/tenant-agent.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
@@ -36,6 +39,7 @@ import {
 } from "../protocol/schema/cs-api.js";
 import { extractConfidence } from "./confidence.js";
 import { readJsonBody, sendError, sendJson } from "./http-helpers.js";
+import { buildReasoningFromTraces } from "./reasoning-builder.js";
 import { endSse, startSse, writeSseEvent } from "./sse.js";
 
 const log = createSubsystemLogger("cs-api-runtime");
@@ -442,4 +446,65 @@ export async function handleObserver(
   }
 
   sendJson(res, 201, { messageId });
+}
+
+// ── Handler: GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning ─
+
+/**
+ * Return the LLM reasoning behind a single AI message (P7-B2).
+ *
+ * Reads the message's turn_id, fetches the corresponding llm_interaction_traces,
+ * and returns a structured reasoning summary: KB hits + tool calls + model +
+ * tokens + confidence.
+ *
+ * Returns { reasoning: null } for messages with no turn_id (customer/human/
+ * legacy messages that were not produced by an LLM call).
+ *
+ * 返回单条 AI 消息背后的 LLM 推理摘要（P7-B2）。
+ * 读取消息的 turn_id → 查询 llm_interaction_traces → 返回结构化推理依据。
+ * turn_id 为 null 的消息（客户/人工/历史消息）返回 { reasoning: null }。
+ */
+export async function handleReasoning(
+  req: IncomingMessage,
+  res: ServerResponse,
+  appId: string,
+  sessionId: string,
+  messageId: string,
+): Promise<void> {
+  // 1. Auth — appSecret required (same pattern as all cs-api runtime endpoints).
+  // 1. 鉴权：所有 cs-api runtime 端点统一要求 appSecret。
+  const authResult = await tryAppSecretAuth(req, appId);
+  if (!authResult.ok) {
+    sendError(res, 401, authResult.code, authResult.message);
+    return;
+  }
+  const { tenantId } = authResult.tenant;
+
+  // 2. Load message — then verify tenant + session ownership.
+  // 2. 加载消息，校验 tenant + session 归属。
+  const message = await getCSMessage(messageId);
+  if (!message || message.tenantId !== tenantId || message.sessionId !== sessionId) {
+    sendError(res, 404, "SESSION_OR_MESSAGE_NOT_FOUND", `Message not found: ${messageId}`);
+    return;
+  }
+
+  // 3. No turn_id → human/legacy message, no LLM trace.
+  // 3. 无 turn_id → 客户/人工/历史消息，无 LLM 轨迹，直接返回 null。
+  if (!message.turnId) {
+    sendJson(res, 200, { reasoning: null });
+    return;
+  }
+
+  // 4. Fetch traces by turn_id and verify tenant ownership.
+  // 4. 按 turn_id 查询 trace，校验 tenant 归属。
+  const traces = await getInteractionsByTurn(message.turnId);
+  // Tenant guard: turn_id is global (not namespaced by tenant in the query),
+  // so we verify the first trace's tenantId matches the authenticated tenant.
+  // turn_id 在 DB 查询层不含 tenant 过滤，在此处做二次校验。
+  const tenantTraces = traces.filter((t) => t.tenantId === tenantId);
+
+  // 5. Build and return reasoning struct.
+  // 5. 构建并返回推理摘要。
+  const reasoning = buildReasoningFromTraces(tenantTraces, message.confidence);
+  sendJson(res, 200, { reasoning });
 }
