@@ -25,7 +25,7 @@ interface CSSession {
   id: string;
   visitorId: string;
   visitorName: string | null;
-  state: "ai_active" | "human_active";
+  state: string;
   channel: string;
   createdAt: string;
   updatedAt: string;
@@ -36,11 +36,19 @@ interface CSSession {
 const STATE_LABEL: Record<string, string> = {
   ai_active: "AI 处理中",
   human_active: "人工介入",
+  "ai-handling": "AI 处理中",
+  notifying: "待人工",
+  "human-handling": "人工介入",
+  closed: "闲置",
 };
 
 const STATE_COLOR: Record<string, string> = {
   ai_active: "#1a7f37",
   human_active: "#9a6700",
+  "ai-handling": "#1a7f37",
+  notifying: "#9a6700",
+  "human-handling": "#9a6700",
+  closed: "#6a737d",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -389,7 +397,7 @@ export class CSSessionsView extends LitElement {
                       <span class="expand-icon ${this.expandedId === s.id ? "open" : ""}">▶</span>
                     </td>
                     <td>
-                      <div class="visitor-name">${s.visitorName ?? "匿名访客"}</div>
+                      <div class="visitor-name">${s.visitorName ?? "访客"}</div>
                       <div class="visitor-id">${s.visitorId.slice(0, 16)}…</div>
                     </td>
                     <td>
@@ -397,13 +405,6 @@ export class CSSessionsView extends LitElement {
                         class="state-badge"
                         style="color: ${STATE_COLOR[s.state] ?? "#555"}"
                       >${STATE_LABEL[s.state] ?? s.state}</span>
-                      ${
-                        s.closedAt
-                          ? html`
-                              <br /><span style="font-size: 11px; color: #6a737d">已关闭</span>
-                            `
-                          : nothing
-                      }
                     </td>
                     <td>
                       ${
