@@ -152,9 +152,12 @@ export async function handleMessages(
     return;
   }
 
-  // 8. Extract confidence, append AI message (P7-B1: persist turnId for trace linkage)
-  // 提取置信度，追加 AI 消息（P7-B1：持久化 turnId，用于推理轨迹关联）
+  // 8. Extract confidence + knowledge hits, append AI message (P7-B1/P8:
+  // persist turnId and the per-message reasoning fields used by REST reasoning).
+  // 提取置信度和知识命中，追加 AI 消息（P7-B1/P8：持久化 turnId 以及
+  // REST reasoning 端点需要的单消息推理字段）。
   const { stripped, confidence } = extractConfidence(reply);
+  const knowledgeHits = summarizeKnowledgeHits(agentResult.sourceChunks, DONE_EVENT_MAX_KB_HITS);
   try {
     await appendCsApiMessage({
       sessionId: session.id,
@@ -162,7 +165,8 @@ export async function handleMessages(
       role: "ai",
       source: "agenora-ai",
       content: stripped,
-      metadata: { confidence },
+      confidence,
+      sourceChunks: knowledgeHits,
       turnId: agentResult.turnId,
     });
   } catch (err) {
@@ -179,7 +183,6 @@ export async function handleMessages(
   // 10. 发送 done 事件 — 给上层应用的推理依据（P4 step1）：真实 turnId / 模型
   // （含 fallback）/ token 用量 / 知识库命中摘要。confidence 与 finishReason 保留。
   // runner 无法解析的字段优雅降级（model "unknown"、token 归零），不伪造。
-  const knowledgeHits = summarizeKnowledgeHits(agentResult.sourceChunks, DONE_EVENT_MAX_KB_HITS);
   writeSseEvent(res, "done", {
     confidence,
     turnId: agentResult.turnId,
@@ -505,6 +508,10 @@ export async function handleReasoning(
 
   // 5. Build and return reasoning struct.
   // 5. 构建并返回推理摘要。
-  const reasoning = buildReasoningFromTraces(tenantTraces, message.confidence);
+  const reasoning = buildReasoningFromTraces(
+    tenantTraces,
+    message.confidence,
+    message.sourceChunks ?? [],
+  );
   sendJson(res, 200, { reasoning });
 }

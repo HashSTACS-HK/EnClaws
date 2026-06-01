@@ -48,7 +48,7 @@ export async function handleListSessions(
   const parsed = {
     cursor: params.cursor,
     limit: limitRaw,
-    state: params.state as "ai-handling" | "human-handling" | "closed" | undefined,
+    state: params.state as "ai-handling" | "notifying" | "human-handling" | "closed" | undefined,
     customerId: params.customerId,
     updatedAfter: params.updatedAfter,
   };

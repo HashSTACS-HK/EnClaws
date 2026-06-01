@@ -58,7 +58,7 @@ describe("titleForTab", () => {
 
   it("returns expected titles", () => {
     expect(titleForTab("chat")).toBe("Chat");
-    expect(titleForTab("overview")).toBe("Overview");
+    expect(titleForTab("overview")).toBe("Home");
     expect(titleForTab("cron")).toBe("Cron Jobs");
   });
 });
@@ -129,12 +129,12 @@ describe("pathForTab", () => {
 describe("tabFromPath", () => {
   it("returns tab for valid path", () => {
     expect(tabFromPath("/chat")).toBe("chat");
-    expect(tabFromPath("/platform-overview")).toBe("overview");
+    expect(tabFromPath("/overview")).toBe("overview");
     expect(tabFromPath("/sessions")).toBe("sessions");
   });
 
-  it("returns chat for root path", () => {
-    expect(tabFromPath("/")).toBe("chat");
+  it("returns null for root path so callers can apply their role-aware default", () => {
+    expect(tabFromPath("/")).toBeNull();
   });
 
   it("handles base paths", () => {

@@ -589,18 +589,40 @@ export async function appendCsApiMessage(params: {
   source: "agenora-ai" | "upper-app-relay";
   content: string;
   senderParty?: string;
+  confidence?: unknown | null;
+  sourceChunks?: unknown[] | null;
   metadata?: Record<string, unknown>;
   /** Link to llm_interaction_traces.turn_id. Present for AI messages; null otherwise. */
   // 关联 llm_interaction_traces.turn_id；AI 消息携带，客户/人工消息为 null。
   turnId?: string | null;
 }): Promise<{ id: string }> {
-  const { sessionId, tenantId, role, source, content, senderParty, metadata, turnId } = params;
-  const confidenceJson = null;
-  const sourceChunksJson = senderParty
-    ? JSON.stringify([{ senderParty }])
-    : metadata
-      ? JSON.stringify([{ metadata }])
-      : null;
+  const {
+    sessionId,
+    tenantId,
+    role,
+    source,
+    content,
+    senderParty,
+    confidence,
+    sourceChunks,
+    metadata,
+    turnId,
+  } = params;
+  const metadataConfidence =
+    metadata && "confidence" in metadata ? (metadata.confidence as unknown) : undefined;
+  const confidenceJson =
+    confidence !== undefined && confidence !== null
+      ? JSON.stringify(confidence)
+      : metadataConfidence !== undefined && metadataConfidence !== null
+        ? JSON.stringify(metadataConfidence)
+        : null;
+  const sourceChunksJson = sourceChunks
+    ? JSON.stringify(sourceChunks)
+    : senderParty
+      ? JSON.stringify([{ senderParty }])
+      : metadata
+        ? JSON.stringify([{ metadata }])
+        : null;
   const turnIdVal = turnId ?? null;
 
   if (getDbType() === DB_SQLITE) {
@@ -610,7 +632,18 @@ export async function appendCsApiMessage(params: {
       `INSERT INTO cs_messages
          (id, session_id, tenant_id, role, content, confidence, source_chunks, source, turn_id, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, sessionId, tenantId, role, content, confidenceJson, sourceChunksJson, source, turnIdVal, now],
+      [
+        id,
+        sessionId,
+        tenantId,
+        role,
+        content,
+        confidenceJson,
+        sourceChunksJson,
+        source,
+        turnIdVal,
+        now,
+      ],
     );
     return { id };
   }
@@ -800,7 +833,7 @@ export interface ListCsApiSessionsParams {
   appObjectId: string;
   cursor?: string;
   limit?: number;
-  state?: "ai-handling" | "human-handling" | "closed";
+  state?: "ai-handling" | "notifying" | "human-handling" | "closed";
   customerId?: string;
   updatedAfter?: string;
 }

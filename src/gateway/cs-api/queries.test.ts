@@ -214,6 +214,42 @@ describe("§11.6 query endpoints", () => {
     expect("messages" in body.session).toBe(false);
   });
 
+  it("list sessions supports filtering notifying sessions", async () => {
+    const { tenantId, appObjectId, appId, plainSecret } = await seedTenantAndObject("notifying");
+    const { findOrCreateCsApiSession, updateCSSessionState } =
+      await import("../../db/models/cs-session.js");
+
+    await findOrCreateCsApiSession({
+      tenantId,
+      appObjectId,
+      agentId: "agent-notifying",
+      customerId: "cust-notifying-ai",
+    });
+    const notifyingSession = await findOrCreateCsApiSession({
+      tenantId,
+      appObjectId,
+      agentId: "agent-notifying",
+      customerId: "cust-notifying-target",
+    });
+    await updateCSSessionState(notifyingSession.id, "notifying");
+
+    const { handleListSessions } = await import("./queries.js");
+    const req = makeGetReq(`/api/cs-api/${appId}/sessions?state=notifying`, plainSecret);
+    const res = makeRes();
+    await handleListSessions(req, res, appId);
+
+    expect(res._status).toBe(200);
+    const body = JSON.parse(res._body) as {
+      sessions: Array<{ id: string; state: string; customerId: string }>;
+    };
+    expect(body.sessions).toHaveLength(1);
+    expect(body.sessions[0]).toMatchObject({
+      id: notifyingSession.id,
+      state: "notifying",
+      customerId: "cust-notifying-target",
+    });
+  });
+
   // ── Test 3: transcript with cursor + direction=before ──────────────────────
 
   it("transcript with cursor + direction=before paginates oldest-toward-newest", async () => {

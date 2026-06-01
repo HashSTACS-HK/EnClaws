@@ -42,13 +42,14 @@ afterAll(() => {
 
 // ── Shared test helpers ──────────────────────────────────────────────────────
 
-function makeRequest(opts: {
-  method?: string;
-  authorization?: string;
-}): IncomingMessage {
+function makeRequest(opts: { method?: string; authorization?: string }): IncomingMessage {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Readable } = require("node:stream");
-  const req = new Readable({ read() { this.push(null); } });
+  const req = new Readable({
+    read() {
+      this.push(null);
+    },
+  });
   req.method = opts.method ?? "GET";
   req.headers = opts.authorization ? { authorization: opts.authorization } : {};
   return req as unknown as IncomingMessage;
@@ -61,17 +62,36 @@ function makePlainResponse(): {
 } {
   const state = { body: "", statusCode: 200 };
   const res = {
-    get statusCode() { return state.statusCode; },
-    set statusCode(v: number) { state.statusCode = v; },
-    setHeader() { /* noop */ },
-    flushHeaders() { /* noop */ },
-    write(c: string) { state.body += c; return true; },
-    end(c?: string) { if (c) { state.body += c; } },
+    get statusCode() {
+      return state.statusCode;
+    },
+    set statusCode(v: number) {
+      state.statusCode = v;
+    },
+    setHeader() {
+      /* noop */
+    },
+    flushHeaders() {
+      /* noop */
+    },
+    write(c: string) {
+      state.body += c;
+      return true;
+    },
+    end(c?: string) {
+      if (c) {
+        state.body += c;
+      }
+    },
   } as unknown as ServerResponse;
   return {
     res,
-    get body() { return state.body; },
-    get statusCode() { return state.statusCode; },
+    get body() {
+      return state.body;
+    },
+    get statusCode() {
+      return state.statusCode;
+    },
   };
 }
 
@@ -108,9 +128,8 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
 
   it("returns reasoning with toolCalls when turn_id is set and trace has tool_use block", async () => {
     const { handleReasoning } = await import("./runtime.js");
-    const { findOrCreateCsApiSession, appendCsApiMessage } = await import(
-      "../../db/models/cs-session.js"
-    );
+    const { findOrCreateCsApiSession, appendCsApiMessage } =
+      await import("../../db/models/cs-session.js");
     const { createInteractionTrace } = await import("../../db/models/interaction-trace.js");
 
     // Seed: session → AI message with turnId → trace with tool_use
@@ -130,9 +149,14 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
       source: "agenora-ai",
       content: "AI reply with tool usage",
       turnId,
-      metadata: {
-        confidence: { score: 0.85, verdict: "ok" },
-      },
+      confidence: { score: 0.85, verdict: "ok" },
+      sourceChunks: [
+        {
+          source: "kb://refund-policy",
+          score: 0.91,
+          snippet: "Refunds are processed within 7 business days.",
+        },
+      ],
     });
 
     // Seed trace with a tool_use block in messages JSONB
@@ -166,7 +190,8 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
             {
               type: "tool_result",
               tool_use_id: "toolu_01abc",
-              content: "Refunds are processed within 7 business days. Customers must request within 30 days of purchase.",
+              content:
+                "Refunds are processed within 7 business days. Customers must request within 30 days of purchase.",
             },
           ],
         },
@@ -185,8 +210,8 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
         turnId: string;
         model: string;
         tokensUsed: { prompt: number; completion: number; total: number };
-        confidence: unknown;
-        knowledgeHits: unknown[];
+        confidence: { score: number; verdict: string } | null;
+        knowledgeHits: Array<{ source: string; score: number; snippet: string }>;
         toolCalls: Array<{ name: string; input: unknown; resultSummary: string }>;
       };
     };
@@ -197,6 +222,14 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
     expect(parsed.reasoning.tokensUsed.prompt).toBe(120);
     expect(parsed.reasoning.tokensUsed.completion).toBe(45);
     expect(parsed.reasoning.tokensUsed.total).toBe(165);
+    expect(parsed.reasoning.confidence).toEqual({ score: 0.85, verdict: "ok" });
+    expect(parsed.reasoning.knowledgeHits).toEqual([
+      {
+        source: "kb://refund-policy",
+        score: 0.91,
+        snippet: "Refunds are processed within 7 business days.",
+      },
+    ]);
 
     expect(Array.isArray(parsed.reasoning.toolCalls)).toBe(true);
     expect(parsed.reasoning.toolCalls.length).toBeGreaterThan(0);
@@ -204,15 +237,13 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
     expect(tc.name).toBe("search_knowledge_base");
     expect(tc.resultSummary).toContain("Refunds are processed");
 
-    // knowledgeHits: [] (sourceChunks not persisted per-message via appendCsApiMessage)
     expect(Array.isArray(parsed.reasoning.knowledgeHits)).toBe(true);
   });
 
   it("returns { reasoning: null } when message has null turn_id (human/legacy message)", async () => {
     const { handleReasoning } = await import("./runtime.js");
-    const { findOrCreateCsApiSession, appendCsApiMessage } = await import(
-      "../../db/models/cs-session.js"
-    );
+    const { findOrCreateCsApiSession, appendCsApiMessage } =
+      await import("../../db/models/cs-session.js");
 
     const session = await findOrCreateCsApiSession({
       tenantId,
@@ -256,9 +287,9 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
 
     const turnId = `cs-run-test-conf-${Date.now()}`;
 
-    // appendCsApiMessage sets confidence = null (no param); use raw sqliteQuery to seed
-    // a message with both confidence and turn_id, testing the field flows through.
-    // appendCsApiMessage 不支持 confidence 参数，直接用 sqliteQuery 插入测试数据。
+    // Raw sqliteQuery still exercises the low-level row mapper path for legacy
+    // rows that already have confidence persisted.
+    // 直接用 sqliteQuery 继续覆盖已持久化 confidence 的历史行映射路径。
     const msgId = crypto.randomUUID();
     const now = new Date().toISOString();
     sqliteQuery(
@@ -332,9 +363,8 @@ describe("GET /{appId}/sessions/{sessionId}/messages/{messageId}/reasoning", () 
 
   it("returns 404 when message belongs to a different session", async () => {
     const { handleReasoning } = await import("./runtime.js");
-    const { findOrCreateCsApiSession, appendCsApiMessage } = await import(
-      "../../db/models/cs-session.js"
-    );
+    const { findOrCreateCsApiSession, appendCsApiMessage } =
+      await import("../../db/models/cs-session.js");
 
     // Seed message in session A
     const sessionA = await findOrCreateCsApiSession({

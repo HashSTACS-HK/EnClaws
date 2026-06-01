@@ -7,8 +7,8 @@
  * Pure functions, unit-testable without DB or HTTP dependencies.
  */
 
-import type { LlmInteractionTrace } from "../../db/types.js";
 import type { CSConfidence } from "../../customer-service/types.js";
+import type { LlmInteractionTrace } from "../../db/types.js";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,12 +45,10 @@ export interface ReasoningStruct {
    */
   confidence: CSConfidence | null;
   /**
-   * KB knowledge hits. Currently [] — sourceChunks are NOT persisted per-message
-   * via appendCsApiMessage (only surfaced in the SSE done event). Persistence
-   * of sourceChunks per-message is a P8 follow-up.
+   * KB knowledge hits persisted with the AI message. For legacy messages created
+   * before per-message sourceChunks were persisted, this is [].
    *
-   * 知识库命中列表。当前恒为 []：appendCsApiMessage 不持久化 sourceChunks
-   * （仅在 SSE done 事件中传递），per-message 持久化为 P8 后续任务。
+   * 随 AI 消息持久化的知识库命中列表。历史消息没有单消息 sourceChunks 时返回 []。
    */
   knowledgeHits: unknown[];
   /** Tool calls extracted from the trace messages JSONB. */
@@ -125,7 +123,7 @@ export function parseToolCallsFromMessages(messages: unknown[]): ParsedToolCall[
             // 内容块数组，提取文本块。
             text = rawContent
               .filter((c) => isRecord(c) && c.type === "text")
-              .map((c) => (isRecord(c) ? (c.text as string | undefined) ?? "" : ""))
+              .map((c) => (isRecord(c) ? ((c.text as string | undefined) ?? "") : ""))
               .join("\n");
           }
           toolResultMap.set(toolUseId, text.slice(0, TOOL_RESULT_MAX_CHARS));
@@ -160,6 +158,7 @@ export function parseToolCallsFromMessages(messages: unknown[]): ParsedToolCall[
 export function buildReasoningFromTraces(
   traces: LlmInteractionTrace[],
   confidence: CSConfidence | null,
+  knowledgeHits: unknown[] = [],
 ): ReasoningStruct {
   // Sort by turn_index ascending for deterministic processing.
   // 按 turn_index 升序排列以保证确定性处理顺序。
@@ -201,7 +200,7 @@ export function buildReasoningFromTraces(
       total: promptTokens + completionTokens,
     },
     confidence,
-    knowledgeHits: [], // sourceChunks not persisted per-message — P8 follow-up
+    knowledgeHits,
     toolCalls: allToolCalls,
   };
 }

@@ -1,5 +1,41 @@
 import { afterAll, afterEach, beforeEach, vi } from "vitest";
 
+if (!("localStorage" in globalThis)) {
+  const storage = new Map<string, string>();
+  const localStorage = {
+    get length() {
+      return storage.size;
+    },
+    clear() {
+      storage.clear();
+    },
+    getItem(key: string) {
+      return storage.get(String(key)) ?? null;
+    },
+    key(index: number) {
+      return Array.from(storage.keys())[index] ?? null;
+    },
+    removeItem(key: string) {
+      storage.delete(String(key));
+    },
+    setItem(key: string, value: string) {
+      storage.set(String(key), String(value));
+    },
+  };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: localStorage,
+  });
+}
+
+Object.defineProperty(globalThis, "navigator", {
+  configurable: true,
+  value: {
+    ...(typeof navigator === "object" ? navigator : {}),
+    language: "en-US",
+  },
+});
+
 // Ensure Vitest environment is properly set
 process.env.VITEST = "true";
 // Config validation walks plugin manifests; keep an aggressive cache in tests to avoid

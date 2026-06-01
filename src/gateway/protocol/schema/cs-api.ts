@@ -88,6 +88,7 @@ export const ListSessionsQuery = Type.Object(
     state: Type.Optional(
       Type.Union([
         Type.Literal("ai-handling"),
+        Type.Literal("notifying"),
         Type.Literal("human-handling"),
         Type.Literal("closed"),
       ]),
