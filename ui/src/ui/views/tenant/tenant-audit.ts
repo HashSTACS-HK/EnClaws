@@ -15,10 +15,9 @@
  * LLM审计嵌套现有 tenant-traces-view，两者使用与独立页面完全一致的 props。
  */
 
-import { html, css, LitElement, nothing } from "lit";
+import { html, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import { t, I18nController } from "../../../i18n/index.ts";
-import { caretFix } from "../../shared-styles.ts";
 import { renderSessions } from "../sessions.ts";
 import type { SessionsProps } from "../sessions.ts";
 import "./tenant-traces.ts";
@@ -46,54 +45,14 @@ export class TenantAuditView extends LitElement {
 
   @state() private currentSubTab: AuditTab = "sessions";
 
-  static styles = [
-    caretFix,
-    css`
-      :host {
-        display: block;
-      }
-
-      /* ── Tab bar ─────────────────────────────────────────────────────────── */
-      .audit-tab-bar {
-        display: flex;
-        gap: 4px;
-        padding: 0 1.5rem;
-        border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-        background: var(--surface, transparent);
-        flex-wrap: wrap;
-      }
-
-      .audit-tab-btn {
-        padding: 10px 16px;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -1px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text-muted, #888);
-        white-space: nowrap;
-        transition:
-          color 0.15s,
-          border-color 0.15s;
-      }
-
-      .audit-tab-btn:hover {
-        color: var(--text, #e5e5e5);
-      }
-
-      .audit-tab-btn.active {
-        color: var(--accent, #7c6af5);
-        border-bottom-color: var(--accent, #7c6af5);
-      }
-
-      /* ── Content area ───────────────────────────────────────────────────── */
-      .audit-content {
-        /* embedded views manage their own padding */
-      }
-    `,
-  ];
+  /**
+   * Light DOM rendering so that renderSessions() content inherits global
+   * components.css classes (.card, .field, .session-card, etc.).
+   * static styles is not used — tab-bar uses inline styles instead.
+   */
+  createRenderRoot() {
+    return this;
+  }
 
   /** i18n key for each sub-tab. */
   private _tabLabelKey(tab: AuditTab): string {
@@ -106,22 +65,33 @@ export class TenantAuditView extends LitElement {
 
   private _renderTabBar() {
     return html`
-      <div class="audit-tab-bar" role="tablist" aria-label="AI Employee Audit">
-        ${AUDIT_TABS.map(
-          (tab) => html`
+      <div
+        role="tablist"
+        aria-label="AI Employee Audit"
+        style="display: flex; gap: 4px; border-bottom: 1px solid var(--border, #262626); margin-bottom: 16px;"
+      >
+        ${AUDIT_TABS.map((tab) => {
+          const active = this.currentSubTab === tab;
+          return html`
             <button
               type="button"
               role="tab"
-              aria-selected=${this.currentSubTab === tab}
-              class="audit-tab-btn ${this.currentSubTab === tab ? "active" : ""}"
+              aria-selected=${active}
               @click=${() => {
                 this.currentSubTab = tab;
               }}
+              style="padding: 8px 16px; background: none; border: none; border-bottom: 2px solid ${active
+                ? "var(--accent, #3b82f6)"
+                : "transparent"}; color: ${active
+                ? "var(--accent, #3b82f6)"
+                : "var(--text-2, #888)"}; cursor: pointer; font-size: 0.9rem; font-weight: ${active
+                ? "600"
+                : "400"};"
             >
               ${t(this._tabLabelKey(tab))}
             </button>
-          `,
-        )}
+          `;
+        })}
       </div>
     `;
   }
@@ -145,7 +115,7 @@ export class TenantAuditView extends LitElement {
   render() {
     return html`
       ${this._renderTabBar()}
-      <div class="audit-content">${this._renderContent()}</div>
+      <div>${this._renderContent()}</div>
     `;
   }
 }
