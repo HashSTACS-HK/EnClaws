@@ -64,7 +64,7 @@ export const zh_TW: TranslationMap = {
     "tenant-overview": "首頁",
     "tenant-settings": "企業設置",
     "tenant-users": "使用者管理",
-    "tenant-agents": "Agent 管理",
+    "tenant-agents": "AI 員工管理",
     "tenant-channels": "頻道管理",
     "tenant-models": "模型管理",
     "tenant-skills": "技能市場",
@@ -420,7 +420,7 @@ export const zh_TW: TranslationMap = {
     de: "Deutsch (德語)",
   },
   tenantAgents: {
-    title: "Agent 管理",
+    title: "AI 員工管理",
     refresh: "重新整理",
     createAgent: "建立 Agent",
     cancel: "取消",

@@ -72,7 +72,7 @@ export const en: TranslationMap = {
     "tenant-settings": "Settings",
     "tenant-knowledge": "Enterprise Knowledge",
     "tenant-users": "Users",
-    "tenant-agents": "Agents",
+    "tenant-agents": "AI Employees",
     "tenant-channels": "Channels",
     "tenant-models": "Models",
     "tenant-skills": "Skill Store",
@@ -1018,7 +1018,7 @@ export const en: TranslationMap = {
     autoDisabled: "auto-disabled",
   },
   tenantAgents: {
-    title: "Agent Management",
+    title: "AI Employee Management",
     refresh: "Refresh",
     createAgent: "Create Agent",
     cancel: "Cancel",

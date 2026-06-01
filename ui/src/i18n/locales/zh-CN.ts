@@ -71,7 +71,7 @@ export const zh_CN: TranslationMap = {
     "tenant-settings": "企业设置",
     "tenant-knowledge": "企业知识库",
     "tenant-users": "用户管理",
-    "tenant-agents": "Agent 管理",
+    "tenant-agents": "AI 员工管理",
     "tenant-channels": "频道管理",
     "tenant-models": "模型管理",
     "tenant-skills": "技能市场",
@@ -990,7 +990,7 @@ export const zh_CN: TranslationMap = {
     autoDisabled: "已自动禁用",
   },
   tenantAgents: {
-    title: "Agent 管理",
+    title: "AI 员工管理",
     refresh: "刷新",
     createAgent: "创建 Agent",
     cancel: "取消",

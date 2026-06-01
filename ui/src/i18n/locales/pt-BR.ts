@@ -65,7 +65,7 @@ export const pt_BR: TranslationMap = {
     "tenant-overview": "Início",
     "tenant-settings": "Configurações",
     "tenant-users": "Usuários",
-    "tenant-agents": "Agentes",
+    "tenant-agents": "Funcionarios IA",
     "tenant-channels": "Canais",
     "tenant-models": "Modelos",
     "tenant-skills": "Loja de Skills",
@@ -624,7 +624,7 @@ export const pt_BR: TranslationMap = {
     channelWeb: "Web",
   },
   tenantAgents: {
-    title: "Gerenciamento de Agentes",
+    title: "Gerenciamento de Funcionarios IA",
     refresh: "Atualizar",
     createAgent: "Criar Agente",
     cancel: "Cancelar",

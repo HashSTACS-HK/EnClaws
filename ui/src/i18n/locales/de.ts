@@ -66,7 +66,7 @@ export const de: TranslationMap = {
     "tenant-overview": "Startseite",
     "tenant-settings": "Einstellungen",
     "tenant-users": "Benutzer",
-    "tenant-agents": "Agenten",
+    "tenant-agents": "KI-Mitarbeiter",
     "tenant-channels": "Kanäle",
     "tenant-models": "Modelle",
     "tenant-skills": "Skill Store",
@@ -628,7 +628,7 @@ export const de: TranslationMap = {
     agentBinding: "Gebundener Agent",
   },
   tenantAgents: {
-    title: "Agentenverwaltung",
+    title: "KI-Mitarbeiter-Verwaltung",
     refresh: "Aktualisieren",
     createAgent: "Agent erstellen",
     cancel: "Abbrechen",
