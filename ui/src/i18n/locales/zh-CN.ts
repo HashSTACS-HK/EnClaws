@@ -714,6 +714,7 @@ export const zh_CN: TranslationMap = {
         confirmMessage:
           "将覆盖当前 IDENTITY / SOUL / AGENTS 为推荐的客服默认配置（身份：客服助手；行为准则：优先查询知识库、诚实作答、无法解答时引导转人工；语气：专业友善）。启用后仍可随时手动调整。",
         confirmBtn: "确认启用",
+        manualEditBtn: "手动修改",
       },
       title: "人设与规范",
       subtitle: "定义这个 Agent 的身份、行为边界和工作方式。",

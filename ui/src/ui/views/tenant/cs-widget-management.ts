@@ -21,6 +21,7 @@ import { loadAuth } from "../../auth-store.ts";
 import { caretFix } from "../../shared-styles.ts";
 import { loadSettings } from "../../storage.ts";
 import { tenantRpc } from "./rpc.ts";
+import { applyRecommendedPersona } from "../../lib/apply-recommended-persona.ts";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -633,6 +634,10 @@ export class CSWidgetManagementView extends LitElement {
   @state() private widgetError = "";
   /** Tenant agents for the per-widget agent dropdown. 用于 widget 关联 AI 员工下拉。 */
   @state() private _agents: TenantAgent[] = [];
+  /** Per-widget persona applying flag. 各 widget 启用推荐配置的加载状态。 */
+  @state() private _personaApplying: Record<number, boolean> = {};
+  /** Per-widget persona error. 各 widget 启用推荐配置的错误信息。 */
+  @state() private _personaErrors: Record<number, string> = {};
 
   // ── Shared config state (notification + restrictions + AI config) ─────────────
 
@@ -714,6 +719,49 @@ export class CSWidgetManagementView extends LitElement {
     }
     const agent = this._agents.find((a) => a.agentId === agentId);
     return agent?.name ?? agentId;
+  }
+
+  // ── Persona shortcuts ──────────────────────────────────────────────────────────
+
+  /**
+   * Apply recommended CS persona to the agent bound to the widget at the given index.
+   * 将推荐客服人设写入指定索引 widget 绑定的 agent。
+   */
+  private async _applyPersonaForWidget(idx: number) {
+    const agentId = this.channels[idx]?.agentId;
+    if (!agentId || this._personaApplying[idx]) {
+      return;
+    }
+    this._personaApplying = { ...this._personaApplying, [idx]: true };
+    this._personaErrors = { ...this._personaErrors, [idx]: "" };
+    try {
+      const rpc = (method: string, params?: Record<string, unknown>) =>
+        tenantRpc(method, params ?? {}, this.gatewayUrl || undefined);
+      const result = await applyRecommendedPersona(agentId, rpc);
+      if (!result.ok && result.error) {
+        this._personaErrors = { ...this._personaErrors, [idx]: result.error };
+      }
+    } finally {
+      this._personaApplying = { ...this._personaApplying, [idx]: false };
+    }
+  }
+
+  /**
+   * Navigate to the persona tab of the agent bound to the widget at the given index.
+   * 派发 navigate-to-agent 事件，跳转到指定索引 widget 绑定 agent 的人设与规范标签页。
+   */
+  private _navigateToPersonaForWidget(idx: number) {
+    const agentId = this.channels[idx]?.agentId;
+    if (!agentId) {
+      return;
+    }
+    this.dispatchEvent(
+      new CustomEvent("navigate-to-agent", {
+        bubbles: true,
+        composed: true,
+        detail: { agentId, panel: "persona" },
+      }),
+    );
   }
 
   private async _loadConfig() {
@@ -1404,19 +1452,46 @@ export class CSWidgetManagementView extends LitElement {
 
   /** Render the agent-select dropdown for a widget. 渲染单个 widget 的关联 AI 员工下拉。 */
   private _renderAgentSelect(ch: Channel, idx: number) {
+    const applying = !!this._personaApplying[idx];
+    const personaError = this._personaErrors[idx] ?? "";
     return html`
       <div class="widget-field">
         <span class="widget-field-label">${t("cs.widget.agentLabel")}</span>
         <select
           .value=${ch.agentId ?? ""}
-          @change=${(e: Event) =>
-            this._updateChannelAgent(idx, (e.target as HTMLSelectElement).value)}
+          @change=${(e: Event) => {
+            void this._updateChannelAgent(idx, (e.target as HTMLSelectElement).value);
+            this._personaErrors = { ...this._personaErrors, [idx]: "" };
+          }}
         >
           <option value="">${t("cs.widget.agentDefault")}</option>
           ${this._agents.map(
             (a) => html`<option value=${a.agentId} ?selected=${a.agentId === ch.agentId}>${a.name ?? a.agentId}</option>`,
           )}
         </select>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <button
+            type="button"
+            ?disabled=${!ch.agentId || applying}
+            @click=${() => { void this._applyPersonaForWidget(idx); }}
+            style="padding: 0.3rem 0.7rem; background: var(--accent, #3b82f6); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; white-space: nowrap;"
+          >
+            ${applying
+              ? t("agents.persona.recommended.applying")
+              : t("agents.persona.recommended.btn")}
+          </button>
+          <button
+            type="button"
+            ?disabled=${!ch.agentId}
+            @click=${() => { this._navigateToPersonaForWidget(idx); }}
+            style="padding: 0.3rem 0.7rem; background: transparent; color: var(--text-1, #e5e7eb); border: 1px solid var(--border, #374151); border-radius: 6px; cursor: pointer; font-size: 0.8rem; white-space: nowrap;"
+          >
+            ${t("agents.persona.recommended.manualEditBtn")}
+          </button>
+          ${personaError
+            ? html`<span style="color: var(--danger, #ef4444); font-size: 0.78rem;">${personaError}</span>`
+            : nothing}
+        </div>
       </div>
     `;
   }

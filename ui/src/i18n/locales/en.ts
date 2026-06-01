@@ -734,6 +734,7 @@ export const en: TranslationMap = {
         confirmMessage:
           "This OVERWRITES the current IDENTITY / SOUL / AGENTS with recommended customer-service defaults (Identity: CS assistant; Rules: prioritize the knowledge base, answer honestly, escalate to a human when unable; Tone: professional and friendly). You can still adjust them manually afterward.",
         confirmBtn: "Enable",
+        manualEditBtn: "Edit Manually",
       },
       title: "Persona & Standards",
       subtitle: "Define this Agent's identity, behavior boundaries, and working standards.",

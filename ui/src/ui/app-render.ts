@@ -1906,6 +1906,15 @@ export function renderApp(state: AppViewState) {
                                               ? html`
                                                   <cs-console-view
                                                     .gatewayUrl=${state.settings.gatewayUrl}
+                                                    @navigate-to-agent=${(
+                                                      e: CustomEvent<{ agentId: string; panel?: string }>,
+                                                    ) => {
+                                                      _pendingAgentNav = {
+                                                        agentId: e.detail.agentId,
+                                                        panel: e.detail.panel ?? "persona",
+                                                      };
+                                                      state.setTab("tenant-agents");
+                                                    }}
                                                   ></cs-console-view>
                                                 `
                                               : nothing

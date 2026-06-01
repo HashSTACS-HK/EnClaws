@@ -23,6 +23,7 @@ import { showSecretReveal } from "../../components/secret-reveal-dialog.ts";
 import { caretFix } from "../../shared-styles.ts";
 import { loadSettings } from "../../storage.ts";
 import { tenantRpc } from "./rpc.ts";
+import { applyRecommendedPersona } from "../../lib/apply-recommended-persona.ts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -339,6 +340,10 @@ export class CsApiModeView extends LitElement {
   @state() private _createDescription = "";
   @state() private _createAgentId = "";
 
+  // Persona shortcut state (apply recommended / navigate to persona tab)
+  @state() private _personaApplying = false;
+  @state() private _personaError = "";
+
   private _i18n = new I18nController(this);
 
   connectedCallback() {
@@ -446,6 +451,48 @@ export class CsApiModeView extends LitElement {
     this._createDescription = "";
     this._createAgentId = "";
     this._error = "";
+    this._personaError = "";
+  }
+
+  // ── Persona shortcuts ────────────────────────────────────────────────────────
+
+  /**
+   * Apply the recommended CS persona to the currently selected agent in the create form.
+   * 将推荐客服人设写入创建表单中选定的 agent。
+   */
+  private async _applyPersonaToCreate() {
+    if (!this._createAgentId || this._personaApplying) {
+      return;
+    }
+    this._personaApplying = true;
+    this._personaError = "";
+    try {
+      const rpc = (method: string, params?: Record<string, unknown>) =>
+        tenantRpc(method, params ?? {}, this.gatewayUrl || undefined);
+      const result = await applyRecommendedPersona(this._createAgentId, rpc);
+      if (!result.ok && result.error) {
+        this._personaError = result.error;
+      }
+    } finally {
+      this._personaApplying = false;
+    }
+  }
+
+  /**
+   * Navigate to the persona tab of the selected agent by dispatching navigate-to-agent.
+   * 派发 navigate-to-agent 事件，跳转到选定 agent 的人设与规范标签页。
+   */
+  private _navigateToPersona() {
+    if (!this._createAgentId) {
+      return;
+    }
+    this.dispatchEvent(
+      new CustomEvent("navigate-to-agent", {
+        bubbles: true,
+        composed: true,
+        detail: { agentId: this._createAgentId, panel: "persona" },
+      }),
+    );
   }
 
   // ── Regenerate secret ───────────────────────────────────────────────────────
@@ -612,6 +659,7 @@ export class CsApiModeView extends LitElement {
             .value=${this._createAgentId}
             @change=${(e: Event) => {
               this._createAgentId = (e.target as HTMLSelectElement).value;
+              this._personaError = "";
             }}
           >
             <option value="">${t("cs.apiMode.create.agentNone")}</option>
@@ -621,6 +669,29 @@ export class CsApiModeView extends LitElement {
             `,
             )}
           </select>
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button
+              type="button"
+              ?disabled=${!this._createAgentId || this._personaApplying}
+              @click=${() => { void this._applyPersonaToCreate(); }}
+              style="padding: 0.35rem 0.8rem; background: var(--accent, #3b82f6); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.82rem; white-space: nowrap;"
+            >
+              ${this._personaApplying
+                ? t("agents.persona.recommended.applying")
+                : t("agents.persona.recommended.btn")}
+            </button>
+            <button
+              type="button"
+              ?disabled=${!this._createAgentId}
+              @click=${() => { this._navigateToPersona(); }}
+              style="padding: 0.35rem 0.8rem; background: transparent; color: var(--text-1, #e5e7eb); border: 1px solid var(--border, #374151); border-radius: 6px; cursor: pointer; font-size: 0.82rem; white-space: nowrap;"
+            >
+              ${t("agents.persona.recommended.manualEditBtn")}
+            </button>
+            ${this._personaError
+              ? html`<span style="color: var(--danger, #ef4444); font-size: 0.8rem;">${this._personaError}</span>`
+              : nothing}
+          </div>
         </div>
 
         <div class="form-actions">
