@@ -50,6 +50,9 @@ export interface CSMessage {
   confidence: CSConfidence | null;
   feedbackType: string | null;
   sourceChunks: unknown[] | null;
+  /** Link to llm_interaction_traces.turn_id; null for customer/human/legacy messages. */
+  // 关联 llm_interaction_traces.turn_id；客户/人工/历史消息为 null。
+  turnId: string | null;
   createdAt: Date;
 }
 
