@@ -20,8 +20,7 @@ export const TAB_GROUPS = [
       "tenant-agents",
       "tenant-workshop",
       "tenant-knowledge",
-      "cs-api-management",
-      "cs-widget-management",
+      "cs-console",
     ],
   },
   {
@@ -71,8 +70,7 @@ export type Tab =
   | "scheduler-placeholder"
   | "tenant-audit"
   | "tenant-workshop"
-  | "cs-api-management"
-  | "cs-widget-management";
+  | "cs-console";
 
 const TAB_PATHS: Record<Tab, string> = {
   agents: "/agents",
@@ -107,8 +105,7 @@ const TAB_PATHS: Record<Tab, string> = {
   "scheduler-placeholder": "/scheduler-placeholder",
   "tenant-audit": "/tenant-audit",
   "tenant-workshop": "/tenant-workshop",
-  "cs-api-management": "/cs-api-management",
-  "cs-widget-management": "/cs-widget-management",
+  "cs-console": "/cs-console",
 };
 
 const PATH_TO_TAB = new Map(Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]));
@@ -258,10 +255,8 @@ export function iconForTab(tab: Tab): IconName {
       return "scrollText";
     case "tenant-workshop":
       return "zap";
-    case "cs-api-management":
-      return "settings";
-    case "cs-widget-management":
-      return "puzzle";
+    case "cs-console":
+      return "messageSquare";
     default:
       return "folder";
   }

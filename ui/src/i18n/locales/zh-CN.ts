@@ -84,8 +84,7 @@ export const zh_CN: TranslationMap = {
     "scheduler-placeholder": "AI 调度台",
     "tenant-audit": "AI 员工审计",
     "tenant-workshop": "AI 工坊",
-    "cs-api-management": "AI 服务管理",
-    "cs-widget-management": "Widget 管理",
+    "cs-console": "客服控制台",
   },
   subtitles: {
     agents: "管理代理工作区、工具和身份。",
@@ -120,8 +119,11 @@ export const zh_CN: TranslationMap = {
     "scheduler-placeholder": "AI 调度中心 — 即将上线。",
     "tenant-audit": "审计 AI 员工行为，追踪所有 Agent 活动记录。",
     "tenant-workshop": "构建和管理 AI 工作流与自动化模板。",
-    "cs-api-management": "管理 API 集成模式下的 AI 服务凭据。",
-    "cs-widget-management": "管理并嵌入客服 Widget 到您的网站。",
+    "cs-console": "客服接入配置 — API 模式与 Widget 模式。",
+  },
+  csConsole: {
+    apiTab: "API 模式",
+    widgetTab: "Widget 模式",
   },
   platformTools: {
     infoBanner:

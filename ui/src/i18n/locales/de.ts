@@ -78,8 +78,7 @@ export const de: TranslationMap = {
     "scheduler-placeholder": "KI-Zeitplaner",
     "tenant-audit": "KI-Mitarbeiter-Audit",
     "tenant-workshop": "KI-Werkstatt",
-    "cs-api-management": "KI-Dienstverwaltung",
-    "cs-widget-management": "Widget-Verwaltung",
+    "cs-console": "CS-Konsole",
   },
   subtitles: {
     agents: "Agent-Arbeitsbereiche, Tools und Identitäten verwalten.",
@@ -113,8 +112,11 @@ export const de: TranslationMap = {
     "scheduler-placeholder": "KI-Planungszentrale -- demnachst verfugbar.",
     "tenant-audit": "KI-Mitarbeiteraktionen prufen und alle Agentaktivitaten verfolgen.",
     "tenant-workshop": "KI-Workflows und Automatisierungsvorlagen erstellen und verwalten.",
-    "cs-api-management": "KI-Dienst-Anmeldeinformationen fur den API-Integrationsmodus verwalten.",
-    "cs-widget-management": "Kundenservice-Widgets verwalten und auf Ihrer Website einbetten.",
+    "cs-console": "Kundenservice-Konfiguration -- API-Modus und Widget-Modus.",
+  },
+  csConsole: {
+    apiTab: "API-Modus",
+    widgetTab: "Widget-Modus",
   },
   platformTools: {
     infoBanner:

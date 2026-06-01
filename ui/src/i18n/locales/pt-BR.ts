@@ -77,8 +77,7 @@ export const pt_BR: TranslationMap = {
     "scheduler-placeholder": "Agendador de IA",
     "tenant-audit": "Auditoria de Funcionario de IA",
     "tenant-workshop": "Oficina de IA",
-    "cs-api-management": "Gerenciamento de Servicos de IA",
-    "cs-widget-management": "Gerenciamento de Widget",
+    "cs-console": "Console do CS",
   },
   subtitles: {
     agents: "Gerenciar espaços de trabalho, ferramentas e identidades de agentes.",
@@ -114,8 +113,11 @@ export const pt_BR: TranslationMap = {
     "scheduler-placeholder": "Central de agendamento de IA — em breve.",
     "tenant-audit": "Auditar acoes de funcionarios de IA e rastrear atividades de agentes.",
     "tenant-workshop": "Criar e gerenciar fluxos de trabalho de IA e modelos de automacao.",
-    "cs-api-management": "Gerenciar credenciais de servico de IA para modo de integracao de API.",
-    "cs-widget-management": "Gerenciar e incorporar widgets de atendimento ao cliente no seu site.",
+    "cs-console": "Configuracao de atendimento ao cliente -- modo API e modo Widget.",
+  },
+  csConsole: {
+    apiTab: "Modo API",
+    widgetTab: "Modo Widget",
   },
   platformTools: {
     infoBanner:

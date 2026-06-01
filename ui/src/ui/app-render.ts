@@ -106,6 +106,7 @@ import "./views/tenant/tenant-usage.ts";
 import "./views/tenant/cs-sessions.ts";
 import "./views/tenant/cs-api-mode.ts";
 import "./views/tenant/cs-widget-management.ts";
+import "./views/tenant/cs-console.ts";
 import "./views/tenant/tenant-workshop.ts";
 import "./views/tenant/tenant-audit.ts";
 import "./components/cs-widget.ts";
@@ -585,8 +586,7 @@ export function renderApp(state: AppViewState) {
                   "scheduler-placeholder",
                   "tenant-audit",
                   "tenant-workshop",
-                  "cs-api-management",
-                  "cs-widget-management",
+                  "cs-console",
                 ]);
                 const platformOnlyTabs = new Set([
                   "overview",
@@ -1775,8 +1775,7 @@ export function renderApp(state: AppViewState) {
                       state.tab === "tenant-usage" ||
                       state.tab === "tenant-cron" ||
                       state.tab === "cs-sessions" ||
-                      state.tab === "cs-api-management" ||
-                      state.tab === "cs-widget-management" ||
+                      state.tab === "cs-console" ||
                       state.tab === "tenant-workshop" ||
                       state.tab === "tenant-audit")
                       ? html`
@@ -1903,20 +1902,11 @@ export function renderApp(state: AppViewState) {
                                               : nothing
                                           }
                                           ${
-                                            state.tab === "cs-api-management"
+                                            state.tab === "cs-console"
                                               ? html`
-                                                  <cs-api-mode-view
+                                                  <cs-console-view
                                                     .gatewayUrl=${state.settings.gatewayUrl}
-                                                  ></cs-api-mode-view>
-                                                `
-                                              : nothing
-                                          }
-                                          ${
-                                            state.tab === "cs-widget-management"
-                                              ? html`
-                                                  <cs-widget-management-view
-                                                    .gatewayUrl=${state.settings.gatewayUrl}
-                                                  ></cs-widget-management-view>
+                                                  ></cs-console-view>
                                                 `
                                               : nothing
                                           }

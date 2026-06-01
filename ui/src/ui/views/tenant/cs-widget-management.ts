@@ -1554,7 +1554,7 @@ export class CSWidgetManagementView extends LitElement {
       }
 
       <div class="section">
-        <h2>客服设置 &amp; 嵌入代码</h2>
+        <h2>Widget模式</h2>
       </div>
 
       ${this._renderGuide()}

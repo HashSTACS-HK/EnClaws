@@ -197,8 +197,7 @@ describe("TAB_GROUPS", () => {
     expect(config).toBeDefined();
     expect(config!.tabs).toContain("tenant-agents");
     expect(config!.tabs).toContain("tenant-knowledge");
-    expect(config!.tabs).toContain("cs-api-management");
-    expect(config!.tabs).toContain("cs-widget-management");
+    expect(config!.tabs).toContain("cs-console");
     expect(config!.tabs).toContain("tenant-workshop");
   });
 

@@ -85,8 +85,7 @@ export const en: TranslationMap = {
     "scheduler-placeholder": "AI Scheduler",
     "tenant-audit": "AI Employee Audit",
     "tenant-workshop": "AI Workshop",
-    "cs-api-management": "AI Service Management",
-    "cs-widget-management": "Widget Management",
+    "cs-console": "CS Console",
   },
   subtitles: {
     agents: "Manage agent workspaces, tools, and identities.",
@@ -122,8 +121,11 @@ export const en: TranslationMap = {
     "scheduler-placeholder": "AI scheduling dispatch center — coming soon.",
     "tenant-audit": "Audit AI employee actions and trace all agent activities.",
     "tenant-workshop": "Build and manage AI workflows and automation templates.",
-    "cs-api-management": "Manage AI service credentials for API integration mode.",
-    "cs-widget-management": "Manage and embed customer service widgets on your site.",
+    "cs-console": "Customer service configuration — API mode and Widget mode.",
+  },
+  csConsole: {
+    apiTab: "API Mode",
+    widgetTab: "Widget Mode",
   },
   platformTools: {
     infoBanner:
