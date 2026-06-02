@@ -37,6 +37,7 @@ import {
   ReleaseInput,
   SendMessageInput,
 } from "../protocol/schema/cs-api.js";
+import { confidenceToVerdict } from "./confidence-verdict.js";
 import { extractConfidence } from "./confidence.js";
 import { readJsonBody, sendError, sendJson } from "./http-helpers.js";
 import { buildReasoningFromTraces } from "./reasoning-builder.js";
@@ -138,6 +139,7 @@ export async function handleMessages(
       sessionId: session.id,
       customerMessage: input.content,
       cfg,
+      businessMetadata: input.metadata,
       // Honor the agent bound to this cs-api object (resolved from auth, tenant-scoped)
       // instead of falling back to the global default agent.
       // 使用绑定到该 cs-api 对象的 agent（从鉴权解析，租户作用域），而非全局默认。
@@ -157,6 +159,7 @@ export async function handleMessages(
   // 提取置信度和知识命中，追加 AI 消息（P7-B1/P8：持久化 turnId 以及
   // REST reasoning 端点需要的单消息推理字段）。
   const { stripped, confidence } = extractConfidence(reply);
+  const confidenceVerdict = confidenceToVerdict(confidence);
   const knowledgeHits = summarizeKnowledgeHits(agentResult.sourceChunks, DONE_EVENT_MAX_KB_HITS);
   try {
     await appendCsApiMessage({
@@ -185,6 +188,7 @@ export async function handleMessages(
   // runner 无法解析的字段优雅降级（model "unknown"、token 归零），不伪造。
   writeSseEvent(res, "done", {
     confidence,
+    confidenceVerdict,
     turnId: agentResult.turnId,
     modelActuallyUsed: agentResult.modelUsed ?? "unknown",
     finishReason: "stop",

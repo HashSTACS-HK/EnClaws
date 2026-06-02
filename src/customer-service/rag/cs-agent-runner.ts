@@ -22,6 +22,7 @@ import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../../agents/defaults.js";
 import { runWithModelFallback } from "../../agents/model-fallback.js";
 import { parseModelRef } from "../../agents/model-selection.js";
 import { runEmbeddedPiAgent } from "../../agents/pi-embedded.js";
+import { buildWorkspaceSkillSnapshot } from "../../agents/skills.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import {
   resolveTenantDir,
@@ -29,11 +30,13 @@ import {
   resolveTenantAgentKnowledgeDir,
   resolveTenantAgentMemoryIndexPath,
   resolveTenantMemoryIndexPath,
+  resolveTenantSkillsDir,
 } from "../../config/sessions/tenant-paths.js";
 import { getTenantById } from "../../db/models/tenant.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { getMemorySearchManager } from "../../memory/search-manager.js";
 import type { MemorySearchResult } from "../../memory/types.js";
+import { resolveCSBusinessContext, type CSBusinessMetadata } from "./cs-business-context.js";
 import { mergeCascadeResults } from "./cs-knowledge-cascade.js";
 import { loadAgentPersona, selectBasePrompt } from "./cs-persona.js";
 import {
@@ -101,6 +104,11 @@ export async function runCSAgentReply(params: {
    */
   restrictions?: CSRestrictions;
   /**
+   * Upper-app business metadata rendered into the CS run so business skills can
+   * make slot-filling decisions without guessing.
+   */
+  businessMetadata?: CSBusinessMetadata;
+  /**
    * Bound agent id from the cs-api object / widget; falls back to the
    * tenant/global default agent when omitted. 绑定 agent；缺省回退默认。
    */
@@ -117,6 +125,15 @@ export async function runCSAgentReply(params: {
   const disableTools = params.restrictions?.disableSkills ?? false;
 
   const agentId = params.agentId ?? resolveDefaultAgentId(cfg);
+  const turnId = `cs-run-${Date.now()}`;
+  const businessContext = resolveCSBusinessContext(params.businessMetadata);
+  if (businessContext?.slotQuestion) {
+    return {
+      reply: businessContext.slotQuestion,
+      sourceChunks: [],
+      turnId,
+    };
+  }
   // Runtime workspace for the embedded agent run (NOT the RAG source — see Step 1).
   // The CS RAG now cascades over the agent KB + enterprise KB; this dir only scopes
   // the agent's own tool/file workspace during the reply run.
@@ -212,6 +229,13 @@ export async function runCSAgentReply(params: {
     visitorName,
     restrictions: params.restrictions,
   });
+  const finalSystemPrompt = [extraSystemPrompt, businessContext?.systemPrompt]
+    .filter((part): part is string => Boolean(part?.trim()))
+    .join("\n\n");
+  const skillsSnapshot = buildWorkspaceSkillSnapshot(csWorkspaceDir, {
+    config: cfg,
+    tenantSkillsDir: resolveTenantSkillsDir(tenantId),
+  });
 
   // Step 3: Create temporary session file
   // 步骤 3：创建临时会话文件
@@ -230,8 +254,6 @@ export async function runCSAgentReply(params: {
     // Run correlation id — generated once here so it is stable across fallback
     // attempts and can be surfaced as the turnId for upper-layer reasoning.
     // 运行关联 id：在此处生成一次，跨 fallback 尝试保持稳定，并作为 turnId 上抛。
-    const turnId = `cs-run-${Date.now()}`;
-
     // Step 5: Call LLM with model fallback
     // promptMode: "none" — skip the 800+ line EC agent prompt entirely.
     // The full system prompt is: "You are a personal assistant running inside EnClaws." + extraSystemPrompt.
@@ -256,7 +278,8 @@ export async function runCSAgentReply(params: {
           model: modelOverride,
           timeoutMs: CS_AGENT_TIMEOUT_MS,
           runId: turnId,
-          extraSystemPrompt,
+          skillsSnapshot,
+          extraSystemPrompt: finalSystemPrompt,
           promptMode: "none",
           disableTools,
           disableMessageTool: true,

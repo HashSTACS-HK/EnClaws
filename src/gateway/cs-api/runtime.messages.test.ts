@@ -374,6 +374,7 @@ describe("POST /{appId}/messages", () => {
     const done = events.find((e) => e.event === "done");
     const doneData = done?.data as {
       confidence?: number;
+      confidenceVerdict?: string;
       modelActuallyUsed?: string;
       finishReason?: string;
       turnId?: string;
@@ -381,6 +382,7 @@ describe("POST /{appId}/messages", () => {
       knowledgeHits?: Array<{ source?: string; score?: number; snippet?: string }>;
     };
     expect(doneData?.confidence).toBeCloseTo(0.85);
+    expect(doneData?.confidenceVerdict).toBe("ok");
     expect(doneData?.finishReason).toBe("stop");
     expect(doneData?.modelActuallyUsed).toBe("openai-compatible/gpt-test");
     expect(doneData?.turnId).toBe("cs-run-1700000000000");
@@ -419,15 +421,40 @@ describe("POST /{appId}/messages", () => {
     );
   });
 
+  it("passes request metadata as businessMetadata to runCSAgentReply", async () => {
+    runCSAgentReplyMock.mockClear();
+
+    const { handleMessages } = await import("./runtime.js");
+    const metadata = {
+      business: "customs",
+      customs: { declarationId: "GK-20260510-088" },
+    };
+    const req = makeRequest({
+      authorization: `Bearer ${plainSecret}`,
+      body: {
+        customerId: "cust-metadata-001",
+        content: "帮我查一下这个报关单",
+        metadata,
+      },
+    });
+    const { res } = makeSseResponse();
+
+    await handleMessages(req, res, appId);
+
+    expect(runCSAgentReplyMock).toHaveBeenCalledTimes(1);
+    expect(runCSAgentReplyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ businessMetadata: metadata }),
+    );
+  });
+
   // ST-C0: cs-api runtime enable-gate — is_active=false → 403 SERVICE_DISABLED
   it("returns 403 OBJECT_INACTIVE when the AI service is_active=false (ST-C0 cs-api gate)", async () => {
     // Create a second object that starts active, then deactivate it.
     // 创建一个对象，初始 active，然后停用，验证 is_active=false 时拒绝请求。
     const bcrypt = (await import("bcryptjs")).default;
     const { createTenant } = await import("../../db/models/tenant.js");
-    const { createCsApiObject, updateCsApiObject } = await import(
-      "../../db/models/cs-api-object.js"
-    );
+    const { createCsApiObject, updateCsApiObject } =
+      await import("../../db/models/cs-api-object.js");
 
     const tenant2 = await createTenant({ name: "Inactive Gate Tenant" });
     const inactiveSecret = "inactive-secret-xyz";
