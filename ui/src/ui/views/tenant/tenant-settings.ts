@@ -115,14 +115,15 @@ export class TenantSettingsView extends LitElement {
         margin-top: 1rem;
       }
       .form-field.readonly {
+        display: block;
+      }
+      .form-field.readonly label {
+        margin-bottom: 0.3rem;
+      }
+      .tenant-id-row {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        flex-wrap: wrap;
-      }
-      .form-field.readonly label {
-        margin-bottom: 0;
-        white-space: nowrap;
       }
       .tenant-id-value {
         font-family: var(--font-mono, monospace);
@@ -130,6 +131,14 @@ export class TenantSettingsView extends LitElement {
         color: var(--text);
         flex: 1;
         word-break: break-all;
+        min-height: 2.4rem;
+        padding: 0.45rem 0.65rem;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: var(--radius-md);
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
       }
       .btn-copy {
         padding: 0.3rem 0.65rem;
@@ -309,11 +318,13 @@ export class TenantSettingsView extends LitElement {
               ? html`
           <div class="form-field readonly">
             <label>${t("tenantSettings.tenantIdLabel")}</label>
-            <span class="tenant-id-value">${tenantId}</span>
-            <button class="btn-copy" type="button"
-              @click=${() => this._copyTenantId(tenantId)}>
-              ${this._copiedTenantId ? t("tenantSettings.tenantIdCopied") : t("tenantSettings.tenantIdCopy")}
-            </button>
+            <div class="tenant-id-row">
+              <span class="tenant-id-value">${tenantId}</span>
+              <button class="btn-copy" type="button"
+                @click=${() => this._copyTenantId(tenantId)}>
+                ${this._copiedTenantId ? t("tenantSettings.tenantIdCopied") : t("tenantSettings.tenantIdCopy")}
+              </button>
+            </div>
           </div>
           `
               : nothing;

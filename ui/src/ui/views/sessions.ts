@@ -167,11 +167,7 @@ export function renderSessions(props: SessionsProps) {
   const rows = props.result?.sessions ?? [];
   return html`
     <section class="card">
-      <div class="row" style="justify-content: space-between;">
-        <div>
-          <div class="card-title">${t("sessions.title")}</div>
-          <div class="card-sub">${t("sessions.subtitle")}</div>
-        </div>
+      <div class="row" style="justify-content: flex-end;">
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
           ${props.loading ? t("sessions.loading") : t("sessions.refresh")}
         </button>

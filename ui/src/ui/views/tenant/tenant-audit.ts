@@ -20,13 +20,14 @@ import { customElement, state, property } from "lit/decorators.js";
 import { t, I18nController } from "../../../i18n/index.ts";
 import { renderSessions } from "../sessions.ts";
 import type { SessionsProps } from "../sessions.ts";
+import "./cs-sessions.ts";
 import "./tenant-traces.ts";
 
 // ── Sub-tab IDs ───────────────────────────────────────────────────────────────
 
-type AuditTab = "sessions" | "traces";
+type AuditTab = "customer-sessions" | "sessions" | "traces";
 
-const AUDIT_TABS: AuditTab[] = ["sessions", "traces"];
+const AUDIT_TABS: AuditTab[] = ["customer-sessions", "sessions", "traces"];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ export class TenantAuditView extends LitElement {
    */
   @property({ attribute: false }) sessionsProps: SessionsProps | null = null;
 
-  @state() private currentSubTab: AuditTab = "sessions";
+  @state() private currentSubTab: AuditTab = "customer-sessions";
 
   /**
    * Light DOM rendering so that renderSessions() content inherits global
@@ -57,8 +58,18 @@ export class TenantAuditView extends LitElement {
   /** i18n key for each sub-tab. */
   private _tabLabelKey(tab: AuditTab): string {
     const keyMap: Record<AuditTab, string> = {
+      "customer-sessions": "tenantAudit.customerSessionsTab",
       sessions: "tenantAudit.sessionsTab",
       traces: "tenantAudit.tracesTab",
+    };
+    return keyMap[tab];
+  }
+
+  private _descriptionKey(tab: AuditTab): string {
+    const keyMap: Record<AuditTab, string> = {
+      "customer-sessions": "tenantAudit.customerSessionsDescription",
+      sessions: "tenantAudit.sessionsDescription",
+      traces: "tenantAudit.tracesDescription",
     };
     return keyMap[tab];
   }
@@ -80,13 +91,11 @@ export class TenantAuditView extends LitElement {
               @click=${() => {
                 this.currentSubTab = tab;
               }}
-              style="padding: 8px 16px; background: none; border: none; border-bottom: 2px solid ${active
-                ? "var(--accent, #3b82f6)"
-                : "transparent"}; color: ${active
-                ? "var(--accent, #3b82f6)"
-                : "var(--text-2, #888)"}; cursor: pointer; font-size: 0.9rem; font-weight: ${active
-                ? "600"
-                : "400"};"
+              style="padding: 8px 16px; background: none; border: none; border-bottom: 2px solid ${
+                active ? "var(--accent, #3b82f6)" : "transparent"
+              }; color: ${
+                active ? "var(--accent, #3b82f6)" : "var(--text-2, #888)"
+              }; cursor: pointer; font-size: 0.9rem; font-weight: ${active ? "600" : "400"};"
             >
               ${t(this._tabLabelKey(tab))}
             </button>
@@ -104,6 +113,11 @@ export class TenantAuditView extends LitElement {
         }
         return renderSessions(this.sessionsProps);
 
+      case "customer-sessions":
+        return html`
+          <cs-sessions-view></cs-sessions-view>
+        `;
+
       case "traces":
         return html`<tenant-traces-view .gatewayUrl=${this.gatewayUrl}></tenant-traces-view>`;
 
@@ -115,6 +129,9 @@ export class TenantAuditView extends LitElement {
   render() {
     return html`
       ${this._renderTabBar()}
+      <p style="margin: -4px 0 16px; color: var(--text-2, #6b7280); font-size: 0.9rem;">
+        ${t(this._descriptionKey(this.currentSubTab))}
+      </p>
       <div>${this._renderContent()}</div>
     `;
   }

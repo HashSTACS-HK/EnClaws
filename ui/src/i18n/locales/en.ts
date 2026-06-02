@@ -1438,7 +1438,7 @@ export const en: TranslationMap = {
     memorySaveFailed: "Failed to save enterprise memory",
     memoryHint:
       "This content is auto-maintained by AI assistants and can be manually edited. It will be injected as enterprise context into all AI conversations.",
-    tenantIdLabel: "Tenant ID:",
+    tenantIdLabel: "Tenant ID",
     tenantIdCopy: "Copy",
     tenantIdCopied: "Copied",
   },

@@ -1049,7 +1049,7 @@ export const pt_BR: TranslationMap = {
     memorySaveFailed: "Falha ao salvar memoria da empresa",
     memoryHint:
       "Este conteudo e mantido automaticamente pelos assistentes de IA e pode ser editado manualmente.",
-    tenantIdLabel: "ID do tenant:",
+    tenantIdLabel: "ID do tenant",
     tenantIdCopy: "Copiar",
     tenantIdCopied: "Copiado",
   },

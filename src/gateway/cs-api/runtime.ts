@@ -25,6 +25,7 @@ import { getCSMessage } from "../../db/models/cs-message.js";
 import {
   findOrCreateCsApiSession,
   appendCsApiMessage,
+  deleteCSSessionIfNoMessages,
   setSessionState,
 } from "../../db/models/cs-session.js";
 import { getInteractionsByTurn } from "../../db/models/interaction-trace.js";
@@ -114,14 +115,28 @@ export async function handleMessages(
   }
 
   // 5. Append customer message to DB
-  await appendCsApiMessage({
-    sessionId: session.id,
-    tenantId,
-    role: "customer",
-    source: "upper-app-relay",
-    content: input.content,
-    metadata: input.metadata,
-  });
+  try {
+    await appendCsApiMessage({
+      sessionId: session.id,
+      tenantId,
+      role: "customer",
+      source: "upper-app-relay",
+      content: input.content,
+      metadata: input.metadata,
+    });
+  } catch (err) {
+    if (session.isNew) {
+      await deleteCSSessionIfNoMessages(session.id).catch((cleanupErr) => {
+        log.warn(`cs-api: failed to clean empty session ${session.id}: ${String(cleanupErr)}`);
+      });
+    }
+    const msg = err instanceof Error ? err.message : String(err);
+    log.error(
+      `cs-api messages persist customer error: appId=${appId} sessionId=${session.id} err=${msg}`,
+    );
+    sendError(res, 500, "MESSAGE_PERSIST_FAILED", "Failed to persist customer message");
+    return;
+  }
 
   // 6. Start SSE stream
   startSse(res);

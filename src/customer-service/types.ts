@@ -30,6 +30,7 @@ export interface CSSession {
   visitorName: string | null;
   state: CSSessionState;
   channel: string;
+  appObjectId?: string | null;
   tags: string[];
   identityAnchors: Record<string, string>;
   metadata: Record<string, unknown>;

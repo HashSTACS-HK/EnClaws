@@ -113,6 +113,19 @@ export async function getLastCSMessageForSession(sessionId: string): Promise<CSM
   return result.rows.length > 0 ? rowToMessage(result.rows[0]) : null;
 }
 
+export async function countCSMessagesForSession(sessionId: string): Promise<number> {
+  if (getDbType() === DB_SQLITE) {
+    const result = sqliteQuery("SELECT COUNT(*) AS cnt FROM cs_messages WHERE session_id = ?", [
+      sessionId,
+    ]);
+    return Number((result.rows[0] as Record<string, unknown> | undefined)?.cnt ?? 0);
+  }
+  const result = await query("SELECT COUNT(*) AS cnt FROM cs_messages WHERE session_id = $1", [
+    sessionId,
+  ]);
+  return Number((result.rows[0] as Record<string, unknown> | undefined)?.cnt ?? 0);
+}
+
 // -- List by session (paginated, chronological) --
 
 export async function listCSMessages(

@@ -20,16 +20,17 @@ import { I18nController, t } from "../../../i18n/index.ts";
 import { getAccessToken } from "../../auth-store.ts";
 import { showConfirm } from "../../components/confirm-dialog.ts";
 import { showSecretReveal } from "../../components/secret-reveal-dialog.ts";
+import { applyRecommendedPersona } from "../../lib/apply-recommended-persona.ts";
 import { caretFix } from "../../shared-styles.ts";
 import { loadSettings } from "../../storage.ts";
 import { tenantRpc } from "./rpc.ts";
-import { applyRecommendedPersona } from "../../lib/apply-recommended-persona.ts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ApiObject {
   id: string;
   name: string;
+  description: string | null;
   agentId: string | null;
   appId: string;
   isActive: boolean;
@@ -339,9 +340,9 @@ export class CsApiModeView extends LitElement {
   @state() private _createName = "";
   @state() private _createDescription = "";
   @state() private _createAgentId = "";
+  @state() private _useRecommendedConfig = true;
 
   // Persona shortcut state (apply recommended / navigate to persona tab)
-  @state() private _personaApplying = false;
   @state() private _personaError = "";
 
   private _i18n = new I18nController(this);
@@ -395,16 +396,37 @@ export class CsApiModeView extends LitElement {
       this._error = t("cs.apiMode.create.nameRequired");
       return;
     }
+    if (!this._createAgentId) {
+      this._error = t("cs.apiMode.create.agentRequired");
+      return;
+    }
     this._submitting = true;
     this._error = "";
     try {
+      if (this._useRecommendedConfig) {
+        const agentName = this._agentName(this._createAgentId);
+        const confirmed = await showConfirm({
+          title: t("agents.persona.recommended.btn"),
+          message: `将为${agentName}覆盖当前“人设与规范”为系统推荐配置。`,
+          confirmText: t("agents.persona.recommended.btn"),
+          cancelText: "取消",
+        });
+        if (!confirmed) {
+          return;
+        }
+        const rpc = (method: string, params?: Record<string, unknown>) =>
+          tenantRpc(method, params ?? {}, this.gatewayUrl || undefined);
+        const personaResult = await applyRecommendedPersona(this._createAgentId, rpc);
+        if (!personaResult.ok && personaResult.error) {
+          throw new Error(personaResult.error);
+        }
+      }
+
       const body: Record<string, unknown> = { name: this._createName.trim() };
       if (this._createDescription.trim()) {
         body.description = this._createDescription.trim();
       }
-      if (this._createAgentId) {
-        body.agentId = this._createAgentId;
-      }
+      body.agentId = this._createAgentId;
 
       const res = await apiFetch("/api/cs-api/objects", {
         method: "POST",
@@ -427,6 +449,7 @@ export class CsApiModeView extends LitElement {
       this._createName = "";
       this._createDescription = "";
       this._createAgentId = "";
+      this._useRecommendedConfig = true;
       this._showCreate = false;
 
       // Reveal one-time secret (must happen before refetch, which is fine)
@@ -450,6 +473,7 @@ export class CsApiModeView extends LitElement {
     this._createName = "";
     this._createDescription = "";
     this._createAgentId = "";
+    this._useRecommendedConfig = true;
     this._error = "";
     this._personaError = "";
   }
@@ -457,33 +481,21 @@ export class CsApiModeView extends LitElement {
   // ── Persona shortcuts ────────────────────────────────────────────────────────
 
   /**
-   * Apply the recommended CS persona to the currently selected agent in the create form.
-   * 将推荐客服人设写入创建表单中选定的 agent。
-   */
-  private async _applyPersonaToCreate() {
-    if (!this._createAgentId || this._personaApplying) {
-      return;
-    }
-    this._personaApplying = true;
-    this._personaError = "";
-    try {
-      const rpc = (method: string, params?: Record<string, unknown>) =>
-        tenantRpc(method, params ?? {}, this.gatewayUrl || undefined);
-      const result = await applyRecommendedPersona(this._createAgentId, rpc);
-      if (!result.ok && result.error) {
-        this._personaError = result.error;
-      }
-    } finally {
-      this._personaApplying = false;
-    }
-  }
-
-  /**
    * Navigate to the persona tab of the selected agent by dispatching navigate-to-agent.
    * 派发 navigate-to-agent 事件，跳转到选定 agent 的人设与规范标签页。
    */
-  private _navigateToPersona() {
+  private async _navigateToPersona() {
     if (!this._createAgentId) {
+      return;
+    }
+    const agentName = this._agentName(this._createAgentId);
+    const confirmed = await showConfirm({
+      title: t("agents.persona.recommended.manualEditBtn"),
+      message: `手动修改，将前往${agentName}配置页面手动修改“人设与规范”。`,
+      confirmText: t("agents.persona.recommended.manualEditBtn"),
+      cancelText: "取消",
+    });
+    if (!confirmed) {
       return;
     }
     this.dispatchEvent(
@@ -505,6 +517,7 @@ export class CsApiModeView extends LitElement {
       title: t("cs.apiMode.regenerate.confirmTitle"),
       message: t("cs.apiMode.regenerate.confirmMessage"),
       confirmText: t("cs.apiMode.regenerate.confirmBtn"),
+      cancelText: "取消",
       danger: true,
     });
     if (!confirmed) {
@@ -554,6 +567,7 @@ export class CsApiModeView extends LitElement {
       title: t("cs.apiMode.delete.confirmTitle"),
       message: t("cs.apiMode.delete.confirmMessage", { name: obj.name }),
       confirmText: t("cs.apiMode.delete.confirmBtn"),
+      cancelText: "取消",
       danger: true,
     });
     if (!confirmed) {
@@ -588,6 +602,17 @@ export class CsApiModeView extends LitElement {
 
   private async _toggleActive(obj: ApiObject) {
     if (this._busyId !== null) {
+      return;
+    }
+    const confirmed = await showConfirm({
+      title: obj.isActive ? "停用 AI 服务？" : "启用 AI 服务？",
+      message: `${obj.isActive ? "停用" : "启用"}「${obj.name}」？`,
+      confirmText: obj.isActive
+        ? t("cs.apiMode.table.toggleDisableBtn")
+        : t("cs.apiMode.table.toggleEnableBtn"),
+      cancelText: "取消",
+    });
+    if (!confirmed) {
       return;
     }
     this._busyId = obj.id;
@@ -654,50 +679,59 @@ export class CsApiModeView extends LitElement {
         </div>
 
         <div class="form-group">
-          <label>${t("cs.apiMode.create.agentLabel")}</label>
-          <select
-            .value=${this._createAgentId}
-            @change=${(e: Event) => {
-              this._createAgentId = (e.target as HTMLSelectElement).value;
-              this._personaError = "";
-            }}
-          >
-            <option value="">${t("cs.apiMode.create.agentNone")}</option>
-            ${this._agents.map(
-              (a) => html`
-              <option value=${a.agentId}>${a.name ?? a.agentId}</option>
-            `,
-            )}
-          </select>
-          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <button
-              type="button"
-              ?disabled=${!this._createAgentId || this._personaApplying}
-              @click=${() => { void this._applyPersonaToCreate(); }}
-              style="padding: 0.35rem 0.8rem; background: var(--accent, #3b82f6); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.82rem; white-space: nowrap;"
+          <label>${t("cs.apiMode.create.agentLabel")}<span class="required-mark">*</span></label>
+          <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+            <select
+              .value=${this._createAgentId}
+              @change=${(e: Event) => {
+                this._createAgentId = (e.target as HTMLSelectElement).value;
+                this._personaError = "";
+              }}
             >
-              ${this._personaApplying
-                ? t("agents.persona.recommended.applying")
-                : t("agents.persona.recommended.btn")}
-            </button>
-            <button
-              type="button"
-              ?disabled=${!this._createAgentId}
-              @click=${() => { this._navigateToPersona(); }}
-              style="padding: 0.35rem 0.8rem; background: transparent; color: var(--text-1, #e5e7eb); border: 1px solid var(--border, #374151); border-radius: 6px; cursor: pointer; font-size: 0.82rem; white-space: nowrap;"
-            >
-              ${t("agents.persona.recommended.manualEditBtn")}
-            </button>
-            ${this._personaError
-              ? html`<span style="color: var(--danger, #ef4444); font-size: 0.8rem;">${this._personaError}</span>`
-              : nothing}
+              <option value="">${t("cs.apiMode.create.agentNone")}</option>
+              ${this._agents.map(
+                (a) => html`
+                <option value=${a.agentId}>${a.name ?? a.agentId}</option>
+              `,
+              )}
+            </select>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-bottom: 2px;">
+              <label
+                style="display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; color: var(--color-text, #1c1c1e); opacity: ${this._createAgentId ? "1" : "0.45"};"
+              >
+                <input
+                  type="checkbox"
+                  .checked=${this._useRecommendedConfig}
+                  ?disabled=${!this._createAgentId}
+                  @change=${(e: Event) => {
+                    this._useRecommendedConfig = (e.target as HTMLInputElement).checked;
+                  }}
+                />
+                ${t("agents.persona.recommended.btn")}
+              </label>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                ?disabled=${!this._createAgentId}
+                @click=${() => {
+                  void this._navigateToPersona();
+                }}
+              >
+                ${t("agents.persona.recommended.manualEditBtn")}
+              </button>
+              ${
+                this._personaError
+                  ? html`<span style="color: var(--danger, #ef4444); font-size: 0.8rem;">${this._personaError}</span>`
+                  : nothing
+              }
+            </div>
           </div>
         </div>
 
         <div class="form-actions">
           <button
             class="btn btn-primary"
-            ?disabled=${this._submitting}
+            ?disabled=${this._submitting || !this._createAgentId}
             @click=${() => this._submitCreate()}
           >${this._submitting ? t("cs.apiMode.create.submitting") : t("cs.apiMode.create.submitBtn")}</button>
           <button
@@ -744,6 +778,7 @@ export class CsApiModeView extends LitElement {
           <thead>
             <tr>
               <th>${t("cs.apiMode.table.name")}</th>
+              <th>${t("cs.apiMode.table.description")}</th>
               <th>${t("cs.apiMode.table.agent")}</th>
               <th>${t("cs.apiMode.table.appId")}</th>
               <th>${t("cs.apiMode.table.status")}</th>
@@ -756,6 +791,7 @@ export class CsApiModeView extends LitElement {
               (obj) => html`
               <tr class=${obj.isActive ? "" : "row-inactive"}>
                 <td>${obj.name}</td>
+                <td>${obj.description || "—"}</td>
                 <td>${this._agentName(obj.agentId)}</td>
                 <td class="cell-mono">${obj.appId}</td>
                 <td>

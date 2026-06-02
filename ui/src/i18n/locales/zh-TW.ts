@@ -986,7 +986,7 @@ export const zh_TW: TranslationMap = {
     memorySaved: "企業記憶已儲存",
     memorySaveFailed: "儲存企業記憶失敗",
     memoryHint: "該內容由 AI 助手自動維護，也可手動編輯。將作為企業上下文注入到所有 AI 對話中。",
-    tenantIdLabel: "租戶 ID：",
+    tenantIdLabel: "租戶 ID",
     tenantIdCopy: "複製",
     tenantIdCopied: "已複製",
   },

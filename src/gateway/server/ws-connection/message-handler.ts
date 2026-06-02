@@ -486,6 +486,18 @@ export function attachGatewayWsMessageHandler(params: {
           if (!originCheck.ok) {
             const errorMessage =
               "origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)";
+            logWsControl.warn(
+              `origin rejected conn=${connId} remote=${remoteAddr ?? "?"} origin=${requestOrigin ?? "n/a"} host=${requestHost ?? "n/a"} allowedOrigins=${JSON.stringify(configSnapshot.gateway?.controlUi?.allowedOrigins ?? [])} client=${connectParams.client.id} connect=${JSON.stringify(
+                {
+                  minProtocol: connectParams.minProtocol,
+                  maxProtocol: connectParams.maxProtocol,
+                  client: connectParams.client,
+                  role: connectParams.role,
+                  scopes: connectParams.scopes,
+                  caps: connectParams.caps,
+                },
+              )} reason=${originCheck.reason}`,
+            );
             markHandshakeFailure("origin-mismatch", {
               origin: requestOrigin ?? "n/a",
               host: requestHost ?? "n/a",

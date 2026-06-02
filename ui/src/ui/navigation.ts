@@ -12,16 +12,11 @@ export const TAB_GROUPS = [
   },
   {
     label: "workbench",
-    tabs: ["chat", "scheduler-placeholder", "cs-sessions", "tenant-audit"],
+    tabs: ["chat", "scheduler-placeholder", "tenant-audit"],
   },
   {
     label: "config",
-    tabs: [
-      "tenant-agents",
-      "tenant-workshop",
-      "tenant-knowledge",
-      "cs-console",
-    ],
+    tabs: ["tenant-agents", "tenant-workshop", "tenant-knowledge", "cs-console"],
   },
   {
     label: "workspace-group",

@@ -47,6 +47,8 @@ export interface CsApiSession {
   updatedAt: Date | string;
   /** Message history for agent context (chronological). */
   messages: Array<{ role: string; content: string }>;
+  /** True only when this call inserted the session row. */
+  isNew?: boolean;
 }
 
 // -- Row mapper --
@@ -70,6 +72,7 @@ function rowToSession(row: Record<string, unknown>): CSSession {
     visitorName: (row.visitor_name as string) ?? null,
     state: (row.state as CSSessionState) ?? "ai_active",
     channel: (row.channel as string) ?? "web_widget",
+    appObjectId: (row.app_object_id as string | null) ?? null,
     tags: parseJson(row.tags, []) as string[],
     identityAnchors: parseJson(row.identity_anchors, {}) as Record<string, string>,
     metadata: parseJson(row.metadata, {}) as Record<string, unknown>,
@@ -235,23 +238,50 @@ export async function updateCSSessionMeta(
 
 export async function listCSSessions(
   tenantId: string,
-  opts: { limit?: number; offset?: number } = {},
+  opts: { limit?: number; offset?: number; requireMessages?: boolean } = {},
 ): Promise<CSSession[]> {
   const limit = opts.limit ?? 50;
   const offset = opts.offset ?? 0;
+  const requireMessages = opts.requireMessages ?? false;
 
   if (getDbType() === DB_SQLITE) {
+    const messageFilter = requireMessages
+      ? "AND EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)"
+      : "";
     const result = sqliteQuery(
-      "SELECT * FROM cs_sessions WHERE tenant_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?",
+      `SELECT * FROM cs_sessions WHERE tenant_id = ? ${messageFilter} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
       [tenantId, limit, offset],
     );
     return result.rows.map(rowToSession);
   }
+  const messageFilter = requireMessages
+    ? "AND EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)"
+    : "";
   const result = await query(
-    "SELECT * FROM cs_sessions WHERE tenant_id = $1 ORDER BY updated_at DESC LIMIT $2 OFFSET $3",
+    `SELECT * FROM cs_sessions WHERE tenant_id = $1 ${messageFilter} ORDER BY updated_at DESC LIMIT $2 OFFSET $3`,
     [tenantId, limit, offset],
   );
   return result.rows.map(rowToSession);
+}
+
+export async function deleteCSSessionIfNoMessages(id: string): Promise<boolean> {
+  if (getDbType() === DB_SQLITE) {
+    const count = sqliteQuery("SELECT COUNT(*) AS cnt FROM cs_messages WHERE session_id = ?", [id])
+      .rows[0] as Record<string, unknown> | undefined;
+    if (Number(count?.cnt ?? 0) > 0) {
+      return false;
+    }
+    const result = sqliteQuery("DELETE FROM cs_sessions WHERE id = ?", [id]);
+    return result.rowCount > 0;
+  }
+
+  const result = await query(
+    `DELETE FROM cs_sessions s
+     WHERE s.id = $1
+       AND NOT EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = s.id)`,
+    [id],
+  );
+  return (result.rowCount ?? 0) > 0;
 }
 
 // -- Record last Feishu notification time (stored in metadata JSON) --
@@ -536,6 +566,7 @@ export async function findOrCreateCsApiSession(params: {
     const sess = rowToCsApiSession(flattenMetadata(r2.rows[0]));
     sess.agentId = agentId;
     sess.messages = [];
+    sess.isNew = true;
     return sess;
   }
 
@@ -549,6 +580,7 @@ export async function findOrCreateCsApiSession(params: {
   const sess = rowToCsApiSession(flattenMetadata(r.rows[0]));
   sess.agentId = agentId;
   sess.messages = [];
+  sess.isNew = true;
   return sess;
 }
 

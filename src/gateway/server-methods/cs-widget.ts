@@ -17,6 +17,7 @@ import { CS_ROLE_LABELS } from "../../customer-service/types.js";
 import { createCSMessage, listCSMessages } from "../../db/models/cs-message.js";
 import {
   createCSSession,
+  deleteCSSessionIfNoMessages,
   findActiveCSSession,
   updateCSSessionNotifiedAt,
 } from "../../db/models/cs-session.js";
@@ -51,6 +52,7 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
       return;
     }
 
+    let createdSessionId: string | null = null;
     try {
       // Only resume — do not create. Creation happens in cs.widget.send.
       // 只恢复，不创建。session 在 cs.widget.send 中按需创建。
@@ -106,6 +108,7 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
           channel: (params.channel as string | undefined) ?? "web_widget",
           metadata: params.metadata as Record<string, unknown> | undefined,
         });
+        createdSessionId = session.id;
         log.info(`created cs session ${session.id} for visitor ${visitorId}`);
       }
 
@@ -241,6 +244,11 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
         respond(true, { action });
       }
     } catch (err) {
+      if (createdSessionId) {
+        await deleteCSSessionIfNoMessages(createdSessionId).catch((cleanupErr) => {
+          log.warn(`cs.widget.send empty-session cleanup failed: ${String(cleanupErr)}`);
+        });
+      }
       const message = err instanceof Error ? err.message : String(err);
       log.error(`cs.widget.send failed: ${message}`);
       respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, "Failed to process message"));

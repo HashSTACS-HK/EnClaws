@@ -150,6 +150,7 @@ export async function listObjects(req: IncomingMessage, res: ServerResponse): Pr
     objects: objects.map((o) => ({
       id: o.id,
       name: o.name,
+      description: o.description ?? null,
       agentId: o.agentId,
       appId: o.appId,
       isActive: o.isActive,

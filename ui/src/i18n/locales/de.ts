@@ -1053,7 +1053,7 @@ export const de: TranslationMap = {
     memorySaveFailed: "Unternehmensspeicher konnte nicht gespeichert werden",
     memoryHint:
       "Dieser Inhalt wird von KI-Assistenten automatisch gepflegt und kann manuell bearbeitet werden.",
-    tenantIdLabel: "Mandanten-ID:",
+    tenantIdLabel: "Mandanten-ID",
     tenantIdCopy: "Kopieren",
     tenantIdCopied: "Kopiert",
   },

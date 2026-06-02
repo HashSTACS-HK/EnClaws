@@ -18,10 +18,11 @@ import { html, css, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { I18nController, t } from "../../../i18n/index.ts";
 import { loadAuth } from "../../auth-store.ts";
+import { showConfirm } from "../../components/confirm-dialog.ts";
+import { applyRecommendedPersona } from "../../lib/apply-recommended-persona.ts";
 import { caretFix } from "../../shared-styles.ts";
 import { loadSettings } from "../../storage.ts";
 import { tenantRpc } from "./rpc.ts";
-import { applyRecommendedPersona } from "../../lib/apply-recommended-persona.ts";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -638,6 +639,7 @@ export class CSWidgetManagementView extends LitElement {
   @state() private _personaApplying: Record<number, boolean> = {};
   /** Per-widget persona error. 各 widget 启用推荐配置的错误信息。 */
   @state() private _personaErrors: Record<number, string> = {};
+  @state() private _widgetRecommended: Record<number, boolean> = {};
 
   // ── Shared config state (notification + restrictions + AI config) ─────────────
 
@@ -727,20 +729,32 @@ export class CSWidgetManagementView extends LitElement {
    * Apply recommended CS persona to the agent bound to the widget at the given index.
    * 将推荐客服人设写入指定索引 widget 绑定的 agent。
    */
-  private async _applyPersonaForWidget(idx: number) {
+  private async _applyPersonaForWidget(idx: number): Promise<boolean> {
     const agentId = this.channels[idx]?.agentId;
     if (!agentId || this._personaApplying[idx]) {
-      return;
+      return false;
     }
     this._personaApplying = { ...this._personaApplying, [idx]: true };
     this._personaErrors = { ...this._personaErrors, [idx]: "" };
     try {
+      const agentName = this._agentName(agentId);
+      const confirmed = await showConfirm({
+        title: t("agents.persona.recommended.btn"),
+        message: `将为${agentName}覆盖当前“人设与规范”为系统推荐配置。`,
+        confirmText: t("agents.persona.recommended.btn"),
+        cancelText: "取消",
+      });
+      if (!confirmed) {
+        return false;
+      }
       const rpc = (method: string, params?: Record<string, unknown>) =>
         tenantRpc(method, params ?? {}, this.gatewayUrl || undefined);
       const result = await applyRecommendedPersona(agentId, rpc);
       if (!result.ok && result.error) {
         this._personaErrors = { ...this._personaErrors, [idx]: result.error };
+        return false;
       }
+      return true;
     } finally {
       this._personaApplying = { ...this._personaApplying, [idx]: false };
     }
@@ -750,9 +764,19 @@ export class CSWidgetManagementView extends LitElement {
    * Navigate to the persona tab of the agent bound to the widget at the given index.
    * 派发 navigate-to-agent 事件，跳转到指定索引 widget 绑定 agent 的人设与规范标签页。
    */
-  private _navigateToPersonaForWidget(idx: number) {
+  private async _navigateToPersonaForWidget(idx: number) {
     const agentId = this.channels[idx]?.agentId;
     if (!agentId) {
+      return;
+    }
+    const agentName = this._agentName(agentId);
+    const confirmed = await showConfirm({
+      title: t("agents.persona.recommended.manualEditBtn"),
+      message: `手动修改，将前往${agentName}配置页面手动修改“人设与规范”。`,
+      confirmText: t("agents.persona.recommended.manualEditBtn"),
+      cancelText: "取消",
+    });
+    if (!confirmed) {
       return;
     }
     this.dispatchEvent(
@@ -1053,6 +1077,19 @@ export class CSWidgetManagementView extends LitElement {
       };
       return;
     }
+    if (!ch.agentId) {
+      this.channelErrors = {
+        ...this.channelErrors,
+        [channelIdx]: "请选择关联AI员工",
+      };
+      return;
+    }
+    if (this._widgetRecommended[channelIdx] ?? true) {
+      const applied = await this._applyPersonaForWidget(channelIdx);
+      if (!applied) {
+        return;
+      }
+    }
 
     // Reuse an existing id (edit) or mint one (create). The embed snippet must
     // carry this id so the runtime can identify the widget (T3b).
@@ -1176,9 +1213,7 @@ export class CSWidgetManagementView extends LitElement {
     } catch (err) {
       // Revert optimistic change on failure.
       // 失败时回滚乐观更新。
-      this.channels = this.channels.map((c, i) =>
-        i === idx ? { ...c, agentId: ch.agentId } : c,
-      );
+      this.channels = this.channels.map((c, i) => (i === idx ? { ...c, agentId: ch.agentId } : c));
       this.widgetError = err instanceof Error ? err.message : t("cs.widget.saveError");
     }
   }
@@ -1198,9 +1233,7 @@ export class CSWidgetManagementView extends LitElement {
     try {
       await this._saveChannels();
     } catch (err) {
-      this.channels = this.channels.map((c, i) =>
-        i === idx ? { ...c, enabled: ch.enabled } : c,
-      );
+      this.channels = this.channels.map((c, i) => (i === idx ? { ...c, enabled: ch.enabled } : c));
       this.widgetError = err instanceof Error ? err.message : t("cs.widget.saveError");
     }
   }
@@ -1293,14 +1326,6 @@ export class CSWidgetManagementView extends LitElement {
         <p class="hint" style="margin-bottom:10px">${t("cs.setup.notifSharedHint")}</p>
 
         <div class="form-group">
-          <label>客服 Agent</label>
-          <select disabled style="opacity:0.6;cursor:not-allowed">
-            <option>默认 Agent（系统自动选择）</option>
-          </select>
-          <p class="hint">多 Agent 路由将在后续版本支持</p>
-        </div>
-
-        <div class="form-group">
           <label>通知渠道</label>
           <select
             .value=${this.notificationChannel}
@@ -1308,42 +1333,31 @@ export class CSWidgetManagementView extends LitElement {
               this.notificationChannel = (e.target as HTMLSelectElement).value;
             }}
           >
-            <option value="feishu">飞书（Feishu）</option>
+            <option value="feishu">飞书通知频道</option>
           </select>
-          <p class="hint">当前仅支持飞书，后续渠道上线后可在此切换</p>
+          <p class="hint">当前仅支持飞书,后续渠道上线后可在此切换</p>
         </div>
 
         <div class="form-group">
-          <label>飞书 App ID <span style="color:var(--color-danger,#cf222e)">*</span></label>
+          <label>APP ID</label>
           <input
             type="text"
             placeholder="cli_xxxxxxxxxx"
             .value=${this.appId}
-            @input=${(e: Event) => {
-              this.appId = (e.target as HTMLInputElement).value;
-            }}
+            readonly
           />
         </div>
         <div class="form-group">
-          <label>飞书 App Secret <span style="color:var(--color-danger,#cf222e)">*</span></label>
+          <label>APP Secret</label>
           <input
-            type="password"
-            placeholder=${this.hasExistingSecret ? "已设置（输入新值覆盖）" : "请输入 App Secret"}
-            .value=${this.appSecret}
-            @input=${(e: Event) => {
-              this.appSecret = (e.target as HTMLInputElement).value;
-            }}
+            type="text"
+            placeholder=${this.hasExistingSecret ? "已设置" : "未设置"}
+            .value=${this.appSecretPlaceholder || (this.hasExistingSecret ? "已设置" : "")}
+            readonly
           />
-          ${
-            this.hasExistingSecret && !this.appSecret
-              ? html`
-                  <p class="hint">App Secret 已配置，留空则保留旧值</p>
-                `
-              : nothing
-          }
         </div>
         <div class="form-group">
-          <label>飞书群聊 Chat ID <span style="color:var(--color-danger,#cf222e)">*</span></label>
+          <label>群聊 Chat ID <span style="color:var(--color-danger,#cf222e)">*</span></label>
           <input
             type="text"
             placeholder="oc_xxxxxxxxxx"
@@ -1352,7 +1366,6 @@ export class CSWidgetManagementView extends LitElement {
               this.chatId = (e.target as HTMLInputElement).value;
             }}
           />
-          <p class="hint">群聊中 → 右上角「···」→ 群设置 → Chat ID</p>
         </div>
 
         <div class="form-group">
@@ -1370,7 +1383,6 @@ export class CSWidgetManagementView extends LitElement {
               }
             }}
           />
-          <p class="hint">同一会话内两次通知的最小间隔，默认 10 分钟（1–60）</p>
         </div>
 
       </div>
@@ -1454,43 +1466,62 @@ export class CSWidgetManagementView extends LitElement {
   private _renderAgentSelect(ch: Channel, idx: number) {
     const applying = !!this._personaApplying[idx];
     const personaError = this._personaErrors[idx] ?? "";
+    const recommended = this._widgetRecommended[idx] ?? true;
     return html`
       <div class="widget-field">
         <span class="widget-field-label">${t("cs.widget.agentLabel")}</span>
-        <select
-          .value=${ch.agentId ?? ""}
-          @change=${(e: Event) => {
-            void this._updateChannelAgent(idx, (e.target as HTMLSelectElement).value);
-            this._personaErrors = { ...this._personaErrors, [idx]: "" };
-          }}
-        >
-          <option value="">${t("cs.widget.agentDefault")}</option>
-          ${this._agents.map(
-            (a) => html`<option value=${a.agentId} ?selected=${a.agentId === ch.agentId}>${a.name ?? a.agentId}</option>`,
-          )}
-        </select>
-        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center; flex-wrap: wrap;">
-          <button
-            type="button"
-            ?disabled=${!ch.agentId || applying}
-            @click=${() => { void this._applyPersonaForWidget(idx); }}
-            style="padding: 0.3rem 0.7rem; background: var(--accent, #3b82f6); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; white-space: nowrap;"
+        <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+          <select
+            .value=${ch.agentId ?? ""}
+            @change=${(e: Event) => {
+              void this._updateChannelAgent(idx, (e.target as HTMLSelectElement).value);
+              this._personaErrors = { ...this._personaErrors, [idx]: "" };
+            }}
           >
-            ${applying
-              ? t("agents.persona.recommended.applying")
-              : t("agents.persona.recommended.btn")}
-          </button>
-          <button
-            type="button"
-            ?disabled=${!ch.agentId}
-            @click=${() => { this._navigateToPersonaForWidget(idx); }}
-            style="padding: 0.3rem 0.7rem; background: transparent; color: var(--text-1, #e5e7eb); border: 1px solid var(--border, #374151); border-radius: 6px; cursor: pointer; font-size: 0.8rem; white-space: nowrap;"
-          >
-            ${t("agents.persona.recommended.manualEditBtn")}
-          </button>
-          ${personaError
-            ? html`<span style="color: var(--danger, #ef4444); font-size: 0.78rem;">${personaError}</span>`
-            : nothing}
+            <option value="">——请指定AI员工——</option>
+            ${this._agents.map(
+              (a) =>
+                html`<option value=${a.agentId} ?selected=${a.agentId === ch.agentId}>${a.name ?? a.agentId}</option>`,
+            )}
+          </select>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-bottom: 2px;">
+            <label
+              style="display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; opacity: ${ch.agentId ? "1" : "0.45"};"
+            >
+              <input
+                type="checkbox"
+                .checked=${recommended}
+                ?disabled=${!ch.agentId || applying}
+                @change=${(e: Event) => {
+                  const checked = (e.target as HTMLInputElement).checked;
+                  this._widgetRecommended = { ...this._widgetRecommended, [idx]: checked };
+                  if (checked) {
+                    void this._applyPersonaForWidget(idx);
+                  }
+                }}
+              />
+              ${
+                applying
+                  ? t("agents.persona.recommended.applying")
+                  : t("agents.persona.recommended.btn")
+              }
+            </label>
+            <button
+              class="btn btn-ghost"
+              type="button"
+              ?disabled=${!ch.agentId}
+              @click=${() => {
+                void this._navigateToPersonaForWidget(idx);
+              }}
+            >
+              ${t("agents.persona.recommended.manualEditBtn")}
+            </button>
+            ${
+              personaError
+                ? html`<span style="color: var(--danger, #ef4444); font-size: 0.78rem;">${personaError}</span>`
+                : nothing
+            }
+          </div>
         </div>
       </div>
     `;
@@ -1632,11 +1663,8 @@ export class CSWidgetManagementView extends LitElement {
         <h2>Widget模式</h2>
       </div>
 
-      ${this._renderGuide()}
-      <hr class="divider" />
       <div class="section">
         <div class="config-grid">
-          ${this._renderAgentConfig()}
           ${this._renderNotifyConfig()}
         </div>
 

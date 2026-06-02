@@ -27,6 +27,10 @@ interface CSSession {
   visitorName: string | null;
   state: string;
   channel: string;
+  accessMode?: "api" | "widget";
+  accessModeLabel?: string;
+  accessSource?: string;
+  messageCount?: number;
   createdAt: string;
   updatedAt: string;
   closedAt: string | null;
@@ -70,6 +74,7 @@ export class CSSessionsView extends LitElement {
       .toolbar {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 12px;
         margin-bottom: 20px;
       }
@@ -324,7 +329,7 @@ export class CSSessionsView extends LitElement {
     const msgs = this.messages[session.id];
     return html`
       <tr class="thread-row">
-        <td colspan="6">
+        <td colspan="9">
           <div class="thread-panel">
             ${
               this.messagesLoading === session.id
@@ -356,7 +361,6 @@ export class CSSessionsView extends LitElement {
   render() {
     return html`
       <div class="toolbar">
-        <h2>AI 客服会话记录</h2>
         <button class="btn" @click=${() => this._loadSessions(true)}>刷新</button>
       </div>
 
@@ -377,9 +381,12 @@ export class CSSessionsView extends LitElement {
               <thead>
                 <tr>
                   <th></th>
-                  <th>访客</th>
+                  <th>客户</th>
+                  <th>接入模式</th>
+                  <th>接入渠道/场景</th>
                   <th>状态</th>
                   <th>最后发言</th>
+                  <th>消息数</th>
                   <th>发起时间</th>
                   <th>最近活动</th>
                 </tr>
@@ -397,9 +404,11 @@ export class CSSessionsView extends LitElement {
                       <span class="expand-icon ${this.expandedId === s.id ? "open" : ""}">▶</span>
                     </td>
                     <td>
-                      <div class="visitor-name">${s.visitorName ?? "访客"}</div>
-                      <div class="visitor-id">${s.visitorId.slice(0, 16)}…</div>
+                      <div class="visitor-name">${s.visitorName ?? "客户"}</div>
+                      <div class="visitor-id">${s.visitorId.slice(0, 16)}...</div>
                     </td>
+                    <td>${s.accessModeLabel ?? (s.accessMode === "api" ? "API模式" : "Widget模式")}</td>
+                    <td>${s.accessSource ?? s.channel}</td>
                     <td>
                       <span
                         class="state-badge"
@@ -430,6 +439,7 @@ export class CSSessionsView extends LitElement {
                             `
                       }
                     </td>
+                    <td>${s.messageCount ?? 0}</td>
                     <td class="date-cell">${this._formatDate(s.createdAt)}</td>
                     <td class="date-cell">${this._formatDate(s.updatedAt)}</td>
                   </tr>

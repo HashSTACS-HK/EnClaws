@@ -49,15 +49,21 @@ export async function buildSysConfig(): Promise<OpenClawConfig> {
     const port = config.gateway.port ?? 18888;
     const envDisableAuth = process.env.ENCLAWS_CONTROL_UI_DISABLE_DEVICE_AUTH;
     const envOrigins = process.env.ENCLAWS_CONTROL_UI_ALLOWED_ORIGINS;
+    const baseControlUi =
+      getRuntimeConfigSnapshot()?.gateway?.controlUi ?? loadConfig().gateway?.controlUi ?? {};
 
     config.gateway.controlUi = {
+      ...baseControlUi,
       dangerouslyDisableDeviceAuth: envDisableAuth === "true",
       allowedOrigins: envOrigins
         ? envOrigins
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean)
-        : [`http://localhost:${port}`, `http://127.0.0.1:${port}`],
+        : (baseControlUi.allowedOrigins ?? [
+            `http://localhost:${port}`,
+            `http://127.0.0.1:${port}`,
+          ]),
     };
   }
 
@@ -243,9 +249,29 @@ function buildToolsConfig(row: SysToolsConfigRow): ToolsConfig {
 export async function loadAndActivateSysConfig(): Promise<void> {
   const sysConfig = await buildSysConfig();
   const base = getRuntimeConfigSnapshot() ?? loadConfig();
+  const baseGateway = base.gateway ?? {};
+  const sysGateway = sysConfig.gateway ?? {};
+  const baseControlUi = baseGateway.controlUi ?? {};
+  const sysControlUi = sysGateway.controlUi ?? {};
+  const envOriginsConfigured = Boolean(process.env.ENCLAWS_CONTROL_UI_ALLOWED_ORIGINS?.trim());
+  const preservedAllowedOrigins =
+    !envOriginsConfigured &&
+    Array.isArray(baseControlUi.allowedOrigins) &&
+    baseControlUi.allowedOrigins.length > 0
+      ? baseControlUi.allowedOrigins
+      : sysControlUi.allowedOrigins;
   const merged: OpenClawConfig = {
     ...base,
     ...sysConfig,
+    gateway: {
+      ...baseGateway,
+      ...sysGateway,
+      controlUi: {
+        ...baseControlUi,
+        ...sysControlUi,
+        allowedOrigins: preservedAllowedOrigins,
+      },
+    },
   };
   setRuntimeConfigSnapshot(merged);
 }

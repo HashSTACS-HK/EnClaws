@@ -150,6 +150,53 @@ describe("cs-session SQLite CRUD", () => {
     expect(page1[0].id).not.toBe(page2[0].id);
   });
 
+  it("listCSSessions can exclude sessions with no messages", async () => {
+    const { createCSSession, listCSSessions } = await import("./cs-session.js");
+    const { createCSMessage } = await import("./cs-message.js");
+
+    await createCSSession({ tenantId: tenantA.id, visitorId: "visitor-empty-session" });
+    const withMessage = await createCSSession({
+      tenantId: tenantA.id,
+      visitorId: "visitor-with-message",
+    });
+    await createCSMessage({
+      sessionId: withMessage.id,
+      tenantId: tenantA.id,
+      role: "customer",
+      content: "hello",
+    });
+
+    const sessions = await listCSSessions(tenantA.id, { requireMessages: true });
+    expect(sessions.some((s) => s.visitorId === "visitor-empty-session")).toBe(false);
+    expect(sessions.some((s) => s.visitorId === "visitor-with-message")).toBe(true);
+  });
+
+  it("deleteCSSessionIfNoMessages removes only empty sessions", async () => {
+    const { createCSSession, deleteCSSessionIfNoMessages, getCSSession } =
+      await import("./cs-session.js");
+    const { createCSMessage } = await import("./cs-message.js");
+
+    const empty = await createCSSession({
+      tenantId: tenantA.id,
+      visitorId: "visitor-delete-empty",
+    });
+    const nonEmpty = await createCSSession({
+      tenantId: tenantA.id,
+      visitorId: "visitor-keep-non-empty",
+    });
+    await createCSMessage({
+      sessionId: nonEmpty.id,
+      tenantId: tenantA.id,
+      role: "customer",
+      content: "keep me",
+    });
+
+    await expect(deleteCSSessionIfNoMessages(empty.id)).resolves.toBe(true);
+    await expect(deleteCSSessionIfNoMessages(nonEmpty.id)).resolves.toBe(false);
+    await expect(getCSSession(empty.id)).resolves.toBeNull();
+    await expect(getCSSession(nonEmpty.id)).resolves.not.toBeNull();
+  });
+
   it("updateCSSessionState — transitions state correctly", async () => {
     const { createCSSession, getCSSession, updateCSSessionState } = await import("./cs-session.js");
     const session = await createCSSession({

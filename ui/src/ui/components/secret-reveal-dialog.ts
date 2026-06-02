@@ -214,7 +214,7 @@ export class SecretRevealDialog extends LitElement {
           <button
             class="btn-copy ${isCopied ? "copied" : ""}"
             @click=${() => this._copy(fieldKey, value)}
-          >${isCopied ? "✓ Copied" : "Copy"}</button>
+          >${isCopied ? t("cs.apiMode.secretDialog.copied") : t("cs.apiMode.secretDialog.copy")}</button>
         </div>
       </div>
     `;
@@ -224,25 +224,23 @@ export class SecretRevealDialog extends LitElement {
     return html`
       <div class="overlay">
         <div class="card">
-          <div class="title">API Credentials</div>
+          <div class="title">${t("cs.apiMode.secretDialog.title")}</div>
 
           <div class="warning">
             <span class="warning-icon">⚠️</span>
             <span>
-              This is your <strong>only chance</strong> to copy the App Secret.
-              It is stored as a one-way hash — the server cannot show it again.
-              Save it now before closing this dialog.
+              ${t("cs.apiMode.secretDialog.warning")}
             </span>
           </div>
 
           <div class="fields">
-            ${this._renderField("App ID", "appId", this.appId)}
-            ${this._renderField("App Secret", "appSecret", this.appSecret)}
+            ${this._renderField(t("cs.apiMode.secretDialog.appId"), "appId", this.appId)}
+            ${this._renderField(t("cs.apiMode.secretDialog.appSecret"), "appSecret", this.appSecret)}
             ${this._renderField(t("cs.apiMode.secretDialog.endpointUrl"), "endpointUrl", this.endpointUrl)}
           </div>
 
           <div class="footer">
-            <button class="btn-done" @click=${() => this._close()}>I've Saved It</button>
+            <button class="btn-done" @click=${() => this._close()}>${t("cs.apiMode.secretDialog.doneBtn")}</button>
           </div>
         </div>
       </div>

@@ -70,7 +70,7 @@ export class TenantTracesView extends LitElement {
       }
       .header {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
         margin-bottom: 1.5rem;
       }
@@ -1366,7 +1366,6 @@ export class TenantTracesView extends LitElement {
   render() {
     return html`
       <div class="header">
-        <h2>${t("tenantTraces.title")}</h2>
         <button class="btn btn-outline" @click=${() => this.loadTurns()}>${t("tenantTraces.refresh")}</button>
       </div>
 
