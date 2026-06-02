@@ -80,6 +80,13 @@ async function syncAgentKnowledgeIndex(
   }
 }
 
+function scheduleAgentKnowledgeIndexSync(
+  context: NonNullable<Awaited<ReturnType<typeof resolveAgentContext>>>,
+  reason: string,
+): void {
+  void syncAgentKnowledgeIndex(context, reason);
+}
+
 function resolveMemoryIoPath(
   workspaceDir: string,
   reqPath: string,
@@ -252,7 +259,7 @@ export const memoryHandlers: GatewayRequestHandlers = {
       return;
     }
 
-    await syncAgentKnowledgeIndex(context, "agent-memory-file-set");
+    scheduleAgentKnowledgeIndexSync(context, "agent-memory-file-set");
 
     respond(true, {
       ok: true,
@@ -264,9 +271,6 @@ export const memoryHandlers: GatewayRequestHandlers = {
         missing: false,
         size: entry.size,
         updatedAtMs: entry.mtimeMs,
-        content: isEditableKnowledgeTextFile(resolved.target)
-          ? params.content
-          : (await extractKnowledgeText(resolved.target)).text,
         editable: isEditableKnowledgeTextFile(resolved.target),
       },
     });
@@ -307,7 +311,7 @@ export const memoryHandlers: GatewayRequestHandlers = {
       }
     }
 
-    await syncAgentKnowledgeIndex(context, "agent-memory-delete");
+    scheduleAgentKnowledgeIndexSync(context, "agent-memory-delete");
 
     respond(true, {
       ok: true,

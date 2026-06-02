@@ -47,6 +47,7 @@ import {
   TOOL_LABEL_KEY,
   TOOL_DESC_KEY,
 } from "../tool-group-defs.ts";
+import { normalizeAgentKnowledgeFileName } from "./agent-knowledge-path.ts";
 import { tenantRpc, quotaErrorKey } from "./rpc.ts";
 
 interface ModelConfigEntry {
@@ -1564,26 +1565,7 @@ export class TenantAgentsView extends LitElement {
   }
 
   private normalizeKnowledgeFileName(raw: string): string | null {
-    const clean = raw.trim().replace(/\\/g, "/");
-    if (!clean) {
-      return null;
-    }
-    if (clean === "MEMORY.md" || clean === "memory.md") {
-      return clean;
-    }
-    const withoutPrefix = clean.startsWith("memory/") ? clean.slice("memory/".length) : clean;
-    const safeName = withoutPrefix
-      .split("/")
-      .filter(Boolean)
-      .map((part) => part.replace(/[^a-zA-Z0-9\-_.]/g, ""))
-      .filter(Boolean)
-      .join("/");
-    if (!safeName) {
-      return null;
-    }
-    const supported = [".md", ".txt", ".csv", ".docx", ".xlsx", ".pdf"];
-    const hasSupportedExt = supported.some((ext) => safeName.toLowerCase().endsWith(ext));
-    return `memory/${hasSupportedExt ? safeName : `${safeName}.md`}`;
+    return normalizeAgentKnowledgeFileName(raw);
   }
 
   private isEditableKnowledgeFile(name: string): boolean {
