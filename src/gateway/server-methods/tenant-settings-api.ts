@@ -123,6 +123,10 @@ async function syncTenantKnowledgeIndex(ctx: TenantContext, reason: string): Pro
   }
 }
 
+function scheduleTenantKnowledgeIndexSync(ctx: TenantContext, reason: string): void {
+  void syncTenantKnowledgeIndex(ctx, reason);
+}
+
 export const tenantSettingsHandlers: GatewayRequestHandlers = {
   "tenant.settings.get": async ({ client, respond }: GatewayRequestHandlerOptions) => {
     const ctx = getTenantCtx(client, respond);
@@ -451,7 +455,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
       },
     });
 
-    await syncTenantKnowledgeIndex(ctx, "tenant-memory-file-set");
+    scheduleTenantKnowledgeIndexSync(ctx, "tenant-memory-file-set");
 
     respond(true, {
       ok: true,
@@ -462,9 +466,6 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
         missing: false,
         size: entry.size,
         updatedAtMs: entry.mtimeMs,
-        content: isEditableKnowledgeTextFile(resolved.target)
-          ? String(raw.content ?? "")
-          : (await extractKnowledgeText(resolved.target)).text,
         editable: isEditableKnowledgeTextFile(resolved.target),
       },
     });
@@ -515,7 +516,7 @@ export const tenantSettingsHandlers: GatewayRequestHandlers = {
       detail: {},
     });
 
-    await syncTenantKnowledgeIndex(ctx, "tenant-memory-delete");
+    scheduleTenantKnowledgeIndexSync(ctx, "tenant-memory-delete");
 
     respond(true, { ok: true, name: resolved.rel });
   },

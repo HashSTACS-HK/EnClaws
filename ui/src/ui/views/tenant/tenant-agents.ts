@@ -47,7 +47,7 @@ import {
   TOOL_LABEL_KEY,
   TOOL_DESC_KEY,
 } from "../tool-group-defs.ts";
-import { normalizeAgentKnowledgeFileName } from "./agent-knowledge-path.ts";
+import { normalizeKnowledgeFileName } from "./knowledge-path.ts";
 import { tenantRpc, quotaErrorKey } from "./rpc.ts";
 
 interface ModelConfigEntry {
@@ -1565,7 +1565,7 @@ export class TenantAgentsView extends LitElement {
   }
 
   private normalizeKnowledgeFileName(raw: string): string | null {
-    return normalizeAgentKnowledgeFileName(raw);
+    return normalizeKnowledgeFileName(raw);
   }
 
   private isEditableKnowledgeFile(name: string): boolean {

@@ -9,7 +9,7 @@ function sanitizePathPart(part: string): string | null {
   return sanitized;
 }
 
-export function normalizeAgentKnowledgeFileName(raw: string): string | null {
+export function normalizeKnowledgeFileName(raw: string): string | null {
   const clean = raw.trim().replace(/\\/g, "/");
   if (!clean) {
     return null;

@@ -1,6 +1,7 @@
 import { html, css, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { caretFix } from "../../shared-styles.ts";
+import { normalizeKnowledgeFileName } from "./knowledge-path.ts";
 import { tenantRpc } from "./rpc.ts";
 
 type KnowledgeFile = {
@@ -197,27 +198,7 @@ export class TenantKnowledgeView extends LitElement {
   }
 
   private normalizeName(raw: string): string | null {
-    const clean = raw.trim().replace(/\\/g, "/");
-    if (!clean) {
-      return null;
-    }
-    if (clean === "MEMORY.md" || clean === "memory.md") {
-      return clean;
-    }
-    const withoutPrefix = clean.startsWith("memory/") ? clean.slice("memory/".length) : clean;
-    const safeName = withoutPrefix
-      .split("/")
-      .filter(Boolean)
-      .map((part) => part.replace(/[^a-zA-Z0-9\-_.]/g, ""))
-      .filter(Boolean)
-      .join("/");
-    if (!safeName) {
-      return null;
-    }
-    const hasSupportedExt = this.supportedExtensions.some((ext) =>
-      safeName.toLowerCase().endsWith(ext),
-    );
-    return `memory/${hasSupportedExt ? safeName : `${safeName}.md`}`;
+    return normalizeKnowledgeFileName(raw);
   }
 
   private isEditable(name: string): boolean {
