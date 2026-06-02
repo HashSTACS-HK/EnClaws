@@ -29,7 +29,7 @@ export const de: TranslationMap = {
     na: "k. A.",
     docs: "Dokumentation",
     resources: "Ressourcen",
-    comingSoon: "Multi-Tenant-Funktion in Entwicklung, bleiben Sie dran",
+    comingSoon: "Demnächst verfügbar",
   },
   nav: {
     chat: "Chat",
@@ -775,7 +775,7 @@ export const de: TranslationMap = {
   },
   tenantSkills: {
     title: "Skill Store",
-    subtitle: "Multi-Tenant-Funktion in Entwicklung, bleiben Sie dran",
+    subtitle: "Skill Store——Demnächst verfügbar",
     skillAccess: "Skill-Zugriff",
     refresh: "Aktualisieren",
     loading: "Wird geladen...",
@@ -1321,7 +1321,8 @@ export const de: TranslationMap = {
       apiModeBtn: "API-Modus",
     },
     setup: {
-      notifSharedHint: "Geteilt von allen Widgets -- Aenderungen gelten fuer den gesamten Mandanten.",
+      notifSharedHint:
+        "Geteilt von allen Widgets -- Aenderungen gelten fuer den gesamten Mandanten.",
     },
     widget: {
       sectionTitle: "Widget-Verwaltung",

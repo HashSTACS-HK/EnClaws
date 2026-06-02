@@ -39,6 +39,7 @@ import type {
 } from "../../types.ts";
 import type { CronFormState } from "../../ui-types.ts";
 import { renderAgentKnowledge } from "../agents-panels-knowledge.ts";
+import { renderComingSoonPlaceholder } from "../coming-soon-placeholder.ts";
 import { SKILL_LABEL_KEY, SKILL_DESC_KEY } from "../skill-defs.ts";
 import {
   TOOL_GROUP_DEFS,
@@ -3220,7 +3221,7 @@ export class TenantAgentsView extends LitElement {
   }
 
   private renderPanelEmpty() {
-    return html`<div class="empty">${t("common.comingSoon")}</div>`;
+    return renderComingSoonPlaceholder(t("tabs.files"), t("tenantWorkshop.comingSoonLabel"));
   }
 
   private renderPanelKnowledge(agent: TenantAgent) {

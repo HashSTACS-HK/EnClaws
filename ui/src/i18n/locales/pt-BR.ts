@@ -28,7 +28,7 @@ export const pt_BR: TranslationMap = {
     na: "n/a",
     docs: "Docs",
     resources: "Recursos",
-    comingSoon: "Recurso multi-tenant em desenvolvimento, fique atento",
+    comingSoon: "Em Breve",
   },
   nav: {
     chat: "Chat",
@@ -773,7 +773,7 @@ export const pt_BR: TranslationMap = {
   },
   tenantSkills: {
     title: "Loja de Skills",
-    subtitle: "Recurso multi-tenant em desenvolvimento, fique atento",
+    subtitle: "Loja de Skills——Em Breve",
     skillAccess: "Acesso a Skills",
     refresh: "Atualizar",
     loading: "Carregando...",

@@ -9,6 +9,7 @@ import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import { t, I18nController } from "../../../i18n/index.ts";
 import { caretFix } from "../../shared-styles.ts";
+import { renderComingSoonPlaceholder } from "../coming-soon-placeholder.ts";
 import { tenantRpc } from "./rpc.ts";
 
 interface SkillInstallSpec {
@@ -380,10 +381,7 @@ export class TenantSkillsView extends LitElement {
           <h2>${t("tenantSkills.title")}</h2>
         </div>
       </div>
-      <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted,#525252);">
-        <img src="/coming-soon.svg" alt="" style="width:64px;height:64px;margin-bottom:0.75rem;opacity:0.5;" />
-        <p style="font-size:0.85rem;margin:0;">${t("tenantSkills.subtitle")}</p>
-      </div>
+      ${renderComingSoonPlaceholder(t("tenantSkills.title"), t("tenantWorkshop.comingSoonLabel"))}
     `;
   }
 

@@ -75,13 +75,21 @@ import {
 } from "./controllers/skills.ts";
 import { buildExternalLinkRel, EXTERNAL_LINK_TARGET } from "./external-link.ts";
 import { icons } from "./icons.ts";
-import { isEmbedMode, normalizeBasePath, TAB_GROUPS, subtitleForTab, tabFromPath, titleForTab } from "./navigation.ts";
+import {
+  isEmbedMode,
+  normalizeBasePath,
+  TAB_GROUPS,
+  subtitleForTab,
+  tabFromPath,
+  titleForTab,
+} from "./navigation.ts";
 import { loadSettings } from "./storage.ts";
 import { resolveConfiguredCronModelSuggestions } from "./views/agents-utils.ts";
 import { renderAgents } from "./views/agents.ts";
 import { renderChannels } from "./views/channels.ts";
 import { renderChat } from "./views/chat.ts";
 import type { TenantAgentOption } from "./views/chat.ts";
+import { renderComingSoonPlaceholder } from "./views/coming-soon-placeholder.ts";
 import { renderConfig } from "./views/config.ts";
 import { renderCron } from "./views/cron.ts";
 import { renderDebug } from "./views/debug.ts";
@@ -808,7 +816,7 @@ export function renderApp(state: AppViewState) {
 
                   ${
                     isComingSoon
-                      ? html`<section class="card"><div style="text-align:center;padding:4rem 2rem;color:var(--text-muted,#525252);font-family:var(--font-sans,system-ui,sans-serif);"><img src="/coming-soon.svg" alt="" style="width:64px;height:64px;margin-bottom:0.75rem;opacity:0.5;" /><p style="font-size:0.85rem;margin:0;">${t("common.comingSoon")}</p></div></section>`
+                      ? html`<section class="card">${renderComingSoonPlaceholder(titleForTab(state.tab), t("tenantWorkshop.comingSoonLabel"))}</section>`
                       : nothing
                   }
 
@@ -1907,7 +1915,10 @@ export function renderApp(state: AppViewState) {
                                                   <cs-console-view
                                                     .gatewayUrl=${state.settings.gatewayUrl}
                                                     @navigate-to-agent=${(
-                                                      e: CustomEvent<{ agentId: string; panel?: string }>,
+                                                      e: CustomEvent<{
+                                                        agentId: string;
+                                                        panel?: string;
+                                                      }>,
                                                     ) => {
                                                       _pendingAgentNav = {
                                                         agentId: e.detail.agentId,
@@ -1966,14 +1977,19 @@ export function renderApp(state: AppViewState) {
                                                         includeGlobal: boolean;
                                                         includeUnknown: boolean;
                                                       }) => {
-                                                        state.sessionsFilterActive = next.activeMinutes;
+                                                        state.sessionsFilterActive =
+                                                          next.activeMinutes;
                                                         state.sessionsFilterLimit = next.limit;
-                                                        state.sessionsIncludeGlobal = next.includeGlobal;
-                                                        state.sessionsIncludeUnknown = next.includeUnknown;
+                                                        state.sessionsIncludeGlobal =
+                                                          next.includeGlobal;
+                                                        state.sessionsIncludeUnknown =
+                                                          next.includeUnknown;
                                                       },
                                                       onRefresh: () => loadSessions(state),
-                                                      onPatch: (key: string, patch: Parameters<typeof patchSession>[2]) =>
-                                                        patchSession(state, key, patch),
+                                                      onPatch: (
+                                                        key: string,
+                                                        patch: Parameters<typeof patchSession>[2],
+                                                      ) => patchSession(state, key, patch),
                                                       onDelete: (key: string) =>
                                                         deleteSessionAndRefresh(state, key),
                                                     }}

@@ -21,6 +21,7 @@ import { html, css, LitElement, nothing } from "lit";
 import { customElement, state, property } from "lit/decorators.js";
 import { t, I18nController } from "../../../i18n/index.ts";
 import { caretFix } from "../../shared-styles.ts";
+import { renderComingSoonPlaceholder } from "../coming-soon-placeholder.ts";
 import "./tenant-models.ts";
 import "./tenant-channels.ts";
 import "./tenant-cron.ts";
@@ -201,14 +202,7 @@ export class TenantWorkshopView extends LitElement {
           this.currentSubTab === "workflow"
             ? "tenantWorkshop.workflowTab"
             : "tenantWorkshop.operationsTab";
-        return html`
-          <div class="coming-soon-placeholder">
-            <span class="coming-soon-icon" aria-hidden="true">🔧</span>
-            <span class="coming-soon-label">
-              ${t(labelKey)} — ${t("tenantWorkshop.comingSoonLabel")}
-            </span>
-          </div>
-        `;
+        return renderComingSoonPlaceholder(t(labelKey), t("tenantWorkshop.comingSoonLabel"));
       }
 
       default:

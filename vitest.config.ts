@@ -39,6 +39,7 @@ export default defineConfig({
       "test/**/*.test.ts",
       "ui/src/ui/navigation.test.ts",
       "ui/src/ui/views/agents-utils.test.ts",
+      "ui/src/ui/views/coming-soon-placeholder.test.ts",
       "ui/src/ui/views/usage-render-details.test.ts",
       "ui/src/ui/views/tenant/agent-knowledge-path.test.ts",
       "ui/src/ui/controllers/agents.test.ts",

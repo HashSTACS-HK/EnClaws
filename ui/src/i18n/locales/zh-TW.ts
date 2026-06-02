@@ -27,7 +27,7 @@ export const zh_TW: TranslationMap = {
     na: "不適用",
     docs: "文檔",
     resources: "資源",
-    comingSoon: "多租戶功能實現中，敬請期待",
+    comingSoon: "即將上線",
   },
   nav: {
     chat: "聊天",
@@ -718,7 +718,7 @@ export const zh_TW: TranslationMap = {
   },
   tenantSkills: {
     title: "技能市場",
-    subtitle: "多租戶功能實現中，敬請期待",
+    subtitle: "技能市場——即將上線",
     skillAccess: "技能權限",
     refresh: "重新整理",
     loading: "載入中...",

@@ -28,7 +28,7 @@ export const en: TranslationMap = {
     na: "n/a",
     docs: "Docs",
     resources: "Resources",
-    comingSoon: "Multi-tenant feature coming soon, stay tuned",
+    comingSoon: "Coming Soon",
   },
   nav: {
     chat: "Chat",
@@ -1162,7 +1162,7 @@ export const en: TranslationMap = {
   },
   tenantSkills: {
     title: "Skill Store",
-    subtitle: "Multi-tenant feature coming soon, stay tuned",
+    subtitle: "Skill Store——Coming Soon",
     skillAccess: "Skill Access",
     refresh: "Refresh",
     loading: "Loading...",
