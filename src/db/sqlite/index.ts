@@ -85,6 +85,7 @@ export function initSqliteDb(url: string): void {
     "source",
     "TEXT NOT NULL DEFAULT 'agenora-ai' CHECK (source IN ('agenora-ai','upper-app-relay'))",
   );
+  addColumnIfMissing("cs_messages", "turn_id", "TEXT");
   addColumnIfMissing(
     "cs_sessions",
     "app_object_id",
