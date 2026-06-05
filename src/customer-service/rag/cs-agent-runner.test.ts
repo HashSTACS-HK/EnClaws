@@ -164,6 +164,9 @@ describe("runCSAgentReply", () => {
       timeoutMs?: number;
     };
     expect(call.timeoutMs).toBe(90_000);
+    expect(call.extraSystemPrompt).toContain("<customer_service_platform_policy>");
+    expect(call.extraSystemPrompt).toContain("[confidence:X.XX]");
+    expect(call.extraSystemPrompt).toContain("<customer_service_behavior_and_knowledge>");
     expect(call.extraSystemPrompt).toContain("<customer_service_conversation_context>");
     expect(call.extraSystemPrompt).toContain("query BG20260528001 order status");
     expect(call.extraSystemPrompt).toContain("Please confirm customs order BG20260528001.");
@@ -211,5 +214,4 @@ describe("runCSAgentReply", () => {
       ].join("\n\n"),
     );
   });
-
 });

@@ -35,11 +35,12 @@ import {
   resolveTenantMemoryIndexPath,
   resolveTenantSkillsDir,
 } from "../../config/sessions/tenant-paths.js";
-import { getTenantById } from "../../db/models/tenant.js";
 import { listCSMessages } from "../../db/models/cs-message.js";
+import { getTenantById } from "../../db/models/tenant.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { getMemorySearchManager } from "../../memory/search-manager.js";
 import type { MemorySearchResult } from "../../memory/types.js";
+import { composeCustomerServicePrompt } from "../prompt/composer.js";
 import { resolveCSBusinessContext, type CSBusinessMetadata } from "./cs-business-context.js";
 import { mergeCascadeResults } from "./cs-knowledge-cascade.js";
 import { loadAgentPersona, selectBasePrompt } from "./cs-persona.js";
@@ -313,7 +314,7 @@ export async function runCSAgentReply(params: {
 
   // Step 2: Build CS system prompt with knowledge
   // 步骤 2：用知识片段构建客服系统提示词
-  const extraSystemPrompt = buildCSSystemPrompt({
+  const servicePrompt = buildCSSystemPrompt({
     basePrompt,
     knowledgeChunks: sourceChunks,
     visitorName,
@@ -323,13 +324,11 @@ export async function runCSAgentReply(params: {
     sessionId,
     currentCustomerMessage: customerMessage,
   });
-  const finalSystemPrompt = [
-    extraSystemPrompt,
-    recentConversationContext,
-    businessContext?.systemPrompt,
-  ]
-    .filter((part): part is string => Boolean(part?.trim()))
-    .join("\n\n");
+  const finalSystemPrompt = composeCustomerServicePrompt({
+    servicePrompt,
+    conversationContext: recentConversationContext,
+    businessContext: businessContext?.systemPrompt,
+  });
   const skillsSnapshot = buildWorkspaceSkillSnapshot(csWorkspaceDir, {
     config: cfg,
     tenantSkillsDir: resolveTenantSkillsDir(tenantId),
