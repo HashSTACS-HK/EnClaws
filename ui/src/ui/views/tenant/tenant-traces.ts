@@ -1365,10 +1365,6 @@ export class TenantTracesView extends LitElement {
 
   render() {
     return html`
-      <div class="header">
-        <button class="btn btn-outline" @click=${() => this.loadTurns()}>${t("tenantTraces.refresh")}</button>
-      </div>
-
       ${this.errorKey ? html`<div class="error-msg">${this.tr(this.errorKey)}</div>` : nothing}
 
       <div class="filters">
@@ -1395,6 +1391,7 @@ export class TenantTracesView extends LitElement {
             this.page = 0;
             void this.loadTurns();
           }}></date-picker>
+        <button class="btn btn-outline" @click=${() => this.loadTurns()}>${t("tenantTraces.refresh")}</button>
       </div>
 
       ${

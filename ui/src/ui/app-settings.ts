@@ -61,6 +61,8 @@ type SettingsHost = {
   themeMedia: MediaQueryList | null;
   themeMediaHandler: ((event: MediaQueryListEvent) => void) | null;
   pendingGatewayUrl?: string | null;
+  pendingSsoToken?: string | null;
+  embedSsoError?: string | null;
   sandboxPollTimer?: ReturnType<typeof setInterval> | null;
   client?: unknown;
 };
@@ -102,6 +104,7 @@ export function applySettingsFromUrl(host: SettingsHost) {
   const passwordRaw = params.get("password") ?? hashParams.get("password");
   const sessionRaw = params.get("session") ?? hashParams.get("session");
   const gatewayUrlRaw = params.get("gatewayUrl") ?? hashParams.get("gatewayUrl");
+  const ssoTokenRaw = params.get("ssoToken") ?? hashParams.get("ssoToken");
   let shouldCleanUrl = false;
 
   if (tokenRaw != null) {
@@ -140,6 +143,17 @@ export function applySettingsFromUrl(host: SettingsHost) {
     }
     params.delete("gatewayUrl");
     hashParams.delete("gatewayUrl");
+    shouldCleanUrl = true;
+  }
+
+  if (ssoTokenRaw != null) {
+    const ssoToken = ssoTokenRaw.trim();
+    if (ssoToken) {
+      host.pendingSsoToken = ssoToken;
+      host.embedSsoError = null;
+    }
+    params.delete("ssoToken");
+    hashParams.delete("ssoToken");
     shouldCleanUrl = true;
   }
 

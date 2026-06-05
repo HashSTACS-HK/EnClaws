@@ -172,7 +172,7 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
         // 上送；缺失/匹配不到/未绑定时返回 undefined，runCSAgentReply 回退租户默认 agent
         // （保持 S1）。
         const agentId = resolveWidgetAgentId(csCfg.channels, widgetId);
-        const { reply, sourceChunks } = await runCSAgentReply({
+        const agentResult = await runCSAgentReply({
           tenantId,
           sessionId: session.id,
           customerMessage: text,
@@ -182,16 +182,22 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
           customSystemPrompt: csCfg.customSystemPrompt,
           agentId,
         });
+        const replyTexts = agentResult.replies?.length ? agentResult.replies : [agentResult.reply];
+        const reply = agentResult.reply;
 
         // Save AI reply
         // 保存 AI 回复
-        const aiMessage = await createCSMessage({
-          sessionId: session.id,
-          tenantId,
-          role: "ai",
-          content: reply,
-          sourceChunks,
-        });
+        const aiMessages: Array<{ id: string; text: string }> = [];
+        for (const replyText of replyTexts) {
+          const aiMessage = await createCSMessage({
+            sessionId: session.id,
+            tenantId,
+            role: "ai",
+            content: replyText,
+            sourceChunks: agentResult.sourceChunks,
+          });
+          aiMessages.push({ id: aiMessage.id, text: replyText });
+        }
 
         // Notify Feishu at most once per notifyIntervalMinutes per session (default: 10 min).
         // csCfg already loaded above for skillsEnabled — reuse it here, no second read.
@@ -232,9 +238,10 @@ export const csWidgetHandlers: GatewayRequestHandlers = {
 
         respond(true, {
           sessionId: session.id,
-          messageId: aiMessage.id,
+          messageId: aiMessages.at(-1)?.id,
           role: "ai",
           text: reply,
+          messages: aiMessages,
           roleLabel: CS_ROLE_LABELS.ai,
         });
       } else if (action === "forward_to_boss") {

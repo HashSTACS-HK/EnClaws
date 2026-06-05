@@ -39,6 +39,7 @@ import { taskPlanHandlers } from "./server-methods/task-plan.js";
 import { tenantAgentsHandlers } from "./server-methods/tenant-agents-api.js";
 import { tenantHandlers } from "./server-methods/tenant-api.js";
 import { tenantChannelsHandlers } from "./server-methods/tenant-channels-api.js";
+import { tenantEmbedSsoHandlers } from "./server-methods/tenant-embed-sso-api.js";
 import { tenantModelsHandlers } from "./server-methods/tenant-models-api.js";
 import { tenantOnboardingHandlers } from "./server-methods/tenant-onboarding-api.js";
 import { tenantOverviewHandlers } from "./server-methods/tenant-overview-api.js";
@@ -60,6 +61,7 @@ import { wizardHandlers } from "./server-methods/wizard.js";
 const AUTH_BYPASS_METHODS = new Set([
   "auth.register",
   "auth.login",
+  "auth.embedSso.consume",
   "auth.refresh",
   "health",
   "captcha.challenge",
@@ -137,6 +139,7 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...captchaHandlers,
   ...tenantHandlers,
   ...tenantAgentsHandlers,
+  ...tenantEmbedSsoHandlers,
   ...tenantChannelsHandlers,
   ...feishuRegisterHandlers,
   ...wecomRegisterHandlers,

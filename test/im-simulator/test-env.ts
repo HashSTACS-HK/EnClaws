@@ -59,7 +59,9 @@ export class TestEnv {
    * If JWT is available, the connection carries tenant context.
    */
   private async ensureClient(): Promise<RpcClient> {
-    if (this.client?.connected) {return this.client;}
+    if (this.client?.connected) {
+      return this.client;
+    }
     this.client?.close();
     this.client = new RpcClient({
       url: this.connOpts.url,
@@ -239,25 +241,19 @@ export class TestEnv {
   ): Promise<string> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
-      const match = events.find(
-        (evt) => evt.runId === runId && evt.state === "final",
-      );
+      const match = events.find((evt) => evt.runId === runId && evt.state === "final");
       if (match) {
         return extractTextFromMessage(match.message);
       }
       // Check for error state too
-      const errorEvt = events.find(
-        (evt) => evt.runId === runId && evt.state === "error",
-      );
+      const errorEvt = events.find((evt) => evt.runId === runId && evt.state === "error");
       if (errorEvt) {
         const errText = extractTextFromMessage(errorEvt.message);
         throw new Error(`Agent returned error: ${errText || "unknown error"}`);
       }
       await sleep(POLL_INTERVAL_MS);
     }
-    throw new Error(
-      `Timeout (${timeoutMs}ms) waiting for agent reply (runId=${runId})`,
-    );
+    throw new Error(`Timeout (${timeoutMs}ms) waiting for agent reply (runId=${runId})`);
   }
 }
 
@@ -265,10 +261,10 @@ export class TestEnv {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function extractTextFromMessage(
-  message?: ChatEventPayload["message"],
-): string {
-  if (!message?.content || !Array.isArray(message.content)) {return "";}
+function extractTextFromMessage(message?: ChatEventPayload["message"]): string {
+  if (!message?.content || !Array.isArray(message.content)) {
+    return "";
+  }
   return message.content
     .filter((block) => block.type === "text" && typeof block.text === "string")
     .map((block) => block.text!)

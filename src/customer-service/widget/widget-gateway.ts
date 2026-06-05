@@ -206,33 +206,37 @@ async function handleSend(params: {
 
     // Run RAG agent
     // 运行 RAG Agent
-    const { reply, sourceChunks } = await runCSAgentReply({
+    const agentResult = await runCSAgentReply({
       tenantId,
       sessionId: session.id,
       customerMessage: text,
       visitorName: session.visitorName ?? undefined,
       cfg,
     });
+    const replyTexts = agentResult.replies?.length ? agentResult.replies : [agentResult.reply];
+    const reply = agentResult.reply;
 
     // Save AI reply
     // 保存 AI 回复
-    const aiMessage = await createCSMessage({
-      sessionId: session.id,
-      tenantId,
-      role: "ai",
-      content: reply,
-      sourceChunks,
-    });
+    for (const replyText of replyTexts) {
+      const aiMessage = await createCSMessage({
+        sessionId: session.id,
+        tenantId,
+        role: "ai",
+        content: replyText,
+        sourceChunks: agentResult.sourceChunks,
+      });
 
     // Send reply to customer
     // 发送回复给客户
-    sendToVisitor(visitorId, {
-      type: "message",
-      role: "ai",
-      text: reply,
-      messageId: aiMessage.id,
-      roleLabel: CS_ROLE_LABELS.ai,
-    });
+      sendToVisitor(visitorId, {
+        type: "message",
+        role: "ai",
+        text: replyText,
+        messageId: aiMessage.id,
+        roleLabel: CS_ROLE_LABELS.ai,
+      });
+    }
 
     // Notify boss via Feishu
     // 通过飞书通知老板

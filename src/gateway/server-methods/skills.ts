@@ -1,3 +1,5 @@
+import fs from "node:fs";
+
 import {
   listAgentIds,
   resolveAgentWorkspaceDir,
@@ -15,6 +17,7 @@ import { resolveTenantSkillsDir } from "../../config/sessions/tenant-paths.js";
 import { loadTenantConfig } from "../../config/tenant-config.js";
 import { isDbInitialized } from "../../db/index.js";
 import { getRemoteSkillEligibility } from "../../infra/skills-remote.js";
+import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { normalizeAgentId } from "../../routing/session-key.js";
 import { normalizeSecretInput } from "../../utils/normalize-secret-input.js";
 import {
@@ -27,6 +30,8 @@ import {
   validateSkillsUpdateParams,
 } from "../protocol/index.js";
 import type { GatewayRequestHandlers, GatewayRequestHandlerOptions } from "./types.js";
+
+const skillsStatusLog = createSubsystemLogger("gateway/skills-status");
 
 /**
  * Resolve config for the current request. When a tenant context is present,
@@ -110,6 +115,21 @@ export const skillsHandlers: GatewayRequestHandlers = {
     const entries = loadWorkspaceSkillEntries(workspaceDir, {
       config: cfg,
       tenantSkillsDir,
+    });
+    const jiumiSkills = entries
+      .filter((entry) => /jiumi/i.test(entry.skill.name))
+      .map((entry) => `${entry.skill.name}:${entry.skill.source}`);
+    const tenantSkillsDirExists = tenantSkillsDir ? fs.existsSync(tenantSkillsDir) : false;
+    skillsStatusLog.info("skills.status resolved workspace skills", {
+      agentId,
+      tenantId: tenant?.tenantId ?? null,
+      userId: tenant?.userId ?? null,
+      tenantSkillsDir: tenantSkillsDir ?? null,
+      tenantSkillsDirExists,
+      workspaceDir,
+      skillCount: entries.length,
+      jiumiSkills,
+      consoleMessage: `skills.status agent=${agentId} tenant=${tenant?.tenantId ?? "(none)"} skillCount=${entries.length} tenantSkillsDir=${tenantSkillsDir ?? "(none)"} tenantSkillsDirExists=${tenantSkillsDirExists} jiumiSkills=${jiumiSkills.length > 0 ? jiumiSkills.join(",") : "(none)"}`,
     });
     const report = buildWorkspaceSkillStatus(workspaceDir, {
       config: cfg,

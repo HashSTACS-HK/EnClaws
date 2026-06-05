@@ -25,14 +25,14 @@ pnpm vitest run test/im-simulator/test-case/register.test.ts
 
 ## 环境变量
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `TEST_GATEWAY_URL` | `ws://127.0.0.1:18789` | Gateway WebSocket 地址 |
-| `OPENCLAW_GATEWAY_TOKEN` | `""` | Gateway 认证 token |
-| `TEST_DATA_DIR` | `test-data/` | 测试数据目录（递归加载 `*.json`） |
-| `TEST_CSV_OUTPUT` | `test-results/{timestamp}.csv` | CSV 报告输出路径 |
-| `TEST_CONCURRENCY` | `2` | 并发执行的测试文件数 |
-| `TEST_DEEPSEEK_API_KEY` | — | 模型 API Key（仅 full-setup 测试需要） |
+| 变量                     | 默认值                         | 说明                                   |
+| ------------------------ | ------------------------------ | -------------------------------------- |
+| `TEST_GATEWAY_URL`       | `ws://127.0.0.1:18789`         | Gateway WebSocket 地址                 |
+| `OPENCLAW_GATEWAY_TOKEN` | `""`                           | Gateway 认证 token                     |
+| `TEST_DATA_DIR`          | `test-data/`                   | 测试数据目录（递归加载 `*.json`）      |
+| `TEST_CSV_OUTPUT`        | `test-results/{timestamp}.csv` | CSV 报告输出路径                       |
+| `TEST_CONCURRENCY`       | `2`                            | 并发执行的测试文件数                   |
+| `TEST_DEEPSEEK_API_KEY`  | —                              | 模型 API Key（仅 full-setup 测试需要） |
 
 ## 测试数据格式
 
@@ -42,15 +42,15 @@ pnpm vitest run test/im-simulator/test-case/register.test.ts
 
 ```jsonc
 {
-  "ownerEmail": "admin@example.com",   // 租户 owner 邮箱（用于邀请用户）
-  "ownerPassword": "xxx",              // owner 密码
-  "email": "test@example.com",         // 测试用户邮箱
-  "password": "xxx",                   // 测试用户密码
-  "agentId": "agent1",                 // 目标 Agent ID
+  "ownerEmail": "admin@example.com", // 租户 owner 邮箱（用于邀请用户）
+  "ownerPassword": "xxx", // owner 密码
+  "email": "test@example.com", // 测试用户邮箱
+  "password": "xxx", // 测试用户密码
+  "agentId": "agent1", // 目标 Agent ID
   "cases": [
     {
       "name": "基本问候",
-      "message": "你好！"
+      "message": "你好！",
     },
     {
       "name": "带断言",
@@ -60,10 +60,10 @@ pnpm vitest run test/im-simulator/test-case/register.test.ts
         "notContains": "error",
         "matches": "AI|机器人",
         "minLength": 2,
-        "maxLength": 500
-      }
-    }
-  ]
+        "maxLength": 500,
+      },
+    },
+  ],
 }
 ```
 
@@ -71,32 +71,32 @@ pnpm vitest run test/im-simulator/test-case/register.test.ts
 
 **顶层字段**
 
-| 字段 | 必填 | 说明 |
-|------|------|------|
-| `email` | 是 | 测试用户邮箱（用于登录） |
-| `password` | 是 | 测试用户密码 |
-| `agentId` | 是 | 消息发送的目标 Agent ID |
-| `ownerEmail` | 否 | 租户 owner 邮箱（当 email 用户不存在时，用 owner 身份邀请该用户） |
-| `ownerPassword` | 否 | owner 密码 |
-| `cases` | 是 | 测试用例数组 |
+| 字段            | 必填 | 说明                                                              |
+| --------------- | ---- | ----------------------------------------------------------------- |
+| `email`         | 是   | 测试用户邮箱（用于登录）                                          |
+| `password`      | 是   | 测试用户密码                                                      |
+| `agentId`       | 是   | 消息发送的目标 Agent ID                                           |
+| `ownerEmail`    | 否   | 租户 owner 邮箱（当 email 用户不存在时，用 owner 身份邀请该用户） |
+| `ownerPassword` | 否   | owner 密码                                                        |
+| `cases`         | 是   | 测试用例数组                                                      |
 
 **cases 数组**
 
-| 字段 | 必填 | 说明 |
-|------|------|------|
-| `name` | 是 | 用例名称 |
-| `message` | 是 | 发送给 Agent 的消息文本 |
-| `assert` | 否 | 断言规则（省略则仅检查回复非空） |
+| 字段      | 必填 | 说明                             |
+| --------- | ---- | -------------------------------- |
+| `name`    | 是   | 用例名称                         |
+| `message` | 是   | 发送给 Agent 的消息文本          |
+| `assert`  | 否   | 断言规则（省略则仅检查回复非空） |
 
 **assert 对象**
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `contains` | `string` | 回复必须包含该子串 |
-| `notContains` | `string` | 回复不得包含该子串 |
-| `matches` | `string` | 回复必须匹配的正则表达式 |
-| `minLength` | `number` | 回复文本最小长度 |
-| `maxLength` | `number` | 回复文本最大长度 |
+| 字段          | 类型     | 说明                     |
+| ------------- | -------- | ------------------------ |
+| `contains`    | `string` | 回复必须包含该子串       |
+| `notContains` | `string` | 回复不得包含该子串       |
+| `matches`     | `string` | 回复必须匹配的正则表达式 |
+| `minLength`   | `number` | 回复文本最小长度         |
+| `maxLength`   | `number` | 回复文本最大长度         |
 
 ## 目录结构
 
@@ -179,36 +179,36 @@ await env.disconnect();
 
 ## TestEnv API
 
-| 方法 | 说明 |
-|------|------|
-| `register(opts)` | 注册新租户并以 owner 身份登录 |
-| `login(opts)` | 以已有用户登录 |
-| `inviteUser(opts)` | 邀请新用户加入租户（需 owner 权限） |
-| `createModel(opts)` | 创建 LLM 模型提供商配置 |
-| `createAgent(opts)` | 创建 Agent（含系统提示词和模型配置） |
-| `sendAsUser(agentId, message)` | 发送消息并等待回复（默认超时 60s） |
-| `disconnect()` | 关闭 WebSocket 连接 |
+| 方法                           | 说明                                 |
+| ------------------------------ | ------------------------------------ |
+| `register(opts)`               | 注册新租户并以 owner 身份登录        |
+| `login(opts)`                  | 以已有用户登录                       |
+| `inviteUser(opts)`             | 邀请新用户加入租户（需 owner 权限）  |
+| `createModel(opts)`            | 创建 LLM 模型提供商配置              |
+| `createAgent(opts)`            | 创建 Agent（含系统提示词和模型配置） |
+| `sendAsUser(agentId, message)` | 发送消息并等待回复（默认超时 60s）   |
+| `disconnect()`                 | 关闭 WebSocket 连接                  |
 
 ## CSV 报告
 
 每次运行自动生成 CSV 报告，包含以下列：
 
-| 列 | 说明 |
-|----|------|
-| File Name | 测试文件名 |
-| Case Name | 用例名称 |
-| Message Input | 发送的消息 |
-| Expected Output | 断言规则描述 |
-| Actual Output | Agent 实际回复 |
-| Result | PASS / FAIL |
-| Duration | 耗时（ms） |
+| 列              | 说明           |
+| --------------- | -------------- |
+| File Name       | 测试文件名     |
+| Case Name       | 用例名称       |
+| Message Input   | 发送的消息     |
+| Expected Output | 断言规则描述   |
+| Actual Output   | Agent 实际回复 |
+| Result          | PASS / FAIL    |
+| Duration        | 耗时（ms）     |
 
 ## 与 Feishu Simulator 的区别
 
-| | IM Simulator | Feishu Simulator |
-|---|---|---|
-| 通信方式 | WebSocket RPC（直连 Gateway） | 飞书 Open API（经飞书服务器） |
-| 认证方式 | 邮箱/密码登录（JWT） | 飞书 OAuth Device Flow |
-| 消息链路 | 不经过外部 IM | 经过真实飞书服务器和 Lark 插件 |
-| 适用场景 | Agent 逻辑测试、快速迭代 | 飞书渠道端到端验证 |
-| 速度 | 快（直连） | 较慢（经飞书服务器 + 流式卡片） |
+|          | IM Simulator                  | Feishu Simulator                |
+| -------- | ----------------------------- | ------------------------------- |
+| 通信方式 | WebSocket RPC（直连 Gateway） | 飞书 Open API（经飞书服务器）   |
+| 认证方式 | 邮箱/密码登录（JWT）          | 飞书 OAuth Device Flow          |
+| 消息链路 | 不经过外部 IM                 | 经过真实飞书服务器和 Lark 插件  |
+| 适用场景 | Agent 逻辑测试、快速迭代      | 飞书渠道端到端验证              |
+| 速度     | 快（直连）                    | 较慢（经飞书服务器 + 流式卡片） |

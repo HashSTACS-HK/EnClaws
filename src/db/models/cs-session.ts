@@ -238,30 +238,145 @@ export async function updateCSSessionMeta(
 
 export async function listCSSessions(
   tenantId: string,
-  opts: { limit?: number; offset?: number; requireMessages?: boolean } = {},
+  opts: {
+    limit?: number;
+    offset?: number;
+    requireMessages?: boolean;
+    q?: string;
+    state?: string;
+    accessMode?: "api" | "widget";
+  } = {},
 ): Promise<CSSession[]> {
   const limit = opts.limit ?? 50;
   const offset = opts.offset ?? 0;
   const requireMessages = opts.requireMessages ?? false;
+  const q = opts.q?.trim();
 
   if (getDbType() === DB_SQLITE) {
-    const messageFilter = requireMessages
-      ? "AND EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)"
-      : "";
+    const conditions: string[] = ["tenant_id = ?"];
+    const values: unknown[] = [tenantId];
+    if (requireMessages) {
+      conditions.push("EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)");
+    }
+    if (opts.state) {
+      conditions.push("state = ?");
+      values.push(opts.state);
+    }
+    if (opts.accessMode === "api") {
+      conditions.push("app_object_id IS NOT NULL");
+    } else if (opts.accessMode === "widget") {
+      conditions.push("app_object_id IS NULL");
+    }
+    if (q) {
+      conditions.push(
+        `(LOWER(COALESCE(visitor_id, '')) LIKE ? OR LOWER(COALESCE(visitor_name, '')) LIKE ? OR LOWER(COALESCE(channel, '')) LIKE ? OR LOWER(COALESCE(id, '')) LIKE ?)`,
+      );
+      const pattern = `%${q.toLowerCase()}%`;
+      values.push(pattern, pattern, pattern, pattern);
+    }
     const result = sqliteQuery(
-      `SELECT * FROM cs_sessions WHERE tenant_id = ? ${messageFilter} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
-      [tenantId, limit, offset],
+      `SELECT * FROM cs_sessions WHERE ${conditions.join(" AND ")} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+      [...values, limit, offset],
     );
     return result.rows.map(rowToSession);
   }
-  const messageFilter = requireMessages
-    ? "AND EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)"
-    : "";
+  const conditions: string[] = ["tenant_id = $1"];
+  const values: unknown[] = [tenantId];
+  let idx = 1;
+  if (requireMessages) {
+    conditions.push("EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)");
+  }
+  if (opts.state) {
+    conditions.push(`state = $${++idx}`);
+    values.push(opts.state);
+  }
+  if (opts.accessMode === "api") {
+    conditions.push("app_object_id IS NOT NULL");
+  } else if (opts.accessMode === "widget") {
+    conditions.push("app_object_id IS NULL");
+  }
+  if (q) {
+    const pattern = `%${q.toLowerCase()}%`;
+    conditions.push(
+      `(LOWER(COALESCE(visitor_id, '')) LIKE $${++idx} OR LOWER(COALESCE(visitor_name, '')) LIKE $${++idx} OR LOWER(COALESCE(channel, '')) LIKE $${++idx} OR LOWER(COALESCE(id::text, '')) LIKE $${++idx})`,
+    );
+    values.push(pattern, pattern, pattern, pattern);
+  }
   const result = await query(
-    `SELECT * FROM cs_sessions WHERE tenant_id = $1 ${messageFilter} ORDER BY updated_at DESC LIMIT $2 OFFSET $3`,
-    [tenantId, limit, offset],
+    `SELECT * FROM cs_sessions WHERE ${conditions.join(" AND ")} ORDER BY updated_at DESC LIMIT $${++idx} OFFSET $${++idx}`,
+    [...values, limit, offset],
   );
   return result.rows.map(rowToSession);
+}
+
+export async function countCSSessions(
+  tenantId: string,
+  opts: {
+    requireMessages?: boolean;
+    q?: string;
+    state?: string;
+    accessMode?: "api" | "widget";
+  } = {},
+): Promise<number> {
+  const requireMessages = opts.requireMessages ?? false;
+  const q = opts.q?.trim();
+
+  if (getDbType() === DB_SQLITE) {
+    const conditions: string[] = ["tenant_id = ?"];
+    const values: unknown[] = [tenantId];
+    if (requireMessages) {
+      conditions.push("EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)");
+    }
+    if (opts.state) {
+      conditions.push("state = ?");
+      values.push(opts.state);
+    }
+    if (opts.accessMode === "api") {
+      conditions.push("app_object_id IS NOT NULL");
+    } else if (opts.accessMode === "widget") {
+      conditions.push("app_object_id IS NULL");
+    }
+    if (q) {
+      conditions.push(
+        `(LOWER(COALESCE(visitor_id, '')) LIKE ? OR LOWER(COALESCE(visitor_name, '')) LIKE ? OR LOWER(COALESCE(channel, '')) LIKE ? OR LOWER(COALESCE(id, '')) LIKE ?)`,
+      );
+      const pattern = `%${q.toLowerCase()}%`;
+      values.push(pattern, pattern, pattern, pattern);
+    }
+    const result = sqliteQuery(
+      `SELECT COUNT(*) AS cnt FROM cs_sessions WHERE ${conditions.join(" AND ")}`,
+      values,
+    );
+    return Number((result.rows[0] as Record<string, unknown> | undefined)?.cnt ?? 0);
+  }
+
+  const conditions: string[] = ["tenant_id = $1"];
+  const values: unknown[] = [tenantId];
+  let idx = 1;
+  if (requireMessages) {
+    conditions.push("EXISTS (SELECT 1 FROM cs_messages m WHERE m.session_id = cs_sessions.id)");
+  }
+  if (opts.state) {
+    conditions.push(`state = $${++idx}`);
+    values.push(opts.state);
+  }
+  if (opts.accessMode === "api") {
+    conditions.push("app_object_id IS NOT NULL");
+  } else if (opts.accessMode === "widget") {
+    conditions.push("app_object_id IS NULL");
+  }
+  if (q) {
+    const pattern = `%${q.toLowerCase()}%`;
+    conditions.push(
+      `(LOWER(COALESCE(visitor_id, '')) LIKE $${++idx} OR LOWER(COALESCE(visitor_name, '')) LIKE $${++idx} OR LOWER(COALESCE(channel, '')) LIKE $${++idx} OR LOWER(COALESCE(id::text, '')) LIKE $${++idx})`,
+    );
+    values.push(pattern, pattern, pattern, pattern);
+  }
+  const result = await query(
+    `SELECT COUNT(*)::int AS cnt FROM cs_sessions WHERE ${conditions.join(" AND ")}`,
+    values,
+  );
+  return Number(result.rows[0]?.cnt ?? 0);
 }
 
 export async function deleteCSSessionIfNoMessages(id: string): Promise<boolean> {

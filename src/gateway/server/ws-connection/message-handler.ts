@@ -52,6 +52,7 @@ import {
 } from "../../net.js";
 import { resolveNodeCommandAllowlist } from "../../node-command-policy.js";
 import { checkBrowserOrigin } from "../../origin-check.js";
+import { resolveControlUiOriginConfig } from "../../control-ui-origin-config.js";
 import { GATEWAY_CLIENT_IDS } from "../../protocol/client-info.js";
 import {
   ConnectErrorDetailCodes,
@@ -476,18 +477,21 @@ export function attachGatewayWsMessageHandler(params: {
         const isControlUi = connectParams.client.id === GATEWAY_CLIENT_IDS.CONTROL_UI;
         const isWebchat = isWebchatConnect(connectParams);
         if (enforceOriginCheckForAnyClient || isControlUi || isWebchat) {
+          const controlUiOriginConfig = resolveControlUiOriginConfig(
+            configSnapshot.gateway?.controlUi,
+          );
           const originCheck = checkBrowserOrigin({
             requestHost,
             origin: requestOrigin,
-            allowedOrigins: configSnapshot.gateway?.controlUi?.allowedOrigins,
+            allowedOrigins: controlUiOriginConfig?.allowedOrigins,
             allowHostHeaderOriginFallback:
-              configSnapshot.gateway?.controlUi?.dangerouslyAllowHostHeaderOriginFallback === true,
+              controlUiOriginConfig?.dangerouslyAllowHostHeaderOriginFallback === true,
           });
           if (!originCheck.ok) {
             const errorMessage =
               "origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)";
             logWsControl.warn(
-              `origin rejected conn=${connId} remote=${remoteAddr ?? "?"} origin=${requestOrigin ?? "n/a"} host=${requestHost ?? "n/a"} allowedOrigins=${JSON.stringify(configSnapshot.gateway?.controlUi?.allowedOrigins ?? [])} client=${connectParams.client.id} connect=${JSON.stringify(
+              `origin rejected conn=${connId} remote=${remoteAddr ?? "?"} origin=${requestOrigin ?? "n/a"} host=${requestHost ?? "n/a"} allowedOrigins=${JSON.stringify(controlUiOriginConfig?.allowedOrigins ?? [])} client=${connectParams.client.id} connect=${JSON.stringify(
                 {
                   minProtocol: connectParams.minProtocol,
                   maxProtocol: connectParams.maxProtocol,
@@ -517,7 +521,7 @@ export function attachGatewayWsMessageHandler(params: {
         const hasSharedAuth = hasTokenAuth || hasPasswordAuth;
         const controlUiAuthPolicy = resolveControlUiAuthPolicy({
           isControlUi,
-          controlUiConfig: configSnapshot.gateway?.controlUi,
+          controlUiConfig: resolveControlUiOriginConfig(configSnapshot.gateway?.controlUi),
           deviceRaw,
         });
         const device = controlUiAuthPolicy.device;
@@ -576,16 +580,58 @@ export function attachGatewayWsMessageHandler(params: {
           });
           close(1008, truncateCloseReason(authMessage));
         };
+
+        // Resolve JWT before device-identity / pairing checks. Embed SSO and
+        // tenant console views authenticate with the tenant JWT issued by the
+        // auth service; they must not also require the gateway shared secret or
+        // a paired local device.
+        let earlyTenantContext: TenantContext | undefined;
+        const jwtCandidateEarly =
+          connectParams.auth?.jwt ??
+          (connectParams.auth?.token?.includes(".") ? connectParams.auth.token : undefined);
+        if (jwtCandidateEarly && isDbInitialized()) {
+          try {
+            const jwtPayload = verifyAccessToken(jwtCandidateEarly);
+            const [jwtUser, jwtTenant] = await Promise.all([
+              getUserById(jwtPayload.sub),
+              getTenantById(jwtPayload.tid),
+            ]);
+            if (
+              jwtUser &&
+              jwtUser.status === "active" &&
+              jwtTenant &&
+              jwtTenant.status === "active"
+            ) {
+              earlyTenantContext = {
+                tenantId: jwtTenant.id,
+                userId: jwtUser.id,
+                email: jwtUser.email ?? undefined,
+                role: jwtUser.role,
+                scopes: mapRoleToGatewayScopes(jwtUser.role),
+              };
+              authResult = { ok: true, method: "jwt", user: jwtUser.email ?? jwtUser.id };
+              authOk = true;
+              authMethod = "jwt";
+              sharedAuthOk = true;
+            }
+          } catch {
+            // JWT invalid; fall through to the normal gateway auth checks.
+          }
+        }
+
         const clearUnboundScopes = () => {
           if (scopes.length > 0 && !controlUiAuthPolicy.allowBypass && !sharedAuthOk) {
             scopes = [];
             connectParams.scopes = scopes;
           }
         };
+        const isPublicUnauthConnect = () =>
+          role === "operator" && scopes.length === 0 && !hasSharedAuth;
         const handleMissingDeviceIdentity = (): boolean => {
           if (!device) {
             clearUnboundScopes();
           }
+          const tenantJwtAuthOk = authOk && authMethod === "jwt" && Boolean(earlyTenantContext);
           const trustedProxyAuthOk = isTrustedProxyControlUiOperatorAuth({
             isControlUi,
             role,
@@ -599,6 +645,8 @@ export function attachGatewayWsMessageHandler(params: {
             isControlUi,
             controlUiAuthPolicy,
             trustedProxyAuthOk,
+            tenantJwtAuthOk,
+            publicUnauthOk: isPublicUnauthConnect(),
             sharedAuthOk,
             authOk,
             hasSharedAuth,
@@ -701,16 +749,16 @@ export function attachGatewayWsMessageHandler(params: {
           }
         }
 
-        // Early JWT tenant resolution — needed before device token verification
+        // Early JWT tenant resolution 鈥?needed before device token verification
         // and device pairing so that data is read/written in the correct
         // tenant-scoped directory.
-        let earlyTenantContext: TenantContext | undefined;
-        const jwtCandidateEarly =
+        let lateTenantContext: TenantContext | undefined;
+        const jwtCandidateLate =
           connectParams.auth?.jwt ??
           (connectParams.auth?.token?.includes(".") ? connectParams.auth.token : undefined);
-        if (jwtCandidateEarly && isDbInitialized()) {
+        if (jwtCandidateLate && isDbInitialized()) {
           try {
-            const jwtPayload = verifyAccessToken(jwtCandidateEarly);
+            const jwtPayload = verifyAccessToken(jwtCandidateLate);
             const [jwtUser, jwtTenant] = await Promise.all([
               getUserById(jwtPayload.sub),
               getTenantById(jwtPayload.tid),
@@ -721,7 +769,7 @@ export function attachGatewayWsMessageHandler(params: {
               jwtTenant &&
               jwtTenant.status === "active"
             ) {
-              earlyTenantContext = {
+              lateTenantContext = {
                 tenantId: jwtTenant.id,
                 userId: jwtUser.id,
                 email: jwtUser.email ?? undefined,
@@ -730,7 +778,7 @@ export function attachGatewayWsMessageHandler(params: {
               };
             }
           } catch {
-            // JWT invalid — fall through, will be handled by later auth
+            // JWT invalid 鈥?fall through, will be handled by later auth
           }
         }
 
@@ -753,7 +801,7 @@ export function attachGatewayWsMessageHandler(params: {
           verifyDeviceToken: (params) =>
             verifyDeviceToken({ ...params, tenantContext: earlyTenantContext }),
         }));
-        if (!authOk) {
+        if (!authOk && !isPublicUnauthConnect()) {
           rejectUnauthorized(authResult);
           return;
         }
@@ -769,6 +817,7 @@ export function attachGatewayWsMessageHandler(params: {
           controlUiAuthPolicy,
           sharedAuthOk,
           trustedProxyAuthOk,
+          authOk && authMethod === "jwt" && Boolean(earlyTenantContext),
         );
 
         if (device && devicePublicKey && !skipPairing) {

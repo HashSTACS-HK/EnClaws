@@ -134,12 +134,47 @@ describe("ws connect policy", () => {
         isControlUi: false,
         controlUiAuthPolicy: policy,
         trustedProxyAuthOk: false,
+        tenantJwtAuthOk: false,
+        publicUnauthOk: true,
+        sharedAuthOk: false,
+        authOk: true,
+        hasSharedAuth: false,
+        isLocalClient: false,
+      }).kind,
+    ).toBe("allow");
+
+    expect(
+      evaluateMissingDeviceIdentity({
+        hasDeviceIdentity: false,
+        role: "operator",
+        isControlUi: false,
+        controlUiAuthPolicy: policy,
+        trustedProxyAuthOk: false,
         sharedAuthOk: false,
         authOk: false,
         hasSharedAuth: true,
         isLocalClient: false,
       }).kind,
     ).toBe("reject-unauthorized");
+
+    // Login/register/captcha use a no-auth, zero-scope operator connection
+    // before issuing a public RPC method. Method-level authorization still
+    // decides which public calls are accepted.
+    expect(
+      evaluateMissingDeviceIdentity({
+        hasDeviceIdentity: false,
+        role: "operator",
+        isControlUi: false,
+        controlUiAuthPolicy: policy,
+        trustedProxyAuthOk: false,
+        tenantJwtAuthOk: false,
+        publicUnauthOk: true,
+        sharedAuthOk: false,
+        authOk: false,
+        hasSharedAuth: false,
+        isLocalClient: false,
+      }).kind,
+    ).toBe("allow");
 
     expect(
       evaluateMissingDeviceIdentity({
@@ -169,6 +204,23 @@ describe("ws connect policy", () => {
         isLocalClient: false,
       }).kind,
     ).toBe("allow");
+
+    // Embed SSO authenticates the tenant user with a short-lived JWT. That
+    // browser session should not depend on local gateway device pairing.
+    expect(
+      evaluateMissingDeviceIdentity({
+        hasDeviceIdentity: false,
+        role: "operator",
+        isControlUi: true,
+        controlUiAuthPolicy: controlUiNoInsecure,
+        trustedProxyAuthOk: false,
+        tenantJwtAuthOk: true,
+        sharedAuthOk: true,
+        authOk: true,
+        hasSharedAuth: false,
+        isLocalClient: false,
+      }).kind,
+    ).toBe("allow");
   });
 
   test("pairing bypass requires control-ui bypass + shared auth (or trusted-proxy auth)", () => {
@@ -186,6 +238,7 @@ describe("ws connect policy", () => {
     expect(shouldSkipControlUiPairing(bypass, false, false)).toBe(false);
     expect(shouldSkipControlUiPairing(strict, true, false)).toBe(false);
     expect(shouldSkipControlUiPairing(strict, false, true)).toBe(true);
+    expect(shouldSkipControlUiPairing(strict, true, false, true)).toBe(true);
   });
 
   test("trusted-proxy control-ui bypass only applies to operator + trusted-proxy auth", () => {

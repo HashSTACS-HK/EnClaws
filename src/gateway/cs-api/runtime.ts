@@ -146,7 +146,6 @@ export async function handleMessages(
   // Non-streaming: returns complete reply, then emits 1 chunk + done.
   // Jiumi is a backend relay to WeCom — true streaming has no UX value here.
   // runCSAgentReply 内部处理 RAG 和 CS prompt，返回完整回复后再发送 SSE 事件。
-  let reply: string;
   let agentResult: CSAgentReplyResult;
   try {
     agentResult = await runCSAgentReply({
@@ -160,7 +159,6 @@ export async function handleMessages(
       // 使用绑定到该 cs-api 对象的 agent（从鉴权解析，租户作用域），而非全局默认。
       agentId,
     });
-    reply = agentResult.reply;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log.error(`cs-api messages agent error: appId=${appId} sessionId=${session.id} err=${msg}`);
@@ -173,26 +171,35 @@ export async function handleMessages(
   // persist turnId and the per-message reasoning fields used by REST reasoning).
   // 提取置信度和知识命中，追加 AI 消息（P7-B1/P8：持久化 turnId 以及
   // REST reasoning 端点需要的单消息推理字段）。
-  const { stripped, confidence } = extractConfidence(reply);
+  const replyTexts = agentResult.replies?.length ? agentResult.replies : [agentResult.reply];
+  const strippedReplies = replyTexts
+    .map((text) => extractConfidence(text))
+    .filter((item) => item.stripped.trim().length > 0);
+  const finalReply = strippedReplies.at(-1) ?? extractConfidence(agentResult.reply);
+  const { confidence } = finalReply;
   const confidenceVerdict = confidenceToVerdict(confidence);
   const knowledgeHits = summarizeKnowledgeHits(agentResult.sourceChunks, DONE_EVENT_MAX_KB_HITS);
   try {
-    await appendCsApiMessage({
-      sessionId: session.id,
-      tenantId,
-      role: "ai",
-      source: "agenora-ai",
-      content: stripped,
-      confidence,
-      sourceChunks: knowledgeHits,
-      turnId: agentResult.turnId,
-    });
+    for (const item of strippedReplies) {
+      await appendCsApiMessage({
+        sessionId: session.id,
+        tenantId,
+        role: "ai",
+        source: "agenora-ai",
+        content: item.stripped,
+        confidence: item.confidence,
+        sourceChunks: knowledgeHits,
+        turnId: agentResult.turnId,
+      });
+    }
   } catch (err) {
     log.warn(`cs-api: failed to persist AI message: ${String(err)}`);
   }
 
-  // 9. Emit single chunk event with full stripped reply
-  writeSseEvent(res, "chunk", { text: stripped });
+  // 9. Emit customer-visible reply payloads in order.
+  for (const item of strippedReplies) {
+    writeSseEvent(res, "chunk", { text: item.stripped });
+  }
 
   // 10. Emit done event — enriched reasoning trace for the upper app (P4 step1):
   // real turnId + model (incl. fallback) + token usage + KB-hits summary.

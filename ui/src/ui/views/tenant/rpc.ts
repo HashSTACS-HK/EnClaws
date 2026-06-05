@@ -67,9 +67,59 @@ export async function tenantRpc(
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(resolveGatewayUrl(gatewayUrl));
     let handshakeDone = false;
+    let settled = false;
+    let connectSent = false;
+    let connectFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let requestTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    ws.onopen = () => {
-      // Gateway requires connect as the first message
+    const cleanup = () => {
+      if (connectFallbackTimer !== null) {
+        clearTimeout(connectFallbackTimer);
+        connectFallbackTimer = null;
+      }
+      if (requestTimeout !== null) {
+        clearTimeout(requestTimeout);
+        requestTimeout = null;
+      }
+    };
+
+    const fail = (err: Error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      try {
+        ws.close();
+      } catch {
+        // ignore close errors
+      }
+      reject(err);
+    };
+
+    const done = (payload: unknown) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      try {
+        ws.close();
+      } catch {
+        // ignore close errors
+      }
+      resolve(payload);
+    };
+
+    const sendConnect = () => {
+      if (connectSent || ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      connectSent = true;
+      if (connectFallbackTimer !== null) {
+        clearTimeout(connectFallbackTimer);
+        connectFallbackTimer = null;
+      }
       ws.send(
         JSON.stringify({
           type: "req",
@@ -80,12 +130,31 @@ export async function tenantRpc(
       );
     };
 
+    ws.onopen = () => {
+      connectFallbackTimer = setTimeout(sendConnect, 250);
+    };
+
     ws.onmessage = (event) => {
       try {
         const frame = JSON.parse(event.data);
+        if (frame.type === "event" && frame.event === "connect.challenge") {
+          sendConnect();
+          return;
+        }
         if (frame.type === "res" && !handshakeDone) {
           // Connect handshake response — now send the actual request
           handshakeDone = true;
+          if (!frame.ok) {
+            const err = new Error(frame.error?.message ?? "connect failed");
+            if (frame.error?.code) {
+              (err as any).code = frame.error.code;
+            }
+            if (frame.error?.details && typeof frame.error.details === "object") {
+              (err as any).details = frame.error.details;
+            }
+            fail(err);
+            return;
+          }
           ws.send(
             JSON.stringify({
               type: "req",
@@ -97,9 +166,8 @@ export async function tenantRpc(
           return;
         }
         if (frame.type === "res" && handshakeDone) {
-          ws.close();
           if (frame.ok) {
-            resolve(frame.payload);
+            done(frame.payload);
           } else {
             const msg = frame.error?.message ?? "请求失败";
             if (msg === "Authentication required") {
@@ -115,18 +183,22 @@ export async function tenantRpc(
             if (frame.error?.details && typeof frame.error.details === "object") {
               (err as any).details = frame.error.details;
             }
-            reject(err);
+            fail(err);
           }
         }
       } catch (err) {
-        reject(err);
+        fail(err instanceof Error ? err : new Error(String(err)));
       }
     };
 
-    ws.onerror = () => reject(new Error(t("rpc.errors.connectionFailed")));
-    setTimeout(() => {
-      ws.close();
-      reject(new Error(t("rpc.errors.requestTimeout")));
+    ws.onerror = () => fail(new Error(t("rpc.errors.connectionFailed")));
+    ws.onclose = (event) => {
+      if (!settled) {
+        fail(new Error(`disconnected (${event.code}): ${event.reason || "no reason"}`));
+      }
+    };
+    requestTimeout = setTimeout(() => {
+      fail(new Error(t("rpc.errors.requestTimeout")));
     }, 60_000);
   });
 }

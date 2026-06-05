@@ -11,6 +11,7 @@ import {
 } from "./app-polling.ts";
 import { observeTopbar, scheduleChatScroll, scheduleLogsScroll } from "./app-scroll.ts";
 import {
+  applySettings,
   applySettingsFromUrl,
   attachThemeListener,
   detachThemeListener,
@@ -18,14 +19,19 @@ import {
   syncTabWithLocation,
   syncThemeWithSettings,
 } from "./app-settings.ts";
-import { isAuthenticated } from "./auth-store.ts";
+import { isAuthenticated, loginWithEmbedSso } from "./auth-store.ts";
 import { loadControlUiBootstrapConfig } from "./controllers/control-ui-bootstrap.ts";
-import type { Tab } from "./navigation.ts";
+import { normalizeBasePath, tabFromPath, type Tab } from "./navigation.ts";
 
 type LifecycleHost = {
   basePath: string;
+  settings: { gatewayUrl: string };
   client?: { stop: () => void } | null;
   connected?: boolean;
+  lastError?: string | null;
+  pendingSsoToken?: string | null;
+  embedSsoInFlight?: boolean;
+  embedSsoError?: string | null;
   tab: Tab;
   assistantName: string;
   assistantAvatar: string | null;
@@ -49,6 +55,67 @@ type LifecycleHost = {
 // Scoped to this module so we don't leak a second listener per app mount.
 const HASH_HANDLERS = new WeakMap<LifecycleHost, () => void>();
 
+async function consumePendingEmbedSso(host: LifecycleHost): Promise<void> {
+  const token = host.pendingSsoToken;
+  if (!token) {
+    return;
+  }
+  const gatewayUrl = inferEmbedSsoGatewayUrl(host) ?? host.settings.gatewayUrl;
+  host.embedSsoInFlight = true;
+  host.embedSsoError = null;
+  host.lastError = null;
+  host.pendingSsoToken = null;
+  console.info("[embed-sso] consuming token", {
+    gatewayUrl,
+    path: typeof window !== "undefined" ? window.location.pathname : undefined,
+    tokenPrefix: token.slice(0, 12),
+  });
+  try {
+    if (gatewayUrl !== host.settings.gatewayUrl) {
+      applySettings(host as unknown as Parameters<typeof applySettings>[0], {
+        ...host.settings,
+        gatewayUrl,
+      });
+    }
+    const auth = await loginWithEmbedSso({
+      gatewayUrl,
+      token,
+    });
+    host.embedSsoInFlight = false;
+    host.embedSsoError = null;
+    const targetPath = auth.targetPath && auth.targetPath.startsWith("/") ? auth.targetPath : "/";
+    if (typeof window !== "undefined" && targetPath !== window.location.pathname) {
+      window.history.replaceState(null, "", targetPath);
+    }
+    const targetTab = tabFromPath(targetPath, host.basePath);
+    if (targetTab) {
+      host.tab = targetTab;
+    }
+    syncTabWithLocation(host as unknown as Parameters<typeof syncTabWithLocation>[0], true);
+    connectGateway(host as unknown as Parameters<typeof connectGateway>[0]);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Embed SSO failed";
+    host.embedSsoInFlight = false;
+    host.embedSsoError = message;
+    host.lastError = message;
+    console.error("[embed-sso] consume failed", {
+      gatewayUrl,
+      path: typeof window !== "undefined" ? window.location.pathname : undefined,
+      tokenPrefix: token.slice(0, 12),
+      message,
+    });
+  }
+}
+
+function inferEmbedSsoGatewayUrl(host: LifecycleHost): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const basePath = normalizeBasePath(host.basePath);
+  return `${protocol}//${window.location.host}${basePath || "/"}`;
+}
+
 export function handleConnected(host: LifecycleHost) {
   host.basePath = inferBasePath();
   void loadControlUiBootstrapConfig(host);
@@ -67,6 +134,10 @@ export function handleConnected(host: LifecycleHost) {
   };
   HASH_HANDLERS.set(host, hashHandler);
   window.addEventListener("hashchange", hashHandler);
+  if (host.pendingSsoToken) {
+    void consumePendingEmbedSso(host);
+    return;
+  }
   // Defer gateway connection and polling until the user is authenticated.
   // The auth-success handler in renderApp calls state.connect() after login/register.
   if (isAuthenticated()) {

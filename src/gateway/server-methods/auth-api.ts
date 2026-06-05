@@ -34,6 +34,7 @@ import {
   shouldThrottleResend,
   noteResendIssued,
 } from "../../auth/email-verification.js";
+import { consumeEmbedSsoToken } from "../../auth/embed-sso.js";
 import { generateTokenPair, verifyRefreshToken, revokeAllUserTokens } from "../../auth/jwt.js";
 import { recordLoginAttempt } from "../../auth/login-attempts.js";
 import { loginRateLimiter, retryAfterSeconds } from "../../auth/login-rate-limit.js";
@@ -522,6 +523,82 @@ export const authHandlers: GatewayRequestHandlers = {
       pwExp: pwExp ?? undefined,
       ...tokens,
     });
+  },
+
+  /**
+   * Consume a short-lived embed SSO token and issue normal JWT auth state.
+   *
+   * Params:
+   *   token: string
+   */
+  "auth.embedSso.consume": async ({ params, client, respond }: GatewayRequestHandlerOptions) => {
+    if (!requireDb(respond)) {
+      return;
+    }
+    const { token } = params as { token?: string };
+    if (!token) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_PARAMS, "Missing token"));
+      return;
+    }
+    try {
+      const consumed = await consumeEmbedSsoToken(token);
+      const tenant = await getTenantById(consumed.tenantId);
+      if (!tenant || tenant.status !== "active") {
+        respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "Tenant is not active"));
+        return;
+      }
+
+      const payload: JwtPayload = {
+        sub: consumed.user.id,
+        tid: consumed.tenantId,
+        email: consumed.user.email,
+        role: consumed.user.role,
+      };
+      const clientIp =
+        (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
+      const uaHeader = (client as unknown as { userAgent?: string })?.userAgent ?? null;
+      const uaParsed = parseUserAgent(uaHeader);
+      const tokens = await generateTokenPair(payload, {
+        ip: clientIp,
+        userAgent: uaHeader,
+        label: uaParsed.label,
+      });
+
+      await createAuditLog({
+        tenantId: consumed.tenantId,
+        userId: consumed.user.id,
+        action: "user.login.embed_sso",
+        resource: `tenant:${consumed.tenantId}`,
+        detail: { externalUserId: consumed.externalUserId, targetPath: consumed.targetPath },
+        ipAddress: clientIp,
+      }).catch(() => undefined);
+
+      respond(true, {
+        user: {
+          id: consumed.user.id,
+          email: consumed.user.email,
+          role: consumed.user.role,
+          displayName: consumed.user.displayName,
+          tenantId: consumed.tenantId,
+          forceChangePassword: false,
+          mfaEnabled: false,
+        },
+        tenant: { id: tenant.id, name: tenant.name, plan: tenant.plan },
+        targetPath: consumed.targetPath,
+        ...tokens,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Invalid embed SSO token";
+      const tokenPrefix = token.slice(0, 12);
+      const clientIp =
+        (client as unknown as { rawClientIp?: string })?.rawClientIp ?? client?.clientIp;
+      console.warn("[embed-sso] consume failed", {
+        tokenPrefix,
+        clientIp: clientIp ?? null,
+        message,
+      });
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, message));
+    }
   },
 
   /**

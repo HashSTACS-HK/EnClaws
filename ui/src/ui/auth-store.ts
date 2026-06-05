@@ -432,8 +432,6 @@ export async function refreshAccessToken(): Promise<AuthState | null> {
 }
 
 function buildConnectParams() {
-  const settings = loadSettings();
-  const gatewayToken = settings.token || undefined;
   return {
     minProtocol: 3,
     maxProtocol: 3,
@@ -447,7 +445,7 @@ function buildConnectParams() {
     role: "operator",
     scopes: [],
     caps: [],
-    auth: gatewayToken ? { token: gatewayToken } : undefined,
+    auth: undefined as { token?: string } | undefined,
   };
 }
 
@@ -556,6 +554,112 @@ export async function login(params: {
   });
 }
 
+interface EmbedSsoConsumePayload {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  targetPath?: string;
+  user: {
+    id: string;
+    email: string | null;
+    role: string;
+    displayName: string | null;
+    tenantId: string;
+    forceChangePassword?: boolean;
+  };
+  tenant?: { id: string; name: string; plan?: string };
+}
+
+function embedSsoConsumeUrl(gatewayUrl: string): string | null {
+  try {
+    const url = new URL(gatewayUrl);
+    if (url.protocol === "wss:") {
+      url.protocol = "https:";
+    } else if (url.protocol === "ws:") {
+      url.protocol = "http:";
+    } else if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return null;
+    }
+    url.pathname = "/api/embed-sso/consume";
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+async function consumeEmbedSsoOverHttp(
+  gatewayUrl: string,
+  token: string,
+): Promise<EmbedSsoConsumePayload | null> {
+  const url = embedSsoConsumeUrl(gatewayUrl);
+  if (!url) {
+    return null;
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ssoToken: token }),
+  });
+  if (response.status === 404 || response.status === 405) {
+    return null;
+  }
+  const body = (await response.json().catch(() => ({}))) as
+    | EmbedSsoConsumePayload
+    | { error?: { code?: string; message?: string } };
+  if (!response.ok) {
+    const message =
+      "error" in body && body.error?.message ? body.error.message : "Embed SSO failed";
+    throw new Error(message);
+  }
+  return body as EmbedSsoConsumePayload;
+}
+
+function saveEmbedSsoAuth(p: EmbedSsoConsumePayload): AuthState & { targetPath?: string } {
+  const auth: AuthState & { targetPath?: string } = {
+    accessToken: p.accessToken,
+    refreshToken: p.refreshToken,
+    expiresAt: Date.now() + p.expiresIn * 1000,
+    user: {
+      id: p.user.id,
+      email: p.user.email ?? "",
+      role: p.user.role,
+      displayName: p.user.displayName,
+      tenantId: p.user.tenantId,
+      forceChangePassword: Boolean(p.user.forceChangePassword),
+    },
+    tenant: p.tenant ?? {
+      id: p.user.tenantId,
+      name: "",
+    },
+    targetPath: p.targetPath,
+  };
+  saveAuth(auth);
+  return auth;
+}
+
+export async function loginWithEmbedSso(params: {
+  gatewayUrl: string;
+  token: string;
+}): Promise<AuthState & { targetPath?: string }> {
+  const httpPayload = await consumeEmbedSsoOverHttp(params.gatewayUrl, params.token);
+  if (httpPayload) {
+    return saveEmbedSsoAuth(httpPayload);
+  }
+
+  const result = await callPublicRpc<EmbedSsoConsumePayload>(
+    params.gatewayUrl,
+    "auth.embedSso.consume",
+    { token: params.token },
+  );
+  if (!result.ok || !result.payload) {
+    throw new Error(result.errorMessage ?? "Embed SSO failed");
+  }
+  return saveEmbedSsoAuth(result.payload);
+}
+
 // ===========================================================================
 // Phase 1 — public RPC wrapper for unauthenticated flows
 // (forgot password, reset, capabilities, view temp password)
@@ -589,11 +693,17 @@ export function callPublicRpc<T = unknown>(
     const ws = new WebSocket(gatewayUrl);
     let handshakeDone = false;
     let settled = false;
+    let connectSent = false;
+    let connectFallbackTimer: ReturnType<typeof setTimeout> | null = null;
     const finish = (r: PublicRpcResult<T>) => {
       if (settled) {
         return;
       }
       settled = true;
+      if (connectFallbackTimer !== null) {
+        clearTimeout(connectFallbackTimer);
+        connectFallbackTimer = null;
+      }
       try {
         ws.close();
       } catch {
@@ -602,7 +712,15 @@ export function callPublicRpc<T = unknown>(
       resolve(r);
     };
 
-    ws.onopen = () => {
+    const sendConnect = () => {
+      if (connectSent) {
+        return;
+      }
+      connectSent = true;
+      if (connectFallbackTimer !== null) {
+        clearTimeout(connectFallbackTimer);
+        connectFallbackTimer = null;
+      }
       const connectParams = buildConnectParams();
       if (jwtToken) {
         connectParams.auth = { ...connectParams.auth, token: jwtToken };
@@ -617,11 +735,27 @@ export function callPublicRpc<T = unknown>(
       );
     };
 
+    ws.onopen = () => {
+      connectFallbackTimer = setTimeout(sendConnect, 250);
+    };
+
     ws.onmessage = (event) => {
       try {
         const frame = JSON.parse(event.data);
+        if (frame.type === "event" && frame.event === "connect.challenge") {
+          sendConnect();
+          return;
+        }
         if (frame.type === "res" && !handshakeDone) {
           handshakeDone = true;
+          if (!frame.ok) {
+            finish({
+              ok: false,
+              errorCode: frame.error?.code,
+              errorMessage: frame.error?.message ?? "connect failed",
+            });
+            return;
+          }
           ws.send(
             JSON.stringify({
               type: "req",

@@ -57,13 +57,10 @@ export class SecretRevealDialog extends LitElement {
         display: flex;
         align-items: flex-start;
         gap: 0.5rem;
-        background: rgba(127, 29, 29, 0.25);
-        border: 1px solid var(--bg-destructive, #7f1d1d);
-        border-radius: var(--radius-md, 6px);
-        padding: 0.75rem 1rem;
-        margin-bottom: 1.25rem;
+        padding: 0;
+        margin-bottom: 1rem;
         font-size: 0.82rem;
-        color: var(--text-destructive, #fca5a5);
+        color: var(--text-secondary, #a3a3a3);
         line-height: 1.5;
       }
       .warning-icon {

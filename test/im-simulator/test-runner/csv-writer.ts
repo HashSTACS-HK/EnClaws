@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ResultRow } from "./types.js";
 
-const CSV_HEADER = "File Name,Case Name,Message Input,Expected Output,Actual Output,Result,Duration";
+const CSV_HEADER =
+  "File Name,Case Name,Message Input,Expected Output,Actual Output,Result,Duration";
 const BOM = "\uFEFF";
 
 function escapeCsv(s: string): string {
@@ -55,11 +56,15 @@ export class CsvWriter {
     fs.mkdirSync(path.dirname(output), { recursive: true });
     const lines: string[] = [BOM + CSV_HEADER];
     for (const src of sources) {
-      if (!fs.existsSync(src)) {continue;}
+      if (!fs.existsSync(src)) {
+        continue;
+      }
       const content = fs.readFileSync(src, "utf-8");
       for (const line of content.split("\n")) {
         const trimmed = line.replace(/^\uFEFF/, "").trim();
-        if (!trimmed || trimmed === CSV_HEADER) {continue;}
+        if (!trimmed || trimmed === CSV_HEADER) {
+          continue;
+        }
         lines.push(trimmed);
       }
       fs.rmSync(src, { force: true });

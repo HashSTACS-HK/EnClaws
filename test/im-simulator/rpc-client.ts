@@ -7,18 +7,15 @@
 
 import { randomUUID } from "node:crypto";
 import { WebSocket } from "ws";
+import { buildDeviceAuthPayloadV3 } from "../../src/gateway/device-auth.js";
+import { PROTOCOL_VERSION } from "../../src/gateway/protocol/index.js";
 import {
   loadOrCreateDeviceIdentity,
   publicKeyRawBase64UrlFromPem,
   signDevicePayload,
 } from "../../src/infra/device-identity.js";
 import { rawDataToString } from "../../src/infra/ws.js";
-import { buildDeviceAuthPayloadV3 } from "../../src/gateway/device-auth.js";
-import { PROTOCOL_VERSION } from "../../src/gateway/protocol/index.js";
-import {
-  GATEWAY_CLIENT_MODES,
-  GATEWAY_CLIENT_NAMES,
-} from "../../src/utils/message-channel.js";
+import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../../src/utils/message-channel.js";
 import type { ChatEventPayload } from "./types.js";
 
 type Pending = {
@@ -75,20 +72,20 @@ export class RpcClient {
     return await new Promise<void>((resolve, reject) => {
       let settled = false;
       const finish = (err?: Error) => {
-        if (settled) {return;}
+        if (settled) {
+          return;
+        }
         settled = true;
         clearTimeout(timer);
-        if (err) {reject(err);}
-        else {
+        if (err) {
+          reject(err);
+        } else {
           this._connected = true;
           resolve();
         }
       };
 
-      const timer = setTimeout(
-        () => finish(new Error("RpcClient connect timeout")),
-        timeoutMs,
-      );
+      const timer = setTimeout(() => finish(new Error("RpcClient connect timeout")), timeoutMs);
 
       const ws = new WebSocket(this.opts.url, {
         maxPayload: 25 * 1024 * 1024,
@@ -119,10 +116,7 @@ export class RpcClient {
 
         // 2) Hello-ok → connected
         //    Gateway wraps it as { type:"res", id:"connect", ok:true, payload:{ type:"hello-ok", ... } }
-        if (
-          obj.type === "hello-ok" ||
-          (obj.type === "res" && obj.id === "connect" && obj.ok)
-        ) {
+        if (obj.type === "hello-ok" || (obj.type === "res" && obj.id === "connect" && obj.ok)) {
           finish();
           return;
         }
@@ -163,10 +157,7 @@ export class RpcClient {
   // RPC
   // -----------------------------------------------------------------------
 
-  async request<T = Record<string, unknown>>(
-    method: string,
-    params?: unknown,
-  ): Promise<T> {
+  async request<T = Record<string, unknown>>(method: string, params?: unknown): Promise<T> {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error("RpcClient not connected");
     }

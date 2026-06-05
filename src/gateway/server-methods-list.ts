@@ -128,6 +128,10 @@ const BASE_METHODS = [
   "cs.config.set",
   "cs.config.test",
   "tenant.cs.recommended-persona.get",
+  "tenant.embedSso.status",
+  "tenant.embedSso.rotate",
+  "tenant.embedSso.revoke",
+  "auth.embedSso.consume",
 ];
 
 export function listGatewayMethods(): string[] {

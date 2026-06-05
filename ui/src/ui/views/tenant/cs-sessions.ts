@@ -74,16 +74,43 @@ export class CSSessionsView extends LitElement {
       .toolbar {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: space-between;
         gap: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
       }
 
-      .toolbar h2 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
+      .query-controls {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
         flex: 1;
+      }
+
+      .query-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--color-text-secondary, #6a737d);
+      }
+
+      .query-field input,
+      .query-field select {
+        height: 32px;
+        min-width: 140px;
+        padding: 5px 9px;
+        border: 1px solid var(--color-border, #e1e4e8);
+        border-radius: 6px;
+        background: var(--color-bg, #fff);
+        color: var(--color-text, #1c1c1e);
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+
+      .query-field.keyword input {
+        min-width: 240px;
       }
 
       .btn {
@@ -236,9 +263,14 @@ export class CSSessionsView extends LitElement {
         margin-top: 8px;
       }
 
-      .load-more {
+      .pagination {
         margin-top: 16px;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        color: var(--color-text-secondary, #6a737d);
+        font-size: 13px;
       }
     `,
   ];
@@ -249,10 +281,13 @@ export class CSSessionsView extends LitElement {
   @state() private expandedId: string | null = null;
   @state() private messages: Record<string, CSMessage[]> = {};
   @state() private messagesLoading: string | null = null;
-  @state() private offset = 0;
-  @state() private hasMore = true;
+  @state() private page = 1;
+  @state() private pageSize = 20;
+  @state() private total = 0;
+  @state() private query = "";
+  @state() private stateFilter = "";
+  @state() private accessModeFilter = "";
 
-  private readonly PAGE_SIZE = 30;
   private _i18n = new I18nController(this);
 
   private get tenantId(): string | undefined {
@@ -270,26 +305,52 @@ export class CSSessionsView extends LitElement {
       return;
     }
     if (reset) {
-      this.offset = 0;
-      this.sessions = [];
+      this.page = 1;
     }
     this.loading = true;
     this.error = null;
+    this.expandedId = null;
     try {
       const result = (await tenantRpc("cs.sessions.list", {
         tenantId,
-        limit: this.PAGE_SIZE,
-        offset: this.offset,
-      })) as { sessions: CSSession[] };
+        limit: this.pageSize,
+        offset: (this.page - 1) * this.pageSize,
+        q: this.query.trim() || undefined,
+        state: this.stateFilter || undefined,
+        accessMode: this.accessModeFilter || undefined,
+      })) as { sessions: CSSession[]; total?: number };
       const newSessions = result.sessions ?? [];
-      this.sessions = reset ? newSessions : [...this.sessions, ...newSessions];
-      this.hasMore = newSessions.length === this.PAGE_SIZE;
-      this.offset += newSessions.length;
+      this.sessions = newSessions;
+      this.total = Number(result.total ?? newSessions.length);
     } catch (err) {
       this.error = err instanceof Error ? err.message : "加载失败";
     } finally {
       this.loading = false;
     }
+  }
+
+  private _applyQuery(e?: Event) {
+    e?.preventDefault();
+    this.page = 1;
+    void this._loadSessions(false);
+  }
+
+  private _resetQuery() {
+    this.query = "";
+    this.stateFilter = "";
+    this.accessModeFilter = "";
+    this.page = 1;
+    void this._loadSessions(false);
+  }
+
+  private _goToPage(nextPage: number) {
+    const totalPages = this._totalPages();
+    this.page = Math.max(1, Math.min(totalPages, nextPage));
+    void this._loadSessions(false);
+  }
+
+  private _totalPages(): number {
+    return Math.max(1, Math.ceil(this.total / this.pageSize));
   }
 
   private async _toggleSession(sessionId: string) {
@@ -359,10 +420,76 @@ export class CSSessionsView extends LitElement {
   }
 
   render() {
+    const totalPages = this._totalPages();
     return html`
-      <div class="toolbar">
-        <button class="btn" @click=${() => this._loadSessions(true)}>刷新</button>
-      </div>
+      <form class="toolbar" @submit=${this._applyQuery}>
+        <div class="query-controls">
+          <label class="query-field keyword">
+            <span>关键词</span>
+            <input
+              type="search"
+              placeholder="客户、会话ID、渠道"
+              .value=${this.query}
+              @input=${(e: Event) => {
+                this.query = (e.target as HTMLInputElement).value;
+              }}
+            />
+          </label>
+          <label class="query-field">
+            <span>接入模式</span>
+            <select
+              .value=${this.accessModeFilter}
+              @change=${(e: Event) => {
+                this.accessModeFilter = (e.target as HTMLSelectElement).value;
+                this._applyQuery();
+              }}
+            >
+              <option value="">全部</option>
+              <option value="api">API模式</option>
+              <option value="widget">Widget模式</option>
+            </select>
+          </label>
+          <label class="query-field">
+            <span>状态</span>
+            <select
+              .value=${this.stateFilter}
+              @change=${(e: Event) => {
+                this.stateFilter = (e.target as HTMLSelectElement).value;
+                this._applyQuery();
+              }}
+            >
+              <option value="">全部</option>
+              <option value="ai-handling">AI处理中</option>
+              <option value="notifying">待人工</option>
+              <option value="human-handling">人工介入</option>
+              <option value="closed">闲置</option>
+              <option value="ai_active">AI处理中（旧）</option>
+              <option value="human_active">人工介入（旧）</option>
+            </select>
+          </label>
+          <label class="query-field">
+            <span>每页</span>
+            <select
+              .value=${String(this.pageSize)}
+              @change=${(e: Event) => {
+                this.pageSize = Number((e.target as HTMLSelectElement).value);
+                this._applyQuery();
+              }}
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <button class="btn" type="submit" ?disabled=${this.loading}>查询</button>
+          <button class="btn" type="button" ?disabled=${this.loading} @click=${() => this._resetQuery()}>
+            重置
+          </button>
+        </div>
+        <button class="btn" type="button" ?disabled=${this.loading} @click=${() => this._loadSessions(false)}>
+          刷新
+        </button>
+      </form>
 
       ${this.error ? html`<p class="error-msg">${this.error}</p>` : nothing}
 
@@ -450,16 +577,15 @@ export class CSSessionsView extends LitElement {
               </tbody>
             </table>
 
-            ${
-              this.hasMore
-                ? html`
-                <div class="load-more">
-                  <button class="btn" ?disabled=${this.loading} @click=${() => this._loadSessions(false)}>
-                    ${this.loading ? "加载中…" : "加载更多"}
-                  </button>
-                </div>`
-                : nothing
-            }
+            <div class="pagination">
+              <span>共 ${this.total} 条，第 ${this.page} / ${totalPages} 页</span>
+              <button class="btn" ?disabled=${this.loading || this.page <= 1} @click=${() => this._goToPage(this.page - 1)}>
+                上一页
+              </button>
+              <button class="btn" ?disabled=${this.loading || this.page >= totalPages} @click=${() => this._goToPage(this.page + 1)}>
+                下一页
+              </button>
+            </div>
           `
               : nothing
       }

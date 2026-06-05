@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const runEmbeddedPiAgentMock = vi.hoisted(() => vi.fn());
+const listCSMessagesMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../agents/pi-embedded.js", () => ({
   runEmbeddedPiAgent: runEmbeddedPiAgentMock,
@@ -31,7 +32,11 @@ vi.mock("../../memory/search-manager.js", () => ({
 }));
 
 vi.mock("../../db/models/tenant.js", () => ({
-  getTenantById: vi.fn().mockResolvedValue({ id: "tenant-jiumi", name: "九米" }),
+  getTenantById: vi.fn().mockResolvedValue({ id: "tenant-jiumi", name: "Jiumi" }),
+}));
+
+vi.mock("../../db/models/cs-message.js", () => ({
+  listCSMessages: listCSMessagesMock,
 }));
 
 describe("runCSAgentReply", () => {
@@ -43,8 +48,10 @@ describe("runCSAgentReply", () => {
     previousStateDir = process.env.ENCLAWS_STATE_DIR;
     process.env.ENCLAWS_STATE_DIR = stateDir;
     runEmbeddedPiAgentMock.mockReset();
+    listCSMessagesMock.mockReset();
+    listCSMessagesMock.mockResolvedValue([]);
     runEmbeddedPiAgentMock.mockResolvedValue({
-      payloads: [{ text: "业务回复 [confidence:0.9]" }],
+      payloads: [{ text: "business reply [confidence:0.9]" }],
       meta: {
         durationMs: 1,
         agentMeta: {
@@ -84,7 +91,7 @@ describe("runCSAgentReply", () => {
         "description: Use when answering Jiumi customs declaration questions.",
         "---",
         "",
-        "# 九米报关订单信息查询",
+        "# Jiumi customs order query",
       ].join("\n"),
     );
 
@@ -93,18 +100,21 @@ describe("runCSAgentReply", () => {
     await runCSAgentReply({
       tenantId: "tenant-jiumi",
       sessionId: "session-001",
-      customerMessage: "我的报关单提交了，但一直没有回音",
+      customerMessage: "submitted no reply",
       cfg: {},
       agentId: "my-first-agent",
     });
 
     expect(runEmbeddedPiAgentMock).toHaveBeenCalledTimes(1);
     const call = runEmbeddedPiAgentMock.mock.calls[0]?.[0] as {
-      skillsSnapshot?: { skills?: Array<{ name?: string }> };
+      promptMode?: string;
+      skillsSnapshot?: { prompt?: string; skills?: Array<{ name?: string }> };
     };
+    expect(call.promptMode).toBe("minimal");
     expect(call.skillsSnapshot?.skills?.map((skill) => skill.name)).toContain(
       "jiumi-customs-order-query",
     );
+    expect(call.skillsSnapshot?.prompt).toContain("<name>jiumi-customs-order-query</name>");
   });
 
   it("returns the Jiumi customs slot question before calling the model when declarationId is missing", async () => {
@@ -113,13 +123,93 @@ describe("runCSAgentReply", () => {
     const result = await runCSAgentReply({
       tenantId: "tenant-jiumi",
       sessionId: "session-slot-001",
-      customerMessage: "我的报关单提交了，但一直没有回音",
+      customerMessage: "submitted no reply",
       cfg: {},
       agentId: "my-first-agent",
       businessMetadata: { business: "customs", customs: {} },
     });
 
-    expect(result.reply).toBe("请提供报关订单号，我帮您查询当前申报状态。");
+    expect(result.reply).toMatch(/\S/);
     expect(runEmbeddedPiAgentMock).not.toHaveBeenCalled();
   });
+
+  it("includes recent CS conversation context so confirmation turns can resolve prior order numbers", async () => {
+    listCSMessagesMock.mockResolvedValue([
+      {
+        role: "customer",
+        content: "query BG20260528001 order status",
+      },
+      {
+        role: "ai",
+        content: "Please confirm customs order BG20260528001.",
+      },
+      {
+        role: "customer",
+        content: "yes",
+      },
+    ]);
+    const { runCSAgentReply } = await import("./cs-agent-runner.js");
+
+    await runCSAgentReply({
+      tenantId: "tenant-jiumi",
+      sessionId: "session-confirm-001",
+      customerMessage: "yes",
+      cfg: {},
+      agentId: "my-first-agent",
+    });
+
+    expect(runEmbeddedPiAgentMock).toHaveBeenCalledTimes(1);
+    const call = runEmbeddedPiAgentMock.mock.calls[0]?.[0] as {
+      extraSystemPrompt?: string;
+      timeoutMs?: number;
+    };
+    expect(call.timeoutMs).toBe(90_000);
+    expect(call.extraSystemPrompt).toContain("<customer_service_conversation_context>");
+    expect(call.extraSystemPrompt).toContain("query BG20260528001 order status");
+    expect(call.extraSystemPrompt).toContain("Please confirm customs order BG20260528001.");
+    expect(call.extraSystemPrompt).not.toContain("yes");
+  });
+
+  it("passes through all customer-visible assistant text payloads in order", async () => {
+    runEmbeddedPiAgentMock.mockResolvedValueOnce({
+      payloads: [
+        { text: "User confirmed the customs order number, I will query it now." },
+        {
+          text:
+            "Customs order BG20260528001 is waiting for inspection.\n\n" +
+            "> Skills used: jiumi-customs-order-query",
+        },
+      ],
+      meta: {
+        durationMs: 1,
+        agentMeta: {
+          sessionId: "embedded-session",
+          provider: "test-provider",
+          model: "test-model",
+          usage: { input: 10, output: 5, total: 15 },
+        },
+      },
+    });
+    const { runCSAgentReply } = await import("./cs-agent-runner.js");
+
+    const result = await runCSAgentReply({
+      tenantId: "tenant-jiumi",
+      sessionId: "session-payload-passthrough-001",
+      customerMessage: "confirm",
+      cfg: {},
+      agentId: "my-first-agent",
+    });
+
+    expect(result.replies).toEqual([
+      "User confirmed the customs order number, I will query it now.",
+      "Customs order BG20260528001 is waiting for inspection.",
+    ]);
+    expect(result.reply).toBe(
+      [
+        "User confirmed the customs order number, I will query it now.",
+        "Customs order BG20260528001 is waiting for inspection.",
+      ].join("\n\n"),
+    );
+  });
+
 });

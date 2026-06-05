@@ -1,12 +1,14 @@
 import { TestEnv } from "../index.js";
-import { loadTestFiles } from "./file-loader.js";
-import { CsvWriter } from "./csv-writer.js";
 import { formatAssert, checkAssertions } from "./asserter.js";
+import { CsvWriter } from "./csv-writer.js";
+import { loadTestFiles } from "./file-loader.js";
 import type { RunnerOptions, ResultRow, TestFile } from "./types.js";
 
 type FileResult = { results: ResultRow[]; errors: string[] };
 
-export async function runTestFiles(opts: RunnerOptions): Promise<{ results: ResultRow[]; errors: string[] }> {
+export async function runTestFiles(
+  opts: RunnerOptions,
+): Promise<{ results: ResultRow[]; errors: string[] }> {
   const testFiles = loadTestFiles(opts.dataDir);
 
   if (testFiles.length === 0) {
@@ -79,7 +81,9 @@ async function runSingleFile(
   function record(row: ResultRow, error?: string) {
     results.push(row);
     csv.append(row);
-    if (error) {errors.push(error);}
+    if (error) {
+      errors.push(error);
+    }
   }
 
   try {
@@ -89,11 +93,18 @@ async function runSingleFile(
       const errMsg = `Login failed for ${data.email}`;
       for (const tc of data.cases) {
         const label = tc.name ?? tc.message.slice(0, 30);
-        record({
-          file: fileName, name: label, message: tc.message,
-          expected: formatAssert(tc.assert), actual: `ERROR: ${errMsg}`,
-          passed: false, duration: "-",
-        }, `[${fileName}] "${label}": ${errMsg}`);
+        record(
+          {
+            file: fileName,
+            name: label,
+            message: tc.message,
+            expected: formatAssert(tc.assert),
+            actual: `ERROR: ${errMsg}`,
+            passed: false,
+            duration: "-",
+          },
+          `[${fileName}] "${label}": ${errMsg}`,
+        );
       }
       return { results, errors };
     }
@@ -109,12 +120,21 @@ async function runSingleFile(
         console.log(`  [${i + 1}/${data.cases.length}] FAIL ❌ ${label}`);
         console.log(`    Message: ${tc.message}`);
         console.log(`    Error: ${(e as Error).message}`);
-        record({
-          file: fileName, name: label, message: tc.message,
-          expected: formatAssert(tc.assert), actual: `ERROR: ${(e as Error).message}`,
-          passed: false, duration: "-",
-        }, `[${fileName}] "${label}": ${(e as Error).message}`);
-        if (!opts.continueOnFailure) {break;}
+        record(
+          {
+            file: fileName,
+            name: label,
+            message: tc.message,
+            expected: formatAssert(tc.assert),
+            actual: `ERROR: ${(e as Error).message}`,
+            passed: false,
+            duration: "-",
+          },
+          `[${fileName}] "${label}": ${(e as Error).message}`,
+        );
+        if (!opts.continueOnFailure) {
+          break;
+        }
         continue;
       }
 
@@ -131,15 +151,22 @@ async function runSingleFile(
         console.log(`    Reply: ${reply.text}`);
       }
 
-      record({
-        file: fileName, name: label, message: tc.message,
-        expected: formatAssert(tc.assert),
-        actual: failures.length > 0 ? failures.join("; ") : reply.text,
-        passed: failures.length === 0,
-        duration: `${reply.durationMs}ms`,
-      }, failures.length > 0 ? `[${fileName}] "${label}": ${failures.join("; ")}` : undefined);
+      record(
+        {
+          file: fileName,
+          name: label,
+          message: tc.message,
+          expected: formatAssert(tc.assert),
+          actual: failures.length > 0 ? failures.join("; ") : reply.text,
+          passed: failures.length === 0,
+          duration: `${reply.durationMs}ms`,
+        },
+        failures.length > 0 ? `[${fileName}] "${label}": ${failures.join("; ")}` : undefined,
+      );
 
-      if (caseFailed && !opts.continueOnFailure) {break;}
+      if (caseFailed && !opts.continueOnFailure) {
+        break;
+      }
     }
   } finally {
     await env.disconnect();

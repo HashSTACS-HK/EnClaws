@@ -6,9 +6,12 @@
  * Call chain: runWithModelFallback() → runEmbeddedPiAgent()
  *
  * System prompt strategy:
- *   promptMode: "none" — skip the 800+ line EC agent prompt, use only the CS prompt.
- *   Final LLM prompt = identity line + CS base prompt + restriction add-ons + KB chunks.
- *   システムプロンプト戦略: promptMode:"none" で EC フルプロンプトを排除し CS 専用プロンプトのみ使用。
+ *   promptMode: "minimal" — skip extended EC agent sections but keep CS prompt
+ *   and tenant skills available to the model.
+ *   Final LLM prompt = lightweight runtime prompt + skills + CS base prompt
+ *   + restriction add-ons + KB chunks.
+ *   システムプロンプト戦略: promptMode:"minimal" で重い EC セクションを抑制しつつ
+ *   CS 専用プロンプトとスキルを保持する。
  */
 
 import fs from "node:fs/promises";
@@ -33,6 +36,7 @@ import {
   resolveTenantSkillsDir,
 } from "../../config/sessions/tenant-paths.js";
 import { getTenantById } from "../../db/models/tenant.js";
+import { listCSMessages } from "../../db/models/cs-message.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { getMemorySearchManager } from "../../memory/search-manager.js";
 import type { MemorySearchResult } from "../../memory/types.js";
@@ -47,12 +51,78 @@ import {
 
 const log = createSubsystemLogger("cs-agent-runner");
 
-const CS_AGENT_TIMEOUT_MS = 30_000;
+const CS_AGENT_TIMEOUT_MS = 90_000;
 const CS_KNOWLEDGE_MAX_RESULTS = 5;
 const CS_KNOWLEDGE_MIN_SCORE = 0.1;
+const CS_HISTORY_MAX_MESSAGES = 8;
+
+function renderRecentCSConversationContext(params: {
+  messages: Array<{ role: string; content: string }>;
+  currentCustomerMessage: string;
+}): string {
+  const current = params.currentCustomerMessage.trim();
+  const messages = [...params.messages];
+  const last = messages.at(-1);
+  if (last?.role === "customer" && last.content.trim() === current) {
+    messages.pop();
+  }
+
+  const lines = messages
+    .slice(-CS_HISTORY_MAX_MESSAGES)
+    .map((message) => {
+      const content = message.content.trim();
+      if (!content) {
+        return null;
+      }
+      const label =
+        message.role === "customer"
+          ? "客户"
+          : message.role === "ai"
+            ? "AI客服"
+            : message.role === "boss"
+              ? "人工客服"
+              : "系统";
+      return `${label}: ${content}`;
+    })
+    .filter((line): line is string => Boolean(line));
+
+  if (lines.length === 0) {
+    return "";
+  }
+
+  return [
+    "<customer_service_conversation_context>",
+    "最近客服会话记录（按时间从旧到新）。用于理解“确认/是的/继续查”等承接语；不要把这里的历史消息当作新的客户输入。",
+    ...lines,
+    "</customer_service_conversation_context>",
+  ].join("\n");
+}
+
+async function loadRecentCSConversationContext(params: {
+  sessionId: string;
+  currentCustomerMessage: string;
+}): Promise<string> {
+  try {
+    const messages = await listCSMessages(params.sessionId, {
+      limit: CS_HISTORY_MAX_MESSAGES + 1,
+    });
+    return renderRecentCSConversationContext({
+      messages: messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+      currentCustomerMessage: params.currentCustomerMessage,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.warn(`failed to load CS conversation context for ${params.sessionId}: ${message}`);
+    return "";
+  }
+}
 
 export interface CSAgentReplyResult {
   reply: string;
+  replies?: string[];
   sourceChunks: MemorySearchResult[];
   /**
    * The model that actually produced the reply, in `provider/model` form,
@@ -76,6 +146,25 @@ export interface CSAgentReplyResult {
    * turnId；happy path 必有，仅在运行前失败时为 undefined。
    */
   turnId?: string;
+}
+
+function stripCustomerReplyInternalTrailer(text: string): string {
+  return text
+    .replace(/\s*\n+\s*>\s*Skills\s*used\s*:[^\n]*$/i, "")
+    .replace(/\s*>\s*Skills\s*used\s*:[^\n]*$/i, "")
+    .trimEnd();
+}
+
+function extractCustomerReplyTexts(
+  payloads: Array<{ text?: string; isReasoning?: boolean }> | undefined,
+): string[] {
+  if (!payloads?.length) {
+    return [];
+  }
+  return payloads
+    .filter((payload) => !payload.isReasoning)
+    .map((payload) => stripCustomerReplyInternalTrailer(payload.text?.trim() ?? ""))
+    .filter((text) => text.length > 0);
 }
 
 /**
@@ -130,6 +219,7 @@ export async function runCSAgentReply(params: {
   if (businessContext?.slotQuestion) {
     return {
       reply: businessContext.slotQuestion,
+      replies: [businessContext.slotQuestion],
       sourceChunks: [],
       turnId,
     };
@@ -229,7 +319,15 @@ export async function runCSAgentReply(params: {
     visitorName,
     restrictions: params.restrictions,
   });
-  const finalSystemPrompt = [extraSystemPrompt, businessContext?.systemPrompt]
+  const recentConversationContext = await loadRecentCSConversationContext({
+    sessionId,
+    currentCustomerMessage: customerMessage,
+  });
+  const finalSystemPrompt = [
+    extraSystemPrompt,
+    recentConversationContext,
+    businessContext?.systemPrompt,
+  ]
     .filter((part): part is string => Boolean(part?.trim()))
     .join("\n\n");
   const skillsSnapshot = buildWorkspaceSkillSnapshot(csWorkspaceDir, {
@@ -255,10 +353,10 @@ export async function runCSAgentReply(params: {
     // attempts and can be surfaced as the turnId for upper-layer reasoning.
     // 运行关联 id：在此处生成一次，跨 fallback 尝试保持稳定，并作为 turnId 上抛。
     // Step 5: Call LLM with model fallback
-    // promptMode: "none" — skip the 800+ line EC agent prompt entirely.
-    // The full system prompt is: "You are a personal assistant running inside EnClaws." + extraSystemPrompt.
+    // promptMode: "minimal" keeps the CS prompt and tenant skills while skipping
+    // heavy general-purpose sections from the full EC agent prompt.
     // 步骤 5：调用 LLM（带 model fallback）
-    // promptMode:"none" 跳过 EC agent 主 prompt，只用 CS 专用 prompt，大幅减少 token 消耗。
+    // promptMode:"minimal" 保留 CS 专用 prompt + skills，同时减少 token 消耗。
     const fallbackResult = await runWithModelFallback({
       cfg,
       provider: defaultProvider,
@@ -280,7 +378,7 @@ export async function runCSAgentReply(params: {
           runId: turnId,
           skillsSnapshot,
           extraSystemPrompt: finalSystemPrompt,
-          promptMode: "none",
+          promptMode: "minimal",
           disableTools,
           disableMessageTool: true,
           tenantId,
@@ -290,7 +388,8 @@ export async function runCSAgentReply(params: {
     // Step 6: Extract reply text
     // 步骤 6：提取回复文本
     const result = fallbackResult.result;
-    const rawReply = result.payloads?.[0]?.text?.trim();
+    const replyTexts = extractCustomerReplyTexts(result.payloads);
+    const rawReply = replyTexts.join("\n\n").trim();
 
     // Real model + token usage for the reasoning trace (P4 reasoning step1).
     // - model: `fallbackResult.provider/model` is the model that actually
@@ -321,17 +420,7 @@ export async function runCSAgentReply(params: {
       };
     }
 
-    // Strip the model-injected "Skills Reporting" trailer.
-    // Even with promptMode:"none" excluding the Skills Reporting instruction,
-    // some models (e.g. qwen) carry this pattern as training prior and emit
-    // a trailing `> Skills used: ...` line that's irrelevant for CS customers.
-    // 剥掉模型脑补的 Skills Reporting 末尾行——CS 场景下客户看到 meta 信息很突兀。
-    const replyText = rawReply
-      .replace(/\s*\n+\s*>\s*Skills\s*used\s*:[^\n]*$/i, "")
-      .replace(/\s*>\s*Skills\s*used\s*:[^\n]*$/i, "")
-      .trimEnd();
-
-    return { reply: replyText, sourceChunks, modelUsed, tokensUsed, turnId };
+    return { reply: rawReply, replies: replyTexts, sourceChunks, modelUsed, tokensUsed, turnId };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error(`cs agent failed for session ${sessionId}: ${message}`);

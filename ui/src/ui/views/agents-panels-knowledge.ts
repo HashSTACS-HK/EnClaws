@@ -45,37 +45,39 @@ export function renderAgentKnowledge(params: {
           <div class="card-title">${t("agents.knowledge.title")}</div>
           <div class="card-sub">${t("agents.knowledge.subtitle")}</div>
         </div>
-        <button
-          class="btn btn--sm"
-          ?disabled=${params.agentKnowledgeLoading}
-          @click=${() => params.onLoadFiles(params.agentId)}
-        >
-          ${params.agentKnowledgeLoading ? t("agents.knowledge.loading") : t("agents.knowledge.refresh")}
-        </button>
-        <button
-          class="btn btn--sm btn--primary"
-          ?disabled=${params.agentKnowledgeSaving}
-          @click=${(e: Event) => {
-            const input = (e.currentTarget as HTMLElement)
-              .nextElementSibling as HTMLInputElement | null;
-            input?.click();
-          }}
-        >
-          上传文件
-        </button>
-        <input
-          type="file"
-          accept=".md,.txt,.csv,.docx,.xlsx,.pdf,text/markdown,text/plain,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          multiple
-          style="display: none;"
-          @change=${(e: Event) => {
-            const input = e.target as HTMLInputElement;
-            if (input.files?.length) {
-              params.onFileUpload(input.files);
-              input.value = "";
-            }
-          }}
-        />
+        <div class="row" style="gap: 8px;">
+          <button
+            class="btn btn--sm"
+            ?disabled=${params.agentKnowledgeLoading}
+            @click=${() => params.onLoadFiles(params.agentId)}
+          >
+            ${params.agentKnowledgeLoading ? t("agents.knowledge.loading") : t("agents.knowledge.refresh")}
+          </button>
+          <button
+            class="btn btn--sm btn--primary"
+            ?disabled=${params.agentKnowledgeSaving}
+            @click=${(e: Event) => {
+              const input = (e.currentTarget as HTMLElement)
+                .nextElementSibling as HTMLInputElement | null;
+              input?.click();
+            }}
+          >
+            上传文件
+          </button>
+          <input
+            type="file"
+            accept=".md,.txt,.csv,.docx,.xlsx,.pdf,text/markdown,text/plain,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            multiple
+            style="display: none;"
+            @change=${(e: Event) => {
+              const input = e.target as HTMLInputElement;
+              if (input.files?.length) {
+                params.onFileUpload(input.files);
+                input.value = "";
+              }
+            }}
+          />
+        </div>
       </div>
       ${
         status

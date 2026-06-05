@@ -32,6 +32,7 @@ import {
   type ControlUiRootState,
 } from "./control-ui.js";
 import { handleCsApiRequest } from "./cs-api-http.js";
+import { handleEmbedSsoHttpRequest } from "./embed-sso-http.js";
 import { applyHookMappings } from "./hooks-mapping.js";
 import {
   extractHookToken,
@@ -515,6 +516,9 @@ export function createGatewayHttpServer(opts: {
       }
       // Agent Chat API — no auth, direct LLM proxy for tenant agents
       if (await handleAgentChatHttpRequest(req, res)) {
+        return;
+      }
+      if (await handleEmbedSsoHttpRequest(req, res)) {
         return;
       }
       // CS API — API Object CRUD + session endpoints for Agenora S2 integration

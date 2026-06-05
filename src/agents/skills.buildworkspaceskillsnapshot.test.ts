@@ -137,6 +137,46 @@ describe("buildWorkspaceSkillSnapshot", () => {
     expect(snapshot.prompt.length).toBeLessThan(2000);
   });
 
+  it("keeps tenant skills in the prompt when the skills prompt is truncated", async () => {
+    const workspaceDir = await tempDirs.make("enclaws-");
+    const bundledDir = await tempDirs.make("enclaws-bundled-");
+    const tenantSkillsDir = await tempDirs.make("enclaws-tenant-skills-");
+
+    for (let i = 0; i < 8; i += 1) {
+      await writeSkill({
+        dir: path.join(bundledDir, `bundled-${String(i).padStart(2, "0")}`),
+        name: `bundled-${String(i).padStart(2, "0")}`,
+        description: "x".repeat(800),
+      });
+    }
+
+    await writeSkill({
+      dir: path.join(tenantSkillsDir, "jiumi-customs-order-query"),
+      name: "jiumi-customs-order-query",
+      description: "Query Jiumi customs declaration status from business data.",
+    });
+
+    const snapshot = withWorkspaceHome(workspaceDir, () =>
+      buildWorkspaceSkillSnapshot(workspaceDir, {
+        config: {
+          skills: {
+            limits: {
+              maxSkillsInPrompt: 100,
+              maxSkillsPromptChars: 1_200,
+            },
+          },
+        },
+        managedSkillsDir: path.join(workspaceDir, ".managed"),
+        bundledSkillsDir: bundledDir,
+        tenantSkillsDir,
+      }),
+    );
+
+    expect(snapshot.skills.map((skill) => skill.name)).toContain("jiumi-customs-order-query");
+    expect(snapshot.prompt).toContain("Skills truncated");
+    expect(snapshot.prompt).toContain("<name>jiumi-customs-order-query</name>");
+  });
+
   it("limits discovery for nested repo-style skills roots (dir/skills/*)", async () => {
     const workspaceDir = await tempDirs.make("enclaws-");
     const repoDir = await tempDirs.make("enclaws-skills-repo-");

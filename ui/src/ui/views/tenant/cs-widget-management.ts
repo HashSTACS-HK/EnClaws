@@ -484,6 +484,12 @@ export class CSWidgetManagementView extends LitElement {
         margin-bottom: 12px;
       }
 
+      .config-error {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--color-danger, #cf222e);
+      }
+
       /* Per-widget controls row: agent select + status toggle */
       .widget-controls {
         display: flex;
@@ -663,6 +669,7 @@ export class CSWidgetManagementView extends LitElement {
   @state() private checkResults: CheckResult[] | null = null;
   @state() private checkResultsAt: string | null = null;
   @state() private loading = true;
+  @state() private configError = "";
   @state() private toast: { text: string; ok: boolean } | null = null;
 
   private _toastTimer?: ReturnType<typeof setTimeout>;
@@ -948,7 +955,7 @@ export class CSWidgetManagementView extends LitElement {
   private async _saveConfig() {
     const validationErr = this._validateConfig();
     if (validationErr) {
-      this._showToast(validationErr, false);
+      this.configError = validationErr;
       return;
     }
     const tenantId = this.tenantId;
@@ -956,6 +963,7 @@ export class CSWidgetManagementView extends LitElement {
       return;
     }
     this.saving = true;
+    this.configError = "";
     try {
       await tenantRpc("cs.config.set", {
         tenantId,
@@ -976,7 +984,7 @@ export class CSWidgetManagementView extends LitElement {
       // Reload to get masked value
       await this._loadConfig();
     } catch (err) {
-      this._showToast(err instanceof Error ? err.message : "保存失败", false);
+      this.configError = err instanceof Error ? err.message : "保存失败";
     } finally {
       this.saving = false;
     }
@@ -1364,6 +1372,7 @@ export class CSWidgetManagementView extends LitElement {
             .value=${this.chatId}
             @input=${(e: Event) => {
               this.chatId = (e.target as HTMLInputElement).value;
+              this.configError = "";
             }}
           />
         </div>
@@ -1381,6 +1390,7 @@ export class CSWidgetManagementView extends LitElement {
               if (!isNaN(v)) {
                 this.notifyIntervalMinutes = Math.max(1, Math.min(60, v));
               }
+              this.configError = "";
             }}
           />
         </div>
@@ -1681,6 +1691,8 @@ export class CSWidgetManagementView extends LitElement {
             ${this.testing ? "检测中…" : "连通性测试"}
           </button>
         </div>
+
+        ${this.configError ? html`<div class="config-error">${this.configError}</div>` : nothing}
 
         ${
           this.checkResults

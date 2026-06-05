@@ -22,7 +22,7 @@ export function resolveControlUiAuthPolicy(params: {
   const allowInsecureAuthConfigured =
     params.isControlUi && params.controlUiConfig?.allowInsecureAuth === true;
   const dangerouslyDisableDeviceAuth =
-    params.controlUiConfig?.dangerouslyDisableDeviceAuth === true;
+    params.isControlUi && params.controlUiConfig?.dangerouslyDisableDeviceAuth === true;
   return {
     allowInsecureAuthConfigured,
     dangerouslyDisableDeviceAuth,
@@ -36,8 +36,9 @@ export function shouldSkipControlUiPairing(
   policy: ControlUiAuthPolicy,
   sharedAuthOk: boolean,
   trustedProxyAuthOk = false,
+  tenantJwtAuthOk = false,
 ): boolean {
-  if (trustedProxyAuthOk) {
+  if (trustedProxyAuthOk || tenantJwtAuthOk) {
     return true;
   }
   return policy.allowBypass && sharedAuthOk;
@@ -71,6 +72,8 @@ export function evaluateMissingDeviceIdentity(params: {
   isControlUi: boolean;
   controlUiAuthPolicy: ControlUiAuthPolicy;
   trustedProxyAuthOk?: boolean;
+  tenantJwtAuthOk?: boolean;
+  publicUnauthOk?: boolean;
   sharedAuthOk: boolean;
   authOk: boolean;
   hasSharedAuth: boolean;
@@ -80,6 +83,12 @@ export function evaluateMissingDeviceIdentity(params: {
     return { kind: "allow" };
   }
   if (params.isControlUi && params.trustedProxyAuthOk) {
+    return { kind: "allow" };
+  }
+  if (params.isControlUi && params.tenantJwtAuthOk) {
+    return { kind: "allow" };
+  }
+  if (params.publicUnauthOk) {
     return { kind: "allow" };
   }
   if (params.controlUiAuthPolicy.allowBypass) {

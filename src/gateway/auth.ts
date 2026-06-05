@@ -38,7 +38,7 @@ export type ResolvedGatewayAuth = {
 
 export type GatewayAuthResult = {
   ok: boolean;
-  method?: "none" | "token" | "password" | "tailscale" | "device-token" | "trusted-proxy";
+  method?: "none" | "token" | "password" | "tailscale" | "device-token" | "trusted-proxy" | "jwt";
   user?: string;
   reason?: string;
   /** Present when the request was blocked by the rate limiter. */

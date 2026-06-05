@@ -186,6 +186,9 @@ export class EnClawsApp extends LitElement {
   @state() execApprovalBusy = false;
   @state() execApprovalError: string | null = null;
   @state() pendingGatewayUrl: string | null = null;
+  @state() pendingSsoToken: string | null = null;
+  @state() embedSsoInFlight = false;
+  @state() embedSsoError: string | null = null;
 
   @state() configLoading = false;
   @state() configRaw = "{\n}\n";

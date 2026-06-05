@@ -110,7 +110,7 @@ export class ConfirmDialog extends LitElement {
   @property() title = "";
   @property() message = "";
   @property() confirmText = "OK";
-  @property() cancelText = "Cancel";
+  @property() cancelText = "取消";
   @property({ type: Boolean }) danger = false;
   @property({ type: Boolean }) hideCancel = false;
 

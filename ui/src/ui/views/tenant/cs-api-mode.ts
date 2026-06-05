@@ -54,7 +54,9 @@ interface TenantAgent {
  */
 function resolveHttpBase(): string {
   const ws = loadSettings().gatewayUrl || "";
-  return ws.replace(/^wss?:\/\//, (m) => (m.startsWith("wss") ? "https://" : "http://"));
+  return ws
+    .replace(/^wss?:\/\//, (m) => (m.startsWith("wss") ? "https://" : "http://"))
+    .replace(/\/+$/, "");
 }
 
 /**

@@ -520,6 +520,36 @@ function applySkillsPromptLimits(params: { skills: Skill[]; config?: OpenClawCon
   return { skillsForPrompt, truncated, truncatedReason };
 }
 
+function promptPriorityForSkillSource(source: string | undefined): number {
+  switch (source) {
+    case "enclaws-tenant":
+      return 0;
+    case "enclaws-workspace":
+    case "agents-skills-project":
+      return 1;
+    case "agents-skills-personal":
+    case "enclaws-managed":
+      return 2;
+    case "enclaws-extra":
+      return 3;
+    case "enclaws-bundled":
+      return 4;
+    default:
+      return 5;
+  }
+}
+
+function sortSkillEntriesForPrompt(entries: SkillEntry[]): SkillEntry[] {
+  return entries.slice().sort((a, b) => {
+    const priority =
+      promptPriorityForSkillSource(a.skill.source) - promptPriorityForSkillSource(b.skill.source);
+    if (priority !== 0) {
+      return priority;
+    }
+    return a.skill.name.localeCompare(b.skill.name);
+  });
+}
+
 export function buildWorkspaceSkillSnapshot(
   workspaceDir: string,
   opts?: WorkspaceSkillBuildOptions & { snapshotVersion?: number },
@@ -590,8 +620,9 @@ function resolveWorkspaceSkillPromptState(
   const promptEntries = eligible.filter(
     (entry) => entry.invocation?.disableModelInvocation !== true,
   );
+  const promptEntriesForPrompt = sortSkillEntriesForPrompt(promptEntries);
   const remoteNote = opts?.eligibility?.remote?.note?.trim();
-  const resolvedSkills = promptEntries.map((entry) => entry.skill);
+  const resolvedSkills = promptEntriesForPrompt.map((entry) => entry.skill);
   const { skillsForPrompt, truncated } = applySkillsPromptLimits({
     skills: resolvedSkills,
     config: opts?.config,
@@ -601,7 +632,7 @@ function resolveWorkspaceSkillPromptState(
     : "";
   // Build inline skill content blocks for skills with inline: true
   const inlineBlocks: string[] = [];
-  for (const entry of promptEntries) {
+  for (const entry of promptEntriesForPrompt) {
     if (entry.inline && entry.inlineContent) {
       inlineBlocks.push(
         `\n<inline_skill name="${entry.skill.name}">\n${entry.inlineContent}\n</inline_skill>`,

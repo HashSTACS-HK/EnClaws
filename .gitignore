@@ -12,6 +12,15 @@ __pycache__/
 .worktrees/
 .DS_Store
 **/.DS_Store
+
+# Local environment files. Commit .env.example instead.
+/.env
+/.env.dev
+
+# Generated test artifacts.
+/test/feishu-simulator/test-data/
+ui/src/**/__screenshots__/
+
 ui/playwright-report/
 ui/test-results/
 **/test-results/

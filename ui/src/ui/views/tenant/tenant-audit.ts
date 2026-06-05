@@ -129,7 +129,7 @@ export class TenantAuditView extends LitElement {
   render() {
     return html`
       ${this._renderTabBar()}
-      <p style="margin: -4px 0 16px; color: var(--text-2, #6b7280); font-size: 0.9rem;">
+      <p style="margin: -4px 0 8px; color: var(--text-2, #6b7280); font-size: 0.9rem;">
         ${t(this._descriptionKey(this.currentSubTab))}
       </p>
       <div>${this._renderContent()}</div>

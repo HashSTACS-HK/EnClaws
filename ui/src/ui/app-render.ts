@@ -395,6 +395,29 @@ export function renderApp(state: AppViewState) {
 
   // ---- Global auth gate: require login before accessing the console ----
   // If the user navigates to /login explicitly, clear any stale auth and force re-login.
+  if (
+    !isAuthenticated() &&
+    (state.pendingSsoToken || state.embedSsoInFlight || state.embedSsoError)
+  ) {
+    return html`
+      <main class="app-shell app-shell--auth">
+        <section class="auth-card">
+          ${
+            state.embedSsoError
+              ? html`
+                  <h1>免登加载失败</h1>
+                  <p>${state.embedSsoError}</p>
+                  <p>请重新加载上层系统页面，获取新的免登令牌后再试。</p>
+                `
+              : html`
+                  <h1>正在登录</h1>
+                  <p>正在通过免登令牌进入智枢后台。</p>
+                `
+          }
+        </section>
+      </main>
+    `;
+  }
   if (typeof window !== "undefined" && window.location.pathname === "/login") {
     clearAuth();
   }

@@ -108,6 +108,9 @@ export type AppViewState = {
   execApprovalBusy: boolean;
   execApprovalError: string | null;
   pendingGatewayUrl: string | null;
+  pendingSsoToken: string | null;
+  embedSsoInFlight: boolean;
+  embedSsoError: string | null;
   configLoading: boolean;
   configRaw: string;
   configRawOriginal: string;

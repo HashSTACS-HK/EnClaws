@@ -26,7 +26,7 @@ import {
   getLastCSMessageForSession,
   countCSMessagesForSession,
 } from "../../db/models/cs-message.js";
-import { listCSSessions } from "../../db/models/cs-session.js";
+import { countCSSessions, listCSSessions } from "../../db/models/cs-session.js";
 import { getTenantById } from "../../db/models/tenant.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
@@ -315,11 +315,33 @@ export const csAdminHandlers: GatewayRequestHandlers = {
       return;
     }
     try {
-      const sessions = await listCSSessions(tenantId, {
-        limit: (params.limit as number) ?? 50,
-        offset: (params.offset as number) ?? 0,
+      const rawLimit = Number(params.limit ?? 50);
+      const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(100, rawLimit)) : 50;
+      const rawOffset = Number(params.offset ?? 0);
+      const offset = Number.isFinite(rawOffset) ? Math.max(0, rawOffset) : 0;
+      const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : undefined;
+      const state = typeof params.state === "string" && params.state ? params.state : undefined;
+      const accessMode =
+        params.accessMode === "api" || params.accessMode === "widget"
+          ? params.accessMode
+          : undefined;
+      const listOpts = {
+        limit,
+        offset,
         requireMessages: true,
-      });
+        q,
+        state,
+        accessMode,
+      };
+      const [sessions, total] = await Promise.all([
+        listCSSessions(tenantId, listOpts),
+        countCSSessions(tenantId, {
+          requireMessages: true,
+          q,
+          state,
+          accessMode,
+        }),
+      ]);
 
       // Attach last message to each session for "last speaker" display in admin console.
       // Parallel fetch: one query per session, acceptable for page sizes ≤ 50.
@@ -339,7 +361,7 @@ export const csAdminHandlers: GatewayRequestHandlers = {
           : null,
       }));
 
-      respond(true, { sessions: sessionsWithLast });
+      respond(true, { sessions: sessionsWithLast, total, limit, offset });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       log.error(`cs.sessions.list failed: ${message}`);

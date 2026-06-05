@@ -167,13 +167,7 @@ export function renderSessions(props: SessionsProps) {
   const rows = props.result?.sessions ?? [];
   return html`
     <section class="card">
-      <div class="row" style="justify-content: flex-end;">
-        <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? t("sessions.loading") : t("sessions.refresh")}
-        </button>
-      </div>
-
-      <div class="filters" style="margin-top: 14px;">
+      <div class="filters" style="align-items: flex-end;">
         <label class="field">
           <span>${t("sessions.activeMinutes")}</span>
           <input
@@ -228,6 +222,9 @@ export function renderSessions(props: SessionsProps) {
               })}
           />
         </label>
+        <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
+          ${props.loading ? t("sessions.loading") : t("sessions.refresh")}
+        </button>
       </div>
 
       ${

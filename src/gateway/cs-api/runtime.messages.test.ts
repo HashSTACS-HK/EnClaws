@@ -395,6 +395,36 @@ describe("POST /{appId}/messages", () => {
     });
   });
 
+  it("streams all CS agent reply payloads in order", async () => {
+    runCSAgentReplyMock.mockResolvedValueOnce({
+      reply: "checking\n\nfinal answer [confidence:0.8]",
+      replies: ["checking", "final answer [confidence:0.8]"],
+      sourceChunks: [],
+      modelUsed: "openai-compatible/gpt-test",
+      tokensUsed: { prompt: 12, completion: 8, total: 20 },
+      turnId: "cs-run-multi-payload",
+    });
+    const { handleMessages } = await import("./runtime.js");
+    const req = makeRequest({
+      authorization: `Bearer ${plainSecret}`,
+      body: {
+        customerId: "cust-multi-payload-001",
+        content: "query order",
+      },
+    });
+    const { res, events } = makeSseResponse();
+
+    await handleMessages(req, res, appId);
+
+    const chunkEvents = events.filter((e) => e.event === "chunk");
+    expect(chunkEvents.map((event) => (event.data as { text?: string }).text)).toEqual([
+      "checking",
+      "final answer",
+    ]);
+    const done = events.find((e) => e.event === "done");
+    expect((done?.data as { confidence?: number } | undefined)?.confidence).toBeCloseTo(0.8);
+  });
+
   it("passes the bound agentId from auth into runCSAgentReply (P4 agentId wiring)", async () => {
     // The cs-api object under test is bound to agentId "cs-test-agent" (see beforeAll).
     // T1 fix: handleMessages must forward that bound agentId so the runner honors the
